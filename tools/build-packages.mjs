@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
-  console.error("Usage: node tools/build-packages.mjs --out <dir> [--update-catalog-source]");
+  console.error("Usage: node tools/build-packages.mjs --out <dir> [--domain <packs|harness>] [--update-catalog-source]");
 }
 
 function args() {
@@ -33,7 +33,11 @@ function args() {
     usage();
     process.exit(2);
   }
-  return { out: path.resolve(out.get("out")), flags };
+  return {
+    out: path.resolve(out.get("out")),
+    domain: out.get("domain") ?? null,
+    flags,
+  };
 }
 
 function readJson(file) {
@@ -124,17 +128,25 @@ function buildDomain(domain, catalogFile, packageEntry, outDir, updateSource) {
 
 const options = args();
 fs.mkdirSync(options.out, { recursive: true });
-buildDomain(
-  "packs",
-  path.join(ROOT, "packs", "catalog-source.json"),
-  packagePack,
-  options.out,
-  options.flags.has("update-catalog-source"),
-);
-buildDomain(
-  "harness",
-  path.join(ROOT, "harness", "catalog-source.json"),
-  packageHarness,
-  options.out,
-  options.flags.has("update-catalog-source"),
-);
+const requestedDomain = options.domain ?? null;
+if (requestedDomain === null || requestedDomain === "packs") {
+  buildDomain(
+    "packs",
+    path.join(ROOT, "packs", "catalog-source.json"),
+    packagePack,
+    options.out,
+    options.flags.has("update-catalog-source"),
+  );
+}
+if (requestedDomain === null || requestedDomain === "harness") {
+  buildDomain(
+    "harness",
+    path.join(ROOT, "harness", "catalog-source.json"),
+    packageHarness,
+    options.out,
+    options.flags.has("update-catalog-source"),
+  );
+}
+if (requestedDomain !== null && !["packs", "harness"].includes(requestedDomain)) {
+  throw new Error(`unsupported domain: ${requestedDomain}`);
+}

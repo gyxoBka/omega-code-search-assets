@@ -104,7 +104,7 @@ function publicCatalogEntry(domain, source, registryDigests) {
   ]) {
     if (source[key] !== undefined) entry[key] = source[key];
   }
-  return { entry, archivePath, archiveFilename };
+  return { entry };
 }
 
 function catalogSourceForDomain(domain) {
@@ -173,14 +173,6 @@ function signPayload(payload) {
   ];
 }
 
-function copyArchives(items, outFile) {
-  const outDir = path.dirname(outFile);
-  fs.mkdirSync(outDir, { recursive: true });
-  for (const item of items) {
-    fs.copyFileSync(item.archivePath, path.join(outDir, item.archiveFilename));
-  }
-}
-
 const options = args();
 const domain = options.get("domain");
 const outFile = path.resolve(options.get("out"));
@@ -202,7 +194,7 @@ const catalog = {
   signatures: signPayload(payload),
 };
 
-copyArchives(items, outFile);
+fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, `${JSON.stringify(catalog, null, 2)}\n`);
 console.log(`wrote ${unixPath(path.relative(process.cwd(), outFile))}`);
 console.log(`entries=${items.length} signed=${catalog.signatures.length > 0}`);

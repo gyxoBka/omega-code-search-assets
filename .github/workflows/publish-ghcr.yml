@@ -2,6 +2,17 @@ name: Publish Omega GHCR Assets
 
 on:
   workflow_dispatch:
+    inputs:
+      domain:
+        description: Asset domain to publish
+        required: true
+        type: choice
+        options:
+          - changed
+          - all
+          - packs
+          - harness
+        default: changed
   push:
     branches:
       - master
@@ -25,6 +36,8 @@ jobs:
       OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM: ${{ secrets.OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -35,44 +48,114 @@ jobs:
       - name: Install package tooling
         run: sudo apt-get update && sudo apt-get install -y zip
 
+      - name: Resolve changed domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          requested="${{ github.event.inputs.domain || 'changed' }}"
+          domains=()
+          add_domain() {
+            local candidate="$1"
+            for existing in "${domains[@]}"; do
+              [[ "${existing}" == "${candidate}" ]] && return 0
+            done
+            domains+=("${candidate}")
+          }
+          if [[ "${requested}" == "all" ]]; then
+            add_domain packs
+            add_domain harness
+          elif [[ "${requested}" == "packs" || "${requested}" == "harness" ]]; then
+            add_domain "${requested}"
+          else
+            if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+              add_domain packs
+              add_domain harness
+            else
+              base="${{ github.event.before }}"
+              if [[ -z "${base}" || "${base}" == "0000000000000000000000000000000000000000" ]]; then
+                base="HEAD^"
+              fi
+              changed="$(git diff --name-only "${base}" HEAD)"
+              echo "${changed}"
+              if echo "${changed}" | grep -qE '^(tools/|\.github/workflows/)'; then
+                add_domain packs
+                add_domain harness
+              fi
+              if echo "${changed}" | grep -qE '^packs/'; then
+                add_domain packs
+              fi
+              if echo "${changed}" | grep -qE '^harness/'; then
+                add_domain harness
+              fi
+            fi
+          fi
+          if [[ "${#domains[@]}" -eq 0 ]]; then
+            echo "No asset domains changed."
+            echo "DOMAINS=" >> "${GITHUB_ENV}"
+          else
+            joined="$(IFS=,; echo "${domains[*]}")"
+            echo "Publishing domains: ${joined}"
+            echo "DOMAINS=${joined}" >> "${GITHUB_ENV}"
+          fi
+
       - name: Build package archives
-        run: node tools/build-packages.mjs --out dist/packages --update-catalog-source
+        if: env.DOMAINS != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra domains <<< "${DOMAINS}"
+          for domain in "${domains[@]}"; do
+            node tools/build-packages.mjs --domain "${domain}" --out "dist/packages/${domain}" --update-catalog-source
+          done
 
       - name: Login to GHCR
+        if: env.DOMAINS != ''
         run: echo "${{ github.token }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Push OCI artifacts
-        run: node tools/push-ghcr-artifacts.mjs --packages dist/packages --out dist/oci-digests.json
+        if: env.DOMAINS != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/digests
+          IFS=',' read -ra domains <<< "${DOMAINS}"
+          for domain in "${domains[@]}"; do
+            node tools/push-ghcr-artifacts.mjs --domain "${domain}" --packages "dist/packages/${domain}" --out "dist/digests/${domain}.json"
+          done
 
       - name: Build signed catalogs
+        if: env.DOMAINS != ''
+        shell: bash
         run: |
-          node tools/build-catalog.mjs \
-            --domain packs \
-            --registry-digests dist/oci-digests.json \
-            --catalog-version "packs-${GITHUB_SHA::12}" \
-            --out dist/catalogs/packs.json
-          node tools/build-catalog.mjs \
-            --domain harness \
-            --registry-digests dist/oci-digests.json \
-            --catalog-version "harness-${GITHUB_SHA::12}" \
-            --out dist/catalogs/harness.json
+          set -euo pipefail
+          IFS=',' read -ra domains <<< "${DOMAINS}"
+          for domain in "${domains[@]}"; do
+            node tools/build-catalog.mjs \
+              --domain "${domain}" \
+              --registry-digests "dist/digests/${domain}.json" \
+              --catalog-version "${domain}-${GITHUB_SHA::12}" \
+              --out "dist/catalogs/${domain}.json"
+          done
 
       - name: Push registry catalogs
+        if: env.DOMAINS != ''
+        shell: bash
         run: |
-          oras push "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/packs:${GITHUB_SHA}" \
-            dist/catalogs/packs.json:application/vnd.omega.catalog.v1+json \
-            --artifact-type application/vnd.omega.catalog.v1
-          oras push "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/harness:${GITHUB_SHA}" \
-            dist/catalogs/harness.json:application/vnd.omega.catalog.v1+json \
-            --artifact-type application/vnd.omega.catalog.v1
-          oras tag "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/packs:${GITHUB_SHA}" current
-          oras tag "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/harness:${GITHUB_SHA}" current
+          set -euo pipefail
+          IFS=',' read -ra domains <<< "${DOMAINS}"
+          for domain in "${domains[@]}"; do
+            oras push "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/${domain}:${GITHUB_SHA}" \
+              "dist/catalogs/${domain}.json:application/vnd.omega.catalog.v1+json" \
+              --artifact-type application/vnd.omega.catalog.v1
+            oras tag "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/${domain}:${GITHUB_SHA}" current
+          done
 
       - name: Upload workflow artifact
+        if: env.DOMAINS != ''
         uses: actions/upload-artifact@v4
         with:
           name: omega-ghcr-catalogs-${{ github.sha }}
           path: |
             dist/catalogs/*.json
-            dist/oci-digests.json
+            dist/digests/*.json
           if-no-files-found: error

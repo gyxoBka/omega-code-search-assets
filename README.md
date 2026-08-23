@@ -86,6 +86,13 @@ signed catalogs whose entries point at `oci://...@sha256:...` immutable package
 references. Omega verifies both the signed catalog and the archive SHA-256
 before install.
 
+CI publishes only changed domains:
+
+- changes under `packs/` publish `packs` assets and the packs catalog;
+- changes under `harness/` publish `harness` assets and the harness catalog;
+- changes under `tools/` or workflow files publish all currently supported
+  domains because packaging semantics may have changed.
+
 ## Local Catalog Build
 
 Build package archives:

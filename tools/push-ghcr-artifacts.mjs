@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
-  console.error("Usage: node tools/push-ghcr-artifacts.mjs --packages <dir> --out <file>");
+  console.error("Usage: node tools/push-ghcr-artifacts.mjs --packages <dir> --out <file> [--domain <packs|harness>]");
 }
 
 function args() {
@@ -28,7 +28,11 @@ function args() {
       process.exit(2);
     }
   }
-  return { packages: path.resolve(out.get("packages")), out: path.resolve(out.get("out")) };
+  return {
+    packages: path.resolve(out.get("packages")),
+    out: path.resolve(out.get("out")),
+    domain: out.get("domain") ?? null,
+  };
 }
 
 function readJson(file) {
@@ -61,23 +65,25 @@ function push(reference, packageRoot, archive) {
   return match[1];
 }
 
-function entries() {
+function entries(domainFilter) {
+  if (domainFilter !== null && !["packs", "harness"].includes(domainFilter)) {
+    throw new Error(`unsupported domain: ${domainFilter}`);
+  }
   return [
     ["packs", path.join(ROOT, "packs", "catalog-source.json")],
     ["harness", path.join(ROOT, "harness", "catalog-source.json")],
-  ].flatMap(([domain, file]) =>
-    readJson(file).entries.map((entry) => ({
+  ].filter(([domain]) => domainFilter === null || domain === domainFilter)
+    .flatMap(([domain, file]) => readJson(file).entries.map((entry) => ({
       domain,
       id: entry.id,
       version: entry.version,
       archive: entry.archive_filename,
-    })),
-  );
+    })));
 }
 
 const options = args();
 const mapping = {};
-for (const entry of entries()) {
+for (const entry of entries(options.domain)) {
   const reference = `ghcr.io/gyxobka/omega-code-search-assets/${entry.domain}/${entry.id}:${entry.version}`;
   const digest = push(reference, options.packages, entry.archive);
   mapping[`${entry.domain}/${entry.id}@${entry.version}`] = {
