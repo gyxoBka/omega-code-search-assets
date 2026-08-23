@@ -1,0 +1,86 @@
+schema_version = 1
+id = "codex"
+display_name = "Codex"
+version = "1.0.0"
+stability = "stable_auto"
+platforms = ["linux", "macos", "windows"]
+
+[min_omega]
+harness_runtime = 1
+
+[capabilities]
+mcp = true
+instructions = true
+native_mcp = true
+current_scope = true
+
+[path_variables]
+environment = ["CODEX_HOME"]
+
+[detection]
+install_when = { any_of = [ { env_path_exists = "CODEX_HOME" }, { dir_exists = "${HOME}/.codex" }, { command_exists = "codex" } ] }
+cleanup_when = { any_of = [ { file_exists = "${HOME}/.codex/config.toml" }, { file_exists = "${HOME}/.codex/AGENTS.md" } ] }
+
+[[targets]]
+id = "config"
+format = "toml"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "env_override"
+env = "CODEX_HOME"
+relative = "config.toml"
+fallback = "${HOME}/.codex/config.toml"
+
+[[targets]]
+id = "agents"
+format = "markdown"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "env_override"
+env = "CODEX_HOME"
+relative = "AGENTS.md"
+fallback = "${HOME}/.codex/AGENTS.md"
+
+[mcp]
+enabled = true
+transport = "stdio"
+server_key = "omega"
+command = "@omega-mcp"
+args = []
+cwd_strategy = "inherit_process_cwd"
+serialization = "toml_mcp_servers"
+target = "config"
+
+[[mutations]]
+id = "install_mcp"
+target = "config"
+kind = "owned_map_entry"
+selector = ["mcp_servers", "omega"]
+value_from = "@mcp.serialized"
+conflict_policy = "preserve_foreign"
+[mutations.ownership]
+identity = "omega-codex-mcp-v1"
+comparison = "semantic_toml"
+accepted_previous = ["omega-codex-mcp-v0"]
+
+[[instructions]]
+id = "global_guide"
+target = "agents"
+content_profile = "omega-agent-guide-v1"
+kind = "managed_text_block"
+marker = "omega-agent-guide"
+
+[[verification]]
+level = "structural"
+check = "owned_mutations_present"
+
+[[verification]]
+level = "process"
+check = "omega_mcp_initialize"
+expected_tools = 10
+
+[[verification]]
+level = "harness"
+check = "manual_acceptance_required"

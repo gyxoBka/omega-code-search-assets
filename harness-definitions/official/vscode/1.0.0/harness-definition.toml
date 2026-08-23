@@ -1,0 +1,74 @@
+schema_version = 1
+id = "vscode"
+display_name = "VS Code / Copilot Chat MCP"
+version = "1.0.0"
+stability = "stable_auto"
+platforms = ["linux", "macos", "windows"]
+[min_omega]
+harness_runtime = 1
+[capabilities]
+mcp = true
+native_mcp = true
+current_scope = true
+[detection]
+install_when = { any_of = [ { command_exists = "code" }, { dir_exists = "${CONFIG_DIR}/Code/User" } ] }
+cleanup_when = { any_of = [ { file_exists = "${CONFIG_DIR}/Code/User/mcp.json" }, { dir_exists = "${CONFIG_DIR}/Code/User/profiles" } ] }
+[[targets]]
+id = "default_mcp"
+format = "jsonc"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "platform_config_dir"
+relative = "Code/User/mcp.json"
+[[targets]]
+id = "profile_mcp"
+format = "jsonc"
+scope = "profile"
+create_policy = "existing_only"
+[targets.resolver]
+kind = "adapter"
+adapter = "existing_profile_fanout"
+root = "${CONFIG_DIR}/Code/User/profiles"
+relative = "mcp.json"
+[mcp]
+enabled = true
+transport = "stdio"
+server_key = "omega"
+command = "@omega-mcp"
+args = []
+cwd_strategy = "inherit_process_cwd"
+serialization = "servers_stdio_json"
+target = "default_mcp"
+[[mutations]]
+id = "default_server"
+target = "default_mcp"
+kind = "owned_map_entry"
+selector = ["servers", "omega"]
+value_from = "@mcp.serialized"
+conflict_policy = "preserve_foreign"
+[mutations.ownership]
+identity = "omega-vscode-mcp-v1"
+comparison = "semantic_json"
+accepted_previous = []
+[[mutations]]
+id = "profile_server"
+target = "profile_mcp"
+kind = "owned_map_entry"
+selector = ["servers", "omega"]
+value_from = "@mcp.serialized"
+conflict_policy = "preserve_foreign"
+[mutations.ownership]
+identity = "omega-vscode-profile-mcp-v1"
+comparison = "semantic_json"
+accepted_previous = []
+[[verification]]
+level = "structural"
+check = "owned_mutations_present"
+[[verification]]
+level = "process"
+check = "omega_mcp_initialize"
+expected_tools = 10
+[[verification]]
+level = "harness"
+check = "manual_acceptance_required"

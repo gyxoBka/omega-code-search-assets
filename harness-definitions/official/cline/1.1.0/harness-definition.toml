@@ -1,0 +1,112 @@
+schema_version = 1
+id = "cline"
+display_name = "Cline"
+version = "1.1.0"
+stability = "stable_auto"
+platforms = ["linux", "macos", "windows"]
+
+[min_omega]
+harness_runtime = 1
+
+[capabilities]
+mcp = true
+instructions = true
+skills = true
+native_mcp = true
+current_scope = true
+
+[path_variables]
+environment = ["CLINE_DATA_DIR"]
+
+[detection]
+install_when = { any_of = [ { dir_exists = "${HOME}/.cline" }, { env_path_exists = "CLINE_DATA_DIR" }, { command_exists = "cline" } ] }
+cleanup_when = { any_of = [ { file_exists = "${HOME}/.cline/mcp.json" }, { file_exists = "${HOME}/.cline/data/settings/cline_mcp_settings.json" } ] }
+
+[[targets]]
+id = "mcp_primary"
+format = "json"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "home_relative"
+path = "${HOME}/.cline/mcp.json"
+
+[[targets]]
+id = "mcp_data"
+format = "json"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "env_override"
+env = "CLINE_DATA_DIR"
+relative = "settings/cline_mcp_settings.json"
+fallback = "${HOME}/.cline/data/settings/cline_mcp_settings.json"
+
+[[targets]]
+id = "rules"
+format = "markdown"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "home_relative"
+path = "${HOME}/.cline/rules/codebase-memory-mcp.md"
+
+[mcp]
+enabled = true
+transport = "stdio"
+server_key = "omega"
+command = "@omega-mcp"
+args = []
+cwd_strategy = "inherit_process_cwd"
+serialization = "mcp_servers_json"
+target = "mcp_primary"
+
+[[mutations]]
+id = "primary_mcp"
+target = "mcp_primary"
+kind = "owned_map_entry"
+selector = ["mcpServers", "omega"]
+value_from = "@mcp.serialized"
+conflict_policy = "preserve_foreign"
+[mutations.ownership]
+identity = "omega-cline-primary-mcp-v1"
+comparison = "semantic_json"
+accepted_previous = ["omega-cline-primary-mcp-v0"]
+
+[[mutations]]
+id = "data_mcp"
+target = "mcp_data"
+kind = "owned_map_entry"
+selector = ["mcpServers", "omega"]
+value_from = "@mcp.serialized"
+conflict_policy = "preserve_foreign"
+[mutations.ownership]
+identity = "omega-cline-data-mcp-v1"
+comparison = "semantic_json"
+accepted_previous = ["omega-cline-data-mcp-v0"]
+
+[[instructions]]
+id = "cline_rule"
+target = "rules"
+content_profile = "omega-agent-guide-v1"
+kind = "managed_text_block"
+marker = "omega-agent-guide"
+
+[[skills]]
+id = "omega_skill"
+target_path = "${HOME}/.cline/skills/omega/SKILL.md"
+content_profile = "omega-skill-v2"
+ownership = "exact_owned_document"
+
+[[verification]]
+level = "structural"
+check = "owned_mutations_present"
+
+[[verification]]
+level = "process"
+check = "omega_mcp_initialize"
+expected_tools = 10
+
+[[verification]]
+level = "harness"
+check = "manual_acceptance_required"

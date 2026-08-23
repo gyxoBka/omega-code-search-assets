@@ -1,0 +1,70 @@
+schema_version = 1
+id = "pi"
+display_name = "Pi"
+version = "1.1.0"
+stability = "stable_auto"
+platforms = ["linux", "macos", "windows"]
+
+[min_omega]
+harness_runtime = 1
+
+[capabilities]
+mcp = false
+instructions = true
+skills = true
+native_mcp = false
+current_scope = true
+
+[detection]
+install_when = { any_of = [ { command_exists = "pi" }, { dir_exists = "${HOME}/.pi/agent" } ] }
+cleanup_when = { any_of = [ { file_exists = "${HOME}/.pi/agent/extensions/omega.ts" }, { file_exists = "${HOME}/.pi/agent/AGENTS.md" } ] }
+
+[[targets]]
+id = "extension"
+format = "generated_source"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "home_relative"
+path = "${HOME}/.pi/agent/extensions/omega.ts"
+
+[[targets]]
+id = "agents_md"
+format = "markdown"
+scope = "user"
+create_policy = "if_harness_detected"
+[targets.resolver]
+kind = "home_relative"
+path = "${HOME}/.pi/agent/AGENTS.md"
+
+[[mutations]]
+id = "tool_adapter"
+target = "extension"
+kind = "generated_template_block"
+template = "pi_omega_tool_adapter_v1"
+conflict_policy = "preserve_foreign"
+[mutations.ownership]
+identity = "omega-pi-adapter-v1"
+comparison = "exact_bytes"
+accepted_previous = []
+
+[[instructions]]
+id = "global_guide"
+target = "agents_md"
+content_profile = "omega-agent-guide-v1"
+kind = "managed_text_block"
+marker = "omega-agent-guide"
+
+[[skills]]
+id = "omega_skill"
+target_path = "${HOME}/.pi/agent/skills/omega/SKILL.md"
+content_profile = "omega-skill-v2"
+ownership = "exact_owned_document"
+
+[[verification]]
+level = "structural"
+check = "owned_documents_current"
+
+[[verification]]
+level = "harness"
+check = "manual_acceptance_required"
