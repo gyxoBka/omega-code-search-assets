@@ -9,7 +9,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
   console.error(`Usage:
-node tools/build-catalog.mjs --domain <domain> --release-base-url <url> --catalog-version <version> --out <path>
+node tools/build-catalog.mjs --domain <domain> --registry-digests <file> --catalog-version <version> --out <path>
 
 Domains:
   packs
@@ -36,7 +36,7 @@ function args() {
     out.set(key.slice(2), process.argv[i + 1]);
     i += 1;
   }
-  for (const required of ["domain", "release-base-url", "catalog-version", "out"]) {
+  for (const required of ["domain", "registry-digests", "catalog-version", "out"]) {
     if (!out.has(required)) {
       usage();
       process.exit(2);
@@ -79,22 +79,10 @@ function jcs(value) {
   }
 }
 
-function publicCatalogEntry(source, packageRoot, releaseBaseUrl) {
-  const archiveFilename = source.archive_filename;
-  if (!archiveFilename || archiveFilename.includes("/") || archiveFilename.includes("\\")) {
-    throw new Error(`entry ${source.id}@${source.version} has invalid archive_filename`);
-  }
-  const archivePath = path.join(packageRoot, archiveFilename);
-  const stat = fs.statSync(archivePath);
-  if (!stat.isFile()) throw new Error(`${archivePath} is not a regular file`);
-  const sha256 = sha256File(archivePath);
-  if (sha256 !== source.sha256) {
-    throw new Error(`${archiveFilename} sha256 mismatch: source=${source.sha256} actual=${sha256}`);
-  }
-  if (stat.size !== source.bytes) {
-    throw new Error(`${archiveFilename} byte mismatch: source=${source.bytes} actual=${stat.size}`);
-  }
-
+function publicCatalogEntry(domain, source, registryDigests) {
+  const key = `${domain}/${source.id}@${source.version}`;
+  const published = registryDigests[key];
+  if (!published) throw new Error(`missing OCI digest mapping for ${key}`);
   const entry = {
     class: source.class,
     id: source.id,
@@ -102,7 +90,7 @@ function publicCatalogEntry(source, packageRoot, releaseBaseUrl) {
     sha256: source.sha256,
     bytes: source.bytes,
     license: source.license,
-    origin_url: `${releaseBaseUrl.replace(/\/+$/, "")}/${encodeURIComponent(archiveFilename)}`,
+    origin_url: `oci://${published.immutable_reference}`,
     archive: source.archive,
     minimum_runtime: source.minimum_runtime ?? null,
   };
@@ -124,12 +112,10 @@ function catalogSourceForDomain(domain) {
     case "packs":
       return {
         file: path.join(ROOT, "packs", "catalog-source.json"),
-        packages: path.join(ROOT, "packs", "packages"),
       };
     case "harness":
       return {
         file: path.join(ROOT, "harness", "catalog-source.json"),
-        packages: path.join(ROOT, "harness", "packages"),
       };
     default:
       throw new Error(`unsupported catalog domain: ${domain}`);
@@ -147,7 +133,7 @@ function expectedClassesForDomain(domain) {
   }
 }
 
-function loadCatalogSource(domain, releaseBaseUrl) {
+function loadCatalogSource(domain, registryDigests) {
   const source = catalogSourceForDomain(domain);
   const expectedClasses = expectedClassesForDomain(domain);
   const items = [];
@@ -160,7 +146,7 @@ function loadCatalogSource(domain, releaseBaseUrl) {
     if (!expectedClasses.has(raw.class)) {
       throw new Error(`${source.file} contains ${raw.class}, which is invalid for ${domain}`);
     }
-    items.push(publicCatalogEntry(raw, source.packages, releaseBaseUrl));
+    items.push(publicCatalogEntry(domain, raw, registryDigests));
   }
   items.sort((a, b) =>
     `${a.entry.class}\0${a.entry.id}\0${a.entry.version}`.localeCompare(
@@ -197,9 +183,9 @@ function copyArchives(items, outFile) {
 
 const options = args();
 const domain = options.get("domain");
-const releaseBaseUrl = options.get("release-base-url");
 const outFile = path.resolve(options.get("out"));
-const items = loadCatalogSource(domain, releaseBaseUrl);
+const registryDigests = readJson(path.resolve(options.get("registry-digests")));
+const items = loadCatalogSource(domain, registryDigests);
 if (items.length === 0) throw new Error("no catalog entries found");
 
 const payload = {

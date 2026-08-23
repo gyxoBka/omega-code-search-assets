@@ -1,18 +1,18 @@
 # Omega Code Search Assets
 
-This repository is the source and release surface for Omega assets.
+This repository is the source and registry surface for Omega assets.
 
 The Omega runtime repository owns code, protocols, validators, and product
 control flows. This repository owns independently distributed assets:
 
-- GrammarBundle sources and release archives.
-- Language Pack sources and release archives.
-- Framework Pack sources and release archives.
-- HarnessDefinition sources and release archives.
+- GrammarBundle sources.
+- Language Pack sources.
+- Framework Pack sources.
+- HarnessDefinition sources.
 - Model descriptors.
 
 The production trust boundary is the signed Official Asset Catalog plus exact
-SHA-256 digests. GitHub Releases are only transport.
+SHA-256 digests. GitHub is transport, not trust.
 
 ## Layout
 
@@ -21,18 +21,18 @@ packs/
   catalog-source.json
   json-basic/
   rust-basic/
-  packages/
 framework-packs/
 harness/
   catalog-source.json
   official/
   held-out/
-  packages/
 grammars/
   legacy-manifest.toml
 models/
 tools/
   build-catalog.mjs
+  build-packages.mjs
+  push-ghcr-artifacts.mjs
 ```
 
 `grammars/legacy-manifest.toml` is not a production GrammarBundle catalog. It is
@@ -40,70 +40,74 @@ old metadata copied out of the runtime repo so it can be audited here. A real
 GrammarBundle release item must contain a validated `grammar.wasm`,
 `node-types.json`, `manifest.toml`, `LICENSE`, and `NOTICE`.
 
-## Release Contract
+## Registry Contract
 
-Release automation publishes separate asset-domain catalogs. Do not mix
-unrelated domains in one release.
+Automation publishes asset packages and signed domain catalogs to GitHub
+Container Registry (GHCR) as OCI artifacts. Do not mix unrelated domains in one
+catalog.
 
-Current release domains:
+Current domains:
 
 - `packs`: Language Packs and Framework Packs.
 - `harness`: HarnessDefinition assets.
 - `grammars`: future GrammarBundle assets.
 - `models`: future ModelDescriptor assets.
 
-Each domain release must publish:
-
-- `catalog.json`
-- asset archives referenced by `catalog.json`
-- optional offline snapshot archive for that same domain
-
-The catalog is signed with Ed25519 over the RFC 8785/JCS canonical form of the
-`signed` payload. Omega release builds embed the public key and catalog URL:
+Stable catalog entry points:
 
 ```text
-OMEGA_OFFICIAL_CATALOG_URL
+oci://ghcr.io/gyxobka/omega-code-search-assets/catalog/packs:current
+oci://ghcr.io/gyxobka/omega-code-search-assets/catalog/harness:current
+```
+
+Asset package references use their own domain/name/version:
+
+```text
+oci://ghcr.io/gyxobka/omega-code-search-assets/packs/omega-rust-basic:2.3.0
+oci://ghcr.io/gyxobka/omega-code-search-assets/harness/claude:1.0.0
+```
+
+The catalog is signed with Ed25519 over the RFC 8785/JCS canonical form of the
+`signed` payload. Omega release builds embed the public key and catalog
+references:
+
+```text
+OMEGA_OFFICIAL_PACK_CATALOG_REF
+OMEGA_OFFICIAL_HARNESS_CATALOG_REF
 OMEGA_OFFICIAL_CATALOG_KEY_ID
 OMEGA_OFFICIAL_CATALOG_PUBLIC_KEY_B64
 ```
 
 The private signing key must never be stored in the Omega runtime repository.
 
+Source branches do not store generated zip packages. CI builds package archives
+from source, pushes them to GHCR, records immutable OCI digests, then emits
+signed catalogs whose entries point at `oci://...@sha256:...` immutable package
+references. Omega verifies both the signed catalog and the archive SHA-256
+before install.
+
 ## Local Catalog Build
 
-Unsigned packs catalog:
+Build package archives:
 
 ```powershell
-node tools/build-catalog.mjs `
-  --domain packs `
-  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/packs-v1 `
-  --catalog-version packs-v1 `
-  --out dist/catalog.json
+node tools/build-packages.mjs --out dist/packages --update-catalog-source
 ```
 
-Signed harness catalog:
+Build signed catalogs after OCI push:
 
 ```powershell
 $env:OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM = Get-Content .secrets/catalog-ed25519.pem -Raw
 $env:OMEGA_ASSET_CATALOG_KEY_ID = "omega-assets-2026-08"
 node tools/build-catalog.mjs `
   --domain harness `
-  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/harness-v1 `
-  --catalog-version harness-v1 `
+  --registry-digests dist/oci-digests.json `
+  --catalog-version harness-<commit-sha> `
   --out dist/catalog.json
 ```
 
-Recommended tag naming:
-
-```text
-packs-v1
-harness-v1
-grammars-v1
-models-v1
-```
-
 Asset versions remain independent inside each catalog. For example,
-`omega-rust-basic@2.3.0` can be published in `packs-v1`, while
+`omega-rust-basic@2.3.0` can be published in a current packs catalog, while
 `omega-json-basic@1.0.0` remains unchanged.
 
 ## Cleanup Policy
