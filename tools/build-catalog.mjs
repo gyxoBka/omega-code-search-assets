@@ -9,7 +9,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
   console.error(`Usage:
-node tools/build-catalog.mjs --release-base-url <url> --catalog-version <version> --out <path>
+node tools/build-catalog.mjs --domain <domain> --release-base-url <url> --catalog-version <version> --out <path>
+
+Domains:
+  packs
+  harness-definitions
 
 Environment for signed output:
   OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM  Ed25519 private key in PEM form
@@ -32,7 +36,7 @@ function args() {
     out.set(key.slice(2), process.argv[i + 1]);
     i += 1;
   }
-  for (const required of ["release-base-url", "catalog-version", "out"]) {
+  for (const required of ["domain", "release-base-url", "catalog-version", "out"]) {
     if (!out.has(required)) {
       usage();
       process.exit(2);
@@ -115,27 +119,48 @@ function publicCatalogEntry(source, packageRoot, releaseBaseUrl) {
   return { entry, archivePath, archiveFilename };
 }
 
-function loadCatalogSources(releaseBaseUrl) {
-  const sources = [
-    {
+function catalogSourceForDomain(domain) {
+  switch (domain) {
+    case "packs":
+      return {
       file: path.join(ROOT, "packs", "catalog-source.json"),
       packages: path.join(ROOT, "packs", "packages"),
-    },
-    {
+      };
+    case "harness-definitions":
+      return {
       file: path.join(ROOT, "harness-definitions", "catalog-source.json"),
       packages: path.join(ROOT, "harness-definitions", "packages"),
-    },
-  ];
+      };
+    default:
+      throw new Error(`unsupported catalog domain: ${domain}`);
+  }
+}
+
+function expectedClassesForDomain(domain) {
+  switch (domain) {
+    case "packs":
+      return new Set(["LANGUAGE_PACK", "FRAMEWORK_PACK"]);
+    case "harness-definitions":
+      return new Set(["HARNESS_DEFINITION"]);
+    default:
+      throw new Error(`unsupported catalog domain: ${domain}`);
+  }
+}
+
+function loadCatalogSource(domain, releaseBaseUrl) {
+  const source = catalogSourceForDomain(domain);
+  const expectedClasses = expectedClassesForDomain(domain);
   const items = [];
-  for (const source of sources) {
-    if (!fs.existsSync(source.file)) continue;
-    const catalog = readJson(source.file);
-    if (catalog.schema_version !== 1 || !Array.isArray(catalog.entries)) {
-      throw new Error(`${source.file} is not a supported catalog source`);
+  if (!fs.existsSync(source.file)) throw new Error(`${source.file} does not exist`);
+  const catalog = readJson(source.file);
+  if (catalog.schema_version !== 1 || !Array.isArray(catalog.entries)) {
+    throw new Error(`${source.file} is not a supported catalog source`);
+  }
+  for (const raw of catalog.entries) {
+    if (!expectedClasses.has(raw.class)) {
+      throw new Error(`${source.file} contains ${raw.class}, which is invalid for ${domain}`);
     }
-    for (const raw of catalog.entries) {
-      items.push(publicCatalogEntry(raw, source.packages, releaseBaseUrl));
-    }
+    items.push(publicCatalogEntry(raw, source.packages, releaseBaseUrl));
   }
   items.sort((a, b) =>
     `${a.entry.class}\0${a.entry.id}\0${a.entry.version}`.localeCompare(
@@ -171,15 +196,16 @@ function copyArchives(items, outFile) {
 }
 
 const options = args();
+const domain = options.get("domain");
 const releaseBaseUrl = options.get("release-base-url");
 const outFile = path.resolve(options.get("out"));
-const items = loadCatalogSources(releaseBaseUrl);
+const items = loadCatalogSource(domain, releaseBaseUrl);
 if (items.length === 0) throw new Error("no catalog entries found");
 
 const payload = {
   catalog_schema: 1,
   catalog_version: options.get("catalog-version"),
-  channel: process.env.OMEGA_ASSET_CATALOG_CHANNEL ?? "stable",
+  channel: process.env.OMEGA_ASSET_CATALOG_CHANNEL ?? domain,
   published_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
   minimum_runtime: process.env.OMEGA_ASSET_MINIMUM_RUNTIME ?? ">=0.1.0",
   entries: items.map((item) => item.entry),

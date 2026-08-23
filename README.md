@@ -42,11 +42,21 @@ GrammarBundle release item must contain a validated `grammar.wasm`,
 
 ## Release Contract
 
-Release automation must publish:
+Release automation publishes separate asset-domain catalogs. Do not mix
+unrelated domains in one release.
+
+Current release domains:
+
+- `packs`: Language Packs and Framework Packs.
+- `harness-definitions`: HarnessDefinition assets.
+- `grammars`: future GrammarBundle assets.
+- `models`: future ModelDescriptor assets.
+
+Each domain release must publish:
 
 - `catalog.json`
 - asset archives referenced by `catalog.json`
-- optional offline snapshot archive
+- optional offline snapshot archive for that same domain
 
 The catalog is signed with Ed25519 over the RFC 8785/JCS canonical form of the
 `signed` payload. Omega release builds embed the public key and catalog URL:
@@ -61,25 +71,40 @@ The private signing key must never be stored in the Omega runtime repository.
 
 ## Local Catalog Build
 
-Unsigned catalog:
+Unsigned packs catalog:
 
 ```powershell
 node tools/build-catalog.mjs `
-  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/assets-v1 `
-  --catalog-version assets-v1 `
+  --domain packs `
+  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/packs-v1 `
+  --catalog-version packs-v1 `
   --out dist/catalog.json
 ```
 
-Signed catalog:
+Signed harness catalog:
 
 ```powershell
 $env:OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM = Get-Content .secrets/catalog-ed25519.pem -Raw
 $env:OMEGA_ASSET_CATALOG_KEY_ID = "omega-assets-2026-08"
 node tools/build-catalog.mjs `
-  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/assets-v1 `
-  --catalog-version assets-v1 `
+  --domain harness-definitions `
+  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/harness-definitions-v1 `
+  --catalog-version harness-definitions-v1 `
   --out dist/catalog.json
 ```
+
+Recommended tag naming:
+
+```text
+packs-v1
+harness-definitions-v1
+grammars-v1
+models-v1
+```
+
+Asset versions remain independent inside each catalog. For example,
+`omega-rust-basic@2.3.0` can be published in `packs-v1`, while
+`omega-json-basic@1.0.0` remains unchanged.
 
 ## Cleanup Policy
 
