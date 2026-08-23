@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
-  console.error("Usage: node tools/build-packages.mjs --out <dir> [--domain <packs|harness>] [--update-catalog-source]");
+  console.error("Usage: node tools/build-packages.mjs --out <dir> [--domain <packs|harness>] [--assets <domain/id@version,...>] [--update-catalog-source]");
 }
 
 function args() {
@@ -36,8 +36,19 @@ function args() {
   return {
     out: path.resolve(out.get("out")),
     domain: out.get("domain") ?? null,
+    assets: parseAssetSelection(out.get("assets") ?? null),
     flags,
   };
+}
+
+function parseAssetSelection(value) {
+  if (value === null) return null;
+  if (value.trim() === "") return new Set();
+  return new Set(value.split(",").map((item) => item.trim()).filter(Boolean));
+}
+
+function assetKey(domain, entry) {
+  return `${domain}/${entry.id}@${entry.version}`;
 }
 
 function readJson(file) {
@@ -115,13 +126,16 @@ function packageHarness(entry, outDir) {
   return archive;
 }
 
-function buildDomain(domain, catalogFile, packageEntry, outDir, updateSource) {
+function buildDomain(domain, catalogFile, packageEntry, outDir, updateSource, selectedAssets, consumedAssets) {
   const catalog = readJson(catalogFile);
   for (const entry of catalog.entries) {
+    const key = assetKey(domain, entry);
+    if (selectedAssets !== null && !selectedAssets.has(key)) continue;
+    consumedAssets.add(key);
     const archive = packageEntry(entry, outDir);
     entry.sha256 = sha256File(archive);
     entry.bytes = fs.statSync(archive).size;
-    console.log(`${domain}/${entry.id}@${entry.version} ${entry.sha256} ${entry.bytes}`);
+    console.log(`${key} ${entry.sha256} ${entry.bytes}`);
   }
   if (updateSource) writeJson(catalogFile, catalog);
 }
@@ -129,6 +143,7 @@ function buildDomain(domain, catalogFile, packageEntry, outDir, updateSource) {
 const options = args();
 fs.mkdirSync(options.out, { recursive: true });
 const requestedDomain = options.domain ?? null;
+const consumedAssets = new Set();
 if (requestedDomain === null || requestedDomain === "packs") {
   buildDomain(
     "packs",
@@ -136,6 +151,8 @@ if (requestedDomain === null || requestedDomain === "packs") {
     packagePack,
     options.out,
     options.flags.has("update-catalog-source"),
+    options.assets,
+    consumedAssets,
   );
 }
 if (requestedDomain === null || requestedDomain === "harness") {
@@ -145,8 +162,14 @@ if (requestedDomain === null || requestedDomain === "harness") {
     packageHarness,
     options.out,
     options.flags.has("update-catalog-source"),
+    options.assets,
+    consumedAssets,
   );
 }
 if (requestedDomain !== null && !["packs", "harness"].includes(requestedDomain)) {
   throw new Error(`unsupported domain: ${requestedDomain}`);
+}
+if (options.assets !== null) {
+  const missing = [...options.assets].filter((asset) => !consumedAssets.has(asset));
+  if (missing.length > 0) throw new Error(`selected assets were not found: ${missing.join(", ")}`);
 }

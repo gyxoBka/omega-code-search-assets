@@ -43,8 +43,9 @@ GrammarBundle release item must contain a validated `grammar.wasm`,
 ## Registry Contract
 
 Automation publishes asset packages and signed domain catalogs to GitHub
-Container Registry (GHCR) as OCI artifacts. Do not mix unrelated domains in one
-catalog.
+Container Registry (GHCR) as OCI artifacts. GHCR is the registry surface: every
+asset has its own package name and version, while catalogs are searchable indexes
+over those independently versioned assets.
 
 Current domains:
 
@@ -86,12 +87,21 @@ signed catalogs whose entries point at `oci://...@sha256:...` immutable package
 references. Omega verifies both the signed catalog and the archive SHA-256
 before install.
 
-CI publishes only changed domains:
+CI publishes at asset level:
 
-- changes under `packs/` publish `packs` assets and the packs catalog;
-- changes under `harness/` publish `harness` assets and the harness catalog;
-- changes under `tools/` or workflow files publish all currently supported
-  domains because packaging semantics may have changed.
+- changes under a single pack source publish only that `packs/<name>:<version>`
+  artifact;
+- changes under a single harness definition publish only that
+  `harness/<name>:<version>` artifact;
+- catalog-source changes publish only entries whose catalog source changed, and
+  still rebuild the domain catalog so removed entries disappear from the index;
+- changes under `tools/` or workflow files do not publish existing asset
+  versions by themselves. Packaging semantic changes must be paired with asset
+  version bumps or an explicit manual publish.
+
+Catalog rebuilds merge with the current published catalog. Entries for changed
+assets are replaced with the new immutable OCI digest; unchanged assets keep
+their previous catalog entries and are not pushed again.
 
 ## Local Catalog Build
 

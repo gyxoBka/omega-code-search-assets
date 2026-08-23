@@ -20,6 +20,7 @@ Environment for signed output:
   OMEGA_ASSET_CATALOG_KEY_ID           public key id embedded in Omega builds
 
 Optional:
+  --previous-catalog <file>                 current published catalog to reuse unchanged entries
   OMEGA_ASSET_CATALOG_CHANNEL          default: stable
   OMEGA_ASSET_MINIMUM_RUNTIME          default: >=0.1.0
 `);
@@ -79,10 +80,18 @@ function jcs(value) {
   }
 }
 
-function publicCatalogEntry(domain, source, registryDigests) {
+function entryKey(entry) {
+  return `${entry.class}/${entry.id}@${entry.version}`;
+}
+
+function publicCatalogEntry(domain, source, registryDigests, previousEntries) {
   const key = `${domain}/${source.id}@${source.version}`;
   const published = registryDigests[key];
-  if (!published) throw new Error(`missing OCI digest mapping for ${key}`);
+  if (!published) {
+    const previous = previousEntries.get(`${source.class}/${source.id}@${source.version}`);
+    if (previous) return { entry: previous };
+    throw new Error(`missing OCI digest mapping for ${key}; no previous catalog entry is available`);
+  }
   const entry = {
     class: source.class,
     id: source.id,
@@ -105,6 +114,18 @@ function publicCatalogEntry(domain, source, registryDigests) {
     if (source[key] !== undefined) entry[key] = source[key];
   }
   return { entry };
+}
+
+function previousEntriesFromCatalog(file) {
+  const entries = new Map();
+  if (file === null) return entries;
+  const catalog = readJson(file);
+  const catalogEntries = catalog.signed?.entries;
+  if (!Array.isArray(catalogEntries)) {
+    throw new Error(`${file} is not a signed Omega catalog`);
+  }
+  for (const entry of catalogEntries) entries.set(entryKey(entry), entry);
+  return entries;
 }
 
 function catalogSourceForDomain(domain) {
@@ -133,7 +154,7 @@ function expectedClassesForDomain(domain) {
   }
 }
 
-function loadCatalogSource(domain, registryDigests) {
+function loadCatalogSource(domain, registryDigests, previousEntries) {
   const source = catalogSourceForDomain(domain);
   const expectedClasses = expectedClassesForDomain(domain);
   const items = [];
@@ -146,7 +167,7 @@ function loadCatalogSource(domain, registryDigests) {
     if (!expectedClasses.has(raw.class)) {
       throw new Error(`${source.file} contains ${raw.class}, which is invalid for ${domain}`);
     }
-    items.push(publicCatalogEntry(domain, raw, registryDigests));
+    items.push(publicCatalogEntry(domain, raw, registryDigests, previousEntries));
   }
   items.sort((a, b) =>
     `${a.entry.class}\0${a.entry.id}\0${a.entry.version}`.localeCompare(
@@ -177,7 +198,9 @@ const options = args();
 const domain = options.get("domain");
 const outFile = path.resolve(options.get("out"));
 const registryDigests = readJson(path.resolve(options.get("registry-digests")));
-const items = loadCatalogSource(domain, registryDigests);
+const previousCatalog = options.has("previous-catalog") ? path.resolve(options.get("previous-catalog")) : null;
+const previousEntries = previousEntriesFromCatalog(previousCatalog);
+const items = loadCatalogSource(domain, registryDigests, previousEntries);
 if (items.length === 0) throw new Error("no catalog entries found");
 
 const payload = {

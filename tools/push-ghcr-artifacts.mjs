@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
-  console.error("Usage: node tools/push-ghcr-artifacts.mjs --packages <dir> --out <file> [--domain <packs|harness>]");
+  console.error("Usage: node tools/push-ghcr-artifacts.mjs --packages <dir> --out <file> [--domain <packs|harness>] [--assets <domain/id@version,...>]");
 }
 
 function args() {
@@ -32,7 +32,18 @@ function args() {
     packages: path.resolve(out.get("packages")),
     out: path.resolve(out.get("out")),
     domain: out.get("domain") ?? null,
+    assets: parseAssetSelection(out.get("assets") ?? null),
   };
+}
+
+function parseAssetSelection(value) {
+  if (value === null) return null;
+  if (value.trim() === "") return new Set();
+  return new Set(value.split(",").map((item) => item.trim()).filter(Boolean));
+}
+
+function assetKey(entry) {
+  return `${entry.domain}/${entry.id}@${entry.version}`;
 }
 
 function readJson(file) {
@@ -65,7 +76,7 @@ function push(reference, packageRoot, archive) {
   return match[1];
 }
 
-function entries(domainFilter) {
+function entries(domainFilter, selectedAssets) {
   if (domainFilter !== null && !["packs", "harness"].includes(domainFilter)) {
     throw new Error(`unsupported domain: ${domainFilter}`);
   }
@@ -78,15 +89,22 @@ function entries(domainFilter) {
       id: entry.id,
       version: entry.version,
       archive: entry.archive_filename,
-    })));
+    })))
+    .filter((entry) => selectedAssets === null || selectedAssets.has(assetKey(entry)));
 }
 
 const options = args();
 const mapping = {};
-for (const entry of entries(options.domain)) {
+const selectedEntries = entries(options.domain, options.assets);
+if (options.assets !== null) {
+  const found = new Set(selectedEntries.map(assetKey));
+  const missing = [...options.assets].filter((asset) => !found.has(asset));
+  if (missing.length > 0) throw new Error(`selected assets were not found: ${missing.join(", ")}`);
+}
+for (const entry of selectedEntries) {
   const reference = `ghcr.io/gyxobka/omega-code-search-assets/${entry.domain}/${entry.id}:${entry.version}`;
   const digest = push(reference, options.packages, entry.archive);
-  mapping[`${entry.domain}/${entry.id}@${entry.version}`] = {
+  mapping[assetKey(entry)] = {
     reference,
     digest,
     immutable_reference: `${reference.split(":")[0]}@${digest}`,
