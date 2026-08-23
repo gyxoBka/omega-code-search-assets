@@ -13,7 +13,7 @@ node tools/build-catalog.mjs --domain <domain> --release-base-url <url> --catalo
 
 Domains:
   packs
-  harness-definitions
+  harness
 
 Environment for signed output:
   OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM  Ed25519 private key in PEM form
@@ -123,13 +123,13 @@ function catalogSourceForDomain(domain) {
   switch (domain) {
     case "packs":
       return {
-      file: path.join(ROOT, "packs", "catalog-source.json"),
-      packages: path.join(ROOT, "packs", "packages"),
+        file: path.join(ROOT, "packs", "catalog-source.json"),
+        packages: path.join(ROOT, "packs", "packages"),
       };
-    case "harness-definitions":
+    case "harness":
       return {
-      file: path.join(ROOT, "harness-definitions", "catalog-source.json"),
-      packages: path.join(ROOT, "harness-definitions", "packages"),
+        file: path.join(ROOT, "harness", "catalog-source.json"),
+        packages: path.join(ROOT, "harness", "packages"),
       };
     default:
       throw new Error(`unsupported catalog domain: ${domain}`);
@@ -140,7 +140,7 @@ function expectedClassesForDomain(domain) {
   switch (domain) {
     case "packs":
       return new Set(["LANGUAGE_PACK", "FRAMEWORK_PACK"]);
-    case "harness-definitions":
+    case "harness":
       return new Set(["HARNESS_DEFINITION"]);
     default:
       throw new Error(`unsupported catalog domain: ${domain}`);

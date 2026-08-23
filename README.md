@@ -23,7 +23,7 @@ packs/
   rust-basic/
   packages/
 framework-packs/
-harness-definitions/
+harness/
   catalog-source.json
   official/
   held-out/
@@ -48,7 +48,7 @@ unrelated domains in one release.
 Current release domains:
 
 - `packs`: Language Packs and Framework Packs.
-- `harness-definitions`: HarnessDefinition assets.
+- `harness`: HarnessDefinition assets.
 - `grammars`: future GrammarBundle assets.
 - `models`: future ModelDescriptor assets.
 
@@ -87,9 +87,9 @@ Signed harness catalog:
 $env:OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM = Get-Content .secrets/catalog-ed25519.pem -Raw
 $env:OMEGA_ASSET_CATALOG_KEY_ID = "omega-assets-2026-08"
 node tools/build-catalog.mjs `
-  --domain harness-definitions `
-  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/harness-definitions-v1 `
-  --catalog-version harness-definitions-v1 `
+  --domain harness `
+  --release-base-url https://github.com/<org>/omega-code-search-assets/releases/download/harness-v1 `
+  --catalog-version harness-v1 `
   --out dist/catalog.json
 ```
 
@@ -97,7 +97,7 @@ Recommended tag naming:
 
 ```text
 packs-v1
-harness-definitions-v1
+harness-v1
 grammars-v1
 models-v1
 ```
