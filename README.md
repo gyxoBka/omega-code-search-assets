@@ -9,7 +9,6 @@ control flows. This repository owns independently distributed assets:
 - Language Pack sources.
 - Framework Pack sources.
 - HarnessDefinition sources.
-- Model descriptors.
 
 The production trust boundary is the signed Official Asset Catalog plus exact
 SHA-256 digests. GitHub is transport, not trust.
@@ -28,7 +27,6 @@ harness/
   held-out/
 grammars/
   legacy-manifest.toml
-models/
 tools/
   build-catalog.mjs
   build-packages.mjs
@@ -52,7 +50,10 @@ Current domains:
 - `packs`: Language Packs and Framework Packs.
 - `harness`: HarnessDefinition assets.
 - `grammars`: future GrammarBundle assets.
-- `models`: future ModelDescriptor assets.
+
+Models are deliberately not a GHCR asset domain. Omega model install accepts an
+explicit local directory or Hugging Face source selected by the user, then the
+CLI stages and validates those files before daemon import.
 
 Stable catalog entry points:
 
@@ -75,6 +76,7 @@ references:
 ```text
 OMEGA_OFFICIAL_PACK_CATALOG_REF
 OMEGA_OFFICIAL_HARNESS_CATALOG_REF
+OMEGA_OFFICIAL_GRAMMAR_CATALOG_REF
 OMEGA_OFFICIAL_CATALOG_KEY_ID
 OMEGA_OFFICIAL_CATALOG_PUBLIC_KEY_B64
 ```
