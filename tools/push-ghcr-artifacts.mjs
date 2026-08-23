@@ -35,19 +35,25 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
-function push(reference, file) {
+function push(reference, packageRoot, archive) {
+  const file = path.join(packageRoot, archive);
+  const relative = path.relative(packageRoot, file).replaceAll("\\", "/");
+  if (relative.startsWith("../") || path.isAbsolute(relative)) {
+    throw new Error(`archive escapes package root: ${archive}`);
+  }
+  if (!fs.statSync(file).isFile()) throw new Error(`archive is not a file: ${file}`);
   const output = execFileSync(
     "oras",
     [
       "push",
       reference,
-      `${file}:application/vnd.omega.asset.archive.zip`,
+      `${relative}:application/vnd.omega.asset.archive.zip`,
       "--artifact-type",
       "application/vnd.omega.asset.v1",
       "--annotation",
       "org.opencontainers.image.source=https://github.com/gyxoBka/omega-code-search-assets",
     ],
-    { encoding: "utf8" },
+    { cwd: packageRoot, encoding: "utf8" },
   );
   process.stdout.write(output);
   const match = output.match(/Digest:\s*(sha256:[a-f0-9]{64})/i);
@@ -73,8 +79,7 @@ const options = args();
 const mapping = {};
 for (const entry of entries()) {
   const reference = `ghcr.io/gyxobka/omega-code-search-assets/${entry.domain}/${entry.id}:${entry.version}`;
-  const file = path.join(options.packages, entry.archive);
-  const digest = push(reference, file);
+  const digest = push(reference, options.packages, entry.archive);
   mapping[`${entry.domain}/${entry.id}@${entry.version}`] = {
     reference,
     digest,
