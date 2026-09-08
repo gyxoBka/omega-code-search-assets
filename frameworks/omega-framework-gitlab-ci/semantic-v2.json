@@ -1,0 +1,3323 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-gitlab-ci",
+  "selector": "framework:gitlab-ci",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "yaml"
+    ],
+    "required_packs": [
+      "omega-yaml"
+    ],
+    "required_capabilities": [
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "structured_documents",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "CacheConfig",
+      "DefaultConfig",
+      "Dependency",
+      "ImageConfig",
+      "Job",
+      "JobSetting",
+      "Pipeline",
+      "PolicyClause",
+      "RunnerTag",
+      "ServiceDependency",
+      "Stage",
+      "Step",
+      "Variable",
+      "VariableGroup",
+      "WorkflowPolicy"
+    ],
+    "relations": [
+      "configured_by",
+      "contains",
+      "contains_step",
+      "needs",
+      "uses"
+    ]
+  },
+  "rules": [
+    {
+      "id": "gitlab.pipeline",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "value.document"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{key}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "key"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.stage",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "stages"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Stage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:stage:{path}:{item_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:stage:{path}:{item_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.step.field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_in",
+          "field": "key",
+          "values": [
+            "script",
+            "before_script",
+            "after_script",
+            "trigger"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Step",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:step:{path}:{parent_key}:{key}:{value}"
+          },
+          "attributes": {
+            "kind": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains_step",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:step:{path}:{parent_key}:{key}:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.step.sequence",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_in",
+          "field": "sequence_key",
+          "values": [
+            "script",
+            "before_script",
+            "after_script"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Step",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:step:{path}:{owner_key}:{sequence_key}:{item_value}"
+          },
+          "attributes": {
+            "kind": {
+              "kind": "field_ref",
+              "field": "sequence_key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains_step",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:step:{path}:{owner_key}:{sequence_key}:{item_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.needs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "needs"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "needs",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{item_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.include.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "include"
+        },
+        {
+          "kind": "field_present",
+          "value": "value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:dependency:{value}"
+          },
+          "attributes": {
+            "source": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:dependency:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.include.sequence",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "include"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:dependency:{item_value}"
+          },
+          "attributes": {
+            "source": {
+              "kind": "field_ref",
+              "field": "item_value"
+            },
+            "include_form": "sequence"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:dependency:{item_value}"
+          },
+          "attributes": {
+            "include_form": "sequence"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.include.mapping-sequence-field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_mapping_sequence_field"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "include"
+        },
+        {
+          "kind": "field_in",
+          "field": "item_key",
+          "values": [
+            "local",
+            "remote",
+            "template",
+            "component",
+            "project",
+            "file"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "item_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:dependency:{item_key}:{item_value}"
+          },
+          "attributes": {
+            "include_kind": {
+              "kind": "field_ref",
+              "field": "item_key"
+            },
+            "source": {
+              "kind": "field_ref",
+              "field": "item_value"
+            },
+            "include_form": "mapping-sequence"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:dependency:{item_key}:{item_value}"
+          },
+          "attributes": {
+            "include_kind": {
+              "kind": "field_ref",
+              "field": "item_key"
+            },
+            "include_form": "mapping-sequence"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Each authored include mapping field is represented independently; cross-field runtime resolution/ref availability is not claimed."
+    },
+    {
+      "id": "gitlab.top.image",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "image"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ImageConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:imageconfig:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "image",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:imageconfig:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.top.workflow",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "workflow"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WorkflowPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:workflowpolicy:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "workflow",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:workflowpolicy:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.top.default",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "default"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DefaultConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:defaultconfig:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "default",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:defaultconfig:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.top.cache",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "cache"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CacheConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:cacheconfig:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "cache",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:cacheconfig:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.top.variables",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "variables"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "VariableGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:variablegroup:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "variables",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:variablegroup:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.variable.top",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "parent_key",
+          "value": "variables"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Variable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:var:{path}:{key}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:var:{path}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.stage",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "stage"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:stage:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "stage",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:stage:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.image",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "image"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:image:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "image",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:image:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.environment",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "environment"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:environment:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "environment",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:environment:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.when",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "when"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:when:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "when",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:when:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.allow_failure",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "allow_failure"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:allow_failure:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "allow_failure",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:allow_failure:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.interruptible",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "interruptible"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:interruptible:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "interruptible",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:interruptible:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.resource_group",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "resource_group"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:resource_group:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "resource_group",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:resource_group:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.extends",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "extends"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:extends:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "extends",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:extends:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.trigger",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "trigger"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:trigger:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "trigger",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:trigger:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.config.retry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "retry"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:retry:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "parent_key"
+            },
+            "key": "retry",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{parent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{parent_key}:retry:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "variables"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Variable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-var:{path}:{a1}:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-var:{path}:{a1}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.sequence.rules",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "rules"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PolicyClause",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:policyclause:{path}:{owner_key}:rules:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "kind": "rules",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.sequence.only",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "only"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PolicyClause",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:policyclause:{path}:{owner_key}:only:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "kind": "only",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.sequence.except",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "except"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PolicyClause",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:policyclause:{path}:{owner_key}:except:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "kind": "except",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.sequence.services",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "services"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceDependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:servicedependency:{path}:{owner_key}:services:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "kind": "services",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.sequence.dependencies",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "dependencies"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:dependency:{path}:{owner_key}:dependencies:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "kind": "dependencies",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.sequence.tags",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "tags"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RunnerTag",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:runnertag:{path}:{owner_key}:tags:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "kind": "tags",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.artifacts.name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "artifacts"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:name:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "artifacts",
+            "key": "name",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:name:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.artifacts.expire-in",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "artifacts"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "expire_in"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:expire_in:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "artifacts",
+            "key": "expire_in",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:expire_in:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.artifacts.expose-as",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "artifacts"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "expose_as"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:expose_as:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "artifacts",
+            "key": "expose_as",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:expose_as:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.artifacts.when",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "artifacts"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "when"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:when:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "artifacts",
+            "key": "when",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:artifacts:when:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.cache.key",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "cache"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "key"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:cache:key:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "cache",
+            "key": "key",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:cache:key:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.cache.policy",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "cache"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "policy"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:cache:policy:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "cache",
+            "key": "policy",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:cache:policy:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.cache.unprotect",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "cache"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "unprotect"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:cache:unprotect:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "cache",
+            "key": "unprotect",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:cache:unprotect:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.environment.name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "environment"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:name:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "environment",
+            "key": "name",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:name:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.environment.url",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "environment"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "url"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:url:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "environment",
+            "key": "url",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:url:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.environment.action",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "environment"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "action"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:action:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "environment",
+            "key": "action",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:action:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.environment.deployment-tier",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "environment"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "deployment_tier"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:deployment_tier:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "environment",
+            "key": "deployment_tier",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:environment:deployment_tier:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.release.tag-name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "release"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "tag_name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:release:tag_name:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "release",
+            "key": "tag_name",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:release:tag_name:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.release.name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "release"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:release:name:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "release",
+            "key": "name",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:release:name:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.nested.release.description",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "release"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "description"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "grandparent_key",
+          "values": [
+            "default",
+            "include",
+            "stages",
+            "variables",
+            "workflow",
+            "image",
+            "services",
+            "cache",
+            "before_script",
+            "after_script",
+            "spec"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "grandparent_key",
+          "value": "."
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:release:description:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "grandparent_key"
+            },
+            "group": "release",
+            "key": "description",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{grandparent_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job-setting:{path}:{grandparent_key}:release:description:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.sequence.artifacts.paths",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "paths"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "artifacts"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:artifacts-paths:{path}:{source.start}"
+          },
+          "attributes": {
+            "group": "artifacts",
+            "key": "paths",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "gitlab.job.sequence.cache.paths",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_scalar_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "paths"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_key",
+          "value": "cache"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".gitlab-ci.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:cache-paths:{path}:{source.start}"
+          },
+          "attributes": {
+            "group": "cache",
+            "key": "paths",
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "rules/only/except/variables/services/image/environment/artifacts/cache/release and other common authored CI policy/config fields are materialized; GitLab expression evaluation is not executed",
+      "hidden dot-prefixed job templates remain authored config/template evidence rather than runnable Job entities",
+      "remote/project/component include content, generated child pipelines, matrix/parallel expansion and runner state require external/runtime evidence"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "checkov",
+      "repository": "https://github.com/bridgecrewio/checkov",
+      "path": "checkov/gitlab_ci/**",
+      "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "gitlab-ci.candidate_signature.1.specifier",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "gitlab-ci"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "gitlab-ci"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "gitlab-ci",
+          "signature": "gitlab-ci",
+          "source": "candidate_signature"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    },
+    {
+      "id": "gitlab-ci.candidate_signature.1.name",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "gitlab-ci"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "gitlab-ci"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "gitlab-ci",
+          "signature": "gitlab-ci",
+          "source": "candidate_reference"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

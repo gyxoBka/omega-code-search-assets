@@ -1,0 +1,1500 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-sveltekit",
+  "selector": "framework:sveltekit",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "svelte",
+      "typescript",
+      "javascript"
+    ],
+    "required_packs": [
+      "omega-svelte",
+      "omega-typescript",
+      "omega-javascript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references",
+      "scopes",
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "file_paths",
+    "directory_conventions",
+    "imports_bindings",
+    "existing_language_ir",
+    "data.ecmascript_exported_object_field_context"
+  ],
+  "emits": {
+    "entities": [
+      "Action",
+      "Actions",
+      "ApiUse",
+      "Dependency",
+      "Endpoint",
+      "EndpointHandler",
+      "ErrorPage",
+      "HookHandler",
+      "HookModule",
+      "Layout",
+      "LayoutLoader",
+      "LayoutServer",
+      "Loader",
+      "LoaderModule",
+      "Page",
+      "PageServer",
+      "ParamMatcher",
+      "ParamMatcherFunction",
+      "Route"
+    ],
+    "relations": [
+      "contains",
+      "depends_on",
+      "handles",
+      "layout_applies_to",
+      "uses_api"
+    ]
+  },
+  "rules": [
+    {
+      "id": "sveltekit.page.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "value": "**/+page.svelte",
+          "field": "file.path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:page:{path.route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path.value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:route:{path.route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path.route"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:page:{path.route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.endpoint.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "value": "**/+server.*",
+          "field": "file.path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Endpoint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:endpoint:{path.route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path.value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:route:{path.route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path.route"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.layout.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "value": "**/+layout.svelte",
+          "field": "file.path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:layout:{path.dir}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path.value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_applies_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:layout:{path.dir}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "path.dir"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "candidate"
+    },
+    {
+      "id": "sveltekit.generic-api-call.sveltejs-kit",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@sveltejs/kit"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@sveltejs/kit",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@sveltejs/kit",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "sveltekit.generic-dependency.sveltejs-kit",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@sveltejs/kit"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:dependency:@sveltejs/kit"
+          },
+          "attributes": {
+            "package": "@sveltejs/kit",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:dependency:@sveltejs/kit"
+          },
+          "attributes": {
+            "package": "@sveltejs/kit",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "sveltekit.file.page-server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PageServer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:page-server:{path.route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "page_server",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.file.page-load",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LoaderModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:page-load:{path.route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "page_load",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.file.layout-server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout.server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LayoutServer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:layout-server:{path.dir}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "layout_server",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.file.layout-load",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LayoutLoader",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:layout-load:{path.dir}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "layout_load",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.file.error",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+error.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ErrorPage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:error:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "error",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.file.hooks",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/hooks.{server,client}.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:hooks:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "hooks",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.file.param-matcher",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/params/*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ParamMatcher",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:param-matcher:{path.stem}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "param_matcher",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.endpointhandler.function.xx-+server.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EndpointHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:endpointhandler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.loader.function.xx-+pagex.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "load"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loader",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:loader:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.loader.function.xx-+layoutx.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "load"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loader",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:loader:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.actions.function.xx-+pagex.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "actions"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Actions",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:actions:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.actions.function.xx-+layoutx.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "actions"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Actions",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:actions:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.parammatcherfunction.function.xx-params-x.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "match"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/params/*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ParamMatcherFunction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:parammatcherfunction:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.hookhandler.function.xx-hooksx.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "handle",
+            "handleFetch",
+            "handleError",
+            "init",
+            "reroute"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/hooks*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:hookhandler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.endpointhandler.variable.xx-+server.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EndpointHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:endpointhandler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.loader.variable.xx-+pagex.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "load"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loader",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:loader:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.loader.variable.xx-+layoutx.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "load"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loader",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:loader:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.actions.variable.xx-+pagex.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "actions"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Actions",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:actions:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.actions.variable.xx-+layoutx.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "actions"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Actions",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:actions:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.parammatcherfunction.variable.xx-params-x.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "match"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/params/*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ParamMatcherFunction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:parammatcherfunction:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.export.hookhandler.variable.xx-hooksx.{js,ts}",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "handle",
+            "handleFetch",
+            "handleError",
+            "init",
+            "reroute"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/hooks*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:hookhandler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.endpoint.handles.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:endpointhandler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.endpoint.handles.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:endpointhandler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "sveltekit.action.member",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_exported_object_field_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_export",
+          "value": "actions"
+        },
+        {
+          "kind": "field_present",
+          "field": "field_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.server.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Action",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "sveltekit:action:{path}:{field_key}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:action:{path}:{field_key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "authored +page/+layout/+server/hooks/params exports and direct `export const actions = { ... }` members are materialized; computed/spread/indirect action objects require bounded value-flow evidence",
+      "route matcher execution result, adapter behavior and runtime handle/action invocation remain runtime semantics",
+      "layout/reset and route-group URL normalization beyond authored file ancestry require the runtime/framework path normalizer and are not guessed by Framework rules"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/sveltekit/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-sveltekit-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "sveltekit.exact_signature.1.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "sveltekit.exact_signature.2.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "sveltekit.exact_signature.3.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "sveltekit.exact_signature.4.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  },
+  "runtime_status": "terminal-static-source-contract"
+}

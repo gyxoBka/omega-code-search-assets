@@ -1,0 +1,2516 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-electron",
+  "selector": "framework:electron",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence",
+    "import.ecmascript_named_binding_context",
+    "call.ecmascript_constructor_identifier_context"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Command",
+      "ContextBridge",
+      "Dependency",
+      "IpcHandler",
+      "IpcUse",
+      "LifecycleHook",
+      "PlatformComponent",
+      "Resource",
+      "WindowResource"
+    ],
+    "relations": [
+      "configured_by",
+      "configures",
+      "depends_on",
+      "handles",
+      "uses_api",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "electron.browser-window.imported-constructor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_identifier_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "constructor_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "constructor_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "BrowserWindow"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:browser-window:{path}:{constructor_name}:{source.start}"
+          },
+          "attributes": {
+            "constructor": {
+              "kind": "field_ref",
+              "field": "constructor_name"
+            },
+            "source_role": "electron-import-proven-browser-window-construction",
+            "runtime_window_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Only direct new localIdentifier(...) exact-joined to a same-file named BrowserWindow import from literal module electron."
+    },
+    {
+      "id": "electron.ipc-main-handle.imported",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handle"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "receiver",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "ipcMain"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Command",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-command:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "source_role": "electron-import-proven-ipc-main-handle",
+            "runtime_dispatch_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored ipcMain.handle literal-channel registration only; handler call execution, preload/renderer bridge and runtime dispatch are not claimed."
+    },
+    {
+      "id": "electron.message-channel-main.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_identifier_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "constructor_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "constructor_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "MessageChannelMain"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:resource:message-channel-main:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "MessageChannelMain",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Direct new MessageChannelMain(...) exact-joined to a same-file named import from electron; runtime message ports/traffic are not inferred."
+    },
+    {
+      "id": "electron.generic-api-call.electron",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "electron",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "electron",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "electron.generic-dependency.electron",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:dependency:electron"
+          },
+          "attributes": {
+            "package": "electron",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:dependency:electron"
+          },
+          "attributes": {
+            "package": "electron",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "electron.ipc-main.handle",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "handle"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handle:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "handle"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handle:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-main.handleonce",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "handleOnce"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "handleOnce"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-main.on",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "on"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:on:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "on"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:on:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-main.once",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "once"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:once:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "once"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:once:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-renderer.invoke",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "invoke"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-use:invoke:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "invoke"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-use:invoke:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-renderer.send",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "send"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-use:send:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "send"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-use:send:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-renderer.sendsync",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "sendSync"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-use:sendSync:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "sendSync"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-use:sendSync:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.ipc-renderer.postmessage",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "postMessage"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-use:postMessage:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": "postMessage"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-use:postMessage:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.window.load-file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "loadFile",
+            "loadURL"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WindowResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:window-resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "resource": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "kind": {
+              "kind": "field_ref",
+              "field": "call.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:window-resource:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.context-bridge",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "exposeInMainWorld"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContextBridge",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:bridge:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:bridge:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.app-lifecycle",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "electron",
+          "member_in": [
+            "whenReady",
+            "on",
+            "once"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LifecycleHook",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:lifecycle:{path}:{source.start}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "call.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "electron:lifecycle:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "electron.browser-window.commonjs-named-constructor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_identifier_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "constructor_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_commonjs_named_binding_context",
+          "current_field": "constructor_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "BrowserWindow"
+            },
+            {
+              "kind": "field_equals",
+              "field": "operator",
+              "value": "require"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:browser-window:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "BrowserWindow",
+            "source_role": "electron-commonjs-named-browser-window-construction",
+            "runtime_window_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Direct destructured CommonJS BrowserWindow binding from require(\"electron\") joined to new localIdentifier(...)."
+    },
+    {
+      "id": "electron.browser-window.commonjs-namespace-constructor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_member_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "BrowserWindow"
+        },
+        {
+          "kind": "field_present",
+          "field": "object"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_commonjs_binding_context",
+          "current_field": "object",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "operator",
+              "value": "require"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:browser-window:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "BrowserWindow",
+            "source_role": "electron.browser-window.commonjs-namespace-constructor",
+            "runtime_window_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored new <proven Electron namespace>.BrowserWindow(...) constructor site; runtime window lifecycle/state is not claimed."
+    },
+    {
+      "id": "electron.browser-window.esm-namespace-constructor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_member_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "BrowserWindow"
+        },
+        {
+          "kind": "field_present",
+          "field": "object"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_namespace_binding_context",
+          "current_field": "object",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:browser-window:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "BrowserWindow",
+            "source_role": "electron.browser-window.esm-namespace-constructor",
+            "runtime_window_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored new <proven Electron namespace>.BrowserWindow(...) constructor site; runtime window lifecycle/state is not claimed."
+    },
+    {
+      "id": "electron.browser-window.esm-default-constructor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_member_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "BrowserWindow"
+        },
+        {
+          "kind": "field_present",
+          "field": "object"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_default_binding_context",
+          "current_field": "object",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:browser-window:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "BrowserWindow",
+            "source_role": "electron.browser-window.esm-default-constructor",
+            "runtime_window_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored new <proven Electron namespace>.BrowserWindow(...) constructor site; runtime window lifecycle/state is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.handle.commonjs-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handle"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_commonjs_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "operator",
+              "value": "require"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handle:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "handle",
+            "source_role": "electron-commonjs-ipcMain-handle",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handle:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored commonjs Electron namespace ipcMain.handle(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.handle.namespace-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handle"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_namespace_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handle:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "handle",
+            "source_role": "electron-namespace-ipcMain-handle",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handle:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored namespace Electron namespace ipcMain.handle(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.handle.default-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handle"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_default_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handle:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "handle",
+            "source_role": "electron-default-ipcMain-handle",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handle:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored default Electron namespace ipcMain.handle(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.handleonce.commonjs-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handleOnce"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_commonjs_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "operator",
+              "value": "require"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "handleOnce",
+            "source_role": "electron-commonjs-ipcMain-handleOnce",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored commonjs Electron namespace ipcMain.handleOnce(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.handleonce.namespace-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handleOnce"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_namespace_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "handleOnce",
+            "source_role": "electron-namespace-ipcMain-handleOnce",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored namespace Electron namespace ipcMain.handleOnce(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.handleonce.default-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "handleOnce"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_default_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "handleOnce",
+            "source_role": "electron-default-ipcMain-handleOnce",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:handleOnce:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored default Electron namespace ipcMain.handleOnce(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.on.commonjs-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "on"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_commonjs_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "operator",
+              "value": "require"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:on:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "on",
+            "source_role": "electron-commonjs-ipcMain-on",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:on:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored commonjs Electron namespace ipcMain.on(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.on.namespace-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "on"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_namespace_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:on:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "on",
+            "source_role": "electron-namespace-ipcMain-on",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:on:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored namespace Electron namespace ipcMain.on(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.on.default-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "on"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_default_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:on:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "on",
+            "source_role": "electron-default-ipcMain-on",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:on:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored default Electron namespace ipcMain.on(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.once.commonjs-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "once"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_commonjs_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            },
+            {
+              "kind": "field_equals",
+              "field": "operator",
+              "value": "require"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:once:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "once",
+            "source_role": "electron-commonjs-ipcMain-once",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:once:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored commonjs Electron namespace ipcMain.once(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.once.namespace-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "once"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_namespace_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:once:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "once",
+            "source_role": "electron-namespace-ipcMain-once",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:once:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored namespace Electron namespace ipcMain.once(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    },
+    {
+      "id": "electron.ipc-main.once.default-root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_nested_member_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "object_member",
+          "value": "ipcMain"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "once"
+        },
+        {
+          "kind": "field_present",
+          "field": "root"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_default_binding_context",
+          "current_field": "root",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "electron"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IpcHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "electron:ipc-handler:once:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "handler_identifier": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "method": "once",
+            "source_role": "electron-default-ipcMain-once",
+            "runtime_dispatch_claimed": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "electron:ipc-handler:once:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1"
+          },
+          "attributes": {
+            "channel": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored default Electron namespace ipcMain.once(\"literal\", identifier) registration; runtime delivery/invocation is not claimed."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "dynamic/computed CommonJS destructuring, non-literal module specifiers and rebinding remain bounded resolver/value-flow ceilings",
+      "non-literal IPC channels, preload/window option expressions and renderer/main runtime wiring remain bounded value-flow/runtime ceilings",
+      "runtime BrowserWindow lifecycle, process boundaries and MessagePort state are runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codeql",
+      "repository": "https://github.com/github/codeql",
+      "path": "javascript/ql/lib/**/Electron*.qll",
+      "revision": "b0fa3e770386f18fd4d63225301ea4c41e7a5721",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "electron.exact_signature.1.electron",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "electron"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "electron"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "electron",
+          "framework_name": "Electron",
+          "signature": "electron",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "electron.exact_signature.2.electron",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "electron"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "electron"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "electron",
+          "framework_name": "Electron",
+          "signature": "electron",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "electron.exact_signature.3.electron",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:electron"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "electron"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "electron",
+          "framework_name": "Electron",
+          "signature": "electron",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "electron.exact_signature.4.electron",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "electron"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "electron"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "electron",
+          "framework_name": "Electron",
+          "signature": "electron",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

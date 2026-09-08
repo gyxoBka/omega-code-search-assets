@@ -1,0 +1,823 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-terraform-template",
+  "selector": "framework:terraform-template",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "hcl"
+    ],
+    "required_packs": [
+      "omega-hcl"
+    ],
+    "required_capabilities": [
+      "definitions",
+      "calls",
+      "references",
+      "data",
+      "scopes"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "project_level_evidence",
+    "structured_documents",
+    "calls_members",
+    "scope.hcl_body",
+    "definition.hcl_block_labeled",
+    "reference.hcl_block_list_traversal_context",
+    "reference.hcl_block_traversal_context",
+    "call.hcl_function_context"
+  ],
+  "emits": {
+    "entities": [
+      "ConfigDocument",
+      "Module",
+      "Resource",
+      "TemplateCall",
+      "TemplateControl",
+      "TemplateFile",
+      "TemplateReference"
+    ],
+    "relations": [
+      "configured_by",
+      "depends_on",
+      "references"
+    ]
+  },
+  "rules": [
+    {
+      "id": "terraform-template.source-authored.config-document",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "scope.hcl_body"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{tf,hcl,tftpl}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigDocument",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform-template:config-document:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "An authored HCL/Terraform source body is a ConfigDocument; template evaluation, variable interpolation values and Terraform plan/state are not executed."
+    },
+    {
+      "id": "terraform-template.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.hcl_block_labeled"
+        },
+        {
+          "kind": "field_equals",
+          "field": "block_kind",
+          "value": "resource"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform-template:resource:{label0}:{label1}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "label0"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "label1"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.hcl_block_labeled"
+        },
+        {
+          "kind": "field_equals",
+          "field": "block_kind",
+          "value": "module"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Module",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform-template:module:{label0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "label0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.depends_on.resource_resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_list_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_key",
+          "value": "depends_on"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "resource"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "target_root",
+          "values": [
+            "module",
+            "var",
+            "local",
+            "data",
+            "count",
+            "each",
+            "path",
+            "terraform"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{target_root}:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_depends_on_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.depends_on.resource_module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_list_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_key",
+          "value": "depends_on"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "resource"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "target_root",
+          "value": "module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_depends_on_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.depends_on.module_resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_list_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_key",
+          "value": "depends_on"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "module"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "target_root",
+          "values": [
+            "module",
+            "var",
+            "local",
+            "data",
+            "count",
+            "each",
+            "path",
+            "terraform"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{owner_label0}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{target_root}:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_depends_on_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.depends_on.module_module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_list_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_key",
+          "value": "depends_on"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "module"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "target_root",
+          "value": "module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{owner_label0}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_depends_on_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.references.resource_resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "resource"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "target_root",
+          "values": [
+            "module",
+            "var",
+            "local",
+            "data",
+            "count",
+            "each",
+            "path",
+            "terraform",
+            "provider"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{target_root}:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_attribute_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.references.resource_module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "resource"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "target_root",
+          "value": "module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_attribute_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.references.module_resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "module"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "target_root",
+          "values": [
+            "module",
+            "var",
+            "local",
+            "data",
+            "count",
+            "each",
+            "path",
+            "terraform",
+            "provider"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{owner_label0}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:resource:{target_root}:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_attribute_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.references.module_module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.hcl_block_traversal_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_kind",
+          "value": "module"
+        },
+        {
+          "kind": "path_glob",
+          "glob": "**/*.{tf,hcl}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "target_root",
+          "value": "module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{owner_label0}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform-template:module:{target_name}"
+          },
+          "attributes": {
+            "evidence": "direct_hcl_attribute_traversal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
+    },
+    {
+      "id": "terraform-template.template-file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference_context.template_interpolation"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tftpl"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateFile",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform:template:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "terraform-template.template-interpolation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference_context.template_interpolation"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tftpl"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform:template-ref:{path}:{source.start}"
+          },
+          "attributes": {
+            "expression": {
+              "kind": "field_ref",
+              "field": "name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform:template:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform:template-ref:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "terraform-template.template-condition",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference_context.template_condition"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tftpl"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateControl",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform:template-control:{path}:{source.start}"
+          },
+          "attributes": {
+            "expression": {
+              "kind": "field_ref",
+              "field": "name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "terraform:template:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "terraform:template-control:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "terraform-template.templatefile-call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.hcl_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "function_name",
+          "value": "templatefile"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{tf,hcl}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateCall",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "terraform:template-call:{path}:{source.start}"
+          },
+          "attributes": {
+            "function": "templatefile"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "authored .tftpl interpolation/control sites and templatefile() call sites are materialized; resolving computed template paths and variable-object values requires bounded HCL value/path resolution",
+      "template rendering results, filesystem availability outside the snapshot and provider/runtime/tool execution are external/runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "hashicorp-hcl",
+      "repository": "https://github.com/hashicorp/hcl",
+      "path": "hclsyntax/**",
+      "revision": "6b5068090eef06b1f127f61529db5ba0be7ed343",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "terraform-template.candidate_signature.1.specifier",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "terraform-template"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "terraform-template"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "terraform-template",
+          "signature": "terraform-template",
+          "source": "candidate_signature"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    },
+    {
+      "id": "terraform-template.candidate_signature.1.name",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "terraform-template"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "terraform-template"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "terraform-template",
+          "signature": "terraform-template",
+          "source": "candidate_reference"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

@@ -1,0 +1,5197 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-node-js",
+  "selector": "framework:node-js",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence",
+    "import.ecmascript_named_binding_context",
+    "call.ecmascript_constructor_identifier_context"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Dependency",
+      "EnvironmentConfig",
+      "EventChannel",
+      "FileResource",
+      "Process",
+      "Resource",
+      "RuntimeComponent",
+      "Server",
+      "Task"
+    ],
+    "relations": [
+      "creates_server",
+      "depends_on",
+      "spawns",
+      "uses_api",
+      "uses_config",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "node-js.source-authored.worker-task",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_identifier_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "constructor_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "constructor_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "node:worker_threads"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Worker"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,mjs,cjs}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:task:worker:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "Worker",
+            "module": "node:worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Direct new Worker(...) from node:worker_threads is represented as a source-site Task declaration; scheduling/execution is not inferred."
+    },
+    {
+      "id": "node-js.source-authored.message-channel-resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_identifier_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "constructor_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "constructor_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "node:worker_threads"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "MessageChannel"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,mjs,cjs}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:resource:message-channel:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "MessageChannel",
+            "module": "node:worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Direct new MessageChannel(...) from node:worker_threads is represented as a source-site Resource declaration; messages/runtime endpoints are not inferred."
+    },
+    {
+      "id": "node-js.source-authored-async-local-storage",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_constructor_identifier_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "constructor_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "constructor_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "node:async_hooks"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "AsyncLocalStorage"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,mjs,cjs}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:runtime-component:async-local-storage:{path}:{source.start}"
+          },
+          "attributes": {
+            "constructor": "AsyncLocalStorage",
+            "module": "node:async_hooks",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Direct new AsyncLocalStorage(...) from node:async_hooks is represented as a source-site RuntimeComponent declaration; async context values/runtime propagation are not inferred."
+    },
+    {
+      "id": "node-js.generic-api-call.node",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node-js:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node-js:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "node-js.generic-dependency.node",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node-js:dependency:node"
+          },
+          "attributes": {
+            "package": "node",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node-js:dependency:node"
+          },
+          "attributes": {
+            "package": "node",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "node-js.api.node-fs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:fs"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-fs:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-fs:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:fs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-fs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:fs"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-fs"
+          },
+          "attributes": {
+            "package": "node:fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-fs"
+          },
+          "attributes": {
+            "package": "node:fs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.fs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "fs"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:fs:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:fs:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "fs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.fs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "fs"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:fs"
+          },
+          "attributes": {
+            "package": "fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:fs"
+          },
+          "attributes": {
+            "package": "fs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-fs-promises",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:fs/promises"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-fs-promises:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:fs/promises",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-fs-promises:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:fs/promises",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-fs-promises",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:fs/promises"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-fs-promises"
+          },
+          "attributes": {
+            "package": "node:fs/promises",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-fs-promises"
+          },
+          "attributes": {
+            "package": "node:fs/promises",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.fs-promises",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "fs/promises"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:fs-promises:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "fs/promises",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:fs-promises:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "fs/promises",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.fs-promises",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "fs/promises"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:fs-promises"
+          },
+          "attributes": {
+            "package": "fs/promises",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:fs-promises"
+          },
+          "attributes": {
+            "package": "fs/promises",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-http",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:http"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-http:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:http",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-http:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:http",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-http",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:http"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-http"
+          },
+          "attributes": {
+            "package": "node:http",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-http"
+          },
+          "attributes": {
+            "package": "node:http",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.http",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "http"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:http:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "http",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:http:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "http",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.http",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "http"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:http"
+          },
+          "attributes": {
+            "package": "http",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:http"
+          },
+          "attributes": {
+            "package": "http",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-https",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:https"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-https:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:https",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-https:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:https",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-https",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:https"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-https"
+          },
+          "attributes": {
+            "package": "node:https",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-https"
+          },
+          "attributes": {
+            "package": "node:https",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.https",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "https"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:https:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "https",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:https:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "https",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.https",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "https"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:https"
+          },
+          "attributes": {
+            "package": "https",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:https"
+          },
+          "attributes": {
+            "package": "https",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-events",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:events"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-events:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:events",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-events:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:events",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-events",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:events"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-events"
+          },
+          "attributes": {
+            "package": "node:events",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-events"
+          },
+          "attributes": {
+            "package": "node:events",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.events",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "events"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:events:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "events",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:events:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "events",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.events",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "events"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:events"
+          },
+          "attributes": {
+            "package": "events",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:events"
+          },
+          "attributes": {
+            "package": "events",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-stream",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:stream"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-stream:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:stream",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-stream:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:stream",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-stream",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:stream"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-stream"
+          },
+          "attributes": {
+            "package": "node:stream",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-stream"
+          },
+          "attributes": {
+            "package": "node:stream",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.stream",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "stream"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:stream:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "stream",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:stream:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "stream",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.stream",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "stream"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:stream"
+          },
+          "attributes": {
+            "package": "stream",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:stream"
+          },
+          "attributes": {
+            "package": "stream",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-child_process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:child_process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-child_process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:child_process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-child_process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:child_process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-child_process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:child_process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-child_process"
+          },
+          "attributes": {
+            "package": "node:child_process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-child_process"
+          },
+          "attributes": {
+            "package": "node:child_process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.child_process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "child_process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:child_process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "child_process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:child_process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "child_process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.child_process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "child_process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:child_process"
+          },
+          "attributes": {
+            "package": "child_process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:child_process"
+          },
+          "attributes": {
+            "package": "child_process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-net",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:net"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-net:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-net:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:net",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-net",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:net"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-net"
+          },
+          "attributes": {
+            "package": "node:net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-net"
+          },
+          "attributes": {
+            "package": "node:net",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.net",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "net"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:net:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:net:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "net",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.net",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "net"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:net"
+          },
+          "attributes": {
+            "package": "net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:net"
+          },
+          "attributes": {
+            "package": "net",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-path",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:path"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-path:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:path",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-path:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:path",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-path",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:path"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-path"
+          },
+          "attributes": {
+            "package": "node:path",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-path"
+          },
+          "attributes": {
+            "package": "node:path",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.path",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "path"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:path:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "path",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:path:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "path",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.path",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "path"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:path"
+          },
+          "attributes": {
+            "package": "path",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:path"
+          },
+          "attributes": {
+            "package": "path",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-url",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:url"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-url:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:url",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-url:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:url",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-url",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:url"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-url"
+          },
+          "attributes": {
+            "package": "node:url",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-url"
+          },
+          "attributes": {
+            "package": "node:url",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.url",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "url"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:url:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "url",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:url:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "url",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.url",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "url"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:url"
+          },
+          "attributes": {
+            "package": "url",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:url"
+          },
+          "attributes": {
+            "package": "url",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-worker_threads",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:worker_threads"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-worker_threads:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:worker_threads",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-worker_threads:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-worker_threads",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:worker_threads"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-worker_threads"
+          },
+          "attributes": {
+            "package": "node:worker_threads",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-worker_threads"
+          },
+          "attributes": {
+            "package": "node:worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.worker_threads",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "worker_threads"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:worker_threads:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "worker_threads",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:worker_threads:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.worker_threads",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "worker_threads"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:worker_threads"
+          },
+          "attributes": {
+            "package": "worker_threads",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:worker_threads"
+          },
+          "attributes": {
+            "package": "worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-process"
+          },
+          "attributes": {
+            "package": "node:process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-process"
+          },
+          "attributes": {
+            "package": "node:process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "process"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:process"
+          },
+          "attributes": {
+            "package": "process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:process"
+          },
+          "attributes": {
+            "package": "process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-crypto",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:crypto"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-crypto:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:crypto",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-crypto:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:crypto",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-crypto",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:crypto"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-crypto"
+          },
+          "attributes": {
+            "package": "node:crypto",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-crypto"
+          },
+          "attributes": {
+            "package": "node:crypto",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.crypto",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "crypto"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:crypto:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "crypto",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:crypto:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "crypto",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.crypto",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "crypto"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:crypto"
+          },
+          "attributes": {
+            "package": "crypto",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:crypto"
+          },
+          "attributes": {
+            "package": "crypto",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-os",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:os"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-os:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:os",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-os:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:os",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-os",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:os"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-os"
+          },
+          "attributes": {
+            "package": "node:os",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-os"
+          },
+          "attributes": {
+            "package": "node:os",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.os",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "os"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:os:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "os",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:os:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "os",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.os",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "os"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:os"
+          },
+          "attributes": {
+            "package": "os",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:os"
+          },
+          "attributes": {
+            "package": "os",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-async_hooks",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:async_hooks"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-async_hooks:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:async_hooks",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-async_hooks:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:async_hooks",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-async_hooks",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:async_hooks"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-async_hooks"
+          },
+          "attributes": {
+            "package": "node:async_hooks",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-async_hooks"
+          },
+          "attributes": {
+            "package": "node:async_hooks",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.async_hooks",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "async_hooks"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:async_hooks:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "async_hooks",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:async_hooks:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "async_hooks",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.async_hooks",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "async_hooks"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:async_hooks"
+          },
+          "attributes": {
+            "package": "async_hooks",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:async_hooks"
+          },
+          "attributes": {
+            "package": "async_hooks",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-timers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:timers"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-timers:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:timers",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-timers:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:timers",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-timers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:timers"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-timers"
+          },
+          "attributes": {
+            "package": "node:timers",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-timers"
+          },
+          "attributes": {
+            "package": "node:timers",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.timers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "timers"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:timers:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "timers",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:timers:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "timers",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.timers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "timers"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:timers"
+          },
+          "attributes": {
+            "package": "timers",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:timers"
+          },
+          "attributes": {
+            "package": "timers",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-buffer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:buffer"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-buffer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:buffer",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-buffer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:buffer",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-buffer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:buffer"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-buffer"
+          },
+          "attributes": {
+            "package": "node:buffer",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-buffer"
+          },
+          "attributes": {
+            "package": "node:buffer",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.buffer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "buffer"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:buffer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "buffer",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:buffer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "buffer",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.buffer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "buffer"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:buffer"
+          },
+          "attributes": {
+            "package": "buffer",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:buffer"
+          },
+          "attributes": {
+            "package": "buffer",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-util",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:util"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-util:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:util",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-util:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:util",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-util",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:util"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-util"
+          },
+          "attributes": {
+            "package": "node:util",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-util"
+          },
+          "attributes": {
+            "package": "node:util",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.util",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "util"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:util:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "util",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:util:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "util",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.util",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "util"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:util"
+          },
+          "attributes": {
+            "package": "util",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:util"
+          },
+          "attributes": {
+            "package": "util",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-zlib",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:zlib"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-zlib:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:zlib",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-zlib:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:zlib",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-zlib",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:zlib"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-zlib"
+          },
+          "attributes": {
+            "package": "node:zlib",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-zlib"
+          },
+          "attributes": {
+            "package": "node:zlib",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.zlib",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "zlib"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:zlib:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "zlib",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:zlib:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "zlib",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.zlib",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "zlib"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:zlib"
+          },
+          "attributes": {
+            "package": "zlib",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:zlib"
+          },
+          "attributes": {
+            "package": "zlib",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.node-readline",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:readline"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:node-readline:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:readline",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:node-readline:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:readline",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.node-readline",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:readline"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:node-readline"
+          },
+          "attributes": {
+            "package": "node:readline",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:node-readline"
+          },
+          "attributes": {
+            "package": "node:readline",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.api.readline",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "readline"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:api-use:readline:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "readline",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:api-use:readline:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "readline",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.dependency.readline",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "readline"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:dependency:readline"
+          },
+          "attributes": {
+            "package": "readline",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:dependency:readline"
+          },
+          "attributes": {
+            "package": "readline",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.process-env",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.ecmascript_root_member_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "root",
+          "value": "process"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "env"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EnvironmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:process-env:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_config",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:process-env:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.node-http-Server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:http",
+          "member_in": [
+            "createServer"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Server",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:http",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "creates_server",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:http",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.http-Server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "http",
+          "member_in": [
+            "createServer"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Server",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "http",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "creates_server",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "http",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.node-https-Server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:https",
+          "member_in": [
+            "createServer"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Server",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:https",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "creates_server",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:https",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.https-Server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "https",
+          "member_in": [
+            "createServer"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Server",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "https",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "creates_server",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "https",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.node-fs-FileResource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:fs",
+          "member_in": [
+            "readFile",
+            "readFileSync",
+            "writeFile",
+            "writeFileSync",
+            "open",
+            "openSync",
+            "createReadStream",
+            "createWriteStream"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FileResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:fileresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:fileresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:fs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.fs-FileResource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "fs",
+          "member_in": [
+            "readFile",
+            "readFileSync",
+            "writeFile",
+            "writeFileSync",
+            "open",
+            "openSync",
+            "createReadStream",
+            "createWriteStream"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FileResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:fileresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:fileresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "fs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.node-child_process-Process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:child_process",
+          "member_in": [
+            "spawn",
+            "exec",
+            "execFile",
+            "fork"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Process",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:child_process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "spawns",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:child_process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.child_process-Process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "child_process",
+          "member_in": [
+            "spawn",
+            "exec",
+            "execFile",
+            "fork"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Process",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "child_process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "spawns",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:process:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "child_process",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.node-worker_threads-Task",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:worker_threads",
+          "member_in": [
+            "Worker"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:worker_threads",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "spawns",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.worker_threads-Task",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "worker_threads",
+          "member_in": [
+            "Worker"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "worker_threads",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "spawns",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "worker_threads",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.node-events-EventChannel",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "node:events",
+          "member_in": [
+            "EventEmitter"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventChannel",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:eventchannel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:events",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:eventchannel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "node:events",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "node-js.special.events-EventChannel",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "events",
+          "member_in": [
+            "EventEmitter"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventChannel",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "node:eventchannel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "events",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "node:eventchannel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "events",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "runtime object identity, actual file/socket/process effects, event delivery and stream contents remain terminal runtime ceilings",
+      "CommonJS require/namespace/global API provenance is materialized only where host Pack resolves it to ExternalPath; unresolved dynamic require remains candidate evidence",
+      "filesystem paths/process command strings are not executed or normalized into real external resources unless authored static argument facts support a later safe rule",
+      "package-local application APIs are outside Node core overlay and remain generic JavaScript/TypeScript semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "nodejs",
+      "repository": "https://github.com/nodejs/node",
+      "path": "lib/internal/modules/cjs/loader.js",
+      "revision": "d715fba7a5a6c82dac181e5deb10c170ec5b3674",
+      "confidence": "high",
+      "reuse_mode": "knowledge-only-reimplement"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "node-js.exact_signature.1.node",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "node"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "node-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "node-js",
+          "framework_name": "Node.js",
+          "signature": "node",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "node-js.exact_signature.2.node",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "node"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "node-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "node-js",
+          "framework_name": "Node.js",
+          "signature": "node",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "node-js.exact_signature.3.node",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:node"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "node-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "node-js",
+          "framework_name": "Node.js",
+          "signature": "node",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "node-js.exact_signature.4.node",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "node"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "node-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "node-js",
+          "framework_name": "Node.js",
+          "signature": "node",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

@@ -1,0 +1,2577 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-angular",
+  "selector": "framework:angular",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "html",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-html",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "AngularType",
+      "ApiUse",
+      "Component",
+      "Dependency",
+      "Directive",
+      "EventBinding",
+      "InjectionPoint",
+      "Input",
+      "InputBinding",
+      "Module",
+      "NavigationReference",
+      "Output",
+      "Pipe",
+      "Selector",
+      "Service",
+      "StructuralDirective",
+      "StyleReference",
+      "SymbolReference",
+      "TemplateElement",
+      "TemplateReference",
+      "View"
+    ],
+    "relations": [
+      "configured_by",
+      "contains",
+      "declares",
+      "declares_selector",
+      "depends_on",
+      "exports",
+      "has_input",
+      "has_output",
+      "imports",
+      "injects",
+      "provides",
+      "references",
+      "renders",
+      "specializes",
+      "uses_api",
+      "uses_style",
+      "uses_template"
+    ]
+  },
+  "rules": [
+    {
+      "id": "angular.component.decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core",
+          "member_in": [
+            "Component"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:component:{path}:{definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.component.inline-template",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_string_field_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "template"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "string_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.ts"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "reference.decorator",
+          "current_field": "owner_class",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "@angular/core",
+              "member_in": [
+                "Component"
+              ]
+            }
+          ],
+          "bind": "component_decorator"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:view:inline:{path}:{owner_class}"
+          },
+          "attributes": {
+            "inline_template": true,
+            "owner_class": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:component:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:view:inline:{path}:{owner_class}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:component:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:view:inline:{path}:{owner_class}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.generic-api-call.angular-core",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@angular/core",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@angular/core",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "angular.generic-dependency.angular-core",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:dependency:@angular/core"
+          },
+          "attributes": {
+            "package": "@angular/core",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:dependency:@angular/core"
+          },
+          "attributes": {
+            "package": "@angular/core",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "angular.component.resolved-decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core",
+          "member_in": [
+            "Component"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AngularType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": "Component",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:component:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "specializes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:component:{path}:{definition.name}"
+          },
+          "attributes": {
+            "decorator": "Component"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.directive.resolved-decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core",
+          "member_in": [
+            "Directive"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AngularType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": "Directive",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Directive",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:directive:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "specializes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:directive:{path}:{definition.name}"
+          },
+          "attributes": {
+            "decorator": "Directive"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.service.resolved-decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core",
+          "member_in": [
+            "Injectable"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AngularType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": "Injectable",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:service:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "specializes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:service:{path}:{definition.name}"
+          },
+          "attributes": {
+            "decorator": "Injectable"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.module.resolved-decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core",
+          "member_in": [
+            "NgModule"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AngularType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": "NgModule",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Module",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:module:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "specializes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:module:{path}:{definition.name}"
+          },
+          "attributes": {
+            "decorator": "NgModule"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.pipe.resolved-decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@angular/core",
+          "member_in": [
+            "Pipe"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AngularType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": "Pipe",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipe",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:pipe:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "specializes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:pipe:{path}:{definition.name}"
+          },
+          "attributes": {
+            "decorator": "Pipe"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.component.metadata-string.templateUrl",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_string_field_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "templateUrl"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "string_value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:template:{path}:{owner_class}:{string_value}"
+          },
+          "attributes": {
+            "value": {
+              "kind": "field_ref",
+              "field": "string_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_template",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:template:{path}:{owner_class}:{string_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.component.metadata-string.selector",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_string_field_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "selector"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "string_value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Selector",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:selector:{path}:{owner_class}:{string_value}"
+          },
+          "attributes": {
+            "value": {
+              "kind": "field_ref",
+              "field": "string_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_selector",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:selector:{path}:{owner_class}:{string_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.component.styleUrls",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_string_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "styleUrls"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_string"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StyleReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:style:{path}:{owner_class}:{item_string}"
+          },
+          "attributes": {
+            "value": {
+              "kind": "field_ref",
+              "field": "item_string"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_style",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:style:{path}:{owner_class}:{item_string}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.component.imports",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "imports"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "imports",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.component.providers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "providers"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "provides",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.component.declarations",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "declarations"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.component.exports",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Component"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "exports"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Component"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "exports",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.ngmodule.imports",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "NgModule"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "imports"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "NgModule"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "imports",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.ngmodule.providers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "NgModule"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "providers"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "NgModule"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "provides",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.ngmodule.declarations",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "NgModule"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "declarations"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "NgModule"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.ngmodule.exports",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "NgModule"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "exports"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "NgModule"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymbolReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "exports",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:symbol-ref:{path}:{item_identifier}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resolved_target_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.member.input.typescript_class_member_decorator_context",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_member_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Input"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Input"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Input",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:input:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_input",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:input:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.member.input.typescript_class_member_marker_decorator_context",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_member_marker_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Input"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Input"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Input",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:input:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_input",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:input:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.member.output.typescript_class_member_decorator_context",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_member_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Output"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Output"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Output",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:output:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_output",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:output:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.member.output.typescript_class_member_marker_decorator_context",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_member_marker_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Output"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@angular/core"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Output"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Output",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:output:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_output",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:output:{path}:{owner_class}:{member_name}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "angular.constructor.typed-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_constructor_parameter_type_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "parameter_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "parameter_type"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "reference.decorator",
+          "current_field": "owner_class",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "@angular/core",
+              "member_in": [
+                "Component",
+                "Directive",
+                "Injectable",
+                "NgModule",
+                "Pipe"
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InjectionPoint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:injection:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "parameter_type"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "angular:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:injection:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "parameter_type"
+            },
+            "target_resolution": "candidate"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "angular.template.input-binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.html_attribute_context"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.component.html"
+        },
+        {
+          "kind": "field_present",
+          "field": "tag"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_name",
+          "prefix": "["
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InputBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "element": {
+              "kind": "field_ref",
+              "field": "tag"
+            },
+            "syntax": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored Angular template attribute syntax in external component HTML."
+    },
+    {
+      "id": "angular.template.event-binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.html_attribute_context"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.component.html"
+        },
+        {
+          "kind": "field_present",
+          "field": "tag"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_name",
+          "prefix": "("
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "element": {
+              "kind": "field_ref",
+              "field": "tag"
+            },
+            "syntax": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored Angular template attribute syntax in external component HTML."
+    },
+    {
+      "id": "angular.template.structural-directive",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.html_attribute_context"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.component.html"
+        },
+        {
+          "kind": "field_present",
+          "field": "tag"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_name",
+          "prefix": "*"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StructuralDirective",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "element": {
+              "kind": "field_ref",
+              "field": "tag"
+            },
+            "syntax": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored Angular template attribute syntax in external component HTML."
+    },
+    {
+      "id": "angular.template.reference",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.html_attribute_context"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.component.html"
+        },
+        {
+          "kind": "field_present",
+          "field": "tag"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_name",
+          "prefix": "#"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "element": {
+              "kind": "field_ref",
+              "field": "tag"
+            },
+            "syntax": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored Angular template attribute syntax in external component HTML."
+    },
+    {
+      "id": "angular.template.router-link",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.html_attribute_context"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.component.html"
+        },
+        {
+          "kind": "field_present",
+          "field": "tag"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_in",
+          "field": "attribute_name",
+          "values": [
+            "routerLink",
+            "[routerLink]"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NavigationReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:router-link:{path}:{source.start}"
+          },
+          "attributes": {
+            "target_expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "angular:router-link:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored RouterLink binding/value; runtime route evaluation is not claimed."
+    },
+    {
+      "id": "angular.template.element",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.html_element_text_context"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.component.html"
+        },
+        {
+          "kind": "field_present",
+          "field": "tag"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateElement",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "angular:template-element:{path}:{source.start}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "tag"
+            },
+            "text": {
+              "kind": "field_ref",
+              "field": "text"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored external Angular template element/text; component/directive target resolution remains generic resolver work."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "Angular class decorators, metadata imports/providers/declarations/exports, template/style refs, Inputs/Outputs and constructor typed dependency candidates are materialized from TypeScript source",
+      "external *.component.html element/text plus authored property/event/two-way/structural/reference/routerLink attribute syntax is materialized; resolving template tags/binding expressions to component members requires generic Angular/template resolver evidence",
+      "inline template string contents remain authored TypeScript string evidence unless an injected HTML AnalysisUnit is provided by the generic injection/value pipeline",
+      "runtime-generated views, injector hierarchy/provider selection, signals/change detection and dynamic component creation require runtime/compiler evidence"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/angular/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "src/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "angular.exact_signature.1.@angular_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "@angular/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "angular"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "angular",
+          "framework_name": "Angular",
+          "signature": "@angular/core",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "angular.exact_signature.2.@angular_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "@angular/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "angular"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "angular",
+          "framework_name": "Angular",
+          "signature": "@angular/core",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "angular.exact_signature.3.@angular_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:@angular/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "angular"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "angular",
+          "framework_name": "Angular",
+          "signature": "@angular/core",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "angular.exact_signature.4.@angular_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "@angular/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "angular"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "angular",
+          "framework_name": "Angular",
+          "signature": "@angular/core",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  },
+  "runtime_status": "terminal-static-source-contract"
+}

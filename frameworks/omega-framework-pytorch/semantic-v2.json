@@ -1,0 +1,2348 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-pytorch",
+  "selector": "framework:pytorch",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "python"
+    ],
+    "required_packs": [
+      "omega-python"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "imports_bindings",
+    "calls_members",
+    "existing_language_ir",
+    "definition.python_import_bound_member_call_identifier_context",
+    "definition.python_import_bound_member_call_two_identifier_context",
+    "definition.python_class_method_self_member_call_two_identifier_context"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "ComputeGraph",
+      "ComputeNode",
+      "Dependency",
+      "Forward",
+      "Loss",
+      "ModelComponent",
+      "Optimizer",
+      "Parameter",
+      "RegisteredState",
+      "Submodule"
+    ],
+    "relations": [
+      "compute_depends_on",
+      "contains",
+      "depends_on",
+      "forward_calls",
+      "has_forward",
+      "has_parameter",
+      "uses_api",
+      "uses_loss"
+    ]
+  },
+  "rules": [
+    {
+      "id": "pytorch.module.subclass",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch.nn",
+          "member_prefix": "Module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{definition.qname}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "pytorch.direct-functional-compute-node",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch",
+            "torch.nn.functional"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "relu",
+            "sigmoid",
+            "tanh",
+            "softmax",
+            "gelu",
+            "matmul",
+            "mm",
+            "bmm",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "sum",
+            "mean",
+            "reshape",
+            "flatten",
+            "stack",
+            "cat",
+            "where",
+            "clamp"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "input_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:node:{path}:{source.start}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "op": {
+              "kind": "field_ref",
+              "field": "callee_member"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "module_name"
+            },
+            "owner_function": {
+              "kind": "field_ref",
+              "field": "owner_function"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Only explicit aliased torch/torch.nn.functional direct calls with direct identifier first input and local assignment are materialized."
+    },
+    {
+      "id": "pytorch.direct-functional-compute-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch",
+            "torch.nn.functional"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "relu",
+            "sigmoid",
+            "tanh",
+            "softmax",
+            "gelu",
+            "matmul",
+            "mm",
+            "bmm",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "sum",
+            "mean",
+            "reshape",
+            "flatten",
+            "stack",
+            "cat",
+            "where",
+            "clamp"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "input_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.python_import_bound_member_call_identifier_context",
+          "current_field": "input_identifier",
+          "join_field": "binding_name",
+          "same_path": true,
+          "additional_field_equalities": [
+            {
+              "current_field": "owner_function",
+              "join_field": "owner_function"
+            }
+          ],
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "module_name",
+              "values": [
+                "torch",
+                "torch.nn.functional"
+              ]
+            },
+            {
+              "kind": "field_in",
+              "field": "callee_member",
+              "values": [
+                "relu",
+                "sigmoid",
+                "tanh",
+                "softmax",
+                "gelu",
+                "matmul",
+                "mm",
+                "bmm",
+                "add",
+                "sub",
+                "mul",
+                "div",
+                "sum",
+                "mean",
+                "reshape",
+                "flatten",
+                "stack",
+                "cat",
+                "where",
+                "clamp"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "source.start"
+            }
+          ],
+          "bind": "previous_node"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compute_depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:node:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "previous_node",
+            "field": "source.start",
+            "template": "pytorch:node:{path}:{value}"
+          },
+          "attributes": {
+            "direct_identifier_dataflow": true,
+            "same_function": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Dependency exists only when the direct input identifier equals another authored PyTorch output binding in the same named function and path."
+    },
+    {
+      "id": "pytorch.source-authored.fx-graph",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_binding_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.fx"
+        },
+        {
+          "kind": "field_equals",
+          "field": "imported_name",
+          "value": "Graph"
+        },
+        {
+          "kind": "field_equals",
+          "field": "callee_name",
+          "value": "Graph"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeGraph",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:fx-graph:{path}:{source.start}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "imported_name": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Only explicit from torch.fx import Graph plus direct graph = Graph(...) authored syntax is materialized; symbolic tracing, GraphModule ownership and runtime graph nodes require runtime/external semantic evidence and are outside this terminal static contract."
+    },
+    {
+      "id": "pytorch.generic-api-call.torch",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "torch",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "torch",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "pytorch.generic-dependency.torch",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:dependency:torch"
+          },
+          "attributes": {
+            "package": "torch",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:dependency:torch"
+          },
+          "attributes": {
+            "package": "torch",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "pytorch.module.from-import",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_from_import_class_base_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_equals",
+          "field": "imported_name",
+          "value": "Module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "attributes": {
+            "class_name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": "torch.nn.Module",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.module.import-alias",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_import_alias_class_member_base_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_equals",
+          "field": "base_member",
+          "value": "Module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "attributes": {
+            "class_name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": "torch.nn.Module",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.submodule.from",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_self_member_from_import_constructor_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "Linear",
+            "Conv1d",
+            "Conv2d",
+            "Conv3d",
+            "Embedding",
+            "BatchNorm1d",
+            "BatchNorm2d",
+            "BatchNorm3d",
+            "LayerNorm",
+            "Dropout",
+            "ReLU",
+            "GELU",
+            "Sigmoid",
+            "Tanh",
+            "Sequential",
+            "ModuleList",
+            "ModuleDict",
+            "LSTM",
+            "GRU",
+            "RNN",
+            "Transformer",
+            "TransformerEncoder",
+            "TransformerDecoder",
+            "MultiheadAttention",
+            "Identity"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Submodule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:submodule:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "module_type": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:submodule:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.parameter.from",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_self_member_from_import_constructor_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_equals",
+          "field": "imported_name",
+          "value": "Parameter"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Parameter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:parameter:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_parameter",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:parameter:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.loss-member.from",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_self_member_from_import_constructor_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CrossEntropyLoss",
+            "MSELoss",
+            "L1Loss",
+            "NLLLoss",
+            "BCELoss",
+            "BCEWithLogitsLoss",
+            "KLDivLoss",
+            "SmoothL1Loss",
+            "HuberLoss",
+            "CTCLoss"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loss",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:loss:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "loss_type": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_loss",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:loss:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.submodule.alias",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_self_member_import_alias_constructor_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "Linear",
+            "Conv1d",
+            "Conv2d",
+            "Conv3d",
+            "Embedding",
+            "BatchNorm1d",
+            "BatchNorm2d",
+            "BatchNorm3d",
+            "LayerNorm",
+            "Dropout",
+            "ReLU",
+            "GELU",
+            "Sigmoid",
+            "Tanh",
+            "Sequential",
+            "ModuleList",
+            "ModuleDict",
+            "LSTM",
+            "GRU",
+            "RNN",
+            "Transformer",
+            "TransformerEncoder",
+            "TransformerDecoder",
+            "MultiheadAttention",
+            "Identity"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Submodule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:submodule:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "module_type": {
+              "kind": "field_ref",
+              "field": "callee_member"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:submodule:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.parameter.alias",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_self_member_import_alias_constructor_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_equals",
+          "field": "callee_member",
+          "value": "Parameter"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Parameter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:parameter:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_parameter",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:parameter:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.loss-member.alias",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_self_member_import_alias_constructor_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "CrossEntropyLoss",
+            "MSELoss",
+            "L1Loss",
+            "NLLLoss",
+            "BCELoss",
+            "BCEWithLogitsLoss",
+            "KLDivLoss",
+            "SmoothL1Loss",
+            "HuberLoss",
+            "CTCLoss"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "member_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loss",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:loss:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "member_name"
+            },
+            "loss_type": {
+              "kind": "field_ref",
+              "field": "callee_member"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_loss",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:loss:{path}:{class_name}.{member_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.registration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.python_class_self_registration_string_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "register_buffer",
+            "register_parameter",
+            "add_module"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "name_string"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RegisteredState",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:registered:{path}:{class_name}:{member}:{name_string}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "name_string"
+            },
+            "registration": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:registered:{path}:{class_name}:{member}:{name_string}"
+          },
+          "attributes": {
+            "registration": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.forward",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method_name",
+          "value": "forward"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Forward",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:forward:{path}:{class_name}"
+          },
+          "attributes": {
+            "class_name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_forward",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward:{path}:{class_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.forward.self-call-node",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_self_member_call_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "member"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "op_member": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "input_identifier": {
+              "kind": "field_ref",
+              "field": "input_identifier"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "forward_calls",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "attributes": {
+            "member": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.forward.self-return-node",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.python_class_method_self_member_return_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "member"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "attributes": {
+            "op_member": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "input_identifier": {
+              "kind": "field_ref",
+              "field": "input_identifier"
+            },
+            "return_site": true,
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "forward_calls",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward:{path}:{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "attributes": {
+            "member": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.forward.self-call-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_self_member_call_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "input_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.python_class_method_self_member_call_identifier_context",
+          "current_field": "input_identifier",
+          "join_field": "binding_name",
+          "same_path": true,
+          "additional_field_equalities": [
+            {
+              "current_field": "class_name",
+              "join_field": "class_name"
+            },
+            {
+              "current_field": "owner_function",
+              "join_field": "owner_function"
+            }
+          ],
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "owner_function",
+              "value": "forward"
+            },
+            {
+              "kind": "field_present",
+              "field": "source.start"
+            }
+          ],
+          "bind": "previous_node"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compute_depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "previous_node",
+            "field": "source.start",
+            "template": "pytorch:forward-node:{path}:{class_name}:{value}"
+          },
+          "attributes": {
+            "same_forward": true,
+            "direct_identifier_dataflow": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.optimizer.binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_binding_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch.optim"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "SGD",
+            "Adam",
+            "AdamW",
+            "Adagrad",
+            "Adadelta",
+            "Adamax",
+            "ASGD",
+            "LBFGS",
+            "NAdam",
+            "RAdam",
+            "RMSprop",
+            "Rprop",
+            "SparseAdam"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Optimizer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:optimizer:{path}:{binding}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "binding"
+            },
+            "optimizer_type": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.loss.binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_binding_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.nn"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "CrossEntropyLoss",
+            "MSELoss",
+            "L1Loss",
+            "NLLLoss",
+            "BCELoss",
+            "BCEWithLogitsLoss",
+            "KLDivLoss",
+            "SmoothL1Loss",
+            "HuberLoss",
+            "CTCLoss"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loss",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:loss:{path}:{binding}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "binding"
+            },
+            "loss_type": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.direct-functional-second-input-metadata",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_two_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch",
+            "torch.nn.functional"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "relu",
+            "sigmoid",
+            "tanh",
+            "softmax",
+            "gelu",
+            "matmul",
+            "mm",
+            "bmm",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "sum",
+            "mean",
+            "reshape",
+            "flatten",
+            "stack",
+            "cat",
+            "where",
+            "clamp"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "second_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:node:{path}:{source.start}"
+          },
+          "attributes": {
+            "second_input_identifier": {
+              "kind": "field_ref",
+              "field": "second_identifier"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Preserves the authored second direct identifier input on supported imported torch/functional compute calls."
+    },
+    {
+      "id": "pytorch.direct-functional-second-input-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_two_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch",
+            "torch.nn.functional"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "relu",
+            "sigmoid",
+            "tanh",
+            "softmax",
+            "gelu",
+            "matmul",
+            "mm",
+            "bmm",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "sum",
+            "mean",
+            "reshape",
+            "flatten",
+            "stack",
+            "cat",
+            "where",
+            "clamp"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "second_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.python_import_bound_member_call_identifier_context",
+          "current_field": "second_identifier",
+          "join_field": "binding_name",
+          "same_path": true,
+          "additional_field_equalities": [
+            {
+              "current_field": "owner_function",
+              "join_field": "owner_function"
+            }
+          ],
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "module_name",
+              "values": [
+                "torch",
+                "torch.nn.functional"
+              ]
+            },
+            {
+              "kind": "field_in",
+              "field": "callee_member",
+              "values": [
+                "relu",
+                "sigmoid",
+                "tanh",
+                "softmax",
+                "gelu",
+                "matmul",
+                "mm",
+                "bmm",
+                "add",
+                "sub",
+                "mul",
+                "div",
+                "sum",
+                "mean",
+                "reshape",
+                "flatten",
+                "stack",
+                "cat",
+                "where",
+                "clamp"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "source.start"
+            }
+          ],
+          "bind": "second_producer"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compute_depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:node:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "second_producer",
+            "field": "source.start",
+            "template": "pytorch:node:{path}:{value}"
+          },
+          "attributes": {
+            "argument_index": 1,
+            "same_function": true,
+            "direct_identifier_dataflow": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Second-argument dependency requires an independently authored supported compute output binding with the same identifier in the same function/path."
+    },
+    {
+      "id": "pytorch.forward.self-call-second-input-metadata",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_self_member_call_two_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "member"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "second_identifier"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "attributes": {
+            "second_input_identifier": {
+              "kind": "field_ref",
+              "field": "second_identifier"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.forward.self-call-second-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_self_member_call_two_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "second_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.python_class_method_self_member_call_identifier_context",
+          "current_field": "second_identifier",
+          "join_field": "binding_name",
+          "same_path": true,
+          "additional_field_equalities": [
+            {
+              "current_field": "class_name",
+              "join_field": "class_name"
+            },
+            {
+              "current_field": "owner_function",
+              "join_field": "owner_function"
+            }
+          ],
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "owner_function",
+              "value": "forward"
+            },
+            {
+              "kind": "field_present",
+              "field": "source.start"
+            }
+          ],
+          "bind": "second_forward_producer"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compute_depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "second_forward_producer",
+            "field": "source.start",
+            "template": "pytorch:forward-node:{path}:{class_name}:{value}"
+          },
+          "attributes": {
+            "argument_index": 1,
+            "same_forward": true,
+            "direct_identifier_dataflow": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pytorch.direct-functional-third-input-metadata",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_three_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch",
+            "torch.nn.functional"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "relu",
+            "sigmoid",
+            "tanh",
+            "softmax",
+            "gelu",
+            "matmul",
+            "mm",
+            "bmm",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "sum",
+            "mean",
+            "reshape",
+            "flatten",
+            "stack",
+            "cat",
+            "where",
+            "clamp"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "third_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:node:{path}:{source.start}"
+          },
+          "attributes": {
+            "third_input_identifier": {
+              "kind": "field_ref",
+              "field": "third_identifier"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Preserves the authored third direct identifier input on supported imported torch/functional compute calls."
+    },
+    {
+      "id": "pytorch.direct-functional-third-input-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_three_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "module_name",
+          "values": [
+            "torch",
+            "torch.nn.functional"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_member",
+          "values": [
+            "relu",
+            "sigmoid",
+            "tanh",
+            "softmax",
+            "gelu",
+            "matmul",
+            "mm",
+            "bmm",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "sum",
+            "mean",
+            "reshape",
+            "flatten",
+            "stack",
+            "cat",
+            "where",
+            "clamp"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "third_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.python_import_bound_member_call_identifier_context",
+          "current_field": "third_identifier",
+          "join_field": "binding_name",
+          "same_path": true,
+          "additional_field_equalities": [
+            {
+              "current_field": "owner_function",
+              "join_field": "owner_function"
+            }
+          ],
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "module_name",
+              "values": [
+                "torch",
+                "torch.nn.functional"
+              ]
+            },
+            {
+              "kind": "field_in",
+              "field": "callee_member",
+              "values": [
+                "relu",
+                "sigmoid",
+                "tanh",
+                "softmax",
+                "gelu",
+                "matmul",
+                "mm",
+                "bmm",
+                "add",
+                "sub",
+                "mul",
+                "div",
+                "sum",
+                "mean",
+                "reshape",
+                "flatten",
+                "stack",
+                "cat",
+                "where",
+                "clamp"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "source.start"
+            }
+          ],
+          "bind": "third_producer"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compute_depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:node:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "third_producer",
+            "field": "source.start",
+            "template": "pytorch:node:{path}:{value}"
+          },
+          "attributes": {
+            "argument_index": 2,
+            "same_function": true,
+            "direct_identifier_dataflow": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Second-argument dependency requires an independently authored supported compute output binding with the same identifier in the same function/path."
+    },
+    {
+      "id": "pytorch.forward.self-call-third-input-metadata",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_self_member_call_three_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "member"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "third_identifier"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComputeNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "attributes": {
+            "third_input_identifier": {
+              "kind": "field_ref",
+              "field": "third_identifier"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Preserves and joins the authored third direct identifier input within the same bounded function/forward context."
+    },
+    {
+      "id": "pytorch.forward.self-call-third-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_method_self_member_call_three_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "owner_function",
+          "value": "forward"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "third_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.python_class_method_self_member_call_identifier_context",
+          "current_field": "third_identifier",
+          "join_field": "binding_name",
+          "same_path": true,
+          "additional_field_equalities": [
+            {
+              "current_field": "class_name",
+              "join_field": "class_name"
+            },
+            {
+              "current_field": "owner_function",
+              "join_field": "owner_function"
+            }
+          ],
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "owner_function",
+              "value": "forward"
+            },
+            {
+              "kind": "field_present",
+              "field": "source.start"
+            }
+          ],
+          "bind": "third_forward_producer"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compute_depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:forward-node:{path}:{class_name}:{source.start}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "third_forward_producer",
+            "field": "source.start",
+            "template": "pytorch:forward-node:{path}:{class_name}:{value}"
+          },
+          "attributes": {
+            "argument_index": 2,
+            "same_forward": true,
+            "direct_identifier_dataflow": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Preserves and joins the authored third direct identifier input within the same bounded function/forward context."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "nn.Module inheritance is source-complete for explicit `from torch.nn import Module` and `import torch.nn as alias; class X(alias.Module)` forms; wildcard/re-export/dynamic base resolution requires normal resolver provenance",
+      "source-authored factory/computed module-type expressions require bounded value/symbol resolution before exact module identity can be materialized",
+      "containers populated dynamically and setattr-driven module mutation require runtime/value-flow state beyond static source facts",
+      "PyTorch register_buffer/register_parameter/add_module names derived from source-deterministic constants require bounded static value-origin projection",
+      "PyTorch module/parameter/buffer state mutation beyond authored registrations remains runtime state",
+      "forward graph covers authored direct self.member(identifier[, identifier]) assignments/returns and explicit aliased torch/functional assignment facts with first/second/third direct identifier dependencies; fourth+ arguments, arbitrary expressions, containers, tensor aliasing and control-flow dataflow require richer bounded value-flow evidence",
+      "optimizer/loss identities cover explicit import-alias member constructor bindings; optimizer parameter groups, scheduler state and actual optimization behavior are runtime/value-flow semantics",
+      "FX/GraphModule tracing, autograd graph, dispatcher/kernel selection, compiled graph lowering and runtime tensor shapes are intentionally not inferred from static source"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "pytorch-fx",
+      "repository": "https://github.com/pytorch/pytorch",
+      "path": "torch/fx/graph.py",
+      "revision": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "pytorch.exact_signature.1.torch",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "torch"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch",
+          "framework_name": "PyTorch",
+          "signature": "torch",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch.exact_signature.2.torch",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "torch"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch",
+          "framework_name": "PyTorch",
+          "signature": "torch",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch.exact_signature.3.torch",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:torch"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch",
+          "framework_name": "PyTorch",
+          "signature": "torch",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch.exact_signature.4.torch",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "torch"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch",
+          "framework_name": "PyTorch",
+          "signature": "torch",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ]
+}

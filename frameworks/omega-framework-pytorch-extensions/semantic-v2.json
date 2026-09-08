@@ -1,0 +1,1191 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-pytorch-extensions",
+  "selector": "framework:pytorch-extensions",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "python",
+      "cpp"
+    ],
+    "required_packs": [
+      "omega-python",
+      "omega-cpp"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence",
+    "definition.python_from_import_constructor_binding_context"
+  ],
+  "emits": {
+    "entities": [
+      "BuildTool",
+      "ExtensionModule",
+      "BuildInput",
+      "BuildOption"
+    ],
+    "relations": [
+      "builds",
+      "configured_by"
+    ]
+  },
+  "rules": [
+    {
+      "id": "pytorch-extensions.source-authored.extensionmodule-cppextension",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_binding_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.utils.cpp_extension"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "imported_name": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Only explicit module-level from-import and same-named direct call for torch.utils.cpp_extension.CppExtension/CUDAExtension is materialized; aliases, member/classmethod factories, rebinding and runtime-loaded state require richer semantic/runtime evidence and are outside this terminal static contract."
+    },
+    {
+      "id": "pytorch.ext.load",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch.utils.cpp_extension",
+          "member_in": [
+            "load",
+            "load_inline"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:extension-load:{path}:{source.start}"
+          },
+          "attributes": {
+            "loader": {
+              "kind": "field_ref",
+              "field": "call.name"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "call.kwarg.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "builds",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:extension-load:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "pytorch.ext.buildextension",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch.utils.cpp_extension",
+          "member_in": [
+            "BuildExtension"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildTool",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:build-extension:{path}:{source.start}"
+          },
+          "attributes": {
+            "tool": "BuildExtension"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:build-extension:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "pytorch.ext.constructor-source-item",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_keyword_identifier_list_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.utils.cpp_extension"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "keyword_name",
+          "value": "sources"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "list_item"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "extension_kind": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildInput",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:sources:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "kind": "sources",
+            "value": {
+              "kind": "field_ref",
+              "field": "list_item"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:sources:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "field": "sources",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored sources list items on direct CppExtension/CUDAExtension constructor bindings are preserved; filesystem/compiler effects are not executed."
+    },
+    {
+      "id": "pytorch.ext.constructor-include-dir-item",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_keyword_identifier_list_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.utils.cpp_extension"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "keyword_name",
+          "value": "include_dirs"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "list_item"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "extension_kind": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildInput",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:include_dirs:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "kind": "include_dirs",
+            "value": {
+              "kind": "field_ref",
+              "field": "list_item"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:include_dirs:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "field": "include_dirs",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored include_dirs list items on direct CppExtension/CUDAExtension constructor bindings are preserved; filesystem/compiler effects are not executed."
+    },
+    {
+      "id": "pytorch.ext.constructor-extra-compile-arg-item",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_keyword_identifier_list_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.utils.cpp_extension"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "keyword_name",
+          "value": "extra_compile_args"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "list_item"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "extension_kind": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildOption",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:extra_compile_args:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "kind": "extra_compile_args",
+            "value": {
+              "kind": "field_ref",
+              "field": "list_item"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:extra_compile_args:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "field": "extra_compile_args",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored extra_compile_args list items on direct CppExtension/CUDAExtension constructor bindings are preserved; filesystem/compiler effects are not executed."
+    },
+    {
+      "id": "pytorch.ext.constructor-extra-link-arg-item",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_keyword_identifier_list_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.utils.cpp_extension"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "keyword_name",
+          "value": "extra_link_args"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "list_item"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "extension_kind": {
+              "kind": "field_ref",
+              "field": "imported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildOption",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:extra_link_args:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "kind": "extra_link_args",
+            "value": {
+              "kind": "field_ref",
+              "field": "list_item"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:extra_link_args:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "field": "extra_link_args",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored extra_link_args list items on direct CppExtension/CUDAExtension constructor bindings are preserved; filesystem/compiler effects are not executed."
+    },
+    {
+      "id": "pytorch.ext.constructor-identifier-option",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_from_import_constructor_keyword_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch.utils.cpp_extension"
+        },
+        {
+          "kind": "field_in",
+          "field": "imported_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "callee_name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "keyword_name",
+          "values": [
+            "sources",
+            "include_dirs",
+            "extra_compile_args",
+            "extra_link_args",
+            "define_macros"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "keyword_identifier"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildOption",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch-ext:option:{path}:{binding_name}:{keyword_name}:{source.start}"
+          },
+          "attributes": {
+            "kind": {
+              "kind": "field_ref",
+              "field": "keyword_name"
+            },
+            "identifier": {
+              "kind": "field_ref",
+              "field": "keyword_identifier"
+            },
+            "resolved_value": false,
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:option:{path}:{binding_name}:{keyword_name}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Identifier-valued constructor options preserve authored value provenance without resolving the identifier."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "CppExtension/CUDAExtension, load/load_inline, BuildExtension and direct authored constructor source/include/compiler/link option evidence are materialized; nested/computed option structures remain bounded value-flow candidates",
+      "actual compiler invocation, generated binding code, CUDA toolkit state, filesystem existence and loaded module runtime state are external/runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "pytorch-fx",
+      "repository": "https://github.com/pytorch/pytorch",
+      "path": "torch/utils/cpp_extension.py",
+      "revision": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "pytorch-extensions.exact_signature.1.cppextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "CppExtension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CppExtension",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.2.cppextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "CppExtension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CppExtension",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.3.cppextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:cppextension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CppExtension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.4.cppextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "CppExtension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CppExtension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.1.cudaextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "CUDAExtension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CUDAExtension",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.2.cudaextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "CUDAExtension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CUDAExtension",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.3.cudaextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:cudaextension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CUDAExtension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.4.cudaextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "CUDAExtension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "CUDAExtension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.1.torch.utils.cpp_extension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "torch.utils.cpp_extension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "torch.utils.cpp_extension",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.2.torch.utils.cpp_extension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "torch.utils.cpp_extension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "torch.utils.cpp_extension",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.3.torch.utils.cpp_extension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:torch.utils.cpp_extension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "torch.utils.cpp_extension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-extensions.exact_signature.4.torch.utils.cpp_extension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "torch.utils.cpp_extension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-extensions"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-extensions",
+          "framework_name": "PyTorch extensions",
+          "signature": "torch.utils.cpp_extension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

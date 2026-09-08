@@ -1,0 +1,810 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-pytorch-inductor",
+  "selector": "framework:pytorch-inductor",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "python"
+    ],
+    "required_packs": [
+      "omega-python"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "calls_members",
+    "existing_language_ir"
+  ],
+  "emits": {
+    "entities": [
+      "CompileConfig",
+      "CompiledFunction",
+      "CompilerModule",
+      "CompileOption"
+    ],
+    "relations": [
+      "configured_by",
+      "configures"
+    ]
+  },
+  "rules": [
+    {
+      "id": "inductor.compile.call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch",
+          "member_prefix": "compile"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompilerModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "inductor:compile:{source.path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "candidate"
+    },
+    {
+      "id": "inductor.torch-compile",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch",
+          "member_in": [
+            "compile"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompiledFunction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compiled:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "backend": {
+              "kind": "field_ref",
+              "field": "call.kwarg.backend"
+            },
+            "mode": {
+              "kind": "field_ref",
+              "field": "call.kwarg.mode"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compiled:{path}:{source.start}"
+          },
+          "attributes": {
+            "kind": "torch.compile"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "inductor.dynamo-optimize",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "torch._dynamo",
+          "member_in": [
+            "optimize"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompileConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:dynamo:{path}:{source.start}"
+          },
+          "attributes": {
+            "backend": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:dynamo:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "inductor.torch-compile.literal-option",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_call_literal_keyword_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch"
+        },
+        {
+          "kind": "field_equals",
+          "field": "callee_member",
+          "value": "compile"
+        },
+        {
+          "kind": "field_in",
+          "field": "keyword_name",
+          "values": [
+            "backend",
+            "mode"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "keyword_string"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompiledFunction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompileOption",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compile-option:{path}:{binding_name}:{keyword_name}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "keyword_name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "keyword_string"
+            },
+            "literal": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compile-option:{path}:{binding_name}:{keyword_name}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Literal backend/mode on an import-proven torch.compile binding is source-exact; backend execution is not inferred."
+    },
+    {
+      "id": "inductor.torch-compile.identifier-options",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_import_bound_member_two_keyword_identifiers_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_name",
+          "value": "torch"
+        },
+        {
+          "kind": "field_equals",
+          "field": "callee_member",
+          "value": "compile"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompiledFunction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CompileConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compile-config:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "keyword1": {
+              "kind": "field_ref",
+              "field": "keyword1"
+            },
+            "value1_identifier": {
+              "kind": "field_ref",
+              "field": "value1"
+            },
+            "keyword2": {
+              "kind": "field_ref",
+              "field": "keyword2"
+            },
+            "value2_identifier": {
+              "kind": "field_ref",
+              "field": "value2"
+            },
+            "resolved_values": false
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compile-config:{path}:{binding_name}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Identifier-valued torch.compile keyword configuration is preserved as authored configuration without resolving identifier values."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "authored torch.compile/torch._dynamo configuration, including literal backend/mode and identifier-valued keyword configuration where host facts preserve it, is materialized; deeper computed option values remain bounded value-flow candidates",
+      "Inductor IR, graph breaks, lowering, generated kernels and backend-specific runtime compilation are runtime-generated and are not executed"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "pytorch-fx",
+      "repository": "https://github.com/pytorch/pytorch",
+      "path": "torch/_inductor/graph.py",
+      "revision": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "pytorch-inductor.exact_signature.1.backend=_inductor_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "backend=\"inductor\""
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "backend=\"inductor\"",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.2.backend=_inductor_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "backend=\"inductor\""
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "backend=\"inductor\"",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.3.backend=_inductor_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:backend=\"inductor\""
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "backend=\"inductor\"",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.4.backend=_inductor_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "backend=\"inductor\""
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "backend=\"inductor\"",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.1.torch._inductor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "torch._inductor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch._inductor",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.2.torch._inductor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "torch._inductor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch._inductor",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.3.torch._inductor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:torch._inductor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch._inductor",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.4.torch._inductor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "torch._inductor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch._inductor",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.1.torch.compile",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "torch.compile"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch.compile",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.2.torch.compile",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "torch.compile"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch.compile",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.3.torch.compile",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:torch.compile"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch.compile",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "pytorch-inductor.exact_signature.4.torch.compile",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "torch.compile"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "pytorch-inductor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "pytorch-inductor",
+          "framework_name": "PyTorch Inductor",
+          "signature": "torch.compile",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ]
+}

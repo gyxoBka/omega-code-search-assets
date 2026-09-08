@@ -1,0 +1,925 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-godot",
+  "selector": "framework:godot",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "gdscript",
+      "godot-resource"
+    ],
+    "required_packs": [
+      "omega-gdscript",
+      "omega-godot-resource"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "calls_members",
+    "existing_language_ir",
+    "structured_documents",
+    "definition.category_candidate",
+    "call.gdscript_direct_candidate"
+  ],
+  "emits": {
+    "entities": [
+      "Asset",
+      "GameComponent",
+      "GameEntity",
+      "GameType",
+      "Scene",
+      "Signal"
+    ],
+    "relations": [
+      "asset_references",
+      "configured_by",
+      "contains",
+      "script_attached_to",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "godot.node.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.category_candidate"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "symbol_category",
+          "value": "class"
+        },
+        {
+          "kind": "field_present",
+          "field": "name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GameComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}:{name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Only a syntactic GDScript class declaration category emitted by omega-gdscript; arbitrary generic class definitions are not promoted."
+    },
+    {
+      "id": "godot.asset.load.call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.gdscript_direct_candidate"
+        },
+        {
+          "kind": "field_in",
+          "field": "name",
+          "values": [
+            "preload",
+            "load"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Asset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:asset-call:{path}:{source.start}"
+          },
+          "attributes": {
+            "call": {
+              "kind": "field_ref",
+              "field": "name"
+            },
+            "source_only": true,
+            "target_resolution_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "candidate",
+      "coverage_note": "Only direct GDScript load/preload syntax. The referenced resource path is not resolved by this rule."
+    },
+    {
+      "id": "godot.scene.document",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "value.document"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tscn"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Scene",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:scene:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "godot.scene.node",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.godot_section_attribute_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "section_kind",
+          "value": "node"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "name"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tscn"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GameEntity",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:node:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "declaration_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:scene:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:node:{path}:{attribute_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "godot.scene.ext-resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.godot_section_attribute_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "section_kind",
+          "value": "ext_resource"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "path"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tscn"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Asset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:asset:{attribute_value}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "declaration_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "asset_references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:scene:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:asset:{attribute_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "godot.scene.script-attachment",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.godot_node_script_ext_resource_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "node_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "resource_id"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.tscn"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "structured.godot_ext_resource_id_path_context",
+          "current_field": "resource_id",
+          "join_field": "resource_id",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "resource_path"
+            }
+          ],
+          "bind": "script_resource"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "script_attached_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:node:{path}:{node_name}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "script_resource",
+            "field": "resource_path",
+            "template": "godot:asset:{value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "godot.signal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.gdscript_signal"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Signal",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:signal:{path}:{name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:signal:{path}:{name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "godot.class-name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.gdscript_class_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GameType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:class:{path}:{name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:class:{path}:{name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "godot.resource-load",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.gdscript_resource_load"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Asset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:resource:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "authored GDScript class_name/signals/load/preload and .tscn node/resource/script attachments are materialized",
+      "runtime scene tree mutations, autoload singleton state, UID remapping and generated/imported resource state remain runtime/editor semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "godot",
+      "repository": "https://github.com/godotengine/godot",
+      "path": "scene/resources/resource_format_text.cpp",
+      "revision": "35e80b3a8822a9df9be390814b62f44c0a9c69e8",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "godot.exact_signature.1..gdextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": ".gdextension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": ".gdextension",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.2..gdextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": ".gdextension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": ".gdextension",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.3..gdextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:.gdextension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": ".gdextension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.4..gdextension",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": ".gdextension"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": ".gdextension",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.1.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "godot",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.2.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "godot",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.3.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "godot",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.4.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "godot",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.1.project.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "project.godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "project.godot",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.2.project.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "project.godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "project.godot",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.3.project.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:project.godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "project.godot",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "godot.exact_signature.4.project.godot",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "project.godot"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "godot"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "godot",
+          "framework_name": "Godot",
+          "signature": "project.godot",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ]
+}

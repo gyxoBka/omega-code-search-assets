@@ -1,0 +1,2043 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-android",
+  "selector": "framework:android",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "kotlin",
+      "java",
+      "xml"
+    ],
+    "required_packs": [
+      "omega-kotlin",
+      "omega-java",
+      "omega-xml"
+    ],
+    "required_capabilities": [
+      "definitions",
+      "calls",
+      "references",
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "project_level_evidence",
+    "structured.entry(role=xml_element_attribute)",
+    "structured.entry(role=xml_parent_child_attribute_context)"
+  ],
+  "emits": {
+    "entities": [
+      "Activity",
+      "ActivityAlias",
+      "Application",
+      "Component",
+      "ComponentSetting",
+      "DeepLink",
+      "Feature",
+      "IntentAction",
+      "IntentCategory",
+      "Manifest",
+      "ManifestComponent",
+      "Permission",
+      "Provider",
+      "Receiver",
+      "Route",
+      "Service",
+      "View"
+    ],
+    "relations": [
+      "accepts_deep_link",
+      "contains",
+      "declares",
+      "declares_permission",
+      "handles_intent",
+      "has_category",
+      "navigates_to",
+      "renders",
+      "requests_permission",
+      "requires_feature"
+    ]
+  },
+  "rules": [
+    {
+      "id": "android.layout.id_view",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:id"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_value",
+          "value": "\"@+id/"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/res/layout/**/*.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_kind": "layout_xml"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:view:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "element_tag": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            },
+            "resource_id": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:view:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resource_declaration": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:view:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true,
+            "resource_declaration": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.navigation.route_declaration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "element_tag",
+          "values": [
+            "fragment",
+            "activity",
+            "dialog",
+            "navigation"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:id"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_value",
+          "value": "\"@+id/"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/res/navigation/**/*.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:route:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "destination_kind": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            },
+            "resource_id": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.navigation.action_destination",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_parent_child_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "parent_tag",
+          "values": [
+            "fragment",
+            "activity",
+            "dialog",
+            "navigation"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "parent_attribute_name",
+          "value": "android:id"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "parent_attribute_value",
+          "value": "\"@+id/"
+        },
+        {
+          "kind": "field_equals",
+          "field": "child_tag",
+          "value": "action"
+        },
+        {
+          "kind": "field_equals",
+          "field": "child_attribute_name",
+          "value": "app:destination"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "child_attribute_value",
+          "value": "\"@id/"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/res/navigation/**/*.xml"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "structured.entry",
+          "current_field": "child_attribute_value",
+          "join_field": "attribute_value",
+          "current_strip_prefix": "\"@id/",
+          "join_strip_prefix": "\"@+id/",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "attribute_equals",
+              "attribute": "role",
+              "value": "xml_element_attribute"
+            },
+            {
+              "kind": "field_in",
+              "field": "element_tag",
+              "values": [
+                "fragment",
+                "activity",
+                "dialog",
+                "navigation"
+              ]
+            },
+            {
+              "kind": "field_equals",
+              "field": "attribute_name",
+              "value": "android:id"
+            },
+            {
+              "kind": "field_prefix",
+              "field": "attribute_value",
+              "value": "\"@+id/"
+            }
+          ],
+          "bind": "destination"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "navigates_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:route:{path}:{parent_attribute_value}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "destination",
+            "field": "attribute_value",
+            "template": "android:route:{path}:{value}"
+          },
+          "attributes": {
+            "source_only": true,
+            "reference_kind": "app:destination",
+            "target_requires_declaration": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.package",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "manifest"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "package"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Manifest",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.application",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "application"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Application",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:application:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "manifest_tag": "application"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:application:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.activity",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "activity"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Activity",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:activity:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "manifest_tag": "activity"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:activity:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.activity-alias",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "activity-alias"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ActivityAlias",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:activityalias:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "manifest_tag": "activity-alias"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:activityalias:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.service",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "service"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:service:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "manifest_tag": "service"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:service:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.receiver",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "receiver"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Receiver",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:receiver:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "manifest_tag": "receiver"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:receiver:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.provider",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "provider"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Provider",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:provider:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "manifest_tag": "provider"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:provider:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.uses-permission",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "uses-permission"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Permission",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:permission:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "requests_permission",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:permission:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.permission",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "permission"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Permission",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:permission:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_permission",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:permission:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.uses-feature",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "uses-feature"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Feature",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:feature:{attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "requires_feature",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:feature:{attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.component-setting.android-exported",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.xml_element_two_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "element_tag",
+          "values": [
+            "application",
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver",
+            "provider"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute1_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute2_name",
+          "value": "android:exported"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:component-setting:{path}:{attribute1_value}:android:exported"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "attribute1_value"
+            },
+            "setting": "android:exported",
+            "value": {
+              "kind": "field_ref",
+              "field": "attribute2_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.component-setting.android-enabled",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.xml_element_two_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "element_tag",
+          "values": [
+            "application",
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver",
+            "provider"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute1_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute2_name",
+          "value": "android:enabled"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:component-setting:{path}:{attribute1_value}:android:enabled"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "attribute1_value"
+            },
+            "setting": "android:enabled",
+            "value": {
+              "kind": "field_ref",
+              "field": "attribute2_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.component-setting.android-permission",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.xml_element_two_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "element_tag",
+          "values": [
+            "application",
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver",
+            "provider"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute1_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute2_name",
+          "value": "android:permission"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:component-setting:{path}:{attribute1_value}:android:permission"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "attribute1_value"
+            },
+            "setting": "android:permission",
+            "value": {
+              "kind": "field_ref",
+              "field": "attribute2_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.component-setting.android-process",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.xml_element_two_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "element_tag",
+          "values": [
+            "application",
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver",
+            "provider"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute1_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute2_name",
+          "value": "android:process"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:component-setting:{path}:{attribute1_value}:android:process"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "attribute1_value"
+            },
+            "setting": "android:process",
+            "value": {
+              "kind": "field_ref",
+              "field": "attribute2_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.intent-action",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_ancestor_grandchild_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "ancestor_tag",
+          "values": [
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "ancestor_attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "intermediate_tag",
+          "value": "intent-filter"
+        },
+        {
+          "kind": "field_equals",
+          "field": "descendant_tag",
+          "value": "action"
+        },
+        {
+          "kind": "field_equals",
+          "field": "descendant_attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IntentAction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:intentaction:{descendant_attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "descendant_attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ManifestComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:manifest-component:{path}:{ancestor_attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "ancestor_attribute_value"
+            },
+            "kind": {
+              "kind": "field_ref",
+              "field": "ancestor_tag"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles_intent",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest-component:{path}:{ancestor_attribute_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:intentaction:{descendant_attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.intent-category",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_ancestor_grandchild_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "ancestor_tag",
+          "values": [
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "ancestor_attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "intermediate_tag",
+          "value": "intent-filter"
+        },
+        {
+          "kind": "field_equals",
+          "field": "descendant_tag",
+          "value": "category"
+        },
+        {
+          "kind": "field_equals",
+          "field": "descendant_attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IntentCategory",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:intentcategory:{descendant_attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "descendant_attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ManifestComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:manifest-component:{path}:{ancestor_attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "ancestor_attribute_value"
+            },
+            "kind": {
+              "kind": "field_ref",
+              "field": "ancestor_tag"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_category",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest-component:{path}:{ancestor_attribute_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:intentcategory:{descendant_attribute_value}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.manifest.deep-link-data",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_ancestor_grandchild_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "ancestor_tag",
+          "values": [
+            "activity",
+            "activity-alias"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "ancestor_attribute_name",
+          "value": "android:name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "intermediate_tag",
+          "value": "intent-filter"
+        },
+        {
+          "kind": "field_equals",
+          "field": "descendant_tag",
+          "value": "data"
+        },
+        {
+          "kind": "field_in",
+          "field": "descendant_attribute_name",
+          "values": [
+            "android:scheme",
+            "android:host",
+            "android:path",
+            "android:pathPrefix",
+            "android:pathPattern",
+            "android:mimeType"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/AndroidManifest.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DeepLink",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:deeplink:{path}:{ancestor_attribute_value}:{source.start}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "ancestor_attribute_value"
+            },
+            "field": {
+              "kind": "field_ref",
+              "field": "descendant_attribute_name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "descendant_attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "accepts_deep_link",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:manifest-component:{path}:{ancestor_attribute_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:deeplink:{path}:{ancestor_attribute_value}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "android.navigation.deep-link",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_parent_child_attribute_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "parent_tag",
+          "values": [
+            "fragment",
+            "activity",
+            "dialog",
+            "navigation"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "parent_attribute_name",
+          "value": "android:id"
+        },
+        {
+          "kind": "field_equals",
+          "field": "child_tag",
+          "value": "deepLink"
+        },
+        {
+          "kind": "field_in",
+          "field": "child_attribute_name",
+          "values": [
+            "app:uri",
+            "android:uri"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/res/navigation/**/*.xml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DeepLink",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "android:nav-deeplink:{path}:{source.start}"
+          },
+          "attributes": {
+            "uri": {
+              "kind": "field_ref",
+              "field": "child_attribute_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "accepts_deep_link",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "android:route:{path}:{parent_attribute_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "android:nav-deeplink:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "runtime-created components, manifest merge results, package-manager enablement and device/resource-qualifier selection require Android build/runtime evidence",
+      "Safe Args generated directions and runtime navigation mutations are generated/runtime semantics; authored navigation destinations/actions/deep-link URI fields are materialized",
+      "resource aliases, theme/style resolution and dynamic resource expressions require bounded resource resolver evidence rather than Framework guessing",
+      "Compose UI/navigation source semantics are owned by the Jetpack Compose overlay; compiled Compose runtime tree/recomposition remains runtime-only"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "android-lint",
+      "repository": "https://github.com/googlesamples/android-custom-lint-rules",
+      "path": "**/src/main/java/**",
+      "revision": "5751b4f0b7d6c5af67b990e7e06571179baa1e07",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "androidx",
+      "repository": "https://github.com/androidx/androidx",
+      "path": "compose/**",
+      "revision": "9df4d001962d58aabca222967b8ceb1789acb960",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "android.exact_signature.1.com.android.application",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "com.android.application"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.application",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.2.com.android.application",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "com.android.application"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.application",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.3.com.android.application",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:com.android.application"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.application",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.4.com.android.application",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "com.android.application"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.application",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.1.com.android.library",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "com.android.library"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.library",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.2.com.android.library",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "com.android.library"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.library",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.3.com.android.library",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:com.android.library"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.library",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.4.com.android.library",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "com.android.library"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.library",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.1.com.android.tools.build_gradle",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "com.android.tools.build:gradle"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.tools.build:gradle",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.2.com.android.tools.build_gradle",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "com.android.tools.build:gradle"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.tools.build:gradle",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.3.com.android.tools.build_gradle",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:com.android.tools.build:gradle"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.tools.build:gradle",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "android.exact_signature.4.com.android.tools.build_gradle",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "com.android.tools.build:gradle"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "android"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "android",
+          "framework_name": "Android",
+          "signature": "com.android.tools.build:gradle",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

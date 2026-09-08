@@ -1,0 +1,1431 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-wordpress",
+  "selector": "framework:wordpress",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "php"
+    ],
+    "required_packs": [
+      "omega-php"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "BlockType",
+      "ContentType",
+      "Hook",
+      "HookDispatch",
+      "HookRegistration",
+      "Menu",
+      "Option",
+      "Route",
+      "ScriptResource",
+      "Shortcode",
+      "Sidebar",
+      "StyleResource",
+      "Taxonomy"
+    ],
+    "relations": [
+      "configured_by",
+      "configures",
+      "dispatches",
+      "handles",
+      "registers_for",
+      "uses_api",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "wordpress.register-hook-two-string",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_two_string_args_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "call_name",
+          "values": [
+            "add_action",
+            "add_filter"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:hook:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "call_name"
+            },
+            "callback_literal": {
+              "kind": "field_ref",
+              "field": "arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers_for",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:registration:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:hook:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.dispatch-hook",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "call_name",
+          "values": [
+            "do_action",
+            "do_action_ref_array",
+            "apply_filters",
+            "apply_filters_ref_array"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:hook:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookDispatch",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:dispatch:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "call_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "dispatches",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:dispatch:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:hook:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.generic-api-call.wordpress-plugin",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@wordpress-plugin"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@wordpress-plugin",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@wordpress-plugin",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "wordpress.generic-api-call.wp-content-plugins",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "wp-content/plugins"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "wp-content/plugins",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "wp-content/plugins",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "wordpress.add_action.identifier",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_identifier_args_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_action"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "callback": {
+              "kind": "field_ref",
+              "field": "arg1_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1_identifier"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "wordpress.add_filter.identifier",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_identifier_args_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_filter"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "callback": {
+              "kind": "field_ref",
+              "field": "arg1_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1_identifier"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "wordpress.add_shortcode.identifier",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_identifier_args_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_shortcode"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Shortcode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:shortcode:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "callback": {
+              "kind": "field_ref",
+              "field": "arg1_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:shortcode:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1_identifier"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "wordpress.register_post_type",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "register_post_type"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContentType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:contenttype:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:contenttype:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.register_taxonomy",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "register_taxonomy"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Taxonomy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:taxonomy:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:taxonomy:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.register_block_type",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "register_block_type"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlockType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:blocktype:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:blocktype:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.register_nav_menu",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "register_nav_menu"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Menu",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:menu:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:menu:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.register_sidebar",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "register_sidebar"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Sidebar",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:sidebar:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:sidebar:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.rest-route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_two_string_args_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "register_rest_route"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:rest:{arg0}:{arg1}"
+          },
+          "attributes": {
+            "namespace": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:rest:{arg0}:{arg1}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.wp_enqueue_script",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "wp_enqueue_script"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ScriptResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:scriptresource:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "wp_enqueue_script"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:scriptresource:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.wp_enqueue_style",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "wp_enqueue_style"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StyleResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:styleresource:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "wp_enqueue_style"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:styleresource:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.get_option",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "get_option"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Option",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:option:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "get_option"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:option:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.update_option",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "update_option"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Option",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:option:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "update_option"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:option:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "wordpress.add_option",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.php_function_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_option"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Option",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "wordpress:option:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "add_option"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:option:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "callable arrays, closures, computed hook names and dynamic callback resolution remain candidate/runtime value-flow semantics",
+      "literal hook/filter/shortcode names, direct identifier callbacks, REST route namespace/path, content/taxonomy/block/menu/sidebar registrations and literal asset/option keys are materialized",
+      "runtime plugin/theme registration order, generated hooks and WordPress global state are runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "psalm-wordpress",
+      "repository": "https://github.com/psalm/psalm-plugin-wordpress",
+      "path": "src/**",
+      "revision": "fdc47425fc4907214ea00c504290846e492a7e0b",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "wordpress.exact_signature.1.@wordpress-plugin",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "@wordpress-plugin"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "@wordpress-plugin",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.2.@wordpress-plugin",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "@wordpress-plugin"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "@wordpress-plugin",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.3.@wordpress-plugin",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:@wordpress-plugin"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "@wordpress-plugin",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.4.@wordpress-plugin",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "@wordpress-plugin"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "@wordpress-plugin",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.1.plugin name_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "Plugin Name:"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "Plugin Name:",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.2.plugin name_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "Plugin Name:"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "Plugin Name:",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.3.plugin name_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:plugin name:"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "Plugin Name:",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.4.plugin name_",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "Plugin Name:"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "Plugin Name:",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.1.wp-content_plugins",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "wp-content/plugins"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "wp-content/plugins",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.2.wp-content_plugins",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "wp-content/plugins"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "wp-content/plugins",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.3.wp-content_plugins",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:wp-content/plugins"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "wp-content/plugins",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "wordpress.exact_signature.4.wp-content_plugins",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "wp-content/plugins"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "wordpress"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "wordpress",
+          "framework_name": "WordPress",
+          "signature": "wp-content/plugins",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

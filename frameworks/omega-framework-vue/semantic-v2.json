@@ -1,0 +1,1194 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-vue",
+  "selector": "framework:vue",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "vue",
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-vue",
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "file_paths",
+    "imports_bindings",
+    "existing_language_ir"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Component",
+      "ComponentReference",
+      "Composable",
+      "ContextKey",
+      "Dependency",
+      "EmitsDeclaration",
+      "Event",
+      "ExposeDeclaration",
+      "PropsDeclaration",
+      "Route",
+      "SlotsDeclaration",
+      "TemplateBinding",
+      "TemplateExpression"
+    ],
+    "relations": [
+      "declares_emits",
+      "declares_expose",
+      "declares_props",
+      "declares_slots",
+      "depends_on",
+      "emits",
+      "injects_context",
+      "provides_context",
+      "renders",
+      "route_to_component",
+      "uses_api",
+      "uses_binding"
+    ]
+  },
+  "rules": [
+    {
+      "id": "vue.sfc.component",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component:{file.path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "file.path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.router.route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "vue-router",
+          "member_in": [
+            "createRouter"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:router:{file.path}"
+          },
+          "attributes": {
+            "source": {
+              "kind": "literal",
+              "value": "createRouter"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vue.composable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.qname"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/composables/**/*.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Composable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:composable:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_only": true,
+            "convention": "vue_composable_use_prefix"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Source convention only: named function use* under a composables directory. Import/use/runtime behavior is not claimed."
+    },
+    {
+      "id": "vue.template.exact-file-component-render",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.vue_element"
+        },
+        {
+          "kind": "field_present",
+          "field": "name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.file",
+          "current_field": "name",
+          "join_field": "path.stem",
+          "where": [
+            {
+              "kind": "path_glob",
+              "field": "file.path",
+              "pattern": "**/*.vue"
+            }
+          ],
+          "bind": "target_file"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_file",
+            "field": "file.path",
+            "template": "vue:component:{value}"
+          },
+          "attributes": {
+            "tag_name": {
+              "kind": "field_ref",
+              "field": "name"
+            },
+            "evidence": "exact_template_tag_to_file_stem",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vue.router.inline-literal-route-component",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_call_object_array_object_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "createRouter"
+        },
+        {
+          "kind": "field_equals",
+          "field": "array_key",
+          "value": "routes"
+        },
+        {
+          "kind": "field_equals",
+          "field": "string_key",
+          "value": "path"
+        },
+        {
+          "kind": "field_equals",
+          "field": "identifier_key",
+          "value": "component"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "call.direct",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "vue-router",
+              "member": "createRouter"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.file",
+          "current_field": "identifier_value",
+          "join_field": "path.stem",
+          "where": [
+            {
+              "kind": "path_glob",
+              "field": "file.path",
+              "pattern": "**/*.vue"
+            }
+          ],
+          "bind": "target_file"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:router:{path}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_file",
+            "field": "file.path",
+            "template": "vue:component:{value}"
+          },
+          "attributes": {
+            "route_path": {
+              "kind": "field_ref",
+              "field": "string_value"
+            },
+            "component_identifier": {
+              "kind": "field_ref",
+              "field": "identifier_value"
+            },
+            "evidence": "authored_inline_router_entry",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vue.generic-api-call.vue",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "vue"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "vue",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "vue",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "vue.generic-dependency.vue",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "vue"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:dependency:vue"
+          },
+          "attributes": {
+            "package": "vue",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:dependency:vue"
+          },
+          "attributes": {
+            "package": "vue",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "vue.template.imported-component-render",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.vue_element"
+        },
+        {
+          "kind": "field_present",
+          "field": "name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "module_source"
+            }
+          ],
+          "bind": "component_import"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component-ref:{path}:{name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "name"
+            },
+            "source_only": true,
+            "import_resolved": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:component-ref:{path}:{name}"
+          },
+          "attributes": {
+            "source_only": true,
+            "import_resolved": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.macro.defineProps",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "defineProps"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PropsDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:defineProps:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "defineProps",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_props",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:defineProps:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.macro.defineEmits",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "defineEmits"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EmitsDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:defineEmits:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "defineEmits",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_emits",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:defineEmits:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.macro.defineSlots",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "defineSlots"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SlotsDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:defineSlots:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "defineSlots",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_slots",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:defineSlots:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.macro.defineExpose",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "defineExpose"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExposeDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:defineExpose:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "defineExpose",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_expose",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:defineExpose:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.defineEmits.literal-event",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_direct_array_string_item_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "defineEmits"
+        },
+        {
+          "kind": "field_present",
+          "field": "item"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Event",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:event:{path}:{item}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "item"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "emits",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:event:{path}:{item}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.context.provide.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "provide"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContextKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:context:{arg1}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "provides_context",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:context:{arg1}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.context.inject.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "inject"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContextKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:context:{arg1}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects_context",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:context:{arg1}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vue.template.directive-binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.vue_directive_value"
+        },
+        {
+          "kind": "field_in",
+          "field": "directive",
+          "values": [
+            "v-bind",
+            "bind",
+            "v-model",
+            "model",
+            "v-on",
+            "on",
+            "v-if",
+            "if",
+            "v-for",
+            "for",
+            "v-show",
+            "show"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "field_ref",
+              "field": "directive"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_binding",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vue.template.interpolation-expression",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.vue_interpolation"
+        },
+        {
+          "kind": "field_present",
+          "field": "name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateExpression",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:template-expression:{path}:{source.start}"
+          },
+          "attributes": {
+            "expression": {
+              "kind": "field_ref",
+              "field": "name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_binding",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:template-expression:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "TS/JS script semantics require the injected AnalysisUnit parser selected by authored <script lang>; TSX remains unavailable until a TSX grammar asset exists.",
+      "Kebab/Pascal auto-normalization, auto-import conventions and dynamic <component :is> targets require a dedicated deterministic component-name normalizer/resolver; exact imported local-name and exact file-stem evidence are covered.",
+      "Router arrays held in variables, spreads/computed entries, lazy imports, named-route indirection, nested children and runtime router mutation require deeper value-flow/resolution; inline literal entries are covered.",
+      "source-authored non-literal provide/inject keys and dynamic component-selection values require bounded value/symbol resolution",
+      "runtime reactivity and effective component selection remain runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/vue/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-vue-spa-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "gristle",
+      "repository": "https://github.com/Alchemy-Agentic/gristle",
+      "path": "src/gristle/**",
+      "revision": "00c6722c9112c233b354454ce1e66851c56093e7",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "gristle",
+      "repository": "https://github.com/Alchemy-Agentic/gristle",
+      "path": "tests/**",
+      "revision": "00c6722c9112c233b354454ce1e66851c56093e7",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "vue.exact_signature.1.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vue.exact_signature.2.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vue.exact_signature.3.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vue.exact_signature.4.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ]
+}

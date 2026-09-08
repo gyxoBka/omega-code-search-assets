@@ -1,0 +1,1131 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-express",
+  "selector": "framework:express",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "bindings",
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "imports_bindings",
+    "calls_members",
+    "existing_language_ir",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Application",
+      "ConfigEntry",
+      "Dependency",
+      "Handler",
+      "Listener",
+      "Middleware",
+      "Route",
+      "Router",
+      "RouterGroup",
+      "StaticResource"
+    ],
+    "relations": [
+      "configured_by",
+      "depends_on",
+      "handles",
+      "middleware_wraps",
+      "mounts",
+      "uses_api",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "express.route.verb",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "options",
+            "head",
+            "all"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "http:{method}:{normalized_path}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "call.member"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:handler:{call.last_arg}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:handler:{call.last_arg}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.mount.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call.member",
+          "value": "use"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0",
+          "value": "/"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouterGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:router:{call.last_arg}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            },
+            "prefix": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:router:{call.last_arg}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.middleware.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call.member",
+          "value": "use"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "call.arg0",
+          "value": "/"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:middleware:{call.arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "middleware_wraps",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:middleware:{call.arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.generic-api-call.express",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "express",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "express",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "express.generic-dependency.express",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:dependency:express"
+          },
+          "attributes": {
+            "package": "express",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:dependency:express"
+          },
+          "attributes": {
+            "package": "express",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "express.app.construct",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ecmascript_direct_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "express"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Application",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:app:{path}:{source.start}"
+          },
+          "attributes": {
+            "framework": "express"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.router.construct",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "Router"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:router:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.config.param",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "param"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:config:param:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "param",
+            "key": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:config:param:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.config.set",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "set"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:config:set:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "set",
+            "key": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:config:set:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.config.engine",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "engine"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:config:engine:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "engine",
+            "key": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:config:engine:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.config.disable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "disable"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:config:disable:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "disable",
+            "key": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:config:disable:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.config.enable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "enable"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:config:enable:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "enable",
+            "key": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:config:enable:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.static.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "static"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StaticResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:static:{path}:{source.start}"
+          },
+          "attributes": {
+            "root": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:static:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.listener.listen",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "listen"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Listener",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:listener:{path}:{source.start}"
+          },
+          "attributes": {
+            "port": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:listener:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.route.builder",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "route"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouterGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:route-builder:{path}:{source.start}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.middleware-factory.json",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "json"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:middleware-factory:json:{path}:{source.start}"
+          },
+          "attributes": {
+            "factory": "json",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.middleware-factory.urlencoded",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "urlencoded"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:middleware-factory:urlencoded:{path}:{source.start}"
+          },
+          "attributes": {
+            "factory": "urlencoded",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.middleware-factory.raw",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "raw"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:middleware-factory:raw:{path}:{source.start}"
+          },
+          "attributes": {
+            "factory": "raw",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "express.middleware-factory.text",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "express",
+          "member_in": [
+            "text"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:middleware-factory:text:{path}:{source.start}"
+          },
+          "attributes": {
+            "factory": "text",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "computed route/config/static paths remain candidates until bounded constant/value resolution proves them",
+      "router/app aliases and cross-file Router identity require generic resolver provenance; explicit authored registration facts remain materialized",
+      "runtime middleware ordering/mutation and request execution are runtime state"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "src/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "test/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "scripts/source_map_v2/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "express.exact_signature.1.express",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "express"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "express"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "express",
+          "framework_name": "Express",
+          "signature": "express",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "express.exact_signature.2.express",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "express"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "express"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "express",
+          "framework_name": "Express",
+          "signature": "express",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "express.exact_signature.3.express",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:express"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "express"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "express",
+          "framework_name": "Express",
+          "signature": "express",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "express.exact_signature.4.express",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "express"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "express"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "express",
+          "framework_name": "Express",
+          "signature": "express",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ]
+}

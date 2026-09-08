@@ -1,0 +1,1884 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-ruby-on-rails",
+  "selector": "framework:ruby-on-rails",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "ruby"
+    ],
+    "required_packs": [
+      "omega-ruby"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "calls_members",
+    "file_paths",
+    "config_files",
+    "existing_language_ir"
+  ],
+  "emits": {
+    "entities": [
+      "Association",
+      "Controller",
+      "Job",
+      "Model",
+      "ModelRule",
+      "MountedEngine",
+      "ResourceRoute",
+      "Route",
+      "RouteConstraint",
+      "RouteNamespace",
+      "RouteScope",
+      "SchemaIndex",
+      "SchemaReference",
+      "SchemaTable"
+    ],
+    "relations": [
+      "configured_by",
+      "configures",
+      "depends_on",
+      "handles",
+      "uses_model"
+    ]
+  },
+  "rules": [
+    {
+      "id": "rails.route.dsl",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "path_glob",
+          "field": "source.path",
+          "pattern": "**/config/routes.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "call_name",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "resources",
+            "resource"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route:{call_name}:{arg0}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "call_name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.controller.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "ActionController",
+          "member_in": [
+            "Base"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:controller:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "ApplicationRecord"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model:{source.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.to_handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_kwarg_context"
+        },
+        {
+          "kind": "path_glob",
+          "field": "source.path",
+          "pattern": "**/config/routes.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "call_name",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "kwarg_key",
+          "value": "to"
+        },
+        {
+          "kind": "field_present",
+          "field": "kwarg_value"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:route:{call_name}:{arg0}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "kwarg_value"
+          },
+          "attributes": {
+            "source_only": true,
+            "explicit_to_string": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.job.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "field": "source.path",
+          "pattern": "**/app/jobs/**/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:job:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.model.explicit_class_name_association",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.ruby_class_association_explicit_target_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "macro",
+          "values": [
+            "belongs_to",
+            "has_one",
+            "has_many"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "option_key",
+          "value": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "option_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/models/**/*.rb"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.class",
+          "current_field": "owner_class",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "ApplicationRecord"
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.class",
+          "current_field": "option_value",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "ApplicationRecord"
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ],
+          "bind": "target_model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:model:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_model",
+            "field": "source.path",
+            "template": "rails:model:{value}:{option_value}"
+          },
+          "attributes": {
+            "declaration_only": true,
+            "association_macro": {
+              "kind": "field_ref",
+              "field": "macro"
+            },
+            "association_name": {
+              "kind": "field_ref",
+              "field": "association_name"
+            },
+            "explicit_target": {
+              "kind": "field_ref",
+              "field": "option_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:model:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_model",
+            "field": "source.path",
+            "template": "rails:model:{value}:{option_value}"
+          },
+          "attributes": {
+            "declaration_only": true,
+            "association_macro": {
+              "kind": "field_ref",
+              "field": "macro"
+            },
+            "explicit_class_name": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.resources",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "resources"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ResourceRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:resourceroute:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "dsl": "resources"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:resourceroute:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "resource"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ResourceRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:resourceroute:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "dsl": "resource"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:resourceroute:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.namespace",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "namespace"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteNamespace",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:routenamespace:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "dsl": "namespace"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:routenamespace:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.scope",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "scope"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteScope",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:routescope:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "dsl": "scope"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:routescope:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.constraints",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "constraints"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteConstraint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:routeconstraint:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "dsl": "constraints"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:routeconstraint:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.mount",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "mount"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MountedEngine",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:mountedengine:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "dsl": "mount"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:mountedengine:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.association.declaration.belongs_to",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "belongs_to"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Association",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "macro": "belongs_to"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "target_resolution": "candidate_without_inflection"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.association.declaration.has_one",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "has_one"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Association",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "macro": "has_one"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "target_resolution": "candidate_without_inflection"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.association.declaration.has_many",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "has_many"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Association",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "macro": "has_many"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "target_resolution": "candidate_without_inflection"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.association.declaration.has_and_belongs_to_many",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "has_and_belongs_to_many"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Association",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "macro": "has_and_belongs_to_many"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:association:{path}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "target_resolution": "candidate_without_inflection"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.validates",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "validates"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "validates",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:validates:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.validate",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "validate"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "validate",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:validate:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.before_validation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "before_validation"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "before_validation",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:before_validation:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.after_validation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "after_validation"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "after_validation",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:after_validation:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.before_save",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "before_save"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "before_save",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:before_save:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.after_save",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "after_save"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "after_save",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:after_save:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.before_create",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "before_create"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "before_create",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:before_create:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.after_create",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "after_create"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "after_create",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:after_create:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.before_update",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "before_update"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "before_update",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:before_update:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.after_update",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "after_update"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "after_update",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:after_update:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.before_destroy",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "before_destroy"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "before_destroy",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:before_destroy:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.after_destroy",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "after_destroy"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{macro}:{{arg0}}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "macro": "after_destroy",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:model-rule:after_destroy:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.migration.create_table",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "create_table"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schematable:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "create_table"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:schematable:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.migration.change_table",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "change_table"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schematable:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "change_table"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:schematable:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.migration.add_index",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_index"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaIndex",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schemaindex:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "add_index"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:schemaindex:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.migration.add_reference",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_reference"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schemareference:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "add_reference"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:schemareference:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.migration.add_foreign_key",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.ruby_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "add_foreign_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schemareference:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "operation": "add_foreign_key"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:schemareference:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "runtime Rails DSL metaprogramming, concerns/engines loaded dynamically and ActiveSupport callback execution order are runtime semantics",
+      "authored resources/resource/namespace/scope/mount routes, explicit associations, validations/callback declarations and migration operations are materialized",
+      "implicit association target inflection is preserved as candidate association evidence rather than guessed; explicit class_name relations remain stronger",
+      "computed route/migration names and runtime schema state require value/runtime evidence"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "scripts/source_map_v2/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "references/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "mcp-anything",
+      "repository": "https://github.com/gabrielekarra/mcp-anything",
+      "path": "src/mcp_anything/**",
+      "revision": "133e7a0b70132fd8e11f264443dcd6f6c5a1ed6c",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "mcp-anything",
+      "repository": "https://github.com/gabrielekarra/mcp-anything",
+      "path": "tests/**",
+      "revision": "133e7a0b70132fd8e11f264443dcd6f6c5a1ed6c",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "ruby-on-rails.exact_signature.1.rails",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "rails"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "ruby-on-rails"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "ruby-on-rails",
+          "framework_name": "Ruby on Rails",
+          "signature": "rails",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "ruby-on-rails.exact_signature.2.rails",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "rails"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "ruby-on-rails"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "ruby-on-rails",
+          "framework_name": "Ruby on Rails",
+          "signature": "rails",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "ruby-on-rails.exact_signature.3.rails",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:rails"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "ruby-on-rails"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "ruby-on-rails",
+          "framework_name": "Ruby on Rails",
+          "signature": "rails",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "ruby-on-rails.exact_signature.4.rails",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "rails"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "ruby-on-rails"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "ruby-on-rails",
+          "framework_name": "Ruby on Rails",
+          "signature": "rails",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  },
+  "runtime_status": "terminal-static-source-contract"
+}

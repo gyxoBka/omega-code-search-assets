@@ -1,1 +1,0 @@
-(arguments (identifier) @name)

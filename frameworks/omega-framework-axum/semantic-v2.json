@@ -1,0 +1,1251 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-axum",
+  "selector": "framework:axum",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "rust"
+    ],
+    "required_packs": [
+      "omega-rust"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "Controller",
+      "Handler",
+      "Middleware",
+      "Mount",
+      "Route",
+      "RouterDependency",
+      "Service",
+      "StateBinding",
+      "Fallback"
+    ],
+    "relations": [
+      "configured_by",
+      "depends_on",
+      "handles",
+      "mounts"
+    ]
+  },
+  "rules": [
+    {
+      "id": "axum.router.binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.rust_fq_router_binding_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_root",
+          "value": "axum"
+        },
+        {
+          "kind": "field_equals",
+          "field": "router_type",
+          "value": "Router"
+        },
+        {
+          "kind": "field_equals",
+          "field": "constructor_name",
+          "value": "new"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:service:{path}:{binding}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding"
+            },
+            "constructor": "axum::Router::new",
+            "source_role": "router-binding"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:controller:{path}:{binding}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "binding"
+            },
+            "source_role": "router-binding"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "axum.route.registration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_fq_router_route_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_root",
+          "value": "axum"
+        },
+        {
+          "kind": "field_equals",
+          "field": "router_type",
+          "value": "Router"
+        },
+        {
+          "kind": "field_equals",
+          "field": "constructor_name",
+          "value": "new"
+        },
+        {
+          "kind": "field_equals",
+          "field": "route_method",
+          "value": "route"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method_root",
+          "value": "axum"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method_module",
+          "value": "routing"
+        },
+        {
+          "kind": "field_in",
+          "field": "method_wrapper",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "head",
+            "options",
+            "connect",
+            "trace"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "binding"
+        },
+        {
+          "kind": "field_present",
+          "field": "path_literal"
+        },
+        {
+          "kind": "field_present",
+          "field": "handler_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.category_candidate",
+          "current_field": "handler_identifier",
+          "join_field": "name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "attribute_equals",
+              "attribute": "symbol_category",
+              "value": "function"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:route:{path}:{binding}:{method_wrapper}:{path_literal}:{source.start}"
+          },
+          "attributes": {
+            "router": {
+              "kind": "field_ref",
+              "field": "binding"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "method_wrapper"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path_literal"
+            },
+            "registration": "Router::route"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:handler:{path}:{handler_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "handler_identifier"
+            },
+            "resolution": "same-file-function-declaration"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:route:{path}:{binding}:{method_wrapper}:{path_literal}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:handler:{path}:{handler_identifier}"
+          },
+          "attributes": {
+            "declared_via": "Router::route"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "axum.router.nest",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_fq_router_nest_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "module_root",
+          "value": "axum"
+        },
+        {
+          "kind": "field_equals",
+          "field": "router_type",
+          "value": "Router"
+        },
+        {
+          "kind": "field_equals",
+          "field": "constructor_name",
+          "value": "new"
+        },
+        {
+          "kind": "field_equals",
+          "field": "nest_method",
+          "value": "nest"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding"
+        },
+        {
+          "kind": "field_present",
+          "field": "child_binding"
+        },
+        {
+          "kind": "field_present",
+          "field": "prefix_literal"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "child_binding",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            },
+            {
+              "kind": "field_equals",
+              "field": "constructor_name",
+              "value": "new"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{binding}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{child_binding}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "prefix_literal"
+            },
+            "declared_via": "Router::nest"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "axum.route.receiver-variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_route_nested_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "route"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.path_origin_candidate",
+          "current_field": "wrapper",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "axum::routing"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:route:{path}:{receiver}:{wrapper}:{path_literal}:{source.start}"
+          },
+          "attributes": {
+            "router": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "wrapper"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path_literal"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:handler:{path}:{handler}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "handler"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:route:{path}:{receiver}:{wrapper}:{path_literal}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:handler:{path}:{handler}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.nest-service",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "nest_service"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Mount",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:mount:{method}:{path}:{receiver}:{arg0_string}:{source.start}"
+          },
+          "attributes": {
+            "method": "nest_service",
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg0_string"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "arg1_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1_identifier"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg0_string"
+            },
+            "declared_via": "nest_service"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.route-service",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_string_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "route_service"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Mount",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:mount:{method}:{path}:{receiver}:{arg0_string}:{source.start}"
+          },
+          "attributes": {
+            "method": "route_service",
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg0_string"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "arg1_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "arg1_identifier"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg0_string"
+            },
+            "declared_via": "route_service"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.merge",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "merge"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouterDependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:routerdependency:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "method": "merge"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:routerdependency:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.layer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "layer"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:middleware:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "method": "layer"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:middleware:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.with_state",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "with_state"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StateBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:statebinding:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "method": "with_state"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:statebinding:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.route-layer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "route_layer"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:route-middleware:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "scope": "route",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:route-middleware:{path}:{receiver}:{arg0_identifier}:{source.start}"
+          },
+          "attributes": {
+            "scope": "route",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.fallback-handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_identifier_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "method",
+          "values": [
+            "fallback",
+            "method_not_allowed_fallback"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Fallback",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:fallback:{path}:{receiver}:{method}:{source.start}"
+          },
+          "attributes": {
+            "kind": {
+              "kind": "field_ref",
+              "field": "method"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:handler:{path}:{arg0_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:fallback:{path}:{receiver}:{method}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:handler:{path}:{arg0_identifier}"
+          },
+          "attributes": {
+            "fallback": true,
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:fallback:{path}:{receiver}:{method}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "axum.router.fallback-service",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.rust_receiver_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "method",
+          "value": "fallback_service"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.rust_fq_router_binding_context",
+          "current_field": "receiver",
+          "join_field": "binding",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_root",
+              "value": "axum"
+            },
+            {
+              "kind": "field_equals",
+              "field": "router_type",
+              "value": "Router"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Fallback",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:fallback-service:{path}:{receiver}:{source.start}"
+          },
+          "attributes": {
+            "kind": "service",
+            "target": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "axum:service:{path}:{arg0_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0_identifier"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:fallback-service:{path}:{receiver}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:service:{path}:{arg0_identifier}"
+          },
+          "attributes": {
+            "fallback": true,
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "axum:controller:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "axum:fallback-service:{path}:{receiver}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "imported route wrappers/handler aliases/closures and MethodRouter variables are preserved as candidates unless generic import/value resolution proves exact targets",
+      "multi-route fluent chains plus merge/nest/service/layer/route_layer/fallback authored configuration are captured when they materialize as supported receiver facts; arbitrary computed paths remain value-flow ceilings",
+      "middleware/state/merge/fallback/service registrations are authored dependencies/configuration, not proof of runtime invocation"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "axum-official",
+      "repository": "https://github.com/tokio-rs/axum",
+      "path": "axum/src/routing/mod.rs",
+      "revision": "194030d7d0c9395cd98c172d1cfd08777332d7b2",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "axum.exact_signature.1.axum",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "axum"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "axum"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "axum",
+          "framework_name": "Axum",
+          "signature": "axum",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "axum.exact_signature.2.axum",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "axum"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "axum"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "axum",
+          "framework_name": "Axum",
+          "signature": "axum",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "axum.exact_signature.3.axum",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:axum"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "axum"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "axum",
+          "framework_name": "Axum",
+          "signature": "axum",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "axum.exact_signature.4.axum",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "axum"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "axum"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "axum",
+          "framework_name": "Axum",
+          "signature": "axum",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

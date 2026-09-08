@@ -1,0 +1,2203 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-nestjs",
+  "selector": "framework:nestjs",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references",
+      "types"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "imports_bindings",
+    "decorators_annotations",
+    "existing_language_ir"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Controller",
+      "ControllerReference",
+      "Dependency",
+      "ExceptionFilter",
+      "Export",
+      "FilterBinding",
+      "Gateway",
+      "GuardBinding",
+      "Handler",
+      "InjectionPoint",
+      "InterceptorBinding",
+      "MessageHandler",
+      "Module",
+      "ModuleReference",
+      "PipeBinding",
+      "Provider",
+      "RequestBinding",
+      "Route",
+      "Service"
+    ],
+    "relations": [
+      "configured_by",
+      "contains",
+      "depends_on",
+      "exports",
+      "handles",
+      "injects",
+      "uses_api"
+    ]
+  },
+  "rules": [
+    {
+      "id": "nestjs.controller",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/common",
+          "member_in": [
+            "Controller"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:controller:{definition.qname}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "decorator.arg0"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "nestjs.route.method",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/common",
+          "member_in": [
+            "Get",
+            "Post",
+            "Put",
+            "Patch",
+            "Delete",
+            "Options",
+            "Head",
+            "All"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:route:{definition.qname}:{decorator.member}:{decorator.arg0}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "decorator.arg0"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:handler:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:route:{definition.qname}:{decorator.member}:{decorator.arg0}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{definition.qname}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.injectable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/common",
+          "member_in": [
+            "Injectable"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:service:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/common",
+          "member_in": [
+            "Module"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Module",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:module:{source.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.inject.token",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/common",
+          "member_in": [
+            "Inject"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "decorator.arg0"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.module.explicit-imports-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "imports"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_identifier"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "reference.decorator",
+          "current_field": "owner_class",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "@nestjs/common",
+              "member_in": [
+                "Module"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "reference.decorator",
+          "current_field": "item_identifier",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "@nestjs/common",
+              "member_in": [
+                "Module"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ],
+          "bind": "target_module"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:module:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_module",
+            "field": "source.path",
+            "template": "nestjs:module:{value}:{item_identifier}"
+          },
+          "attributes": {
+            "declaration_only": true,
+            "source_metadata": "Module.imports",
+            "authored_identifier": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            },
+            "target_requires_module_declaration": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.generic-api-call.nestjs-core",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/core"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@nestjs/core",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "@nestjs/core",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "nestjs.generic-dependency.nestjs-core",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/core"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:dependency:@nestjs/core"
+          },
+          "attributes": {
+            "package": "@nestjs/core",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:dependency:@nestjs/core"
+          },
+          "attributes": {
+            "package": "@nestjs/core",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "nestjs.guard",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "@nestjs/common",
+            "@nestjs/websockets"
+          ],
+          "member_in": [
+            "UseGuards"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GuardBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:guardbinding:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:guardbinding:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.interceptor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "@nestjs/common",
+            "@nestjs/websockets"
+          ],
+          "member_in": [
+            "UseInterceptors"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InterceptorBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:interceptorbinding:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:interceptorbinding:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.pipe",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "@nestjs/common",
+            "@nestjs/websockets"
+          ],
+          "member_in": [
+            "UsePipes"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PipeBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:pipebinding:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:pipebinding:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.filter",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "@nestjs/common",
+            "@nestjs/websockets"
+          ],
+          "member_in": [
+            "UseFilters"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FilterBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:filterbinding:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:filterbinding:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.gateway",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "@nestjs/common",
+            "@nestjs/websockets"
+          ],
+          "member_in": [
+            "WebSocketGateway"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Gateway",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:gateway:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:gateway:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.catch",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "@nestjs/common",
+            "@nestjs/websockets"
+          ],
+          "member_in": [
+            "Catch"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExceptionFilter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:exceptionfilter:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "decorator": {
+              "kind": "field_ref",
+              "field": "decorator.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:exceptionfilter:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.module.providers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "providers"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Module"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Provider",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:providers:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:module:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:providers:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.module.controllers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "controllers"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Module"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ControllerReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:controllers:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:module:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:controllers:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.module.exports",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "exports"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Module"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Export",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:exports:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "exports",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:module:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:exports:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.module.imports",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_class_decorator_object_array_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "imports"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Module"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModuleReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:imports:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "item_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:module:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:imports:{path}:{owner_class}:{item_identifier}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.constructor.typed-dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_constructor_parameter_type_context"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "reference.decorator",
+          "current_field": "owner_class",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "@nestjs/common",
+              "member_in": [
+                "Controller",
+                "Injectable",
+                "Module"
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InjectionPoint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:inject:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "parameter_type"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:type:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:inject:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "target_resolution": "candidate"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.param",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Param"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Param"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Param",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.query",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Query"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Query"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Query",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.body",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Body"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Body"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Body",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.headers",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Headers"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Headers"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Headers",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.req",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Req"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Req"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Req",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.res",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Res"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Res"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Res",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.session",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Session"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Session"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Session",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.ip",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "Ip"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "Ip"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "Ip",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.hostparam",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "HostParam"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "HostParam"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "HostParam",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.uploadedfile",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "UploadedFile"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "UploadedFile"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "UploadedFile",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.param.uploadedfiles",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.typescript_method_parameter_decorator_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "decorator_name",
+          "value": "UploadedFiles"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.ecmascript_named_binding_context",
+          "current_field": "decorator_name",
+          "join_field": "local_name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "module_source",
+              "value": "@nestjs/common"
+            },
+            {
+              "kind": "field_equals",
+              "field": "imported_name",
+              "value": "UploadedFiles"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {
+            "kind": "UploadedFiles",
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:handler:{path}:{owner_class}:{method_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:request-binding:{path}:{owner_class}:{method_name}:{parameter_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "nestjs.subscribe-message",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "@nestjs/websockets",
+          "member_in": [
+            "SubscribeMessage"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MessageHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "nestjs:message:{decorator.arg0}:{definition.qname}"
+          },
+          "attributes": {
+            "message": {
+              "kind": "field_ref",
+              "field": "decorator.arg0"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "nestjs:message:{decorator.arg0}:{definition.qname}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "message": {
+              "kind": "field_ref",
+              "field": "decorator.arg0"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "custom/composed decorators require cross-file decorator-definition expansion before they can inherit Nest semantics",
+      "source-authored dynamic-module/provider-factory values require bounded value/import resolution before exact module/provider semantics can be materialized",
+      "runtime DI provider selection and container state remain runtime semantics",
+      "computed route/message metadata remains candidate until bounded constant resolution proves it"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/nestjs/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/nestjs/parsers/decorator-parser.ts",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-nest-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "src/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "test/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "nestjs.exact_signature.1.@nestjs_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "@nestjs/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "nestjs"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "nestjs",
+          "framework_name": "NestJS",
+          "signature": "@nestjs/core",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "nestjs.exact_signature.2.@nestjs_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "@nestjs/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "nestjs"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "nestjs",
+          "framework_name": "NestJS",
+          "signature": "@nestjs/core",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "nestjs.exact_signature.3.@nestjs_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:@nestjs/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "nestjs"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "nestjs",
+          "framework_name": "NestJS",
+          "signature": "@nestjs/core",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "nestjs.exact_signature.4.@nestjs_core",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "@nestjs/core"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "nestjs"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "nestjs",
+          "framework_name": "NestJS",
+          "signature": "@nestjs/core",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  },
+  "runtime_status": "terminal-static-source-contract"
+}

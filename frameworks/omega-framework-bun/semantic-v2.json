@@ -1,0 +1,1333 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-bun",
+  "selector": "framework:bun",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence",
+    "reference.ecmascript_root_member_call_context"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "ConfigNamespace",
+      "Connection",
+      "Dependency",
+      "FileResource",
+      "FileWrite",
+      "Listener",
+      "ProcessTask",
+      "Resource",
+      "RuntimeComponent",
+      "Task",
+      "Handler"
+    ],
+    "relations": [
+      "configured_by",
+      "depends_on",
+      "handles",
+      "uses",
+      "uses_api",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "bun.source-authored.spawn-task",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.ecmascript_root_member_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "spawn"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.spawn",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.spawn",
+            "runtime_process_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Explicit Bun.spawn(...) sites emit a Task and an enclosing-symbol uses edge; child-process runtime identity/state is not inferred."
+    },
+    {
+      "id": "bun.source-authored.file-resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_root_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "file"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.file",
+            "source_only": true,
+            "path_literal": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.file",
+            "authored_literal": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Explicit Bun.file(\"literal\") sites emit a Resource and an enclosing-symbol uses edge; filesystem existence/content is never read."
+    },
+    {
+      "id": "bun.source-authored.serve-runtime-component",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.ecmascript_root_member_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "serve"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.serve",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Only explicit Bun.serve(...) source sites are RuntimeComponent declarations; server runtime state is not executed or inferred."
+    },
+    {
+      "id": "bun.source-authored.serve-fetch-handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_root_member_object_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "serve"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_key",
+          "value": "fetch"
+        },
+        {
+          "kind": "field_present",
+          "field": "value_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.serve",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "value_identifier"
+          },
+          "attributes": {
+            "field": "fetch",
+            "runtime_dispatch_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "high",
+      "coverage_note": "Bun.serve({fetch: identifier}) proves an authored handler reference, not runtime server reachability."
+    },
+    {
+      "id": "bun.generic-api-call.bun",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "bun",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "bun",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "bun.generic-dependency.bun",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:dependency:bun"
+          },
+          "attributes": {
+            "package": "bun",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:dependency:bun"
+          },
+          "attributes": {
+            "package": "bun",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "bun.api.write",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun",
+          "member_in": [
+            "write"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FileWrite",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:filewrite:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "write",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:filewrite:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.api.listen",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun",
+          "member_in": [
+            "listen"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Listener",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:listener:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "listen",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:listener:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.api.connect",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun",
+          "member_in": [
+            "connect"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Connection",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:connection:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "connect",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:connection:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.api.spawn",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun",
+          "member_in": [
+            "spawn"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ProcessTask",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:processtask:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "spawn",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:processtask:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.api.spawnsync",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun",
+          "member_in": [
+            "spawnSync"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ProcessTask",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:processtask:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "spawnSync",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:processtask:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.api.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun",
+          "member_in": [
+            "file"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FileResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:fileresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "file",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:fileresource:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.env",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.ecmascript_root_member_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "env"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigNamespace",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:env:{path}:{source.start}"
+          },
+          "attributes": {
+            "namespace": "Bun.env"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:env:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "bun.sqlite.database-constructor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun:sqlite",
+          "member_in": [
+            "Database"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:sqlite-database:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true,
+            "api": "Database",
+            "resource_kind": "sqlite_database"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:sqlite-database:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit imported bun:sqlite Database construction/call site is authored database resource evidence; database contents/open success are runtime-only."
+    },
+    {
+      "id": "bun.sqlite.operation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun:sqlite",
+          "member_in": [
+            "query",
+            "prepare",
+            "run",
+            "exec"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:sqlite-operation:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true,
+            "api_family": "bun:sqlite"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:sqlite-operation:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Provenance-backed bun:sqlite query/prepare/run/exec authored API site only; SQL execution/results are not inferred."
+    },
+    {
+      "id": "bun.test.case-api",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun:test",
+          "member_in": [
+            "test",
+            "it"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:test-case:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true,
+            "api_family": "bun:test",
+            "role": "test_case"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:test-case:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Provenance-backed bun:test test/it authored registration site; execution/result state is not inferred."
+    },
+    {
+      "id": "bun.test.suite-api",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun:test",
+          "member_in": [
+            "describe"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:test-suite:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true,
+            "api_family": "bun:test",
+            "role": "test_suite"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:test-suite:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Provenance-backed bun:test describe authored suite site; execution hierarchy/runtime state is not inferred."
+    },
+    {
+      "id": "bun.test.assertion-api",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "bun:test",
+          "member_in": [
+            "expect"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:test-assertion:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true,
+            "api_family": "bun:test"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:test-assertion:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Provenance-backed bun:test expect authored assertion API site; assertion outcome is runtime-only."
+    },
+    {
+      "id": "bun.serve.websocket-handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_root_member_object_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "serve"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_key",
+          "value": "websocket"
+        },
+        {
+          "kind": "field_present",
+          "field": "value_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.serve",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:websocket-handler:{path}:{value_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "value_identifier"
+            },
+            "source_only": true,
+            "handler_role": "websocket"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:websocket-handler:{path}:{value_identifier}"
+          },
+          "attributes": {
+            "field": "websocket",
+            "runtime_dispatch_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Explicit Bun.serve object identifier field websocket is authored handler registration evidence; runtime dispatch is not inferred."
+    },
+    {
+      "id": "bun.serve.error-handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_root_member_object_identifier_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "serve"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_key",
+          "value": "error"
+        },
+        {
+          "kind": "field_present",
+          "field": "value_identifier"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "Bun.serve",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "bun:error-handler:{path}:{value_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "value_identifier"
+            },
+            "source_only": true,
+            "handler_role": "error"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "bun:runtime-component:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:error-handler:{path}:{value_identifier}"
+          },
+          "attributes": {
+            "field": "error",
+            "runtime_dispatch_not_claimed": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Explicit Bun.serve object identifier field error is authored handler registration evidence; runtime dispatch is not inferred."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "plugin/reflection/runtime process/server/socket state is runtime-only; authored serve/file/write/spawn/listen/connect declarations are materialized",
+      "computed Bun member names/paths and dynamically constructed serve/sqlite/test configuration remain candidates until bounded value/provenance resolution proves them"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "bun-official",
+      "repository": "https://github.com/oven-sh/bun",
+      "path": "src/bunfig.zig",
+      "revision": "34cbb9a40b4bd1bd767d134a7065e66c2432a676",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "bun.exact_signature.1.bun",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "bun"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "bun"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "bun",
+          "framework_name": "Bun",
+          "signature": "bun",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "bun.exact_signature.2.bun",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "bun"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "bun"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "bun",
+          "framework_name": "Bun",
+          "signature": "bun",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "bun.exact_signature.3.bun",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:bun"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "bun"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "bun",
+          "framework_name": "Bun",
+          "signature": "bun",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "bun.exact_signature.4.bun",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "bun"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "bun"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "bun",
+          "framework_name": "Bun",
+          "signature": "bun",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

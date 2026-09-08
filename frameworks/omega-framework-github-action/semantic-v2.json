@@ -1,0 +1,2400 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-github-action",
+  "selector": "framework:github-action",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "yaml"
+    ],
+    "required_packs": [
+      "omega-yaml"
+    ],
+    "required_capabilities": [
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "structured_documents",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ConcurrencyPolicy",
+      "ContainerConfig",
+      "Dependency",
+      "EnvironmentBinding",
+      "EnvironmentConfig",
+      "Job",
+      "JobContainer",
+      "JobOutput",
+      "JobService",
+      "JobSetting",
+      "MatrixAxis",
+      "PermissionPolicy",
+      "Pipeline",
+      "Step",
+      "Trigger",
+      "WorkflowContractField",
+      "ServiceConfig"
+    ],
+    "relations": [
+      "configured_by",
+      "contains",
+      "contains_step",
+      "needs",
+      "uses"
+    ]
+  },
+  "rules": [
+    {
+      "id": "github.workflow",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "value.document"
+        },
+        {
+          "kind": "path_glob",
+          "glob": ".github/workflows/*.yml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.workflow.yaml",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "value.document"
+        },
+        {
+          "kind": "path_glob",
+          "glob": ".github/workflows/*.yaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_nested_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "parent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job:{path}:{key}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "key"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.step",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "steps"
+        },
+        {
+          "kind": "field_in",
+          "field": "item_key",
+          "values": [
+            "uses",
+            "run",
+            "name"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Step",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:step:{path}:{owner_key}:{item_key}:{item_value}"
+          },
+          "attributes": {
+            "kind": {
+              "kind": "field_ref",
+              "field": "item_key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains_step",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:step:{path}:{owner_key}:{item_key}:{item_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.needs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "needs"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "needs",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.step.uses",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "steps"
+        },
+        {
+          "kind": "field_equals",
+          "field": "item_key",
+          "value": "uses"
+        },
+        {
+          "kind": "field_present",
+          "field": "item_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:dependency:{item_value}"
+          },
+          "attributes": {
+            "ref": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:step:{path}:{owner_key}:uses:{item_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:dependency:{item_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.workflow.on",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "on"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Trigger",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:trigger:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "on",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:trigger:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.workflow.permissions",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "permissions"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PermissionPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:permissionpolicy:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "permissions",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:permissionpolicy:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.workflow.concurrency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "concurrency"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConcurrencyPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:concurrencypolicy:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "concurrency",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:concurrencypolicy:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.workflow.env",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "env"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EnvironmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:environmentconfig:{path}:{source.start}"
+          },
+          "attributes": {
+            "key": "env",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:environmentconfig:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.workflow.trigger.sequence",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_top_level_sequence_item"
+        },
+        {
+          "kind": "field_equals",
+          "field": "sequence_key",
+          "value": "on"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Trigger",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:trigger:{path}:{item_value}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "item_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:trigger:{path}:{item_value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.runs-on",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "runs-on"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:runs-on:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "runs-on",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:runs-on:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.if",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "if"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:if:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "if",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:if:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.environment",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "environment"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:environment:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "environment",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:environment:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.concurrency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "concurrency"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:concurrency:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "concurrency",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:concurrency:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.permissions",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "permissions"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:permissions:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "permissions",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:permissions:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.timeout-minutes",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "timeout-minutes"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:timeout-minutes:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "timeout-minutes",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:timeout-minutes:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.continue-on-error",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "continue-on-error"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:continue-on-error:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "continue-on-error",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:continue-on-error:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.uses",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "uses"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:uses:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "uses",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:uses:{source.start}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:uses:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.config.name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_owned_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "grandparent_key",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:name:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "owner_key"
+            },
+            "key": "name",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{owner_key}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{owner_key}:name:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.env.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "env"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EnvironmentBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-env:{path}:{a1}:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-env:{path}:{a1}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.matrix.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth4_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "strategy"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a3",
+          "value": "matrix"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MatrixAxis",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:matrix:{path}:{a1}:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "axis": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:matrix:{path}:{a1}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.workflow-call.contract-field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth4_pair"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "on"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a1",
+          "value": "workflow_call"
+        },
+        {
+          "kind": "field_in",
+          "field": "a2",
+          "values": [
+            "inputs",
+            "secrets",
+            "outputs"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WorkflowContractField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:workflow-call:{path}:{a2}:{a3}:{key}"
+          },
+          "attributes": {
+            "group": {
+              "kind": "field_ref",
+              "field": "a2"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "a3"
+            },
+            "field": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:workflow-call:{path}:{a2}:{a3}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.output.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "outputs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobOutput",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-output:{path}:{a1}:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-output:{path}:{a1}:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.strategy.fail-fast",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "strategy"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "fail-fast"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{a1}:strategy-fail-fast:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "key": "strategy.fail-fast",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{a1}:strategy-fail-fast:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.strategy.max-parallel",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "strategy"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "max-parallel"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-setting:{path}:{a1}:strategy-max-parallel:{source.start}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "key": "strategy.max-parallel",
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-setting:{path}:{a1}:strategy-max-parallel:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.container.image",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "container"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "image"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobContainer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-container:{path}:{a1}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-container:{path}:{a1}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.container.options",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth3_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "container"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "options"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobContainer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-container:{path}:{a1}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "options": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-container:{path}:{a1}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.container.env.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth4_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "container"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a3",
+          "value": "env"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContainerConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:container-config:{path}:{a1}:env:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "group": "env",
+            "key": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-container:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:container-config:{path}:{a1}:env:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.container.credentials.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth4_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "container"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a3",
+          "value": "credentials"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContainerConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:container-config:{path}:{a1}:credentials:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "group": "credentials",
+            "key": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-container:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:container-config:{path}:{a1}:credentials:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.service.image",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth4_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "services"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "image"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobService",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-service:{path}:{a1}:{a3}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "service": {
+              "kind": "field_ref",
+              "field": "a3"
+            },
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-service:{path}:{a1}:{a3}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.service.options",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth4_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "services"
+        },
+        {
+          "kind": "field_equals",
+          "field": "key",
+          "value": "options"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobService",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:job-service:{path}:{a1}:{a3}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "service": {
+              "kind": "field_ref",
+              "field": "a3"
+            },
+            "options": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{a1}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-service:{path}:{a1}:{a3}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "github.job.service.env.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth5_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "services"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a4",
+          "value": "env"
+        },
+        {
+          "kind": "field_present",
+          "field": "a1"
+        },
+        {
+          "kind": "field_present",
+          "field": "a3"
+        },
+        {
+          "kind": "field_present",
+          "field": "key"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:service-config:{path}:{a1}:{a3}:env:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "service": {
+              "kind": "field_ref",
+              "field": "a3"
+            },
+            "group": "env",
+            "key": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-service:{path}:{a1}:{a3}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:service-config:{path}:{a1}:{a3}:env:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Authored GitHub Actions service env mapping entry; expression values are preserved as source config and not evaluated."
+    },
+    {
+      "id": "github.job.service.credentials.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "yaml_depth5_pair"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": ".github/workflows/*.{yml,yaml}"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a0",
+          "value": "jobs"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a2",
+          "value": "services"
+        },
+        {
+          "kind": "field_equals",
+          "field": "a4",
+          "value": "credentials"
+        },
+        {
+          "kind": "field_present",
+          "field": "a1"
+        },
+        {
+          "kind": "field_present",
+          "field": "a3"
+        },
+        {
+          "kind": "field_present",
+          "field": "key"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:service-config:{path}:{a1}:{a3}:credentials:{key}"
+          },
+          "attributes": {
+            "job": {
+              "kind": "field_ref",
+              "field": "a1"
+            },
+            "service": {
+              "kind": "field_ref",
+              "field": "a3"
+            },
+            "group": "credentials",
+            "key": {
+              "kind": "field_ref",
+              "field": "key"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job-service:{path}:{a1}:{a3}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:service-config:{path}:{a1}:{a3}:credentials:{key}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Authored GitHub Actions service credentials mapping entry; expression values are preserved as source config and not evaluated."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "matrix, strategy, job outputs, container/service config and expression values are indexed as authored policy/config evidence but are not evaluated or expanded into runtime jobs",
+      "reusable workflow targets and action refs are materialized from authored uses fields; remote content/availability and expression-derived targets require external/runtime evidence",
+      "secrets/environment values are names/config evidence only; secret contents and runner runtime state are never source truth"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "checkov",
+      "repository": "https://github.com/bridgecrewio/checkov",
+      "path": "checkov/github_actions/**",
+      "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "github-action.candidate_signature.1.specifier",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "github-action"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "github-action"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "github-action",
+          "signature": "github-action",
+          "source": "candidate_signature"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    },
+    {
+      "id": "github-action.candidate_signature.1.name",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "github-action"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "github-action"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "github-action",
+          "signature": "github-action",
+          "source": "candidate_reference"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

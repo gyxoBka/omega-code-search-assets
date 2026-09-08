@@ -1,0 +1,1342 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-asp-net-core",
+  "selector": "framework:asp-net-core",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "csharp"
+    ],
+    "required_packs": [
+      "omega-c-sharp"
+    ],
+    "required_capabilities": [
+      "definitions",
+      "calls",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence",
+    "call.csharp_global_member_string_context",
+    "call.csharp_service_registration_typeof_context"
+  ],
+  "emits": {
+    "entities": [
+      "AuthorizationRule",
+      "ConfigKey",
+      "Controller",
+      "Dependency",
+      "Handler",
+      "Middleware",
+      "Route",
+      "RouteGroup",
+      "RoutePrefix",
+      "Service",
+      "ServiceRegistration"
+    ],
+    "relations": [
+      "configured_by",
+      "depends_on",
+      "handles",
+      "injects",
+      "registers"
+    ]
+  },
+  "rules": [
+    {
+      "id": "aspnet.controller-base",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.csharp_class_base_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "base_name",
+          "values": [
+            "Controller",
+            "ControllerBase"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.cs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:controller:{path}:{owner_class}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "base_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.attribute-route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.csharp_attributed_method_route_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "attribute_name",
+          "values": [
+            "HttpGet",
+            "HttpPost",
+            "HttpPut",
+            "HttpPatch",
+            "HttpDelete",
+            "HttpHead",
+            "HttpOptions",
+            "Route"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "route"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.cs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:route:{path}:{owner_class}:{method_name}:{attribute_name}:{route}"
+          },
+          "attributes": {
+            "template": {
+              "kind": "field_ref",
+              "field": "route"
+            },
+            "attribute": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:handler:{path}:{owner_class}:{method_name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:route:{path}:{owner_class}:{method_name}:{attribute_name}:{route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:handler:{path}:{owner_class}:{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.minimal-api-route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_minimal_api_route_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "MapGet",
+            "MapPost",
+            "MapPut",
+            "MapPatch",
+            "MapDelete",
+            "MapMethods",
+            "MapFallback"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "path_literal"
+        },
+        {
+          "kind": "field_present",
+          "field": "handler_identifier"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.cs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:minimal-route:{path}:{member}:{path_literal}:{source.start}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path_literal"
+            },
+            "api": {
+              "kind": "field_ref",
+              "field": "member"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:minimal-handler:{path}:{handler_identifier}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "handler_identifier"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:minimal-route:{path}:{member}:{path_literal}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:minimal-handler:{path}:{handler_identifier}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.controller.route-prefix",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.csharp_attributed_class_string_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "attribute_name",
+          "values": [
+            "Route",
+            "RouteAttribute"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RoutePrefix",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:route-prefix:{path}:{owner_class}:{argument_string}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            },
+            "owner_class": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.controller.constructor-di",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.csharp_constructor_parameter_context"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.csharp_class_base_context",
+          "current_field": "owner_class",
+          "join_field": "owner_class",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "base_name",
+              "values": [
+                "Controller",
+                "ControllerBase"
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:dependency:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "parameter_type"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:controller:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:dependency:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "parameter_type"
+            },
+            "declaration_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:controller:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:dependency:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.services.registration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_service_registration_generic_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "receiver_member",
+          "values": [
+            "Services"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "AddSingleton",
+            "AddScoped",
+            "AddTransient"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "service_type"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:service-registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "lifetime": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "service_type": {
+              "kind": "field_ref",
+              "field": "service_type"
+            },
+            "implementation_type": {
+              "kind": "field_ref",
+              "field": "implementation_type"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:service-type:{service_type}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "service_type"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:service-registration:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:service-type:{service_type}"
+          },
+          "attributes": {
+            "lifetime": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "implementation_type": {
+              "kind": "field_ref",
+              "field": "implementation_type"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.configuration.get-section",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_global_nested_member_string_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver_member",
+          "value": "Configuration"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "GetSection",
+            "GetConnectionString"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:config:{member}:{arg1}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "key": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.authorization.attribute",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.csharp_attributed_method_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "attribute_name",
+          "values": [
+            "Authorize",
+            "AllowAnonymous"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AuthorizationRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:auth:{path}:{owner_class}:{method_name}:{attribute_name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "aspnet.services.registration.typeof",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_service_registration_typeof_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver_member",
+          "value": "Services"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "AddSingleton",
+            "AddScoped",
+            "AddTransient"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "service_type"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:service-registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "service_type": {
+              "kind": "field_ref",
+              "field": "service_type"
+            },
+            "implementation_type": {
+              "kind": "field_ref",
+              "field": "implementation_type"
+            },
+            "lifetime": {
+              "kind": "field_ref",
+              "field": "member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:service-registration:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.minimal-api-map-group",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_global_member_string_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "MapGroup"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:route-group:{path}:{source.start}"
+          },
+          "attributes": {
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:route-group:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.useauthentication",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseAuthentication"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseAuthentication:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseAuthentication",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseAuthentication:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.useauthorization",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseAuthorization"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseAuthorization:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseAuthorization",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseAuthorization:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.userouting",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseRouting"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseRouting:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseRouting",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseRouting:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.useendpoints",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseEndpoints"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseEndpoints:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseEndpoints",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseEndpoints:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.usecors",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseCors"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseCors:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseCors",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseCors:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.usehttpsredirection",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseHttpsRedirection"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseHttpsRedirection:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseHttpsRedirection",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseHttpsRedirection:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.usestaticfiles",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseStaticFiles"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseStaticFiles:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseStaticFiles",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseStaticFiles:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.useexceptionhandler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseExceptionHandler"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseExceptionHandler:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseExceptionHandler",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseExceptionHandler:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "aspnet.middleware.usehsts",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Microsoft.AspNetCore",
+          "member_in": [
+            "UseHsts"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "aspnet:middleware:UseHsts:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "UseHsts",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "aspnet:middleware:UseHsts:{path}:{source.start}"
+          },
+          "attributes": {
+            "pipeline": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "literal attribute/minimal API routes, controller prefixes, MapGroup prefixes, constructor DI, generic/typeof service registrations, configuration keys and authorization markers are materialized; computed/array/constant route expressions require bounded constant/value-flow resolution",
+      "attribute aliases and meta-annotations require generic source symbol/annotation provenance before they can inherit ASP.NET semantics",
+      "extension/factory DI registrations require bounded call/value provenance before concrete service registration semantics can be materialized",
+      "source-generated controllers require generated compiler artifacts and remain a generated-code ceiling",
+      "service-container runtime selection, endpoint mutation, open-generic/factory behavior and configuration provider values are runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "aspnetcore",
+      "repository": "https://github.com/dotnet/aspnetcore",
+      "path": "src/Http/Routing/src/EndpointDataSource.cs",
+      "revision": "456cc3d350bbb49010bd36348763cb9960752e15",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "asp-net-core.exact_signature.1.microsoft.aspnetcore.app",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "Microsoft.AspNetCore.App"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "asp-net-core"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "asp-net-core",
+          "framework_name": "ASP.NET Core",
+          "signature": "Microsoft.AspNetCore.App",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "asp-net-core.exact_signature.2.microsoft.aspnetcore.app",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "Microsoft.AspNetCore.App"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "asp-net-core"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "asp-net-core",
+          "framework_name": "ASP.NET Core",
+          "signature": "Microsoft.AspNetCore.App",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "asp-net-core.exact_signature.3.microsoft.aspnetcore.app",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:microsoft.aspnetcore.app"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "asp-net-core"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "asp-net-core",
+          "framework_name": "ASP.NET Core",
+          "signature": "Microsoft.AspNetCore.App",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "asp-net-core.exact_signature.4.microsoft.aspnetcore.app",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "Microsoft.AspNetCore.App"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "asp-net-core"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "asp-net-core",
+          "framework_name": "ASP.NET Core",
+          "signature": "Microsoft.AspNetCore.App",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

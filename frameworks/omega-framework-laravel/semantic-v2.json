@@ -1,0 +1,2052 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-laravel",
+  "selector": "framework:laravel",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "php"
+    ],
+    "required_packs": [
+      "omega-php"
+    ],
+    "required_capabilities": [
+      "bindings",
+      "calls",
+      "definitions",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "calls_members",
+    "file_paths",
+    "config_files",
+    "existing_language_ir"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Controller",
+      "EventDispatch",
+      "EventListener",
+      "FallbackRoute",
+      "FrameworkConfig",
+      "InjectionPoint",
+      "MailUse",
+      "Model",
+      "QueueUse",
+      "RedirectRoute",
+      "ResourceRoute",
+      "Route",
+      "SchemaMigration",
+      "View",
+      "ViewRoute"
+    ],
+    "relations": [
+      "configured_by",
+      "configures",
+      "depends_on",
+      "handles",
+      "injects",
+      "renders",
+      "uses_api"
+    ]
+  },
+  "rules": [
+    {
+      "id": "laravel.route.facade",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "options",
+            "any",
+            "match"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:{call.member}:{call.arg0}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "call.member"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:{call.member}:{call.arg0}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.model.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Database\\Eloquent",
+          "member_in": [
+            "Model"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:model:{source.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.view.call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call.name",
+          "value": "view"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:view:{call.arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:view:{call.arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "inferred",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.controller.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "field": "source.path",
+          "pattern": "**/app/Http/Controllers/**/*.php"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:controller:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "laravel.model.explicit-relation-target",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.php_class_relation_explicit_target_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "relation_method",
+          "values": [
+            "belongsTo",
+            "hasOne",
+            "hasMany",
+            "belongsToMany"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "target_class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/Models/**/*.php"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.class",
+          "current_field": "owner_class",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "Illuminate\\Database\\Eloquent",
+              "member_in": [
+                "Model"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.class",
+          "current_field": "target_class",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package": "Illuminate\\Database\\Eloquent",
+              "member_in": [
+                "Model"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ],
+          "bind": "target_model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:model:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_model",
+            "field": "source.path",
+            "template": "laravel:model:{value}:{target_class}"
+          },
+          "attributes": {
+            "declaration_only": true,
+            "relation_method": {
+              "kind": "field_ref",
+              "field": "relation_method"
+            },
+            "owner_method": {
+              "kind": "field_ref",
+              "field": "owner_method"
+            },
+            "explicit_class_constant": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.generic-api-call.laravel-framework",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "laravel/framework"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "laravel/framework",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "laravel/framework",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "laravel.route.get",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "get"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:GET:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "GET",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:GET:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.post",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "post"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:POST:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "POST",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:POST:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.put",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "put"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:PUT:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "PUT",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:PUT:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.patch",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "patch"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:PATCH:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "PATCH",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:PATCH:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.delete",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "delete"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:DELETE:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "DELETE",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:DELETE:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.options",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "options"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:OPTIONS:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "OPTIONS",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:OPTIONS:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.any",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "any"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:ANY:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "ANY",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:ANY:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.match",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Route",
+            "Illuminate\\Routing\\Router"
+          ],
+          "member_in": [
+            "match"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route:MATCH:{call.arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "MATCH",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route:MATCH:{call.arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "resource"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ResourceRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:resourceroute:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "resource",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:resourceroute:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.apiresource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "apiResource"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ResourceRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:resourceroute:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "apiResource",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:resourceroute:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.view",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "view"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:viewroute:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "view",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:viewroute:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.redirect",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "redirect"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RedirectRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:redirectroute:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "redirect",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:redirectroute:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route.fallback",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "fallback"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FallbackRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:fallbackroute:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "fallback",
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:fallbackroute:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.constructor.di",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.php_constructor_parameter_type_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "parameter_type"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InjectionPoint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:inject:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "parameter_type"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:inject:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "target_resolution": "candidate"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.schema.create",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Schema",
+            "Illuminate\\Database\\Schema\\Blueprint"
+          ],
+          "member_in": [
+            "create",
+            "table"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaMigration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:schema:{call.arg0}:{{path}}:{{source.start}}"
+          },
+          "attributes": {
+            "table": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "operation": {
+              "kind": "field_ref",
+              "field": "call.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:schema:{call.arg0}:{{path}}:{{source.start}}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.api.dispatch",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Event",
+            "Illuminate\\Support\\Facades\\Queue",
+            "Illuminate\\Support\\Facades\\Mail"
+          ],
+          "member_in": [
+            "dispatch"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventDispatch",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:eventdispatch:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "dispatch",
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:eventdispatch:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.api.listen",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Event",
+            "Illuminate\\Support\\Facades\\Queue",
+            "Illuminate\\Support\\Facades\\Mail"
+          ],
+          "member_in": [
+            "listen"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventListener",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:eventlistener:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "listen",
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:eventlistener:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.api.queue",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Event",
+            "Illuminate\\Support\\Facades\\Queue",
+            "Illuminate\\Support\\Facades\\Mail"
+          ],
+          "member_in": [
+            "queue"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "QueueUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:queueuse:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "queue",
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:queueuse:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.api.push",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Event",
+            "Illuminate\\Support\\Facades\\Queue",
+            "Illuminate\\Support\\Facades\\Mail"
+          ],
+          "member_in": [
+            "push"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "QueueUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:queueuse:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "push",
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:queueuse:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.api.mail",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "Illuminate\\Support\\Facades\\Event",
+            "Illuminate\\Support\\Facades\\Queue",
+            "Illuminate\\Support\\Facades\\Mail"
+          ],
+          "member_in": [
+            "mail"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MailUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:mailuse:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "mail",
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:mailuse:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route-config.middleware",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "middleware"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route-config:middleware:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "middleware",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route-config:middleware:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route-config.prefix",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "prefix"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route-config:prefix:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "prefix",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route-config:prefix:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route-config.domain",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "domain"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route-config:domain:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "domain",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route-config:domain:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route-config.name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "name"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route-config:name:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "name",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route-config:name:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route-config.where",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "where"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route-config:where:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "where",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route-config:where:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "laravel.route-config.group",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.member"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "Illuminate\\Support\\Facades\\Route",
+          "member_in": [
+            "group"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:route-config:group:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "group",
+            "arg0": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:route-config:group:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "facade alias resolution requires generic source symbol/import provenance",
+      "route macros, service-container runtime bindings and runtime middleware ordering require runtime framework state",
+      "literal/authored Route facade registrations, constructor type dependencies, Eloquent explicit target relations and Schema migration declarations are materialized",
+      "implicit Eloquent relation target inference by Rails/Laravel-style naming, morph runtime types and computed class/view names are not guessed without resolver evidence"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "bladestan",
+      "repository": "https://github.com/bladestan/bladestan",
+      "path": "src/**",
+      "revision": "9be037cd1c505d6952ec6eb5f7f50e13fc61efed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "bladestan",
+      "repository": "https://github.com/bladestan/bladestan",
+      "path": "tests/**",
+      "revision": "9be037cd1c505d6952ec6eb5f7f50e13fc61efed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "scripts/source_map_v2/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "references/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "larastan",
+      "repository": "https://github.com/larastan/larastan",
+      "path": "src/**",
+      "revision": "9baa74074f17cc70feaef31616a06ea0faeebba5",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "larastan",
+      "repository": "https://github.com/larastan/larastan",
+      "path": "tests/**",
+      "revision": "9baa74074f17cc70feaef31616a06ea0faeebba5",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "laravel.exact_signature.1.laravel_framework",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "laravel/framework"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "laravel"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "laravel",
+          "framework_name": "Laravel",
+          "signature": "laravel/framework",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "laravel.exact_signature.2.laravel_framework",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "laravel/framework"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "laravel"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "laravel",
+          "framework_name": "Laravel",
+          "signature": "laravel/framework",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "laravel.exact_signature.3.laravel_framework",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:laravel/framework"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "laravel"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "laravel",
+          "framework_name": "Laravel",
+          "signature": "laravel/framework",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "laravel.exact_signature.4.laravel_framework",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "laravel/framework"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "laravel"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "laravel",
+          "framework_name": "Laravel",
+          "signature": "laravel/framework",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  },
+  "runtime_status": "terminal-static-source-contract"
+}

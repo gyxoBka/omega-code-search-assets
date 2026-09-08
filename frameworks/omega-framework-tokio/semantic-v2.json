@@ -1,0 +1,1529 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-tokio",
+  "selector": "framework:tokio",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "rust"
+    ],
+    "required_packs": [
+      "omega-rust"
+    ],
+    "required_capabilities": [
+      "bindings",
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Channel",
+      "Dependency",
+      "Join",
+      "NetworkResource",
+      "Resource",
+      "RuntimeComponent",
+      "Select",
+      "Task",
+      "TaskYield",
+      "Timer"
+    ],
+    "relations": [
+      "configured_by",
+      "depends_on",
+      "uses_api",
+      "uses_resource"
+    ]
+  },
+  "rules": [
+    {
+      "id": "tokio.runtime-main.scoped-attribute",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.rust_function_scoped_attribute_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_path",
+          "value": "tokio::main"
+        },
+        {
+          "kind": "field_present",
+          "field": "function_name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:runtime:{path}:{function_name}"
+          },
+          "attributes": {
+            "entry": {
+              "kind": "field_ref",
+              "field": "function_name"
+            },
+            "source_role": "fully-qualified-runtime-entry-attribute",
+            "macro_execution_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Source-authored fully-qualified attribute declaration only; macro expansion and runtime effects are not claimed."
+    },
+    {
+      "id": "tokio.explicit-spawn-task-site",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.rust_two_segment_scoped_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "tokio"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_member",
+          "value": "spawn"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "spawn": "tokio::spawn",
+            "source_only": true,
+            "runtime_task_instance_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Task denotes the authored tokio::spawn source site only; scheduling, JoinHandle identity, completion and runtime task instances are not claimed."
+    },
+    {
+      "id": "tokio.explicit-sync-resource-binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.rust_scoped_constructor_binding_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "tokio"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_module",
+          "value": "sync"
+        },
+        {
+          "kind": "field_in",
+          "field": "type_name",
+          "values": [
+            "Mutex",
+            "RwLock",
+            "Semaphore"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "constructor_name",
+          "value": "new"
+        },
+        {
+          "kind": "field_present",
+          "field": "binding_name"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:resource:{path}:{binding_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "binding_name"
+            },
+            "resource_type": {
+              "kind": "field_ref",
+              "field": "type_name"
+            },
+            "source_only": true,
+            "runtime_state_claimed": false
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Resource is a direct source binding to tokio::sync::{Mutex,RwLock,Semaphore}::new only; aliases, helper constructors, await/runtime state and resource use relations remain unresolved."
+    },
+    {
+      "id": "tokio.explicit-task-module-spawn",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.rust_three_segment_scoped_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_root",
+          "value": "tokio"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_namespace",
+          "value": "task"
+        },
+        {
+          "kind": "field_in",
+          "field": "call_member",
+          "values": [
+            "spawn",
+            "spawn_local"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.rs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "api_namespace": "tokio::task",
+            "api": {
+              "kind": "field_ref",
+              "field": "call_member"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "tokio.generic-api-call.tokio",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "tokio.generic-dependency.tokio",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module_path_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:dependency:tokio"
+          },
+          "attributes": {
+            "package": "tokio",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:dependency:tokio"
+          },
+          "attributes": {
+            "package": "tokio",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "tokio.task.spawn",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "tokio",
+            "tokio::task"
+          ],
+          "member_in": [
+            "spawn"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "spawn"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:task:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.task.spawn_blocking",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "tokio",
+            "tokio::task"
+          ],
+          "member_in": [
+            "spawn_blocking"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:task:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "spawn_blocking"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:task:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.task.yield_now",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "tokio",
+            "tokio::task"
+          ],
+          "member_in": [
+            "yield_now"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TaskYield",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:taskyield:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": "yield_now"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:taskyield:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.macro.select",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.macro_scoped"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio",
+          "member_in": [
+            "select"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Select",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:select:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "select"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:select:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.macro.join",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.macro_scoped"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio",
+          "member_in": [
+            "join"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Join",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:join:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "join"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:join:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.macro.try_join",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.macro_scoped"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio",
+          "member_in": [
+            "try_join"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Join",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:join:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": "try_join"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:join:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.resource.tokio-sync-mpsc-channel",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::sync::mpsc",
+          "member_in": [
+            "channel"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Channel",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:channel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::sync::mpsc",
+            "member": "channel"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:channel:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.resource.tokio-sync-oneshot-channel",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::sync::oneshot",
+          "member_in": [
+            "channel"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Channel",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:channel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::sync::oneshot",
+            "member": "channel"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:channel:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.resource.tokio-sync-broadcast-channel",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::sync::broadcast",
+          "member_in": [
+            "channel"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Channel",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:channel:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::sync::broadcast",
+            "member": "channel"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:channel:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.resource.tokio-time-sleep",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::time",
+          "member_in": [
+            "sleep"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Timer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:timer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::time",
+            "member": "sleep"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:timer:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.resource.tokio-time-interval",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::time",
+          "member_in": [
+            "interval"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Timer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:timer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::time",
+            "member": "interval"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:timer:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.resource.tokio-net-tcplistener",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::net",
+          "member_in": [
+            "TcpListener"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NetworkResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::net",
+            "member": "TcpListener"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "tokio.timer.timeout",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::time",
+          "member_in": [
+            "timeout",
+            "timeout_at"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Timer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:timer:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::time",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:timer:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.network.tcpstream",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::net",
+          "member_in": [
+            "TcpStream"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NetworkResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.network.udpsocket",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::net",
+          "member_in": [
+            "UdpSocket"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NetworkResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.network.unixstream",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::net",
+          "member_in": [
+            "UnixStream",
+            "UnixListener"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NetworkResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::net",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:networkresource:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.fs.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::fs",
+          "member_in": [
+            "File",
+            "OpenOptions"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::fs",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.process.command",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::process",
+          "member_in": [
+            "Command"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::process",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.signal.ctrl_c",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::signal",
+          "member_in": [
+            "ctrl_c"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::signal",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.runtime.builder",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::runtime",
+          "member_in": [
+            "Builder"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RuntimeComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:runtime:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::runtime",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:runtime:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    },
+    {
+      "id": "tokio.task.joinset",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "tokio::task",
+          "member_in": [
+            "JoinSet"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Task",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tokio:task-group:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "tokio::task",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tokio:task-group:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Provenance-backed authored Tokio API site only; runtime execution/state is not inferred."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "authored spawn/select/join/channel/timer/network resource declarations are materialized, but runtime scheduling, wakeups, actual resource use and task completion remain runtime state",
+      "aliases/reexports/builders/JoinSet methods require generic import/value provenance when the host Pack cannot prove their ExternalPath",
+      "#[tokio::main] is declaration/configuration evidence only; macro expansion is never executed"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "tokio-official",
+      "repository": "https://github.com/tokio-rs/tokio",
+      "path": "tokio/src/runtime/**",
+      "revision": "75fef53d0a8590c2d1dbb63672aa7b7d1ef51155",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "tokio.exact_signature.1.tokio",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "tokio"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "tokio"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "tokio",
+          "framework_name": "Tokio",
+          "signature": "tokio",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "tokio.exact_signature.2.tokio",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "tokio"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "tokio"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "tokio",
+          "framework_name": "Tokio",
+          "signature": "tokio",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "tokio.exact_signature.3.tokio",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:tokio"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "tokio"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "tokio",
+          "framework_name": "Tokio",
+          "signature": "tokio",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "tokio.exact_signature.4.tokio",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "tokio"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "tokio"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "tokio",
+          "framework_name": "Tokio",
+          "signature": "tokio",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

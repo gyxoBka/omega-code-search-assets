@@ -1,153 +1,39 @@
-name: Publish Omega GHCR Assets
+name: Build Omega Asset Sources
 
 on:
   workflow_dispatch:
-    inputs:
-      domain:
-        description: Asset domain to publish
-        required: true
-        type: choice
-        options:
-          - changed
-          - all
-          - packs
-          - harness
-        default: changed
   push:
     branches:
       - master
     paths:
+      - "grammars/**"
       - "packs/**"
+      - "frameworks/**"
       - "harness/**"
-      - "tools/**"
+      - "tools/build-source.mjs"
+      - "package.json"
       - ".github/workflows/publish-ghcr.yml"
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    env:
-      GHCR_OWNER: gyxobka
-      GHCR_ROOT: omega-code-search-assets
-      OMEGA_ASSET_CATALOG_KEY_ID: ${{ secrets.OMEGA_ASSET_CATALOG_KEY_ID }}
-      OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM: ${{ secrets.OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM }}
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
           package-manager-cache: false
 
-      - uses: oras-project/setup-oras@v1
+      - name: Build source archives
+        run: npm run build
 
-      - name: Install package tooling
-        run: sudo apt-get update && sudo apt-get install -y zip
-
-      - name: Resolve changed assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          requested="${{ github.event.inputs.domain || 'changed' }}"
-          base="${{ github.event.before }}"
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" || -z "${base}" || "${base}" == "0000000000000000000000000000000000000000" ]]; then
-            base="HEAD^"
-          fi
-          node tools/resolve-changed-assets.mjs --base "${base}" --head HEAD --mode "${requested}" --out dist/changed-assets.json
-          domains="$(node -e "const data=require('./dist/changed-assets.json'); console.log(data.domains.join(','));")"
-          assets="$(node -e "const data=require('./dist/changed-assets.json'); console.log(data.assets.join(','));")"
-          if [[ -z "${domains}" ]]; then
-            echo "No assets changed."
-          fi
-          echo "Publishing assets: ${assets:-none}"
-          echo "DOMAINS=${domains}" >> "${GITHUB_ENV}"
-          echo "ASSETS=${assets}" >> "${GITHUB_ENV}"
-
-      - name: Build package archives
-        if: env.DOMAINS != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          IFS=',' read -ra domains <<< "${DOMAINS}"
-          for domain in "${domains[@]}"; do
-            assets="$(node -e "const data=require('./dist/changed-assets.json'); console.log((data.by_domain['${domain}'] || []).join(','));")"
-            if [[ -z "${assets}" ]]; then
-              echo "No package archives to build for ${domain}."
-              continue
-            fi
-            node tools/build-packages.mjs --domain "${domain}" --assets "${assets}" --out "dist/packages/${domain}" --update-catalog-source
-          done
-
-      - name: Login to GHCR
-        if: env.DOMAINS != ''
-        run: echo "${{ github.token }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Push OCI artifacts
-        if: env.DOMAINS != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p dist/digests
-          IFS=',' read -ra domains <<< "${DOMAINS}"
-          for domain in "${domains[@]}"; do
-            assets="$(node -e "const data=require('./dist/changed-assets.json'); console.log((data.by_domain['${domain}'] || []).join(','));")"
-            if [[ -z "${assets}" ]]; then
-              printf '{}\n' > "dist/digests/${domain}.json"
-              echo "No OCI artifacts to push for ${domain}."
-              continue
-            fi
-            node tools/push-ghcr-artifacts.mjs --domain "${domain}" --assets "${assets}" --packages "dist/packages/${domain}" --out "dist/digests/${domain}.json"
-          done
-
-      - name: Build signed catalogs
-        if: env.DOMAINS != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          IFS=',' read -ra domains <<< "${DOMAINS}"
-          for domain in "${domains[@]}"; do
-            previous_args=()
-            mkdir -p "dist/current/${domain}"
-            if oras pull "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/${domain}:current" -o "dist/current/${domain}"; then
-              previous_catalog="$(find "dist/current/${domain}" -name "${domain}.json" -type f -print -quit)"
-              if [[ -n "${previous_catalog}" ]]; then
-                previous_args=(--previous-catalog "${previous_catalog}")
-              fi
-            else
-              echo "No existing current catalog for ${domain}; this must be a full-domain publish."
-            fi
-            node tools/build-catalog.mjs \
-              --domain "${domain}" \
-              --registry-digests "dist/digests/${domain}.json" \
-              "${previous_args[@]}" \
-              --catalog-version "${domain}-${GITHUB_SHA::12}" \
-              --out "dist/catalogs/${domain}.json"
-          done
-
-      - name: Push registry catalogs
-        if: env.DOMAINS != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          IFS=',' read -ra domains <<< "${DOMAINS}"
-          for domain in "${domains[@]}"; do
-            oras push "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/${domain}:${GITHUB_SHA}" \
-              "dist/catalogs/${domain}.json:application/vnd.omega.catalog.v1+json" \
-              --artifact-type application/vnd.omega.catalog.v1
-            oras tag "ghcr.io/${GHCR_OWNER}/${GHCR_ROOT}/catalog/${domain}:${GITHUB_SHA}" current
-          done
-
-      - name: Upload workflow artifact
-        if: env.DOMAINS != ''
+      - name: Upload build output
         uses: actions/upload-artifact@v6
         with:
-          name: omega-ghcr-catalogs-${{ github.sha }}
-          path: |
-            dist/catalogs/*.json
-            dist/digests/*.json
+          name: omega-code-search-assets-${{ github.sha }}
+          path: dist/**
           if-no-files-found: error

@@ -1,0 +1,2035 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-next-js",
+  "selector": "framework:next-js",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "file_paths",
+    "directory_conventions",
+    "imports_bindings",
+    "existing_language_ir",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "ClientBoundary",
+      "Component",
+      "DefaultSlot",
+      "Dependency",
+      "ErrorBoundary",
+      "Layout",
+      "Metadata",
+      "MetadataAsset",
+      "MetadataRoute",
+      "Middleware",
+      "Page",
+      "Route",
+      "RouteHandler",
+      "ServerAction",
+      "ServerBoundary",
+      "Template",
+      "RouteSegmentConfig"
+    ],
+    "relations": [
+      "contains",
+      "depends_on",
+      "handles",
+      "layout_of",
+      "renders",
+      "route_to_component",
+      "uses_api"
+    ]
+  },
+  "rules": [
+    {
+      "id": "next.app.page",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/page.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "normalize_route",
+              "source": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "http:*:{normalized_file_route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "normalize_route",
+              "source": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.app.layout",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/layout.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:layout:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.pages.route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.{js,jsx,ts,tsx}"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "_app",
+            "_document",
+            "_error"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "normalize_route",
+              "source": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.app.route_handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/route.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-handler:{normalized_file_route}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "normalize_route",
+              "source": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.middleware.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/middleware.{js,ts}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:middleware:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.loading",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/loading.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:loading:{path}"
+          },
+          "attributes": {
+            "role": "loading",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.error",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/error.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:error:{path}"
+          },
+          "attributes": {
+            "role": "error",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.not_found",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/not-found.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:not-found:{path}"
+          },
+          "attributes": {
+            "role": "not_found",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.app.layout_hierarchy",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/page.{js,jsx,ts,tsx}"
+        },
+        {
+          "kind": "fact_join_by_path_ancestor",
+          "fact_kind": "data.file",
+          "current_path_field": "path",
+          "join_path_field": "path",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/app/**/layout.{js,jsx,ts,tsx}"
+            }
+          ],
+          "bind": "layout"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_of",
+          "source": {
+            "kind": "by_joined_field",
+            "bind": "layout",
+            "field": "path",
+            "template": "next:layout:{value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "convention": "app_router_path_ancestor"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_joined_field",
+            "bind": "layout",
+            "field": "path",
+            "template": "next:layout:{value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "convention": "app_router_path_ancestor"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_joined_field",
+            "bind": "layout",
+            "field": "path",
+            "template": "next:layout:{value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "convention": "app_router_layout_wraps_descendant_page"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "next-js.generic-api-call.next",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "next"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next-js:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "next",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next-js:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "next",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "next-js.generic-dependency.next",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "next"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next-js:dependency:next"
+          },
+          "attributes": {
+            "package": "next",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next-js:dependency:next"
+          },
+          "attributes": {
+            "package": "next",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "next.special.template.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/template.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:template:{path}"
+          },
+          "attributes": {
+            "role": "template",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.default.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/default.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DefaultSlot",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:default:{path}"
+          },
+          "attributes": {
+            "role": "default",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.global_error.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/global-error.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ErrorBoundary",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:global-error:{path}"
+          },
+          "attributes": {
+            "role": "global-error",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.sitemap.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/sitemap.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:sitemap:{path}"
+          },
+          "attributes": {
+            "role": "sitemap",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.robots.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/robots.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:robots:{path}"
+          },
+          "attributes": {
+            "role": "robots",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.manifest.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/manifest.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:manifest:{path}"
+          },
+          "attributes": {
+            "role": "manifest",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.icon.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/icon.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataAsset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:icon:{path}"
+          },
+          "attributes": {
+            "role": "icon",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.apple_icon.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/apple-icon.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataAsset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:apple-icon:{path}"
+          },
+          "attributes": {
+            "role": "apple-icon",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.opengraph_image.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/opengraph-image.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataAsset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:opengraph-image:{path}"
+          },
+          "attributes": {
+            "role": "opengraph-image",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.special.twitter_image.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/twitter-image.{js,jsx,ts,tsx,xml,txt}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataAsset",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:twitter-image:{path}"
+          },
+          "attributes": {
+            "role": "twitter-image",
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.route-handler.exported-http-method",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/route.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:handler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:route-handler:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:handler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.route-handler.exported-http-variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "exported_name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/route.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:handler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:route-handler:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:handler:{path}:{exported_name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.module.use-client",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_module_directive_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "directive",
+          "value": "use client"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ClientBoundary",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:clientboundary:{path}"
+          },
+          "attributes": {
+            "directive": "use client",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.module.use-server",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_module_directive_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "directive",
+          "value": "use server"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServerBoundary",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:serverboundary:{path}"
+          },
+          "attributes": {
+            "directive": "use server",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.server-action.function-directive",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.ecmascript_function_directive_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "directive",
+          "value": "use server"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_function"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServerAction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:server-action:{path}:{owner_function}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner_function"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.server-action.module-export-function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "exported_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.ecmascript_module_directive_context",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "server_module",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "directive",
+              "value": "use server"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServerAction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:server-action:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true,
+            "module_directive": "use server"
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "candidate",
+      "coverage_note": "Same-path authored use server + exported declaration; deeper async/server-action validity remains compiler/runtime constrained."
+    },
+    {
+      "id": "next.server-action.module-export-variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "exported_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.ecmascript_module_directive_context",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "server_module",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "directive",
+              "value": "use server"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServerAction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:server-action:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true,
+            "module_directive": "use server"
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "candidate",
+      "coverage_note": "Same-path authored use server + exported declaration; deeper async/server-action validity remains compiler/runtime constrained."
+    },
+    {
+      "id": "next.metadata.metadata.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "metadata"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.metadata.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "metadata"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.viewport.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "viewport"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.viewport.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "viewport"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.generateMetadata.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "generateMetadata"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.generateMetadata.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "generateMetadata"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.generateViewport.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "generateViewport"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.metadata.generateViewport.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "generateViewport"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:metadata:{path}:{exported_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "exported_name"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "next.route-segment-config.dynamic",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "dynamic"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:dynamic"
+          },
+          "attributes": {
+            "name": "dynamic",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    },
+    {
+      "id": "next.route-segment-config.dynamicParams",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "dynamicParams"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:dynamicParams"
+          },
+          "attributes": {
+            "name": "dynamicParams",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    },
+    {
+      "id": "next.route-segment-config.revalidate",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "revalidate"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:revalidate"
+          },
+          "attributes": {
+            "name": "revalidate",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    },
+    {
+      "id": "next.route-segment-config.fetchCache",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "fetchCache"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:fetchCache"
+          },
+          "attributes": {
+            "name": "fetchCache",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    },
+    {
+      "id": "next.route-segment-config.runtime",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "runtime"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:runtime"
+          },
+          "attributes": {
+            "name": "runtime",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    },
+    {
+      "id": "next.route-segment-config.preferredRegion",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "preferredRegion"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:preferredRegion"
+          },
+          "attributes": {
+            "name": "preferredRegion",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    },
+    {
+      "id": "next.route-segment-config.maxDuration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.ecmascript_exported_variable_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "exported_name",
+          "value": "maxDuration"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.{js,jsx,ts,tsx}"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "next:route-segment-config:{path}:maxDuration"
+          },
+          "attributes": {
+            "name": "maxDuration",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Authored route-segment configuration declaration only; expression evaluation and effective runtime config are not inferred."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "TSX/JSX in TypeScript files remains blocked by the retained TypeScript grammar asset lacking tree_sitter_tsx; JavaScript/JSX facts are covered by the JavaScript Pack.",
+      "route groups, parallel/intercepted route URL normalization are retained as authored path conventions but exact runtime URL projection requires a dedicated deterministic Next path normalizer before strong route identity",
+      "source-authored dynamic imports and component-selection expressions require generic source symbol/value resolution",
+      "runtime rewrites/redirects and generated metadata values remain runtime/generated semantics",
+      "server action validity beyond authored use-server directive + export shape remains compiler/runtime constrained"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/nextjs/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-next-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-nextpages-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "scripts/source_map_v2/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "references/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "src/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "test/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "next-js.exact_signature.1.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "next-js.exact_signature.2.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "next-js.exact_signature.3.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "next-js.exact_signature.4.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  }
+}

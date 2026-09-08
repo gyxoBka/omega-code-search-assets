@@ -1,0 +1,1266 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-vapor",
+  "selector": "framework:vapor",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "swift"
+    ],
+    "required_packs": [
+      "omega-swift"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "Dependency",
+      "Route",
+      "RouteGroup",
+      "RouteSegment",
+      "Service",
+      "WebSocketRoute"
+    ],
+    "relations": [
+      "contains",
+      "depends_on",
+      "handles",
+      "mounts",
+      "uses_api"
+    ]
+  },
+  "rules": [
+    {
+      "id": "vapor.route.member-string",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "delete",
+            "get",
+            "head",
+            "on",
+            "options",
+            "patch",
+            "post",
+            "put",
+            "webSocket"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.swift"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:service:{path}:{receiver}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:{path}:{receiver}:{member}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:service:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:{path}:{receiver}:{member}:{arg0}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "vapor.generic-api-call.https-github-com-vapor-vapor-git",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "https://github.com/vapor/vapor.git"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "https://github.com/vapor/vapor.git",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "https://github.com/vapor/vapor.git",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "vapor.generic-dependency.https-github-com-vapor-vapor-git",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module_path_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "https://github.com/vapor/vapor.git"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:dependency:https://github.com/vapor/vapor.git"
+          },
+          "attributes": {
+            "package": "https://github.com/vapor/vapor.git",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:dependency:https://github.com/vapor/vapor.git"
+          },
+          "attributes": {
+            "package": "https://github.com/vapor/vapor.git",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "vapor.generic-api-call.vapor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "vapor"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "vapor",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "vapor",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "vapor.generic-dependency.vapor",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module_path_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "vapor"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:dependency:vapor"
+          },
+          "attributes": {
+            "package": "vapor",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:dependency:vapor"
+          },
+          "attributes": {
+            "package": "vapor",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "vapor.route.get",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "get"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:get:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "GET",
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:get:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "candidate_handler": "source-owner"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.route.post",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "post"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:post:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "POST",
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:post:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "candidate_handler": "source-owner"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.route.put",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "put"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:put:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "PUT",
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:put:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "candidate_handler": "source-owner"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.route.patch",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "patch"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:patch:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "PATCH",
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:patch:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "candidate_handler": "source-owner"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.route.delete",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "delete"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:delete:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "DELETE",
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:delete:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "candidate_handler": "source-owner"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.route.on",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "on"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route:on:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": "ON",
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:on:{arg0}:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "candidate_handler": "source-owner"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.group.grouped",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "grouped"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:group:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:group:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.group.group",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "group"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:group:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:group:{arg0}:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "vapor.route.literal-segment",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_segment_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "on",
+            "grouped",
+            "webSocket"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "literal"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:route-segment:{path}:{source.start}"
+          },
+          "attributes": {
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "method_or_group": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "segment": {
+              "kind": "field_ref",
+              "field": "literal"
+            },
+            "arg_label": {
+              "kind": "field_ref",
+              "field": "arg_label"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route-segment:{path}:{source.start}"
+          },
+          "attributes": {
+            "ordered_by_source": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Each authored literal path/group segment is preserved in source order; composition/typed parameters/closures require generic path/call resolver."
+    },
+    {
+      "id": "vapor.route.websocket",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift_receiver_member_string_argument_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "webSocket"
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.swift"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:service:{path}:{receiver}"
+          },
+          "attributes": {
+            "binding": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WebSocketRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vapor:websocket:{path}:{receiver}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "arg0"
+            },
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:service:{path}:{receiver}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:websocket:{path}:{receiver}:{arg0}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "literal HTTP/WebSocket route and group components are materialized individually in source order; typed parameters, closures, imported handler identity and computed path values require Swift generic call/value resolution",
+      "middleware container execution, dependency injection and runtime router mutation are runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "vapor",
+      "repository": "https://github.com/vapor/vapor",
+      "path": "Sources/Vapor/Routing/**",
+      "revision": "e13d8b7f48577e8bd7f434dafa3b1e8486b531a1",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "vapor.exact_signature.1.https___github.com_vapor_vapor.git",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "https://github.com/vapor/vapor.git"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "https://github.com/vapor/vapor.git",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.2.https___github.com_vapor_vapor.git",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "https://github.com/vapor/vapor.git"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "https://github.com/vapor/vapor.git",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.3.https___github.com_vapor_vapor.git",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:https://github.com/vapor/vapor.git"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "https://github.com/vapor/vapor.git",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.4.https___github.com_vapor_vapor.git",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "https://github.com/vapor/vapor.git"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "https://github.com/vapor/vapor.git",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.1.vapor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "vapor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "vapor",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.2.vapor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "vapor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "vapor",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.3.vapor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:vapor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "vapor",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vapor.exact_signature.4.vapor",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "vapor"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vapor"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vapor",
+          "framework_name": "Vapor",
+          "signature": "vapor",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

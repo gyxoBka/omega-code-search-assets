@@ -1,137 +1,28 @@
 # Omega Code Search Assets
 
-This repository is the source and registry surface for Omega assets.
+This repository contains the canonical production asset source for Omega Code Search.
 
-The Omega runtime repository owns code, protocols, validators, and product
-control flows. This repository owns independently distributed assets:
+```text
+source -> Grammar -> AST -> Pack -> normalized Omega IR -> Framework -> enriched graph
+```
 
-- GrammarBundle sources.
-- Language Pack sources.
-- Framework Pack sources.
-- HarnessDefinition sources.
-
-The production trust boundary is the signed Official Asset Catalog plus exact
-SHA-256 digests. GitHub is transport, not trust.
+Dependency direction is strict: `Framework -> Pack -> Grammar`. Grammars provide parser syntax, Packs provide framework-neutral normalized facts, and Frameworks interpret those facts. Frameworks never parse AST directly or invent absent Pack facts.
 
 ## Layout
 
-```text
-packs/
-  catalog-source.json
-  json-basic/
-  rust-basic/
-framework-packs/
-harness/
-  catalog-source.json
-  official/
-  held-out/
-grammars/
-  legacy-manifest.toml
-tools/
-  build-catalog.mjs
-  build-packages.mjs
-  push-ghcr-artifacts.mjs
+- `grammars/<slug>/`: manifest, parser WASM, node types, and required license/provenance files.
+- `packs/<slug>/`: `manifest.toml`, `rules.json`, and optional `queries.scm`.
+- `frameworks/<slug>/`: `manifest.toml` and one canonical rule JSON: `semantic-v2.json` for v2 or `rules.json` for detector-only.
+- `tools/`: compact structural validators and build tooling.
+
+Pack query sections retain their former logical names as comments in `main.scm`; query patterns, captures, output kinds, and rule identities are unchanged.
+
+## Validation
+
+```bash
+npm run build
 ```
 
-`grammars/legacy-manifest.toml` is not a production GrammarBundle catalog. It is
-old metadata copied out of the runtime repo so it can be audited here. A real
-GrammarBundle release item must contain a validated `grammar.wasm`,
-`node-types.json`, `manifest.toml`, `LICENSE`, and `NOTICE`.
+The build creates release output under `dist/` only during validation. `dist/` is generated and must not be committed or included in the source repository.
 
-## Registry Contract
-
-Automation publishes asset packages and signed domain catalogs to GitHub
-Container Registry (GHCR) as OCI artifacts. GHCR is the registry surface: every
-asset has its own package name and version, while catalogs are searchable indexes
-over those independently versioned assets.
-
-Current domains:
-
-- `packs`: Language Packs and Framework Packs.
-- `harness`: HarnessDefinition assets.
-- `grammars`: future GrammarBundle assets.
-
-Models are deliberately not a GHCR asset domain. Omega model install accepts an
-explicit local directory or Hugging Face source selected by the user, then the
-CLI stages and validates those files before daemon import.
-
-Stable catalog entry points:
-
-```text
-oci://ghcr.io/gyxobka/omega-code-search-assets/catalog/packs:current
-oci://ghcr.io/gyxobka/omega-code-search-assets/catalog/harness:current
-```
-
-Asset package references use their own domain/name/version:
-
-```text
-oci://ghcr.io/gyxobka/omega-code-search-assets/packs/omega-rust-basic:2.3.0
-oci://ghcr.io/gyxobka/omega-code-search-assets/harness/claude:1.0.0
-```
-
-The catalog is signed with Ed25519 over the RFC 8785/JCS canonical form of the
-`signed` payload. Omega release builds embed the public key and catalog
-references:
-
-```text
-OMEGA_OFFICIAL_PACK_CATALOG_REF
-OMEGA_OFFICIAL_HARNESS_CATALOG_REF
-OMEGA_OFFICIAL_GRAMMAR_CATALOG_REF
-OMEGA_OFFICIAL_CATALOG_KEY_ID
-OMEGA_OFFICIAL_CATALOG_PUBLIC_KEY_B64
-```
-
-The private signing key must never be stored in the Omega runtime repository.
-
-Source branches do not store generated zip packages. CI builds package archives
-from source, pushes them to GHCR, records immutable OCI digests, then emits
-signed catalogs whose entries point at `oci://...@sha256:...` immutable package
-references. Omega verifies both the signed catalog and the archive SHA-256
-before install.
-
-CI publishes at asset level:
-
-- changes under a single pack source publish only that `packs/<name>:<version>`
-  artifact;
-- changes under a single harness definition publish only that
-  `harness/<name>:<version>` artifact;
-- catalog-source changes publish only entries whose catalog source changed, and
-  still rebuild the domain catalog so removed entries disappear from the index;
-- changes under `tools/` or workflow files do not publish existing asset
-  versions by themselves. Packaging semantic changes must be paired with asset
-  version bumps or an explicit manual publish.
-
-Catalog rebuilds merge with the current published catalog. Entries for changed
-assets are replaced with the new immutable OCI digest; unchanged assets keep
-their previous catalog entries and are not pushed again.
-
-## Local Catalog Build
-
-Build package archives:
-
-```powershell
-node tools/build-packages.mjs --out dist/packages --update-catalog-source
-```
-
-Build signed catalogs after OCI push:
-
-```powershell
-$env:OMEGA_ASSET_CATALOG_PRIVATE_KEY_PEM = Get-Content .secrets/catalog-ed25519.pem -Raw
-$env:OMEGA_ASSET_CATALOG_KEY_ID = "omega-assets-2026-08"
-node tools/build-catalog.mjs `
-  --domain harness `
-  --registry-digests dist/oci-digests.json `
-  --catalog-version harness-<commit-sha> `
-  --out dist/catalog.json
-```
-
-Asset versions remain independent inside each catalog. For example,
-`omega-rust-basic@2.3.0` can be published in a current packs catalog, while
-`omega-json-basic@1.0.0` remains unchanged.
-
-## Cleanup Policy
-
-Production assets should move here. The runtime repo should keep only validators,
-protocols, and crate-local test fixtures. Runtime tests should install assets
-through product-control paths or use small local fixtures, not root-level
-production asset trees.
+The canonical contracts preserve the binding invariants: Pack P0 = 2, Pack P1 = 0, zero precision exceptions, zero synthetic static roles, zero generic reference semantic edges, zero generic semantic target relations, zero generic/broad-call entity debt, and zero declared-output mismatch.

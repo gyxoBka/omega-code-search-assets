@@ -1,0 +1,1278 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-maui",
+  "selector": "framework:maui",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "csharp",
+      "xml"
+    ],
+    "required_packs": [
+      "omega-c-sharp",
+      "omega-xml"
+    ],
+    "required_capabilities": [
+      "definitions",
+      "calls",
+      "references",
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence",
+    "structured.entry(role=xml_parent_child_attribute_context)",
+    "call.csharp_class_member_string_context",
+    "call.csharp_class_nested_member_string_context",
+    "definition.csharp_class_base_context"
+  ],
+  "emits": {
+    "entities": [
+      "Component",
+      "Route",
+      "ServiceRegistration",
+      "View",
+      "XamlResource",
+      "Binding",
+      "ResourceDictionaryImport",
+      "TemplateReference"
+    ],
+    "relations": [
+      "contains",
+      "navigates_to",
+      "renders"
+    ]
+  },
+  "rules": [
+    {
+      "id": "maui.xaml.class_named-child",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_parent_child_attribute_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "parent_attribute_name",
+          "value": "x:Class"
+        },
+        {
+          "kind": "field_equals",
+          "field": "child_attribute_name",
+          "value": "x:Name"
+        },
+        {
+          "kind": "field_present",
+          "field": "parent_attribute_value"
+        },
+        {
+          "kind": "field_present",
+          "field": "child_attribute_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:component:{path}:{parent_attribute_value}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "parent_attribute_value"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source_kind": "xaml"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:view:{path}:{child_attribute_value}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "child_attribute_value"
+            },
+            "element_tag": {
+              "kind": "field_ref",
+              "field": "child_tag"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "maui:component:{path}:{parent_attribute_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "maui:view:{path}:{child_attribute_value}"
+          },
+          "attributes": {
+            "source_only": true,
+            "direct_xaml_child": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "maui:component:{path}:{parent_attribute_value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "maui:view:{path}:{child_attribute_value}"
+          },
+          "attributes": {
+            "source_only": true,
+            "direct_xaml_child": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.route.literal_registration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_class_member_string_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "Routing"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "RegisterRoute"
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.cs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:route:{arg1}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "arg1"
+            },
+            "declaration_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.navigation.literal_registered_route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_class_nested_member_string_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver_root",
+          "value": "Shell"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver_member",
+          "value": "Current"
+        },
+        {
+          "kind": "field_equals",
+          "field": "member",
+          "value": "GoToAsync"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner_class"
+        },
+        {
+          "kind": "field_in",
+          "field": "owner_base",
+          "values": [
+            "ContentPage",
+            "Page",
+            "Shell"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.cs"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "call.csharp_class_member_string_context",
+          "current_field": "arg1",
+          "join_field": "arg1",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "receiver",
+              "value": "Routing"
+            },
+            {
+              "kind": "field_equals",
+              "field": "member",
+              "value": "RegisterRoute"
+            }
+          ],
+          "bind": "route_decl"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:component:csharp:{path}:{owner_class}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "source_kind": "csharp_navigation_owner"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "navigates_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "maui:component:csharp:{path}:{owner_class}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "route_decl",
+            "field": "arg1",
+            "template": "maui:route:{value}"
+          },
+          "attributes": {
+            "source_only": true,
+            "literal_navigation": true,
+            "target_requires_declaration": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.xaml.component",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "x:Class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:component:{path}:{attribute_value}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "element_tag": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            },
+            "source_kind": "xaml"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.shell.route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "element_tag",
+          "values": [
+            "Shell",
+            "ShellContent",
+            "FlyoutItem",
+            "TabBar",
+            "Tab"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "Route"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:route:{attribute_value}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_kind": "xaml_shell"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.xaml.resource-reference",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "attribute_name",
+          "values": [
+            "Source",
+            "StaticResource",
+            "DynamicResource",
+            "x:Key",
+            "x:DataType"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "XamlResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:xaml-resource:{path}:{source.start}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "element": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.services.registration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.csharp_service_registration_generic_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver_member",
+          "value": "Services"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "AddSingleton",
+            "AddTransient",
+            "AddScoped"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "service_type"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:service-registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "lifetime": {
+              "kind": "field_ref",
+              "field": "member"
+            },
+            "service_type": {
+              "kind": "field_ref",
+              "field": "service_type"
+            },
+            "implementation_type": {
+              "kind": "field_ref",
+              "field": "implementation_type"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.xaml.binding-expression",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_value",
+          "value": "{Binding"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "element_tag"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Binding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "element": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            },
+            "binding_kind": "Binding",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored XAML markup extension text is preserved as a binding/resource reference; runtime binding evaluation is not inferred."
+    },
+    {
+      "id": "maui.xaml.staticresource-expression",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_value",
+          "value": "{StaticResource"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "element_tag"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Binding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "element": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            },
+            "binding_kind": "StaticResource",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored XAML markup extension text is preserved as a binding/resource reference; runtime binding evaluation is not inferred."
+    },
+    {
+      "id": "maui.xaml.dynamicresource-expression",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "attribute_value",
+          "value": "{DynamicResource"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "element_tag"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Binding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "attribute_name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "element": {
+              "kind": "field_ref",
+              "field": "element_tag"
+            },
+            "binding_kind": "DynamicResource",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Authored XAML markup extension text is preserved as a binding/resource reference; runtime binding evaluation is not inferred."
+    },
+    {
+      "id": "maui.xaml.resource-dictionary-source",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "ResourceDictionary"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "Source"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ResourceDictionaryImport",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:resource-dictionary:{path}:{source.start}"
+          },
+          "attributes": {
+            "source": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.xaml.shell-content-template",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "structured.entry"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "role",
+          "value": "xml_element_attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "element_tag",
+          "value": "ShellContent"
+        },
+        {
+          "kind": "field_equals",
+          "field": "attribute_name",
+          "value": "ContentTemplate"
+        },
+        {
+          "kind": "field_present",
+          "field": "attribute_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.xaml"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateReference",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:template-reference:{path}:{source.start}"
+          },
+          "attributes": {
+            "expression": {
+              "kind": "field_ref",
+              "field": "attribute_value"
+            },
+            "resolved_target": false,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "ContentTemplate markup is source evidence only; DataTemplate/component resolution requires a XAML resource/type resolver."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "compiled XAML expansion, styles/templates inherited across unavailable resources and runtime visual tree are not executed",
+      "literal Shell/registered routes, markup binding/resource expressions, ResourceDictionary Source and ShellContent template references are materialized; relative/query/interpolated navigation and target resolution require path/value/type resolver evidence",
+      "MAUI DI factory/instance registration overloads require generic ordered authored call-argument emission",
+      "MAUI DI service/implementation target identities across generic/factory registration forms require bounded source symbol/import resolution",
+      "MAUI reflection/runtime container selection and effective service lifetime resolution remain runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "dotnet-maui",
+      "repository": "https://github.com/dotnet/maui",
+      "path": "src/Controls/src/Xaml/**",
+      "revision": "d2edf1972d09f6689a4621ba9ff42346ced6f1b1",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "maui.exact_signature.1..xaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": ".xaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": ".xaml",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.2..xaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": ".xaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": ".xaml",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.3..xaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:.xaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": ".xaml",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.4..xaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": ".xaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": ".xaml",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.1.microsoft.maui.controls",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "Microsoft.Maui.Controls"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "Microsoft.Maui.Controls",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.2.microsoft.maui.controls",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "Microsoft.Maui.Controls"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "Microsoft.Maui.Controls",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.3.microsoft.maui.controls",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:microsoft.maui.controls"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "Microsoft.Maui.Controls",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.4.microsoft.maui.controls",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "Microsoft.Maui.Controls"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "Microsoft.Maui.Controls",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.1.usemauiapp",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "UseMauiApp"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "UseMauiApp",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.2.usemauiapp",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "UseMauiApp"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "UseMauiApp",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.3.usemauiapp",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:usemauiapp"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "UseMauiApp",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "maui.exact_signature.4.usemauiapp",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "UseMauiApp"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "maui"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "maui",
+          "framework_name": "MAUI",
+          "signature": "UseMauiApp",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

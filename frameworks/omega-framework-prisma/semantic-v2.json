@@ -1,0 +1,607 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-prisma",
+  "selector": "framework:prisma",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "prisma",
+      "typescript",
+      "javascript"
+    ],
+    "required_packs": [
+      "omega-prisma",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "structured_documents",
+    "package_manifests",
+    "existing_language_ir",
+    "data.prisma_model_typed_field",
+    "data.view",
+    "data.view_field",
+    "data.enum_value"
+  ],
+  "emits": {
+    "entities": [
+      "Datasource",
+      "Enum",
+      "EnumValue",
+      "Field",
+      "Generator",
+      "Model",
+      "SchemaProject",
+      "View"
+    ],
+    "relations": [
+      "configured_by",
+      "has_field",
+      "relates_to"
+    ]
+  },
+  "rules": [
+    {
+      "id": "prisma.model",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:model:{data.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "data.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.field"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Field",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:field:{data.model}:{data.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "data.name"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "data.type"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_field",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:model:{data.model}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:field:{data.model}:{data.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.relation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.relation"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "relates_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:model:{data.model}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:model:{data.target}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "data.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.datasource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.datasource"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Datasource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:datasource:{data.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "data.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.enum",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.enum"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Enum",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:enum:{data.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "data.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.generator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.generator"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Generator",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:generator:{data.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "data.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.datasource.configured-by-schema",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.datasource"
+        },
+        {
+          "kind": "field_present",
+          "field": "data.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:schema:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:schema:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:datasource:{data.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "prisma.generator.configured-by-schema",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.generator"
+        },
+        {
+          "kind": "field_present",
+          "field": "data.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:schema:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:schema:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:generator:{data.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "prisma.implicit-model-relation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.prisma_model_typed_field"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner"
+        },
+        {
+          "kind": "field_present",
+          "field": "target"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.model",
+          "current_field": "target",
+          "join_field": "name",
+          "bind": "target_model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "relates_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:model:{owner}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_model",
+            "field": "name",
+            "template": "prisma:model:{value}"
+          },
+          "attributes": {
+            "field": {
+              "kind": "field_ref",
+              "field": "field"
+            },
+            "implicit": true,
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.view",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.view"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:view:{path}:{source.start}"
+          },
+          "attributes": {
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.view-field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.view_field"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Field",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:view-field:{owner}:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "type"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_field",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:view:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:view-field:{owner}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "prisma.enum-value",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.enum_value"
+        },
+        {
+          "kind": "field_present",
+          "field": "owner"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EnumValue",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:enum-value:{owner}:{source.start}"
+          },
+          "attributes": {
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "explicit @relation fields and implicit model-typed fields are materialized when the target model declaration exists; scalar/enum fields are not misclassified by name-only heuristics",
+      "computed Prisma Client/runtime query behavior, database introspection and generated client artifacts are runtime/external semantics",
+      "cross-file/model target ambiguity is left to the generic resolver when more than one exact target exists; Omega does not infer database relations from runtime schema state"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "prisma-engines",
+      "repository": "https://github.com/prisma/prisma-engines",
+      "path": "psl/**",
+      "revision": "561d7b42579a2459cc8edf3788918b626c640023",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "prisma-engines",
+      "repository": "https://github.com/prisma/prisma-engines",
+      "path": "schema-engine/**",
+      "revision": "561d7b42579a2459cc8edf3788918b626c640023",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "prisma-engines",
+      "repository": "https://github.com/prisma/prisma-engines",
+      "path": "query-compiler/**",
+      "revision": "561d7b42579a2459cc8edf3788918b626c640023",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/prisma/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/**/prisma/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
+    {
+      "id": "prisma.candidate_signature.1.specifier",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "prisma"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "prisma"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "prisma",
+          "signature": "prisma",
+          "source": "candidate_signature"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    },
+    {
+      "id": "prisma.candidate_signature.1.name",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "prisma"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "prisma"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "prisma",
+          "signature": "prisma",
+          "source": "candidate_reference"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
+    }
+  ]
+}

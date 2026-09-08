@@ -1,0 +1,1043 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-kotlin-multiplatform",
+  "selector": "framework:kotlin-multiplatform",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "kotlin"
+    ],
+    "required_packs": [
+      "omega-kotlin"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "BuildProject",
+      "BuildTarget",
+      "PlatformDeclaration",
+      "PlatformTarget",
+      "SourceSet"
+    ],
+    "relations": [
+      "configured_by",
+      "contains"
+    ]
+  },
+  "rules": [
+    {
+      "id": "kmp.target.direct-call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_in",
+          "field": "call_name",
+          "values": [
+            "jvm",
+            "js",
+            "wasmJs",
+            "wasmWasi",
+            "linuxX64",
+            "linuxArm64",
+            "mingwX64",
+            "macosX64",
+            "macosArm64",
+            "iosX64",
+            "iosArm64",
+            "iosSimulatorArm64",
+            "tvosX64",
+            "tvosArm64",
+            "watchosX64",
+            "watchosArm64",
+            "androidTarget"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gradle.kts"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:project:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:{path}:{call_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "kmp:project:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:{path}:{call_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "kmp.source-set.named",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_member_string_arg_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "sourceSets"
+        },
+        {
+          "kind": "field_in",
+          "field": "member",
+          "values": [
+            "named",
+            "getByName",
+            "maybeCreate",
+            "create"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "arg0"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gradle.kts"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:project:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SourceSet",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:source-set:{path}:{arg0}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "kmp:project:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:source-set:{path}:{arg0}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "kmp.expect.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.kotlin_platform_class_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "modifier",
+          "value": "expect"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:expect:class:{path}:{declaration_name}"
+          },
+          "attributes": {
+            "modifier": "expect",
+            "kind": "class",
+            "name": {
+              "kind": "field_ref",
+              "field": "declaration_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:expect:class:{path}:{declaration_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.actual.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.kotlin_platform_class_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "modifier",
+          "value": "actual"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:actual:class:{path}:{declaration_name}"
+          },
+          "attributes": {
+            "modifier": "actual",
+            "kind": "class",
+            "name": {
+              "kind": "field_ref",
+              "field": "declaration_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:actual:class:{path}:{declaration_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.expect.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.kotlin_platform_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "modifier",
+          "value": "expect"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:expect:function:{path}:{declaration_name}"
+          },
+          "attributes": {
+            "modifier": "expect",
+            "kind": "function",
+            "name": {
+              "kind": "field_ref",
+              "field": "declaration_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:expect:function:{path}:{declaration_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.actual.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.kotlin_platform_function_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "modifier",
+          "value": "actual"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:actual:function:{path}:{declaration_name}"
+          },
+          "attributes": {
+            "modifier": "actual",
+            "kind": "function",
+            "name": {
+              "kind": "field_ref",
+              "field": "declaration_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:actual:function:{path}:{declaration_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.expect.property",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.kotlin_platform_property_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "modifier",
+          "value": "expect"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:expect:property:{path}:{declaration_name}"
+          },
+          "attributes": {
+            "modifier": "expect",
+            "kind": "property",
+            "name": {
+              "kind": "field_ref",
+              "field": "declaration_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:expect:property:{path}:{declaration_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.actual.property",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.kotlin_platform_property_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "modifier",
+          "value": "actual"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformDeclaration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:actual:property:{path}:{declaration_name}"
+          },
+          "attributes": {
+            "modifier": "actual",
+            "kind": "property",
+            "name": {
+              "kind": "field_ref",
+              "field": "declaration_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:actual:property:{path}:{declaration_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.jvm",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "jvm"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:jvm:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "jvm"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:jvm:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.android",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "android"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:android:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "android"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:android:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.iosarm64",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "iosArm64"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:iosArm64:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "iosArm64"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:iosArm64:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.iossimulatorarm64",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "iosSimulatorArm64"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:iosSimulatorArm64:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "iosSimulatorArm64"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:iosSimulatorArm64:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.js",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "js"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:js:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "js"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:js:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.wasmjs",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "wasmJs"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:wasmJs:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "wasmJs"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:wasmJs:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.linuxx64",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "linuxX64"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:linuxX64:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "linuxX64"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:linuxX64:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.macosx64",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "macosX64"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:macosX64:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "macosX64"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:macosX64:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "kmp.target.macosarm64",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.kotlin_direct_call_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "call_name",
+          "value": "macosArm64"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformTarget",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "kmp:target:macosArm64:{path}:{source.start}"
+          },
+          "attributes": {
+            "target": "macosArm64"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "kmp:target:macosArm64:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "authored expect/actual declarations and direct Kotlin Gradle target/source-set calls are materialized",
+      "matching expect to actual across source sets/modules requires project/source-set resolver evidence; no name-only cross-file edge is guessed",
+      "computed aliases and source-set names require bounded source value/symbol resolution",
+      "Gradle plugin execution, convention-plugin effects and generated targets require build/generated evidence"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "kotlin",
+      "repository": "https://github.com/JetBrains/kotlin",
+      "path": "libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/**",
+      "revision": "9f27f51dd5349129c08e300c1957a9085c313853",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "kotlin-multiplatform.exact_signature.1.org.jetbrains.kotlin.multiplatform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "org.jetbrains.kotlin.multiplatform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kotlin-multiplatform"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kotlin-multiplatform",
+          "framework_name": "Kotlin Multiplatform",
+          "signature": "org.jetbrains.kotlin.multiplatform",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kotlin-multiplatform.exact_signature.2.org.jetbrains.kotlin.multiplatform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "org.jetbrains.kotlin.multiplatform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kotlin-multiplatform"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kotlin-multiplatform",
+          "framework_name": "Kotlin Multiplatform",
+          "signature": "org.jetbrains.kotlin.multiplatform",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kotlin-multiplatform.exact_signature.3.org.jetbrains.kotlin.multiplatform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:org.jetbrains.kotlin.multiplatform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kotlin-multiplatform"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kotlin-multiplatform",
+          "framework_name": "Kotlin Multiplatform",
+          "signature": "org.jetbrains.kotlin.multiplatform",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kotlin-multiplatform.exact_signature.4.org.jetbrains.kotlin.multiplatform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "org.jetbrains.kotlin.multiplatform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kotlin-multiplatform"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kotlin-multiplatform",
+          "framework_name": "Kotlin Multiplatform",
+          "signature": "org.jetbrains.kotlin.multiplatform",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

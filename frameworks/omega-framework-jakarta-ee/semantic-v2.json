@@ -1,0 +1,1519 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-jakarta-ee",
+  "selector": "framework:jakarta-ee",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "java"
+    ],
+    "required_packs": [
+      "omega-java"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "project_level_evidence",
+    "structured_documents",
+    "calls_members"
+  ],
+  "emits": {
+    "entities": [
+      "Controller",
+      "Filter",
+      "Handler",
+      "InjectionPoint",
+      "Listener",
+      "MediaContract",
+      "MethodPolicy",
+      "Route",
+      "RouterGroup",
+      "Service",
+      "Servlet"
+    ],
+    "relations": [
+      "configured_by",
+      "guards",
+      "handles",
+      "injects",
+      "mounts"
+    ]
+  },
+  "rules": [
+    {
+      "id": "jakarta-ee.jaxrs.resource.mount",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_class_direct_string_annotation_context"
+        },
+        {
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path",
+          "kind": "external_path_matches"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:controller:{package_name}.{class_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouterGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:router:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:controller:{package_name}.{class_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:router:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.get.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "GET"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:GET:{argument_string}"
+          },
+          "attributes": {
+            "method": "GET",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:GET:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.post.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "POST"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:POST:{argument_string}"
+          },
+          "attributes": {
+            "method": "POST",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:POST:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.put.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "PUT"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:PUT:{argument_string}"
+          },
+          "attributes": {
+            "method": "PUT",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:PUT:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.patch.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "PATCH"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:PATCH:{argument_string}"
+          },
+          "attributes": {
+            "method": "PATCH",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:PATCH:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.delete.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "DELETE"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:DELETE:{argument_string}"
+          },
+          "attributes": {
+            "method": "DELETE",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:DELETE:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.options.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "OPTIONS"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:OPTIONS:{argument_string}"
+          },
+          "attributes": {
+            "method": "OPTIONS",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:OPTIONS:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.jaxrs.head.literal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "jakarta.ws.rs",
+            "javax.ws.rs"
+          ],
+          "member": "Path"
+        },
+        {
+          "kind": "field_present",
+          "field": "package_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "class_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "method_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "argument_string"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.java_package_method_marker_annotation_context",
+          "relation": "same",
+          "where": [
+            {
+              "kind": "external_path_matches",
+              "package_in": [
+                "jakarta.ws.rs",
+                "javax.ws.rs"
+              ],
+              "member": "HEAD"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:HEAD:{argument_string}"
+          },
+          "attributes": {
+            "method": "HEAD",
+            "path": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "method_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:route:{package_name}.{class_name}.{method_name}:HEAD:{argument_string}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta-ee:handler:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.service.cdi-context",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "annotations.annotation_normal"
+        },
+        {
+          "package": "jakarta.enterprise.context",
+          "member_in": [
+            "ApplicationScoped",
+            "RequestScoped",
+            "SessionScoped",
+            "Dependent"
+          ],
+          "kind": "external_path_matches"
+        },
+        {
+          "kind": "field_present",
+          "field": "enclosing.qname"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:service:{enclosing.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "enclosing.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta-ee.service.jakarta-singleton",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "annotations.annotation_normal"
+        },
+        {
+          "package": "jakarta.inject",
+          "member_in": [
+            "Singleton"
+          ],
+          "kind": "external_path_matches"
+        },
+        {
+          "kind": "field_present",
+          "field": "enclosing.qname"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Service",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta-ee:service:{enclosing.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "enclosing.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "jakarta.constructor.di",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_constructor_parameter_import_bound_type_context"
+        },
+        {
+          "kind": "field_present",
+          "field": "target_type_import_path"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InjectionPoint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:inject:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "parameter_name"
+            },
+            "type": {
+              "kind": "field_ref",
+              "field": "target_type_import_path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:inject:{path}:{owner_class}:{parameter_name}"
+          },
+          "attributes": {
+            "target_resolution": "candidate"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.servlet.webservlet",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_class_direct_string_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "WebServlet"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Servlet",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:servlet:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "mapping": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:servlet:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.servlet.webfilter",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_class_direct_string_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "WebFilter"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Filter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:filter:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "mapping": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:filter:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.servlet.weblistener",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_class_direct_string_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "WebListener"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Listener",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:listener:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "mapping": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:listener:{package_name}.{class_name}:{argument_string}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.security.rolesallowed",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_marker_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "RolesAllowed"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MethodPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:policy:RolesAllowed:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "annotation": "RolesAllowed"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "guards",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:policy:RolesAllowed:{package_name}.{class_name}.{method_name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.security.permitall",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_marker_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "PermitAll"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MethodPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:policy:PermitAll:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "annotation": "PermitAll"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "guards",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:policy:PermitAll:{package_name}.{class_name}.{method_name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.security.denyall",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_marker_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "DenyAll"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MethodPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:policy:DenyAll:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "annotation": "DenyAll"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "guards",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:policy:DenyAll:{package_name}.{class_name}.{method_name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.security.transactional",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_marker_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "Transactional"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MethodPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:policy:Transactional:{package_name}.{class_name}.{method_name}"
+          },
+          "attributes": {
+            "annotation": "Transactional"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "guards",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:policy:Transactional:{package_name}.{class_name}.{method_name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.media.produces",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "Produces"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MediaContract",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:media:Produces:{package_name}.{class_name}.{method_name}:{argument_string}"
+          },
+          "attributes": {
+            "kind": "Produces",
+            "media_type": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:media:Produces:{package_name}.{class_name}.{method_name}:{argument_string}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "jakarta.media.consumes",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.java_package_method_direct_string_annotation_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "annotation_name",
+          "value": "Consumes"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MediaContract",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "jakarta:media:Consumes:{package_name}.{class_name}.{method_name}:{argument_string}"
+          },
+          "attributes": {
+            "kind": "Consumes",
+            "media_type": {
+              "kind": "field_ref",
+              "field": "argument_string"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "jakarta:media:Consumes:{package_name}.{class_name}.{method_name}:{argument_string}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "direct JAX-RS/Jakarta annotations, Servlet/Filter/Listener mappings, constructor import-bound dependencies and method policy/media annotations are materialized",
+      "annotation aliases and meta-annotations require generic source symbol/annotation provenance",
+      "runtime CDI bean selection/proxies/interceptors, request/response data flow and servlet container state require runtime evidence",
+      "computed/array annotation values and same-package/wildcard DI types require deeper bounded Java resolver evidence before exact targets"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codeql",
+      "repository": "https://github.com/github/codeql",
+      "path": "java/ql/lib/ext/**/jakarta*.model.yml",
+      "revision": "b0fa3e770386f18fd4d63225301ea4c41e7a5721",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "jakarta-ee.exact_signature.1.jakarta.platform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "jakarta.platform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "jakarta-ee"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "jakarta-ee",
+          "framework_name": "Jakarta EE",
+          "signature": "jakarta.platform",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "jakarta-ee.exact_signature.2.jakarta.platform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "jakarta.platform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "jakarta-ee"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "jakarta-ee",
+          "framework_name": "Jakarta EE",
+          "signature": "jakarta.platform",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "jakarta-ee.exact_signature.3.jakarta.platform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:jakarta.platform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "jakarta-ee"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "jakarta-ee",
+          "framework_name": "Jakarta EE",
+          "signature": "jakarta.platform",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "jakarta-ee.exact_signature.4.jakarta.platform",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "jakarta.platform"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "jakarta-ee"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "jakarta-ee",
+          "framework_name": "Jakarta EE",
+          "signature": "jakarta.platform",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
+}

@@ -1,0 +1,2154 @@
+{
+  "schema_version": 2,
+  "asset": "omega-framework-django",
+  "selector": "framework:django",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "python"
+    ],
+    "required_packs": [
+      "omega-python"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "imports_bindings",
+    "calls_members",
+    "file_paths",
+    "existing_language_ir",
+    "project_level_evidence",
+    "reference.python_class_list_string_tuple_context",
+    "data.python_class_member_constructor_keyword_context"
+  ],
+  "emits": {
+    "entities": [
+      "AdminComponent",
+      "AdminRegistration",
+      "ApiUse",
+      "AppConfig",
+      "ApplicationEntry",
+      "ConfigKey",
+      "Dependency",
+      "FieldOption",
+      "Form",
+      "Handler",
+      "HostPolicy",
+      "InstalledApp",
+      "Middleware",
+      "Migration",
+      "Model",
+      "ModelField",
+      "Route",
+      "SignalHandler",
+      "UrlConfiguration",
+      "View"
+    ],
+    "relations": [
+      "configured_by",
+      "configures",
+      "contains",
+      "depends_on",
+      "handles",
+      "mounts",
+      "uses_api",
+      "uses_model"
+    ]
+  },
+  "rules": [
+    {
+      "id": "django.url.path",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.urls",
+          "member_in": [
+            "path",
+            "re_path"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:route:{call.arg0}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg2"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:handler:{call.arg1}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:route:{call.arg0}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg1"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.url.include",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.urls",
+          "member_in": [
+            "include"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg0"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "Model"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.migration.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/migrations/*.py"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "__pycache__"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Migration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:migration:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.model.relation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.direct"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "ForeignKey",
+            "OneToOneField",
+            "ManyToManyField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "call.arg0"
+          },
+          "attributes": {
+            "relation": {
+              "kind": "field_ref",
+              "field": "call.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.migration.dependencies",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_class_list_string_tuple_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "class_name",
+          "value": "Migration"
+        },
+        {
+          "kind": "field_equals",
+          "field": "field_name",
+          "value": "dependencies"
+        },
+        {
+          "kind": "field_present",
+          "field": "item0"
+        },
+        {
+          "kind": "field_present",
+          "field": "item1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/migrations/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:migration-dependency:{path}:{item0}:{item1}"
+          },
+          "attributes": {
+            "app_label": {
+              "kind": "field_ref",
+              "field": "item0"
+            },
+            "migration_name": {
+              "kind": "field_ref",
+              "field": "item1"
+            },
+            "declaration_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:migration:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:migration-dependency:{path}:{item0}:{item1}"
+          },
+          "attributes": {
+            "declaration_only": true,
+            "resolution": "unresolved_migration_identity"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.generic-api-call.django",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "django",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "package": "django",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+    },
+    {
+      "id": "django.generic-dependency.django",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.target_candidate"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django"
+        },
+        {
+          "kind": "field_present",
+          "field": "source.start"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:dependency:django"
+          },
+          "attributes": {
+            "package": "django",
+            "source_only": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:dependency:django"
+          },
+          "attributes": {
+            "package": "django",
+            "source_only": true
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+    },
+    {
+      "id": "django.model.field.charfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "CharField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "CharField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "CharField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.textfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "TextField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "TextField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "TextField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.integerfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "IntegerField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "IntegerField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "IntegerField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.bigintegerfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "BigIntegerField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "BigIntegerField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "BigIntegerField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.booleanfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "BooleanField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "BooleanField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "BooleanField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.datefield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "DateField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "DateField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "DateField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.datetimefield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "DateTimeField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "DateTimeField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "DateTimeField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.decimalfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "DecimalField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "DecimalField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "DecimalField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.uuidfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "UUIDField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "UUIDField",
+            "field_role": "scalar"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "UUIDField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.jsonfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "JSONField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "JSONField",
+            "field_role": "structured"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "JSONField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.filefield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "FileField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "FileField",
+            "field_role": "resource"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "FileField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.imagefield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "ImageField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "ImageField",
+            "field_role": "resource"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "ImageField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.foreignkey",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "ForeignKey"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "ForeignKey",
+            "field_role": "relation"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "ForeignKey"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.onetoonefield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "OneToOneField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "OneToOneField",
+            "field_role": "relation"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "OneToOneField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field.manytomanyfield",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.python_class_member_constructor_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.db.models",
+          "member_in": [
+            "ManyToManyField"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "field_type": "ManyToManyField",
+            "field_role": "relation"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{owner_class}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}.{field_name}"
+          },
+          "attributes": {
+            "field_type": "ManyToManyField"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.view.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_from_import_class_base_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "django.views",
+            "django.views.generic"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:view:{class_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "base_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.root_urlconf",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_setting_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "ROOT_URLCONF"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "UrlConfiguration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting:ROOT_URLCONF:{string_value}"
+          },
+          "attributes": {
+            "name": "ROOT_URLCONF",
+            "value": {
+              "kind": "field_ref",
+              "field": "string_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.wsgi_application",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_setting_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "WSGI_APPLICATION"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApplicationEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting:WSGI_APPLICATION:{string_value}"
+          },
+          "attributes": {
+            "name": "WSGI_APPLICATION",
+            "value": {
+              "kind": "field_ref",
+              "field": "string_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.asgi_application",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_setting_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "ASGI_APPLICATION"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApplicationEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting:ASGI_APPLICATION:{string_value}"
+          },
+          "attributes": {
+            "name": "ASGI_APPLICATION",
+            "value": {
+              "kind": "field_ref",
+              "field": "string_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.default_auto_field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_setting_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "DEFAULT_AUTO_FIELD"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting:DEFAULT_AUTO_FIELD:{string_value}"
+          },
+          "attributes": {
+            "name": "DEFAULT_AUTO_FIELD",
+            "value": {
+              "kind": "field_ref",
+              "field": "string_value"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.installed_apps",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_list_item_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "INSTALLED_APPS"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InstalledApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting-item:INSTALLED_APPS:{item}"
+          },
+          "attributes": {
+            "setting": "INSTALLED_APPS",
+            "value": {
+              "kind": "field_ref",
+              "field": "item"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:setting-item:INSTALLED_APPS:{item}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.middleware",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_list_item_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "MIDDLEWARE"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting-item:MIDDLEWARE:{item}"
+          },
+          "attributes": {
+            "setting": "MIDDLEWARE",
+            "value": {
+              "kind": "field_ref",
+              "field": "item"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:setting-item:MIDDLEWARE:{item}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.setting.allowed_hosts",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_module_string_list_item_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "setting_name",
+          "value": "ALLOWED_HOSTS"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/settings*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HostPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:setting-item:ALLOWED_HOSTS:{item}"
+          },
+          "attributes": {
+            "setting": "ALLOWED_HOSTS",
+            "value": {
+              "kind": "field_ref",
+              "field": "item"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:setting-item:ALLOWED_HOSTS:{item}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.signal.receiver",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.dispatch",
+          "member_in": [
+            "receiver"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SignalHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:signal-handler:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_field",
+            "field": "decorator.arg0"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:signal-handler:{definition.qname}"
+          },
+          "attributes": {
+            "kind": "signal"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.admin.register",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "external_path_matches",
+          "package": "django.contrib.admin",
+          "member_in": [
+            "register"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AdminRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:admin:{definition.qname}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "decorator.arg0"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:admin:{definition.qname}"
+          },
+          "target": {
+            "kind": "by_field",
+            "field": "decorator.arg0"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.model.field-option",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.python_class_member_constructor_keyword_context"
+        },
+        {
+          "kind": "field_equals",
+          "field": "callee_object",
+          "value": "models"
+        },
+        {
+          "kind": "field_in",
+          "field": "keyword_name",
+          "values": [
+            "max_length",
+            "null",
+            "blank",
+            "default",
+            "unique",
+            "primary_key",
+            "db_index",
+            "related_name",
+            "related_query_name",
+            "on_delete",
+            "through",
+            "to_field",
+            "choices",
+            "editable",
+            "validators"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FieldOption",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:field-option:{owner_class}:{field_name}:{keyword_name}:{source.start}"
+          },
+          "attributes": {
+            "model": {
+              "kind": "field_ref",
+              "field": "owner_class"
+            },
+            "field": {
+              "kind": "field_ref",
+              "field": "field_name"
+            },
+            "option": {
+              "kind": "field_ref",
+              "field": "keyword_name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "keyword_value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:model-field:{owner_class}:{field_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:field-option:{owner_class}:{field_name}:{keyword_name}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "django.form.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_from_import_class_base_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "django.forms"
+          ],
+          "member_in": [
+            "Form",
+            "ModelForm"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Form",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django-form-class:{path}:{class_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "base_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.admin.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_from_import_class_base_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "django.contrib.admin"
+          ],
+          "member_in": [
+            "ModelAdmin",
+            "TabularInline",
+            "StackedInline"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AdminComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django-admin-class:{path}:{class_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "base_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.app-config.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_from_import_class_base_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "django.apps"
+          ],
+          "member_in": [
+            "AppConfig"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AppConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django-app-config-class:{path}:{class_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "base_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "django.middleware.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.python_from_import_class_base_context"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_in": [
+            "django.utils.deprecation"
+          ],
+          "member_in": [
+            "MiddlewareMixin"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django-middleware-class:{path}:{class_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "class_name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "base_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "model fields and authored constructor options/default/constraint/reference expressions, settings, views, signals and admin registrations are materialized; computed Python values remain bounded value-flow candidates",
+      "include targets without resolvable import/module provenance require generic source symbol resolution",
+      "dynamic urlpatterns/settings mutation, metaclass/generated ORM descriptors, app registry and runtime migration graph require compiler/runtime evidence"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/django/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/django/parsers/urls-parser.ts",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-django-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "scripts/source_map_v2/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "references/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "django.exact_signature.1.django",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "django"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "django"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "django",
+          "framework_name": "Django",
+          "signature": "django",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "django.exact_signature.2.django",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "django"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "django"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "django",
+          "framework_name": "Django",
+          "signature": "django",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "django.exact_signature.3.django",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:django"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "django"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "django",
+          "framework_name": "Django",
+          "signature": "django",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "django.exact_signature.4.django",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "django"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "django"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "django",
+          "framework_name": "Django",
+          "signature": "django",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
+  },
+  "runtime_status": "terminal-static-source-contract"
+}
