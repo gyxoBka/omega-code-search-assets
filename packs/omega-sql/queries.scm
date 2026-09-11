@@ -543,7 +543,7 @@
 (lateral_join) @sql.lateral_join
 (subquery) @sql.subquery
 (field column: (_) @sql.field.column) @sql.field.reference
-(field (object_reference) @sql.field.object column: (_) @sql.qualified_field.column) @sql.qualified_field.reference
+(field (object_reference) @sql.field.object (identifier) @sql.qualified_field.column) @sql.qualified_field.reference
 (insert) @sql.insert.statement
 (update) @sql.update.statement
 (delete) @sql.delete.statement

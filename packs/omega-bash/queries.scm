@@ -515,5 +515,5 @@
   (variable_name) @bash.expansion.variable) @bash.expansion.parameter
 
 (pipeline
-  (_statement) @bash.pipeline.statement) @bash.pipeline.owned_statement
+  (_) @bash.pipeline.statement) @bash.pipeline.owned_statement
 

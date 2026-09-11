@@ -53,7 +53,7 @@
     (identifier) @godot.node_script.name_attribute
     (string) @godot.node_script.node_name)
   (property
-    (identifier) @godot.node_script.property_name
+    (path) @godot.node_script.property_name
     (constructor
       (identifier) @godot.node_script.constructor_name
       (arguments

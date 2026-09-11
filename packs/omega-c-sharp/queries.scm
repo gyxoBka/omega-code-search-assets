@@ -248,8 +248,8 @@
 ) @definition.modifiers.owner
 
 (class_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (constructor_declaration
@@ -258,23 +258,23 @@
 ) @definition.modifiers.owner
 
 (delegate_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (enum_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (event_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (interface_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (local_function_statement
@@ -288,18 +288,18 @@
 ) @definition.modifiers.owner
 
 (property_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (record_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (struct_declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- definition_identity_hints ---
@@ -468,8 +468,8 @@
 ; --- import_alias_hints ---
 
 (alias_qualified_name
-  name: (_) @import.target
   alias: (_) @import.alias) @import.statement
+  name: (_) @import.target
 
 ; --- import_targets ---
 

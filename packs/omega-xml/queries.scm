@@ -14,11 +14,12 @@
   (element
     (start_tag
       (tag_name) @xml.ancestor_grandchild.intermediate_tag)
-    (empty_elem_tag
-      (tag_name) @xml.ancestor_grandchild.descendant_tag
-      (attribute
-        (attribute_name) @xml.ancestor_grandchild.descendant_attribute_name
-        (attribute_value) @xml.ancestor_grandchild.descendant_attribute_value)) @xml.ancestor_grandchild.descendant_element) @xml.ancestor_grandchild.intermediate_element) @xml.ancestor_grandchild.context
+    (element
+      (empty_elem_tag
+        (tag_name) @xml.ancestor_grandchild.descendant_tag
+        (attribute
+          (attribute_name) @xml.ancestor_grandchild.descendant_attribute_name
+          (attribute_value) @xml.ancestor_grandchild.descendant_attribute_value))) @xml.ancestor_grandchild.descendant_element) @xml.ancestor_grandchild.intermediate_element) @xml.ancestor_grandchild.context
 
 (element
   (start_tag
@@ -73,11 +74,12 @@
     (element
       (start_tag
         (tag_name) @xml.d3.intermediate_tag)
-      (empty_elem_tag
-        (tag_name) @xml.d3.descendant_tag
-        (attribute
-          (attribute_name) @xml.d3.descendant_attribute_name
-          (attribute_value) @xml.d3.descendant_attribute_value)) @xml.d3.descendant_element) @xml.d3.intermediate_element) @xml.d3.child_element) @xml.d3.context
+      (element
+        (empty_elem_tag
+          (tag_name) @xml.d3.descendant_tag
+          (attribute
+            (attribute_name) @xml.d3.descendant_attribute_name
+            (attribute_value) @xml.d3.descendant_attribute_value))) @xml.d3.descendant_element) @xml.d3.intermediate_element) @xml.d3.child_element) @xml.d3.context
 
 (element
   (start_tag
@@ -178,11 +180,12 @@
     (attribute
       (attribute_name) @xml.parent_child.parent_attribute_name
       (attribute_value) @xml.parent_child.parent_attribute_value))
-  (empty_elem_tag
-    (tag_name) @xml.parent_child.child_tag
-    (attribute
-      (attribute_name) @xml.parent_child.child_attribute_name
-      (attribute_value) @xml.parent_child.child_attribute_value)) @xml.parent_child.child_element) @xml.parent_child.context
+  (element
+    (empty_elem_tag
+      (tag_name) @xml.parent_child.child_tag
+      (attribute
+        (attribute_name) @xml.parent_child.child_attribute_name
+        (attribute_value) @xml.parent_child.child_attribute_value))) @xml.parent_child.child_element) @xml.parent_child.context
 
 ; --- parent_child_text ---
 

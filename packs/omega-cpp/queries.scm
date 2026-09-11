@@ -895,20 +895,20 @@
 (class_specifier
   name: (_) @cpp.adjmacro_member.owner_name
   body: (field_declaration_list
-    (expression_statement
-      (call_expression
-        function: (identifier) @cpp.adjmacro_member.macro_name
-        arguments: (argument_list) @cpp.adjmacro_member.arguments) @cpp.adjmacro_member.macro_call) @cpp.adjmacro_member.macro_stmt
+    (declaration
+      declarator: (function_declarator
+        declarator: (identifier) @cpp.adjmacro_member.macro_name
+        parameters: (parameter_list) @cpp.adjmacro_member.arguments) @cpp.adjmacro_member.macro_call) @cpp.adjmacro_member.macro_stmt
     .
     (field_declaration) @cpp.adjmacro_member.member_decl)) @cpp.adjmacro_member.context
 
 (struct_specifier
   name: (_) @cpp.adjmacro_smember.owner_name
   body: (field_declaration_list
-    (expression_statement
-      (call_expression
-        function: (identifier) @cpp.adjmacro_smember.macro_name
-        arguments: (argument_list) @cpp.adjmacro_smember.arguments) @cpp.adjmacro_smember.macro_call) @cpp.adjmacro_smember.macro_stmt
+    (declaration
+      declarator: (function_declarator
+        declarator: (identifier) @cpp.adjmacro_smember.macro_name
+        parameters: (parameter_list) @cpp.adjmacro_smember.arguments) @cpp.adjmacro_smember.macro_call) @cpp.adjmacro_smember.macro_stmt
     .
     (field_declaration) @cpp.adjmacro_smember.member_decl)) @cpp.adjmacro_smember.context
 
@@ -951,10 +951,10 @@
 (class_specifier
   name: (_) @cpp.adjmacro_arg_member.owner_name
   body: (field_declaration_list
-    (expression_statement
-      (call_expression
-        function: (identifier) @cpp.adjmacro_arg_member.macro_name
-        arguments: (argument_list
+    (declaration
+      declarator: (function_declarator
+        declarator: (identifier) @cpp.adjmacro_arg_member.macro_name
+        parameters: (parameter_list
           (_) @cpp.adjmacro_arg_member.argument)) @cpp.adjmacro_arg_member.macro_call) @cpp.adjmacro_arg_member.macro_stmt
     .
     (field_declaration) @cpp.adjmacro_arg_member.member_decl)) @cpp.adjmacro_arg_member.context
@@ -962,10 +962,10 @@
 (struct_specifier
   name: (_) @cpp.adjmacro_arg_smember.owner_name
   body: (field_declaration_list
-    (expression_statement
-      (call_expression
-        function: (identifier) @cpp.adjmacro_arg_smember.macro_name
-        arguments: (argument_list
+    (declaration
+      declarator: (function_declarator
+        declarator: (identifier) @cpp.adjmacro_arg_smember.macro_name
+        parameters: (parameter_list
           (_) @cpp.adjmacro_arg_smember.argument)) @cpp.adjmacro_arg_smember.macro_call) @cpp.adjmacro_arg_smember.macro_stmt
     .
     (field_declaration) @cpp.adjmacro_arg_smember.member_decl)) @cpp.adjmacro_arg_smember.context

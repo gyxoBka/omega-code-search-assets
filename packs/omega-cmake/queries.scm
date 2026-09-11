@@ -35,9 +35,9 @@
 
 ; --- definition_identity_hints ---
 
-(function_def (argument) @definition.identity.name) @definition.identity.owner
+(function_def (function_command (argument_list (argument) @definition.identity.name))) @definition.identity.owner
 
-(macro_def (argument) @definition.identity.name) @definition.identity.owner
+(macro_def (macro_command (argument_list (argument) @definition.identity.name))) @definition.identity.owner
 
 ; --- nvim_pinned_highlights ---
 

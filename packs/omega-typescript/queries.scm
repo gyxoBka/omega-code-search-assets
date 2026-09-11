@@ -397,8 +397,8 @@
 ; --- declaration_visibility ---
 
 (abstract_method_signature
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (method_definition
@@ -407,13 +407,13 @@
 ) @definition.visibility.owner
 
 (method_signature
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (property_signature
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (public_field_definition
@@ -1403,7 +1403,7 @@
         (required_parameter
           decorator: (decorator
             (call_expression function: (identifier) @ts.ctor_param_decorator.decorator_name))
-          name: (identifier) @ts.ctor_param_decorator.parameter_name) @ts.ctor_param_decorator.parameter))) @ts.ctor_param_decorator.class_context
+          pattern: (identifier) @ts.ctor_param_decorator.parameter_name) @ts.ctor_param_decorator.parameter))) @ts.ctor_param_decorator.class_context
  (#eq? @ts.ctor_param_decorator.constructor_name "constructor"))
 
 
@@ -1461,14 +1461,16 @@
 (class_declaration
   name: (_) @ecma.class_extends.class_name
   (class_heritage
-    (identifier) @ecma.class_extends.superclass)) @ecma.class_extends.context
+    (extends_clause
+      value: (identifier) @ecma.class_extends.superclass))) @ecma.class_extends.context
 
 (class_declaration
   name: (_) @ecma.class_extends_member.class_name
   (class_heritage
-    (member_expression
-      object: (identifier) @ecma.class_extends_member.object
-      property: (property_identifier) @ecma.class_extends_member.member)) @ecma.class_extends_member.superclass) @ecma.class_extends_member.context
+    (extends_clause
+      value: (member_expression
+        object: (identifier) @ecma.class_extends_member.object
+        property: (property_identifier) @ecma.class_extends_member.member) @ecma.class_extends_member.superclass))) @ecma.class_extends_member.context
 
 ; --- semantic_closure_v3_146_ecma_direct_array_first_argument ---
 (call_expression
@@ -1533,7 +1535,7 @@
         (required_parameter
           decorator: (decorator
             (call_expression function: (identifier) @ts.method_param_decorator.decorator_name))
-          name: (identifier) @ts.method_param_decorator.parameter_name) @ts.method_param_decorator.parameter))) @ts.method_param_decorator.class_context)
+          pattern: (identifier) @ts.method_param_decorator.parameter_name) @ts.method_param_decorator.parameter))) @ts.method_param_decorator.class_context)
 
 (class_declaration
   name: (type_identifier) @ts.method_param_marker.owner_class
@@ -1542,8 +1544,8 @@
       name: (property_identifier) @ts.method_param_marker.method_name
       parameters: (formal_parameters
         (required_parameter
-          decorator: (decorator (identifier) @ts.method_param_marker.decorator_full)
           name: (identifier) @ts.method_param_marker.parameter_name) @ts.method_param_marker.parameter))) @ts.method_param_marker.class_context)
+          decorator: (decorator (identifier) @ts.method_param_marker.decorator_full)
 
 ; --- exported_named_object_field_v3_146 ---
 (export_statement

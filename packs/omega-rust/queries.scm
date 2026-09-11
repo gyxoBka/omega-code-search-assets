@@ -364,80 +364,80 @@
 ; --- declaration_modifiers ---
 
 (function_item
-  name: (_) @definition.modifiers.name
   (function_modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (function_signature_item
-  name: (_) @definition.modifiers.name
   (function_modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- declaration_visibility ---
 
 (const_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (enum_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (enum_variant
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (extern_crate_declaration
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (field_declaration
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (function_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (function_signature_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (mod_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (static_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (struct_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (trait_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (type_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (union_item
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 ; --- definition_identity_hints ---
@@ -1578,15 +1578,16 @@
 (struct_item
   name: (type_identifier) @rust.struct_field_string_attr.owner_struct
   body: (field_declaration_list
+    (attribute_item
+      (attribute
+        (identifier) @rust.struct_field_string_attr.attribute_path
+        arguments: (token_tree
+          (identifier) @rust.struct_field_string_attr.attribute_key
+          .
+          (string_literal
+            (string_content) @rust.struct_field_string_attr.target_name))) @rust.struct_field_string_attr.attribute)
+    .
     (field_declaration
-      (attribute_item
-        (attribute
-          (identifier) @rust.struct_field_string_attr.attribute_path
-          arguments: (token_tree
-            (identifier) @rust.struct_field_string_attr.attribute_key
-            .
-            (string_literal
-              (string_content) @rust.struct_field_string_attr.target_name))) @rust.struct_field_string_attr.attribute)
       name: (field_identifier) @rust.struct_field_string_attr.field_name) @rust.struct_field_string_attr.field))
 
 ; --- struct_named_attribute_context ---

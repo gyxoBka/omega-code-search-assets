@@ -96,8 +96,8 @@
 ; --- qualified_chain_hints ---
 
 (attribute
-  module: (_) @reference.qualified_chain.base
   name: (_) @reference.qualified_chain.leaf
+  module: (_) @reference.qualified_chain.base
 ) @reference.qualified_chain.span
 
 ; --- structural-fallback ---

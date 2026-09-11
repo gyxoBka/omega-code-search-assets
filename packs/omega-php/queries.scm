@@ -122,55 +122,55 @@
 ; --- declaration_modifiers ---
 
 (class_declaration
-  name: (_) @definition.modifiers.name
   (abstract_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_declaration
-  name: (_) @definition.modifiers.name
   (final_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_declaration
-  name: (_) @definition.modifiers.name
   (readonly_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_declaration
-  name: (_) @definition.modifiers.name
   (static_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (method_declaration
-  name: (_) @definition.modifiers.name
   (abstract_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (method_declaration
-  name: (_) @definition.modifiers.name
   (final_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (method_declaration
-  name: (_) @definition.modifiers.name
   (readonly_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (method_declaration
-  name: (_) @definition.modifiers.name
   (static_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- declaration_visibility ---
 
 (class_declaration
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (method_declaration
-  name: (_) @definition.visibility.name
   (visibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 ; --- definition_identity_hints ---
@@ -749,5 +749,5 @@
 (namespace_use_clause
   (name) @php.a4_import_simple.target) @php.a4_import_simple.context
 (namespace_use_clause
-  alias: (name) @php.a4_alias.local
-  [(qualified_name) (name)] @php.a4_alias.target) @php.a4_alias.context
+  [(qualified_name) (name)] @php.a4_alias.target
+  alias: (name) @php.a4_alias.local) @php.a4_alias.context

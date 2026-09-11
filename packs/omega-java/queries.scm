@@ -156,58 +156,58 @@
 ; --- declaration_modifiers ---
 
 (annotation_type_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (annotation_type_element_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (compact_constructor_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (constructor_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (enum_constant
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (enum_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (interface_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (method_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (record_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (resource
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- definition_identity_hints ---
@@ -999,8 +999,8 @@
 ; --- signature_return_type ---
 
 (method_declaration
-  name: (_) @definition.signature.name
   type: (_) @definition.signature.return_type
+  name: (_) @definition.signature.name
 ) @definition.signature.owner
 
 ; --- signature_type_parameters ---
@@ -1011,8 +1011,8 @@
 ) @definition.signature.owner
 
 (constructor_declaration
-  name: (_) @definition.signature.name
   type_parameters: (_) @definition.signature.type_parameters
+  name: (_) @definition.signature.name
 ) @definition.signature.owner
 
 (interface_declaration
@@ -1021,8 +1021,8 @@
 ) @definition.signature.owner
 
 (method_declaration
-  name: (_) @definition.signature.name
   type_parameters: (_) @definition.signature.type_parameters
+  name: (_) @definition.signature.name
 ) @definition.signature.owner
 
 (record_declaration

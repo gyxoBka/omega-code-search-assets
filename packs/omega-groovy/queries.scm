@@ -27,25 +27,25 @@
 ; --- declaration_modifiers ---
 
 (class_definition
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (declaration
-  name: (_) @definition.modifiers.name
   (modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- declaration_visibility ---
 
 (class_definition
-  name: (_) @definition.visibility.name
   (access_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (declaration
-  name: (_) @definition.visibility.name
   (access_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 ; --- definition_identity_hints ---

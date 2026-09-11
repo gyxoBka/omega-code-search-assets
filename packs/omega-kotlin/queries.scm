@@ -4,7 +4,7 @@
 
 ; --- completeness_modules_3 ---
 
-(package) @module.expression
+(package_header) @module.expression
 
 ; --- completeness_types_high_confidence ---
 
@@ -61,13 +61,13 @@
 ; --- declaration_modifiers ---
 
 (function_declaration
-  (simple_identifier) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  (simple_identifier) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_declaration
-  (type_identifier) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  (type_identifier) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- definition_identity_hints ---

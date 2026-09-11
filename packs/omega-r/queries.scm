@@ -5,14 +5,18 @@
 
 ; --- definition_identity_hints ---
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
+(binary_operator
+  lhs: (identifier) @definition.identity.name
+  operator: "<-"
+  rhs: (function_definition)) @definition.identity.owner
 
 ; --- named_scope_owners ---
 
-(function_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
+(binary_operator
+  lhs: (identifier) @scope.owner.name
+  operator: "<-"
+  rhs: (function_definition
+    body: (_) @scope.owner.body)) @scope.owner
 
 ; --- nvim_pinned_locals ---
 
@@ -52,9 +56,11 @@
 
 ; --- ownership_parameters ---
 
-(function_definition
-  name: (_) @owner.name
-  parameters: (parameters) @owned.parameters) @owner.span
+(binary_operator
+  lhs: (identifier) @owner.name
+  operator: "<-"
+  rhs: (function_definition
+    parameters: (parameters) @owned.parameters)) @owner.span
 
 ; --- priority_semantics ---
 
@@ -114,7 +120,7 @@
 
 (namespace_operator lhs: (_) @r.namespace.package rhs: (_) @r.namespace.member) @r.namespace
 (for_statement variable: (identifier) @r.for.binding sequence: (_) @r.for.sequence) @r.for
-(binary_operator operator: ["|>" "%>%"] @r.pipe.operator) @r.pipe
+(binary_operator operator: ["|>" "special"] @r.pipe.operator) @r.pipe
 ((call function: (identifier) @r.package.call.name) @r.package.call (#any-of? @r.package.call.name "library" "require" "requireNamespace"))
 
 ; --- semantic_closure_v3_146_batch3 ---

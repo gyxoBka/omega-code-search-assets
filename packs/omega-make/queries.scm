@@ -58,7 +58,7 @@
 (shell_function) @make.shell.function
 
 ; --- semantic_closure_v3_147_make_surface ---
-(variable_assignment name: (word) @make.target_variable.name target_or_pattern: (list) @make.target_variable.target) @make.target_variable.assignment
+(variable_assignment target_or_pattern: (list) @make.target_variable.target name: (word) @make.target_variable.name) @make.target_variable.assignment
 (rule (targets (word) @make.order.owner) order_only: (prerequisites (word) @make.order.prerequisite)) @make.order.rule
 (define_directive name: (word) @make.define.name) @make.define.definition
 (VPATH_assignment value: (paths) @make.vpath.paths) @make.vpath.assignment

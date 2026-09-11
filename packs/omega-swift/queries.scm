@@ -44,10 +44,6 @@
   name: (_) @definition.category.name
 ) @definition.category.owner
 
-(lambda_function_type
-  name: (_) @definition.category.name
-) @definition.category.owner
-
 (protocol_function_declaration
   name: (_) @definition.category.name
 ) @definition.category.owner
@@ -85,8 +81,8 @@
 ; --- declaration_modifiers ---
 
 (associatedtype_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_declaration
@@ -135,8 +131,8 @@
 ) @definition.modifiers.owner
 
 (protocol_property_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (subscript_declaration
@@ -145,13 +141,13 @@
 ) @definition.modifiers.owner
 
 (typealias_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (typealias_declaration
-  name: (_) @definition.modifiers.name
   (property_behavior_modifier) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- definition_identity_hints ---
@@ -351,14 +347,15 @@
 
 ; --- named_array_string_argument_context ---
 
-(call_suffix
-  name: (simple_identifier) @swift.named_array.call_name
-  (value_arguments
-    (value_argument
-      name: (value_argument_label
-        (simple_identifier) @swift.named_array.argument_name)
-      value: (array_literal
-        element: (line_string_literal) @swift.named_array.value)))
+(call_expression
+  (simple_identifier) @swift.named_array.call_name
+  (call_suffix
+    (value_arguments
+      (value_argument
+        name: (value_argument_label
+          (simple_identifier) @swift.named_array.argument_name)
+        value: (array_literal
+          element: (line_string_literal) @swift.named_array.value))))
 ) @swift.named_array.call_context
 
 ; --- named_scope_owners ---
@@ -373,13 +370,14 @@
 
 ; --- named_string_argument_context ---
 
-(call_suffix
-  name: (simple_identifier) @swift.named_string.call_name
-  (value_arguments
-    (value_argument
-      name: (value_argument_label
-        (simple_identifier) @swift.named_string.argument_name)
-      value: (line_string_literal) @swift.named_string.value))
+(call_expression
+  (simple_identifier) @swift.named_string.call_name
+  (call_suffix
+    (value_arguments
+      (value_argument
+        name: (value_argument_label
+          (simple_identifier) @swift.named_string.argument_name)
+        value: (line_string_literal) @swift.named_string.value)))
 ) @swift.named_string.call_context
 
 ; --- nvim_pinned_injections ---
@@ -553,11 +551,6 @@
 ) @definition.signature.owner
 
 (function_type
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(lambda_function_type
   name: (_) @definition.signature.name
   return_type: (_) @definition.signature.return_type
 ) @definition.signature.owner

@@ -73,18 +73,18 @@
 ; --- declaration_modifiers ---
 
 (class_definition
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (class_parameter
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (enum_definition
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (function_declaration
@@ -103,13 +103,13 @@
 ) @definition.modifiers.owner
 
 (object_definition
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (trait_definition
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (type_definition
@@ -118,13 +118,13 @@
 ) @definition.modifiers.owner
 
 (val_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 (var_declaration
-  name: (_) @definition.modifiers.name
   (modifiers) @definition.modifiers.modifier
+  name: (_) @definition.modifiers.name
 ) @definition.modifiers.owner
 
 ; --- declaration_visibility ---
