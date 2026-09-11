@@ -35,7 +35,9 @@
 ; --- annotations ---
 
 (marker_annotation) @annotation.marker
-(annotation) @annotation.normal
+(annotation
+  name: (_) @annotation.normal.name
+  arguments: (annotation_argument_list) @annotation.normal.args) @annotation.normal
 (annotation_argument_list) @annotation.arguments
 (element_value_pair) @annotation.element_pair
 (annotation_type_declaration) @annotation.type

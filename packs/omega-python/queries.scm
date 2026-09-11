@@ -34,8 +34,13 @@
 
 ; --- calls ---
 
-(call function: (identifier) @call.direct.target) @call.direct
-(call function: (attribute object: (_) @call.member.object attribute: (identifier) @call.member.target)) @call.member
+(call function: (identifier) @call.direct.target
+  arguments: (argument_list) @call.direct.args) @call.direct
+(call
+  function: (attribute
+    object: (_) @call.member.object
+    attribute: (identifier) @call.member.target)
+  arguments: (argument_list) @call.member.args) @call.member
 (await (call function: (_) @call.awaited.target)) @call.awaited
 
 ; --- canvas_binary_context ---
@@ -127,6 +132,14 @@
 
 (decorated_definition) @decorated.definition
 (decorator) @decorator
+
+(decorator
+  (call
+    function: [
+      (identifier) @decorator.callee
+      (attribute attribute: (identifier) @decorator.callee)
+    ] @decorator.target
+    arguments: (argument_list) @decorator.args)) @decorator.call
 (class_definition name: (identifier) @class.name) @class.definition.extended
 (argument_list) @class.base_arguments
 

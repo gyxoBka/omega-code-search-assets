@@ -220,8 +220,13 @@
 
 ; --- calls ---
 
-(call_expression function: (identifier) @call.target) @call.direct
-(call_expression function: (member_expression property: (property_identifier) @call.target)) @call.member
+(call_expression function: (identifier) @call.target
+  arguments: (arguments) @call.direct.args) @call.direct
+(call_expression
+  function: (member_expression
+    object: (_) @call.member.receiver
+    property: (property_identifier) @call.target)
+  arguments: (arguments) @call.member.args) @call.member
 (new_expression constructor: (identifier) @call.target) @call.constructor
 
 ; --- class_decorator_object_array_identifier_context ---
@@ -1318,6 +1323,14 @@
 ; --- generic_decorator_reference ---
 
 (decorator) @decorator
+
+(decorator
+  (call_expression
+    function: [
+      (identifier) @decorator.callee
+      (member_expression property: (property_identifier) @decorator.callee)
+    ] @decorator.target
+    arguments: (arguments) @decorator.args)) @decorator.call
 
 ; --- ecmascript_build_config_string_context ---
 
