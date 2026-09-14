@@ -1830,7 +1830,9 @@
       (identifier) @rust.derive.general.attribute_path
       arguments: (token_tree
         (identifier) @rust.derive.general.trait_name)) @rust.derive.general.attribute) @rust.derive.general.attribute_item
+  .
   (attribute_item)*
+  .
   (struct_item name: (type_identifier) @rust.derive.general.owner) @rust.derive.general.declaration)
   (#eq? @rust.derive.general.attribute_path "derive"))
 
@@ -1840,6 +1842,8 @@
       (identifier) @rust.derive.general.attribute_path
       arguments: (token_tree
         (identifier) @rust.derive.general.trait_name)) @rust.derive.general.attribute) @rust.derive.general.attribute_item
+  .
   (attribute_item)*
+  .
   (enum_item name: (type_identifier) @rust.derive.general.owner) @rust.derive.general.declaration)
   (#eq? @rust.derive.general.attribute_path "derive"))
