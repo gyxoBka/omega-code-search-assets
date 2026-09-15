@@ -124,14 +124,51 @@
   function: (identifier) @call.direct.target
   arguments: (arguments) @call.arguments) @call.direct
 
-(call_expression
-  function: (scoped_identifier) @call.path.target
+; A scoped call names its last segment; the path before it is the qualifier.
+; A path whose last segment is a type (`Type::name()`) and `Self::name()` have
+; their own patterns below, so each call is emitted once.
+((call_expression
+  function: (scoped_identifier
+    path: (_) @call.path.qualifier
+    name: (identifier) @call.path.name) @call.path.target
   arguments: (arguments) @call.arguments) @call.path
+ (#not-match? @call.path.qualifier "(^|::)[A-Z][A-Za-z0-9_]*$"))
 
-(call_expression
+; `Type::name()` and `module::Type::name()`: the member of a named type.
+((call_expression
+  function: (scoped_identifier
+    path: [
+      (identifier) @call.type_path.type
+      (scoped_identifier
+        name: (identifier) @call.type_path.type)
+    ] @call.type_path.qualifier
+    name: (identifier) @call.type_path.name) @call.type_path.target
+  arguments: (arguments) @call.arguments) @call.type_path
+ (#match? @call.type_path.type "^[A-Z]")
+ (#not-eq? @call.type_path.type "Self"))
+
+; `Self::name()`: a member of the type the enclosing declaration belongs to.
+((call_expression
+  function: (scoped_identifier
+    path: (identifier) @call.self_path.type
+    name: (identifier) @call.self_path.name) @call.self_path.target
+  arguments: (arguments) @call.arguments) @call.self_path
+ (#eq? @call.self_path.type "Self"))
+
+; A method call on any receiver but `self`, which has its own pattern.
+((call_expression
   function: (field_expression
+    value: (_) @call.method.receiver
     field: (field_identifier) @call.method.name) @call.method.target
   arguments: (arguments) @call.arguments) @call.method
+ (#not-eq? @call.method.receiver "self"))
+
+; `self.name()`: a member of the type the enclosing declaration belongs to.
+(call_expression
+  function: (field_expression
+    value: (self)
+    field: (field_identifier) @call.self_method.name) @call.self_method.target
+  arguments: (arguments) @call.arguments) @call.self_method
 
 (call_expression
   function: (generic_function
@@ -464,6 +501,19 @@
   name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- definitions_functions ---
+
+; The type an `impl` block's functions belong to, carried onto each function
+; declaration: the base type name, whatever generics or path spell it.
+(impl_item
+  type: [
+    (type_identifier) @definition.container_name_candidate.type
+    (generic_type
+      type: (type_identifier) @definition.container_name_candidate.type)
+    (scoped_type_identifier
+      name: (type_identifier) @definition.container_name_candidate.type)
+  ]
+  body: (declaration_list
+    (function_item) @definition.container_name_candidate))
 
 ; All Rust function-like declarations. Rule-side ancestry classification distinguishes
 ; free functions, inherent methods, trait methods, trait requirements, and extern signatures.
