@@ -515,6 +515,24 @@
   body: (declaration_list
     (function_item) @definition.container_name_candidate))
 
+; The enum an enum's variants belong to, carried onto each variant: a variant
+; is named through its enum (`SessionError::UnsafeCurrent`) the way a function
+; of an `impl` is named through its type.
+(enum_item
+  name: (type_identifier) @definition.container_name_candidate.type
+  body: (enum_variant_list
+    (enum_variant) @definition.container_name_candidate))
+
+; The trait a trait's methods belong to, required or provided: a call on a
+; value of that trait reaches them as members.
+(trait_item
+  name: (type_identifier) @definition.container_name_candidate.type
+  body: (declaration_list
+    [
+      (function_signature_item)
+      (function_item)
+    ] @definition.container_name_candidate))
+
 ; All Rust function-like declarations. Rule-side ancestry classification distinguishes
 ; free functions, inherent methods, trait methods, trait requirements, and extern signatures.
 (function_item
@@ -1824,6 +1842,37 @@
 
 (associated_type
   bounds: (trait_bounds) @type.associated.bounds) @type.associated.with_bounds
+
+; --- declared_value_types ---
+
+; A local name whose type its declaration states: a parameter `name: T` or a
+; `let name: T`. The type is the base type the annotation names, through a
+; reference, generics or a path; a primitive is no type with members.
+(parameter
+  pattern: (identifier) @value.declared.binding
+  type: [
+    (type_identifier) @value.declared.type
+    (generic_type type: (type_identifier) @value.declared.type)
+    (scoped_type_identifier name: (type_identifier) @value.declared.type)
+    (reference_type type: [
+      (type_identifier) @value.declared.type
+      (generic_type type: (type_identifier) @value.declared.type)
+      (scoped_type_identifier name: (type_identifier) @value.declared.type)
+    ])
+  ]) @value.declared.parameter
+
+(let_declaration
+  pattern: (identifier) @value.declared.binding
+  type: [
+    (type_identifier) @value.declared.type
+    (generic_type type: (type_identifier) @value.declared.type)
+    (scoped_type_identifier name: (type_identifier) @value.declared.type)
+    (reference_type type: [
+      (type_identifier) @value.declared.type
+      (generic_type type: (type_identifier) @value.declared.type)
+      (scoped_type_identifier name: (type_identifier) @value.declared.type)
+    ])
+  ]) @value.declared.let
 
 ; --- value_origins ---
 
