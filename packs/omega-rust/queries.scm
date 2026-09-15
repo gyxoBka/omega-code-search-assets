@@ -1621,35 +1621,69 @@
 ; contract associates only a contiguous outer-attribute chain on the same
 ; parent with the following function. This avoids relying on sibling-anchor
 ; query behavior for correctness.
-((attribute_item
-   (attribute (identifier) @test.primary.name)) @test.primary.attribute
+; A function is a test when the attribute run immediately above it carries a
+; primary test attribute, and a module is a test container when that run
+; carries #[cfg(test)].
+;
+; The attributes used to be captured on their own, in patterns no template
+; named, beside an unguarded `(function_item)` and an unguarded `(mod_item)`.
+; Nothing joined them, so every function in the corpus was emitted as a test:
+; 6 053 of them, in a repository with 1 258 `#[test]`. `find` answered a
+; plain function twice, once as a test, and everything counted per test
+; counted the whole corpus.
+;
+; The run is anchored on both sides, so the attribute belongs to the
+; declaration below it rather than to any declaration below it. Auxiliary
+; markers -- #[ignore], #[case] -- never make a test by themselves, which is
+; what the intervening `(attribute_item)*` allows without matching on.
+
+((source_file
+   (attribute_item
+     (attribute
+       [(identifier) @test.primary.name
+        (scoped_identifier name: (identifier) @test.primary.name)])) @test.primary.attribute
+   .
+   (attribute_item)*
+   .
+   (function_item
+     name: [(identifier) (metavariable)] @test.function.name) @test.function.candidate)
  (#match? @test.primary.name "^(test|bench|rstest|test_case)$"))
 
-((attribute_item
-   (attribute
-     (scoped_identifier name: (identifier) @test.primary.scoped_leaf)) @test.primary.attribute)
- (#eq? @test.primary.scoped_leaf "test"))
+((declaration_list
+   (attribute_item
+     (attribute
+       [(identifier) @test.primary.name
+        (scoped_identifier name: (identifier) @test.primary.name)])) @test.primary.attribute
+   .
+   (attribute_item)*
+   .
+   (function_item
+     name: [(identifier) (metavariable)] @test.function.name) @test.function.candidate)
+ (#match? @test.primary.name "^(test|bench|rstest|test_case)$"))
 
-; Auxiliary markers are metadata only; they never make a function a test by
-; themselves. This prevents #[ignore] / #[case] from causing false positives.
-((attribute_item
-   (attribute (identifier) @test.auxiliary.name)) @test.auxiliary.attribute
- (#match? @test.auxiliary.name "^(ignore|case)$"))
-
-; cfg(test) is the only cfg form that marks a test container. The token_tree
-; capture is retained for exact source text and runtime re-checking.
-((attribute_item
-   (attribute
-     (identifier) @test.cfg.attribute
-     arguments: (token_tree) @test.cfg.arguments)) @test.cfg.attribute_item
+((source_file
+   (attribute_item
+     (attribute
+       (identifier) @test.cfg.attribute
+       arguments: (token_tree) @test.cfg.arguments)) @test.cfg.attribute_item
+   .
+   (attribute_item)*
+   .
+   (mod_item name: (identifier) @test.module.name) @test.module.candidate)
  (#eq? @test.cfg.attribute "cfg")
  (#match? @test.cfg.arguments "^\\(\\s*test\\s*\\)$"))
 
-(function_item
-  name: [(identifier) (metavariable)] @test.function.name) @test.function.candidate
-
-(mod_item
-  name: (identifier) @test.module.name) @test.module.candidate
+((declaration_list
+   (attribute_item
+     (attribute
+       (identifier) @test.cfg.attribute
+       arguments: (token_tree) @test.cfg.arguments)) @test.cfg.attribute_item
+   .
+   (attribute_item)*
+   .
+   (mod_item name: (identifier) @test.module.name) @test.module.candidate)
+ (#eq? @test.cfg.attribute "cfg")
+ (#match? @test.cfg.arguments "^\\(\\s*test\\s*\\)$"))
 
 ; --- three_segment_scoped_call_context ---
 
