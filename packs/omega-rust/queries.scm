@@ -301,10 +301,6 @@
   name: (_) @definition.category.field.name
 ) @definition.category.owner
 
-(field_pattern
-  name: (_) @definition.category.field.name
-) @definition.category.owner
-
 ; --- declaration_category_function ---
 
 (function_item
@@ -329,10 +325,6 @@
 
 ; --- declaration_category_struct ---
 
-(struct_expression
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
-
 (struct_item
   name: (_) @definition.category.struct.name
 ) @definition.category.owner
@@ -356,10 +348,6 @@
 ) @definition.category.owner
 
 ; --- declaration_category_variable ---
-
-(type_binding
-  name: (_) @definition.category.variable.name
-) @definition.category.owner
 
 ; --- declaration_modifiers ---
 
