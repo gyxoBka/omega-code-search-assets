@@ -282,83 +282,83 @@
 ; --- declaration_category_constant ---
 
 (const_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.constant.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_variant
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_field ---
 
 (field_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.field.name
 ) @definition.category.owner
 
 (field_pattern
-  name: (_) @definition.category.name
+  name: (_) @definition.category.field.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_signature_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_macro ---
 
 (macro_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.macro.name
 ) @definition.category.owner
 
 ; --- declaration_category_module ---
 
 (mod_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.module.name
 ) @definition.category.owner
 
 ; --- declaration_category_struct ---
 
 (struct_expression
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 (struct_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 ; --- declaration_category_trait ---
 
 (trait_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.trait.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (type_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_category_union ---
 
 (union_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.union.name
 ) @definition.category.owner
 
 ; --- declaration_category_variable ---
 
 (type_binding
-  name: (_) @definition.category.name
+  name: (_) @definition.category.variable.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---
@@ -1020,24 +1020,24 @@
 ; --- member_category_enum_member ---
 
 (enum_item
-  name: (_) @owner.name
+  name: (_) @owner.member_category.enum.name
   body: (enum_variant_list
     (enum_variant
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 ; --- member_category_field ---
 
 (enum_variant
-  name: (_) @owner.name
+  name: (_) @owner.member_category.field.name
   body: (field_declaration_list
     (field_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
 
 (struct_item
-  name: (_) @owner.name
+  name: (_) @owner.member_category.field.name
   body: (field_declaration_list
     (field_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
 
 ; --- module_path_guards ---
 
