@@ -6,19 +6,19 @@
 ; --- declaration_category_class ---
 
 (class_statement
-  (simple_name) @definition.category.name
+  (simple_name) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_statement
-  (function_name) @definition.category.name
+  (function_name) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (class_method_definition
-  (simple_name) @definition.category.name
+  (simple_name) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- external-neovim-distributed-locals ---

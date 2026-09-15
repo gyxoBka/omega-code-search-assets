@@ -60,63 +60,63 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_case
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.interface.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- declaration_category_namespace ---
 
 (namespace_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.namespace.name
 ) @definition.category.owner
 
 ; --- declaration_category_property ---
 
 (property_element
-  name: (_) @definition.category.name
+  name: (_) @definition.category.property.name
 ) @definition.category.owner
 
 (property_promotion_parameter
-  name: (_) @definition.category.name
+  name: (_) @definition.category.property.name
 ) @definition.category.owner
 
 ; --- declaration_category_trait ---
 
 (trait_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.trait.name
 ) @definition.category.owner
 
 ; --- declaration_category_variable ---
 
 (static_variable_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.variable.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---
@@ -364,7 +364,7 @@
   name: (_) @owner.name
   body: (enum_declaration_list
     (enum_case
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 ; --- member_category_method ---
 
@@ -372,25 +372,25 @@
   name: (_) @owner.name
   body: (declaration_list
     (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (enum_declaration
   name: (_) @owner.name
   body: (enum_declaration_list
     (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (declaration_list
     (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (trait_declaration
   name: (_) @owner.name
   body: (declaration_list
     (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 ; --- module_declaration_path_hints ---
 

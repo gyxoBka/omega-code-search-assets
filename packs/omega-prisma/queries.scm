@@ -25,19 +25,19 @@
 ; --- declaration_category_enum ---
 
 (enum_declaration
-  (identifier) @definition.category.name
+  (identifier) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_model ---
 
 (model_declaration
-  (identifier) @definition.category.name
+  (identifier) @definition.category.model.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (type_declaration
-  (identifier) @definition.category.name
+  (identifier) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---

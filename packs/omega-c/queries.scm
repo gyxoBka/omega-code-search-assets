@@ -65,35 +65,35 @@
 ; --- declaration_category_enum ---
 
 (enum_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enumerator
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (preproc_function_def
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_macro ---
 
 (macro_type_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.macro.name
 ) @definition.category.owner
 
 ; --- declaration_category_struct ---
 
 (struct_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 ; --- declaration_category_union ---
 
 (union_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.union.name
 ) @definition.category.owner
 
 ; --- declarations ---
@@ -336,7 +336,7 @@
   name: (_) @owner.name
   body: (enumerator_list
     (enumerator
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -344,7 +344,7 @@
   name: (_) @owner.name
   body: (field_declaration_list
     (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 ; --- module_path_hints ---
 

@@ -8,10 +8,6 @@
 
 ; --- declaration_category_macro ---
 
-(macro_call
-  name: (_) @definition.category.name
-) @definition.category.owner
-
 (macro_definition
   name: (_) @definition.category.name
 ) @definition.category.owner

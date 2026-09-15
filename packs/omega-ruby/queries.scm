@@ -101,23 +101,23 @@
 ; --- declaration_category_class ---
 
 (class
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (method
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 (singleton_method
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- declaration_category_module ---
 
 (module
-  name: (_) @definition.category.name
+  name: (_) @definition.category.module.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---

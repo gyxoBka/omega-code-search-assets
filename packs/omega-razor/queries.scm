@@ -53,87 +53,87 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_constructor ---
 
 (constructor_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.constructor.name
 ) @definition.category.owner
 
 ; --- declaration_category_destructor ---
 
 (destructor_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.destructor.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_member_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_event ---
 
 (event_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.event.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (local_function_statement
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.interface.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- declaration_category_model ---
 
 (razor_model_directive
-  name: (_) @definition.category.name
+  name: (_) @definition.category.model.name
 ) @definition.category.owner
 
 ; --- declaration_category_namespace ---
 
 (file_scoped_namespace_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.namespace.name
 ) @definition.category.owner
 
 (namespace_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.namespace.name
 ) @definition.category.owner
 
 ; --- declaration_category_property ---
 
 (property_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.property.name
 ) @definition.category.owner
 
 ; --- declaration_category_record ---
 
 (record_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.record.name
 ) @definition.category.owner
 
 ; --- declaration_category_struct ---
 
 (struct_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---

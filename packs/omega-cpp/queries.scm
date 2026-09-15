@@ -15,67 +15,67 @@
 ; --- declaration_category_class ---
 
 (class_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enumerator
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (preproc_function_def
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (template_function
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (template_method
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- declaration_category_module ---
 
 (module_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.module.name
 ) @definition.category.owner
 
 ; --- declaration_category_namespace ---
 
 (namespace_alias_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.namespace.name
 ) @definition.category.owner
 
 (namespace_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.namespace.name
 ) @definition.category.owner
 
 ; --- declaration_category_struct ---
 
 (struct_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (optional_type_parameter_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_category_union ---
 
 (union_specifier
-  name: (_) @definition.category.name
+  name: (_) @definition.category.union.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---
@@ -506,7 +506,7 @@
   name: (_) @owner.name
   body: (enumerator_list
     (enumerator
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -514,19 +514,19 @@
   name: (_) @owner.name
   body: (field_declaration_list
     (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 (namespace_definition
   name: (_) @owner.name
   body: (declaration_list
     (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 (struct_specifier
   name: (_) @owner.name
   body: (field_declaration_list
     (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 ; --- module_declaration_path_hints ---
 

@@ -173,33 +173,33 @@
 ; --- declaration_category_field ---
 
 (field_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.field.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 (method_elem
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (type_alias
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 (type_parameter_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_details ---

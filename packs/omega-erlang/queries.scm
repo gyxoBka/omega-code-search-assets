@@ -17,23 +17,23 @@
 ; --- declaration_category_function ---
 
 (function
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_clause
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_macro ---
 
 (macro
-  name: (_) @definition.category.name
+  name: (_) @definition.category.macro.name
 ) @definition.category.owner
 
 ; --- declaration_category_record ---
 
 (record
-  name: (_) @definition.category.name
+  name: (_) @definition.category.record.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---

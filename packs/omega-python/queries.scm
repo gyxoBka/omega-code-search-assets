@@ -119,13 +119,13 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- decorators_classes_extended ---

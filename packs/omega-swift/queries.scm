@@ -15,67 +15,67 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_constructor ---
 
 (constructor_suffix
-  name: (_) @definition.category.name
+  name: (_) @definition.category.constructor.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_entry
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_type_parameters
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_type
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (protocol_function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_property ---
 
 (property_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.property.name
 ) @definition.category.owner
 
 ; --- declaration_category_protocol ---
 
 (protocol_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.protocol.name
 ) @definition.category.owner
 
 (protocol_property_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.protocol.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (associatedtype_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 (tuple_type_item
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 (typealias_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---
@@ -256,13 +256,13 @@
   name: (_) @owner.name
   body: (class_body
     (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
 
 ; --- member_category_enum ---
 
@@ -270,7 +270,7 @@
   name: (_) @owner.name
   body: (enum_class_body
     (enum_entry
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -278,13 +278,13 @@
   name: (_) @owner.name
   body: (class_body
     (function_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (function_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 ; --- member_category_property ---
 
@@ -292,13 +292,13 @@
   name: (_) @owner.name
   body: (class_body
     (property_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.property.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (property_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.property.name) @owned.member)) @owner.span
 
 ; --- member_category_protocol ---
 
@@ -306,13 +306,13 @@
   name: (_) @owner.name
   body: (class_body
     (protocol_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.protocol.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (protocol_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.protocol.name) @owned.member)) @owner.span
 
 ; --- member_category_type ---
 
@@ -320,25 +320,25 @@
   name: (_) @owner.name
   body: (class_body
     (associatedtype_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (typealias_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (associatedtype_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (typealias_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
 
 ; --- module_path_hints ---
 

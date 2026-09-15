@@ -11,41 +11,41 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_constructor ---
 
 (constructor_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.constructor.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_constant
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (extension_type_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_category_variable ---
 
 (initialized_variable_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.variable.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---

@@ -277,99 +277,99 @@
 ; --- declaration_category_class ---
 
 (abstract_class_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 (class
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 (class_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_assignment
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_body
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (enum_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_field ---
 
 (public_field_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.field.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_expression
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (generator_function
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (generator_function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.interface.name
 ) @definition.category.owner
 
 ; --- declaration_category_method ---
 
 (abstract_method_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 (method_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 (method_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.method.name
 ) @definition.category.owner
 
 ; --- declaration_category_module ---
 
 (internal_module
-  name: (_) @definition.category.name
+  name: (_) @definition.category.module.name
 ) @definition.category.owner
 
 (module
-  name: (_) @definition.category.name
+  name: (_) @definition.category.module.name
 ) @definition.category.owner
 
 ; --- declaration_category_property ---
 
 (property_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.property.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (type_alias_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---
@@ -652,7 +652,7 @@
   name: (_) @owner.name
   body: (enum_body
     (enum_assignment
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum_member.name) @owned.member)) @owner.span
 
 ; --- member_category_field ---
 
@@ -660,19 +660,19 @@
   name: (_) @owner.name
   body: (class_body
     (public_field_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (public_field_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (public_field_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
 
 ; --- member_category_method ---
 
@@ -680,61 +680,61 @@
   name: (_) @owner.name
   body: (class_body
     (abstract_method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (abstract_class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (abstract_class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (abstract_method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (method_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (abstract_method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
 
 ; --- member_category_property ---
 
@@ -742,7 +742,7 @@
   name: (_) @owner.name
   body: (interface_body
     (property_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.property.name) @owned.member)) @owner.span
 
 ; --- member_string_identifier_call_context ---
 

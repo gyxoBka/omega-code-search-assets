@@ -23,17 +23,17 @@
 ; --- declaration_category_field ---
 
 (container_field
-  name: (_) @definition.category.name
+  name: (_) @definition.category.field.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_signature
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---

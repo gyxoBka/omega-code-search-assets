@@ -17,57 +17,57 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 (class_parameter
-  name: (_) @definition.category.name
+  name: (_) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (full_enum_case
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 (simple_enum_case
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_package ---
 
 (package_clause
-  name: (_) @definition.category.name
+  name: (_) @definition.category.package.name
 ) @definition.category.owner
 
 (package_object
-  name: (_) @definition.category.name
+  name: (_) @definition.category.package.name
 ) @definition.category.owner
 
 ; --- declaration_category_trait ---
 
 (trait_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.trait.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (type_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---

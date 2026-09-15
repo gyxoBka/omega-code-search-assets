@@ -19,65 +19,65 @@
 ; --- declaration_category_constant ---
 
 (constant_variable_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.constant.name
 ) @definition.category.owner
 
 ; --- declaration_category_enum ---
 
 (enum_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.enum.name
 ) @definition.category.owner
 
 ; --- declaration_category_event ---
 
 (event_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.event.name
 ) @definition.category.owner
 
 (event_parameter
-  name: (_) @definition.category.name
+  name: (_) @definition.category.event.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.interface.name
 ) @definition.category.owner
 
 ; --- declaration_category_struct ---
 
 (struct_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 (struct_field_assignment
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 (struct_member
-  name: (_) @definition.category.name
+  name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (user_defined_type_definition
-  name: (_) @definition.category.name
+  name: (_) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_category_variable ---
 
 (state_variable_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.variable.name
 ) @definition.category.owner
 
 (variable_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.variable.name
 ) @definition.category.owner
 
 ; --- declaration_visibility ---
@@ -164,13 +164,13 @@
   name: (_) @owner.name
   body: (contract_body
     (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
 
 ; --- member_category_event ---
 
@@ -178,13 +178,13 @@
   name: (_) @owner.name
   body: (contract_body
     (event_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.event.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (event_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.event.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -192,13 +192,13 @@
   name: (_) @owner.name
   body: (contract_body
     (function_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (function_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
 
 ; --- member_category_struct ---
 
@@ -206,19 +206,19 @@
   name: (_) @owner.name
   body: (contract_body
     (struct_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.struct.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (struct_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.struct.name) @owned.member)) @owner.span
 
 (struct_declaration
   name: (_) @owner.name
   body: (struct_body
     (struct_member
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.struct.name) @owned.member)) @owner.span
 
 ; --- member_category_type ---
 
@@ -226,13 +226,13 @@
   name: (_) @owner.name
   body: (contract_body
     (user_defined_type_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (user_defined_type_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
 
 ; --- module_path_hints ---
 

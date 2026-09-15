@@ -37,25 +37,25 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  (type_identifier) @definition.category.name
+  (type_identifier) @definition.category.class.name
 ) @definition.category.owner
 
 ; --- declaration_category_component ---
 
 (object_declaration
-  (type_identifier) @definition.category.name
+  (type_identifier) @definition.category.component.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  (simple_identifier) @definition.category.name
+  (simple_identifier) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- declaration_category_type ---
 
 (type_alias
-  (type_identifier) @definition.category.name
+  (type_identifier) @definition.category.type.name
 ) @definition.category.owner
 
 ; --- declaration_modifiers ---

@@ -6,17 +6,13 @@
 ; --- declaration_category_field ---
 
 (field
-  name: (_) @definition.category.name
+  name: (_) @definition.category.field.name
 ) @definition.category.owner
 
 ; --- declaration_category_function ---
 
-(function_call
-  name: (_) @definition.category.name
-) @definition.category.owner
-
 (function_declaration
-  name: (_) @definition.category.name
+  name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 ; --- definition_identity_hints ---
