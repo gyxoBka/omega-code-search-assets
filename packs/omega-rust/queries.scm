@@ -1569,6 +1569,41 @@
   return_type: (_) @definition.signature.return_type
 ) @definition.signature.owner
 
+; The type a function returns, as the name a call on its result is resolved
+; through: the base type, whatever generics, path or reference spell it. A
+; function returning the type it belongs to says so instead.
+(function_item
+  return_type: [
+    (type_identifier) @definition.return_type_head_candidate.type
+    (generic_type
+      type: (type_identifier) @definition.return_type_head_candidate.type)
+    (scoped_type_identifier
+      name: (type_identifier) @definition.return_type_head_candidate.type)
+    (reference_type
+      type: (type_identifier) @definition.return_type_head_candidate.type)
+  ]
+  (#not-eq? @definition.return_type_head_candidate.type "Self")) @definition.return_type_head_candidate
+
+(function_signature_item
+  return_type: [
+    (type_identifier) @definition.return_type_head_candidate.type
+    (generic_type
+      type: (type_identifier) @definition.return_type_head_candidate.type)
+    (scoped_type_identifier
+      name: (type_identifier) @definition.return_type_head_candidate.type)
+    (reference_type
+      type: (type_identifier) @definition.return_type_head_candidate.type)
+  ]
+  (#not-eq? @definition.return_type_head_candidate.type "Self")) @definition.return_type_head_candidate
+
+(function_item
+  return_type: (type_identifier) @definition.return_self_candidate.type
+  (#eq? @definition.return_self_candidate.type "Self")) @definition.return_self_candidate
+
+(function_signature_item
+  return_type: (type_identifier) @definition.return_self_candidate.type
+  (#eq? @definition.return_self_candidate.type "Self")) @definition.return_self_candidate
+
 ; --- signature_type_parameters ---
 
 (associated_type
@@ -1888,6 +1923,38 @@
 (let_declaration
   pattern: (identifier) @origin.binding
   value: (identifier) @origin.alias.source) @origin.alias
+
+; What a call on a local reaches through: the function whose return it holds,
+; with the type that function is named through (`Store::open(..)`), or the type a
+; struct literal builds.
+(let_declaration
+  pattern: (identifier) @origin.returned.binding
+  value: (call_expression
+    function: (identifier) @origin.returned.callable)) @origin.returned.plain
+
+(let_declaration
+  pattern: (identifier) @origin.returned.binding
+  value: (call_expression
+    function: (scoped_identifier
+      path: (identifier) @origin.returned.owner
+      name: (identifier) @origin.returned.callable))) @origin.returned.owned
+
+(let_declaration
+  pattern: (identifier) @origin.returned.binding
+  value: (call_expression
+    function: (scoped_identifier
+      path: (scoped_identifier
+        name: (identifier) @origin.returned.owner)
+      name: (identifier) @origin.returned.callable))) @origin.returned.owned
+
+(let_declaration
+  pattern: (identifier) @origin.constructed.binding
+  value: (struct_expression
+    name: [
+      (type_identifier) @origin.constructed.type
+      (scoped_type_identifier
+        name: (type_identifier) @origin.constructed.type)
+    ])) @origin.constructed
 
 ; Destructuring still has a value source even when there is no single local name.
 (let_declaration
