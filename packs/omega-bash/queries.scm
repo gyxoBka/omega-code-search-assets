@@ -73,9 +73,6 @@
 
 (special_variable_name) @constant
 
-(function_definition
-  name: (word) @function)
-
 ; help trap
 
 ; trap -l
@@ -170,9 +167,6 @@
   name: (word) @local.definition.function)
 
 ; References
-(variable_name) @local.reference
-
-(word) @local.reference
 
 ; --- static_delta ---
 
@@ -191,11 +185,8 @@
 ; --- semantic_closure_v3_146_batch2 ---
 
 (for_statement variable: (variable_name) @bash.for.binding value: (_) @bash.for.sequence) @bash.for
-(array) @bash.array
-(pipeline) @bash.pipeline
-[(file_redirect) (herestring_redirect) (heredoc_redirect)] @bash.redirect
+
 (variable_assignment name: (variable_name) @bash.assignment.name value: (_) @bash.assignment.value) @bash.assignment
-[(expansion) (simple_expansion) (arithmetic_expansion)] @bash.expansion
 
 ; --- semantic_closure_v3_146_batch4 ---
 

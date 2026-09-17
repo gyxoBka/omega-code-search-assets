@@ -141,15 +141,14 @@
 (enum_type_extension (name) @graphql.extension.enum.name) @graphql.extension.enum
 (scalar_type_extension (name) @graphql.extension.scalar.name) @graphql.extension.scalar
 (union_type_extension (name) @graphql.extension.union.name) @graphql.extension.union
-(schema_definition) @graphql.schema
-(schema_extension) @graphql.schema_extension
+
 (variable_definition (variable) @graphql.variable.name (type) @graphql.variable.type) @graphql.variable.definition
 
 ; --- semantic_closure_v3_146_batch2 ---
 
 (implements_interfaces (named_type) @graphql.implements.type) @graphql.implements
 (union_type_definition (name) @graphql.union.name (union_member_types (named_type) @graphql.union.member)) @graphql.union
-(default_value) @graphql.default.value
+
 (directive_definition (name) @graphql.directive.name (directive_locations) @graphql.directive.locations) @graphql.directive
 (argument (name) @graphql.argument.name (value) @graphql.argument.value) @graphql.argument
 

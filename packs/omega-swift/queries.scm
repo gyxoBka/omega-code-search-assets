@@ -1,515 +1,169 @@
-; --- call_targets ---
+; omega-swift
+;
+; Swift is an application language: types, their members, and the calls between
+; them. The questions asked of a Swift file are: what does this file declare,
+; what is each declaration called and of what sort, who conforms to this
+; protocol, what does this file import, what does it call, and where is this
+; type used. Every pattern below answers one of them.
+;
+; Containment is deliberately not stated. A member declared inside a type is
+; already inside it in the tree, and the host carries the owner in the
+; declaration's namespace. The extent of a type or a function is emitted once,
+; as a region over its body.
 
-(call_suffix
-  name: (_) @call.target) @call.expression
+; --- a nominal type ---
+;
+; The grammar spells class, struct, enum, actor and extension as one node with
+; a `declaration_kind` keyword. The keyword is captured and carried on the
+; declaration, so one pattern declares all four nominal forms and the exact
+; word survives. `extension` is excluded here and handled below: it introduces
+; no new name.
 
-; --- completeness_imports_3 ---
+((class_declaration
+   (modifiers (visibility_modifier) @type.visibility)?
+   declaration_kind: _ @type.keyword
+   name: (_) @type.name
+   body: (_) @type.body) @type
+ (#not-eq? @type.keyword "extension"))
 
-(import_declaration) @import.expression @module.import
-
-; --- completeness_types_high_confidence ---
-
-(class_declaration) @type.expression
-(protocol_declaration) @type.expression
-
-; --- declaration_category_class ---
+; --- an extension ---
+;
+; `extension Foo` declares members onto a type declared elsewhere, so the
+; extension is stated as depending on that type rather than as declaring it.
 
 (class_declaration
-  name: (_) @definition.category.class.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  declaration_kind: "extension"
+  name: (_) @extension.name
+  body: (_) @extension.body) @extension
 
-; --- declaration_category_constructor ---
-
-(constructor_suffix
-  name: (_) @definition.category.constructor.name
-) @definition.category.owner
-
-; --- declaration_category_enum ---
-
-(enum_entry
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(enum_type_parameters
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
-
-; --- declaration_category_function ---
-
-(function_declaration
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(function_type
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(protocol_function_declaration
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_property ---
-
-(property_declaration
-  name: (_) @definition.category.property.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_protocol ---
+; --- a protocol ---
 
 (protocol_declaration
-  name: (_) @definition.category.protocol.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  (modifiers (visibility_modifier) @protocol.visibility)?
+  name: (_) @protocol.name
+  body: (_) @protocol.body) @protocol
+
+; --- a function ---
+;
+; One pattern carries the declaration, its visibility, its written return type
+; and the region its body occupies.
+
+(function_declaration
+  (modifiers (visibility_modifier) @function.visibility)?
+  name: (_) @function.name
+  (throws)? @function.throws
+  return_type: (_)? @function.return_type
+  body: (function_body) @function.body) @function
+
+; --- a function required by a protocol ---
+
+(protocol_function_declaration
+  name: (_) @requirement.function.name
+  (throws)? @requirement.function.throws
+  return_type: (_)? @requirement.function.return_type) @requirement.function
+
+; --- an initializer, a deinitializer, a subscript ---
+;
+; Swift names these with keywords; that is what a member list calls them and
+; what a member access spells.
+
+(init_declaration
+  (modifiers (visibility_modifier) @init.visibility)?
+  name: "init" @init.name) @init
+
+(deinit_declaration "deinit" @deinit.name) @deinit
+
+(subscript_declaration "subscript" @subscript.name) @subscript
+
+; --- a stored or computed property ---
+;
+; The written type annotation is carried on the property, not emitted as a
+; mention of its own: the type identifier inside it is already a type mention.
+
+(property_declaration
+  (modifiers (visibility_modifier) @property.visibility)?
+  (value_binding_pattern mutability: _ @property.mutability)?
+  name: (pattern bound_identifier: (simple_identifier) @property.name)
+  (type_annotation type: (_) @property.type)?) @property
 
 (protocol_property_declaration
-  name: (_) @definition.category.protocol.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (pattern bound_identifier: (simple_identifier) @requirement.property.name)
+  (type_annotation type: (_) @requirement.property.type)?) @requirement.property
 
-; --- declaration_category_type ---
+; --- a parameter ---
+;
+; A parameter is the one binding Swift gives a name to that a question reaches:
+; it is what a function takes, and its written type is carried on it.
 
-(associatedtype_declaration
-  name: (_) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+(parameter
+  name: (simple_identifier) @parameter.name
+  type: (_) @parameter.type) @parameter
 
-(tuple_type_item
-  name: (_) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+; --- a type alias and an associated type ---
 
 (typealias_declaration
-  name: (_) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_modifiers ---
+  (modifiers (visibility_modifier) @alias.visibility)?
+  name: (_) @alias.name
+  value: (_) @alias.value) @alias
 
 (associatedtype_declaration
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
+  name: (_) @associated.name) @associated
 
-(class_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
-
-(class_declaration
-  name: (_) @definition.modifiers.name
-  (property_behavior_modifier) @definition.modifiers.modifier
-) @definition.modifiers.owner
+; --- an enum case ---
 
 (enum_entry
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
+  name: (simple_identifier) @case.name) @case
 
-(function_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
+; --- a macro, an operator, a precedence group ---
 
-(function_declaration
-  name: (_) @definition.modifiers.name
-  (property_behavior_modifier) @definition.modifiers.modifier
-) @definition.modifiers.owner
+(macro_declaration
+  (simple_identifier) @macro.name) @macro
 
-(property_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
+(operator_declaration
+  (custom_operator) @operator.name) @operator
 
-(property_declaration
-  name: (_) @definition.modifiers.name
-  (property_behavior_modifier) @definition.modifiers.modifier
-) @definition.modifiers.owner
+(precedence_group_declaration
+  (simple_identifier) @precedence.name) @precedence
 
-(protocol_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
+; --- what the file imports ---
 
-(protocol_function_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
+(import_declaration (identifier) @import.name) @import
 
-(protocol_property_declaration
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(subscript_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
-
-(typealias_declaration
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(typealias_declaration
-  (property_behavior_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-; --- definition_identity_hints ---
-
-; --- enclosing_owner_hints ---
-
-(class_declaration 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-(import_declaration (identifier) @local.definition.import @import.module_path.target) @import.module_path.statement
-(function_declaration name: (simple_identifier) @local.definition.function @name) @definition.function
-
-; Scopes
-[
-  (statements)
-  (for_statement)
-  (while_statement)
-  (repeat_while_statement)
-  (do_statement)
-  (if_statement)
-  (guard_statement)
-  (switch_statement)
-  (property_declaration)
-  (function_declaration)
-  (class_declaration)
-  (protocol_declaration)
-] @local.scope
-
-; --- locals ---
-
-; OMEGA IMPORTED LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; SPDX-License-Identifier: Apache-2.0
-; source=audit-baselines/external/nvim-treesitter/swift/locals.scm
-; sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52
-
-; Scopes
-
-; --- member_category_class ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (class_declaration
-      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (class_declaration
-      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_enum ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (enum_entry
-      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_function ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (function_declaration
-      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (function_declaration
-      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_property ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (property_declaration
-      name: (_) @owned.member_category.property.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (property_declaration
-      name: (_) @owned.member_category.property.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_protocol ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (protocol_declaration
-      name: (_) @owned.member_category.protocol.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (protocol_declaration
-      name: (_) @owned.member_category.protocol.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_type ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (associatedtype_declaration
-      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (typealias_declaration
-      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (associatedtype_declaration
-      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (typealias_declaration
-      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-; --- named_array_string_argument_context ---
+; --- what it calls ---
+;
+; `f(x)` and `a.b(x)` are one pattern: the callee is the identifier at the call
+; site in both spellings, and that is the name a call resolves by.
 
 (call_expression
-  (simple_identifier) @swift.named_array.call_name
-  (call_suffix
-    (value_arguments
-      (value_argument
-        name: (value_argument_label
-          (simple_identifier) @swift.named_array.argument_name)
-        value: (array_literal
-          element: (line_string_literal) @swift.named_array.value))))
-) @swift.named_array.call_context
+  .
+  [(simple_identifier) @call.callee
+   (navigation_expression
+     suffix: (navigation_suffix
+       suffix: (simple_identifier) @call.callee))]
+  (call_suffix)) @call
 
-; --- named_scope_owners ---
+(macro_invocation
+  (simple_identifier) @macro_call.callee) @macro_call
 
-(function_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
+; --- where a type is used ---
+;
+; Every written type -- an annotation, a return type, a generic argument, an
+; attribute -- reaches the resolver under the name it is spelled with.
 
-; --- named_string_argument_context ---
+(user_type (type_identifier) @type_use.name)
 
-(call_expression
-  (simple_identifier) @swift.named_string.call_name
-  (call_suffix
-    (value_arguments
-      (value_argument
-        name: (value_argument_label
-          (simple_identifier) @swift.named_string.argument_name)
-        value: (line_string_literal) @swift.named_string.value)))
-) @swift.named_string.call_context
+; --- an attribute written as a bare word ---
+;
+; `@objc`, `@main`, `@available`. An attribute spelled with a type --
+; `@Published`, `@MainActor` -- is a `user_type` and is already a type mention
+; above, so only the bare-identifier spelling is stated here.
 
-; --- nvim_pinned_injections ---
+(attribute . (simple_identifier) @attribute.name) @attribute
 
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=da7c2b36de7e8d17fd10bd5b3bba3563b9445dfba06646a937d615da20c60c29
-; source_name=swift
+; --- what conforms to what ---
+;
+; Swift writes a superclass and a protocol conformance the same way, and both
+; are an implements edge for the host.
 
-; ----- resolved nvim injections source: swift sha256=da7c2b36de7e8d17fd10bd5b3bba3563b9445dfba06646a937d615da20c60c29 -----
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52
-; resolved_query_sha256=6d79dd0553251bfa9cdafac9c12c56784e56acec49e660be0d940799ce8ae510
-; parser_revision=7b7909f2f6b9414be0958275f4c8e5d69c3bca43
-; source_name=swift
-; direct_inherits=
-; resolved_sources=swift
-
-; ----- resolved nvim locals source: swift sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52 -----
-
-; Scopes
-
-; --- ownership_members ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (init_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (subscript_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (init_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (subscript_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-; --- receiver_hints ---
-
-(self_expression) @reference.receiver
-
-(super_expression) @reference.receiver
-
-; --- signature_return_type ---
-
-(function_declaration
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(function_type
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(protocol_function_declaration
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; --- static_delta ---
-
-(call_expression) @call.expression
-(navigation_expression) @reference.navigation
 (inheritance_specifier
-  inherits_from: (_) @relation.supertype) @relation.inheritance
-
-[(line_string_literal) (multi_line_string_literal) (boolean_literal)] @data.literal
-
-; --- swift_class_method_context ---
-
-(class_declaration
-  name: (type_identifier) @swift.class_method.owner_class
-  (inheritance_specifier
-    inherits_from: (user_type) @swift.class_method.superclass)
-  body: (class_body
-    (function_declaration
-      name: (simple_identifier) @swift.class_method.method_name) @swift.class_method.method)) @swift.class_method.class
-
-; --- swift_computed_property_direct_call_context ---
-
-; Generic Swift owner -> computed-property -> direct-call context.
-; Framework-neutral: it captures only source structure. Type/protocol semantics
-; and call target identity remain downstream obligations.
-
-(class_declaration
-  name: (type_identifier) @swift.computed_call.owner_type
-  body: (class_body
-    (property_declaration
-      name: (pattern
-        bound_identifier: (simple_identifier) @swift.computed_call.property_name)
-      computed_value: (computed_property
-        (statements
-          (call_expression
-            (simple_identifier) @swift.computed_call.callee_name
-            (call_suffix)) @swift.computed_call.call))) @swift.computed_call.property)) @swift.computed_call.owner
-
-; --- upstream_tags ---
-
-(class_declaration
-  name: (type_identifier) @name) @definition.class
-
-(protocol_declaration
-  name: (type_identifier) @name) @definition.interface
-
-(class_declaration
-    (class_body
-        [
-            (function_declaration
-                name: (simple_identifier) @name
-            )
-            (subscript_declaration
-                (parameter (simple_identifier) @name)
-            )
-            (init_declaration "init" @name)
-            (deinit_declaration "deinit" @name)
-        ]
-    )
-) @definition.method
-
-(protocol_declaration
-    (protocol_body
-        [
-            (protocol_function_declaration
-                name: (simple_identifier) @name
-            )
-            (subscript_declaration
-                (parameter (simple_identifier) @name)
-            )
-            (init_declaration "init" @name)
-        ]
-    )
-) @definition.method
-
-(class_declaration
-    (class_body
-        [
-            (property_declaration
-                (pattern (simple_identifier) @name)
-            )
-        ]
-    )
-) @definition.property
-
-(property_declaration
-    (pattern (simple_identifier) @name)
-) @definition.property
-
-; --- nominal_conformance_context ---
-
-(class_declaration
-  name: (_) @swift.conformance.owner_type
-  (inheritance_specifier
-    inherits_from: (user_type) @swift.conformance.inherited_type)) @swift.conformance.owner
-
-; --- swift_receiver_member_string_argument_context ---
-
-(call_expression
-  (navigation_expression
-    target: (simple_identifier) @swift.member_string.receiver
-    suffix: (navigation_suffix
-      suffix: (simple_identifier) @swift.member_string.member))
-  (call_suffix
-    (value_arguments
-      . (value_argument
-          value: (line_string_literal
-            text: (line_str_text) @swift.member_string.arg0))))) @swift.member_string.call
-
-; --- framework_neutral_swift_property_attribute_v1 ---
-
-(class_declaration
-  name: (_) @swift.attrprop.owner_type
-  body: (class_body
-    (property_declaration
-      (attribute
-        [(simple_identifier) (user_type (type_identifier))] @swift.attrprop.attribute_name)
-      name: (_) @swift.attrprop.property_name) @swift.attrprop.property)) @swift.attrprop.owner
-
-; --- semantic_closure_v3_146_swift_receiver_member_literal_segments ---
-
-(call_expression
-  (navigation_expression
-    target: (simple_identifier) @swift.member_segment.receiver
-    suffix: (navigation_suffix
-      suffix: (simple_identifier) @swift.member_segment.member))
-  (call_suffix
-    (value_arguments
-      (value_argument
-        name: (value_argument_label)? @swift.member_segment.arg_label
-        value: (line_string_literal
-          text: (line_str_text) @swift.member_segment.literal) @swift.member_segment.literal_node) @swift.member_segment.argument))) @swift.member_segment.call
+  inherits_from: (user_type (type_identifier) @implements.name)) @implements

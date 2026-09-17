@@ -5,19 +5,9 @@
 ; original=packs/omega-json5/third_party/neovim-distributed/queries/highlights.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-(null) @constant @data.null
-
-(string) @string @data.string
-
-(number) @number @data.number
-
 (comment) @comment @spell @data.comment
 
 ; --- literals ---
-
-(identifier) @data.identifier
-(true) @data.true
-(false) @data.false
 
 ; --- structure ---
 

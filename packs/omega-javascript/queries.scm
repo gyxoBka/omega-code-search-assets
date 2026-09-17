@@ -274,13 +274,6 @@
 (object) @data.object @object.literal
 (array) @data.array @array.literal
 (pair key: (_) @data.key @object.property.key value: (_) @data.value @object.property.value) @data.pair @object.property
-(string) @data.string @literal.string
-(number) @data.number @literal.number
-(true) @data.boolean @literal.boolean
-(false) @data.boolean @literal.boolean
-(null) @data.null @literal.null
-(template_string) @data.template @literal.template
-(regex) @data.regex @literal.regex
 
 ; --- declaration_category_class ---
 
@@ -442,9 +435,9 @@
 (jsx_closing_element name: (_) @jsx.close.name) @jsx.closing
 (jsx_attribute) @jsx.attribute
 (jsx_expression) @jsx.expression
-(jsx_text) @jsx.text
+
 (jsx_namespace_name) @jsx.namespace
-(html_character_reference) @jsx.entity
+
 (member_expression object: (_) @reference.receiver @ref.role.member_receiver property: (_) @reference.member @ref.role.member_name) @reference.member_expression
 
 ; --- member_string_identifier_call_context ---
@@ -611,7 +604,6 @@
 
 ; --- references ---
 
-(identifier) @reference.identifier.candidate
 (property_identifier) @reference.property.candidate
 
 ; --- root_member_call_context ---

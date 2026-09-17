@@ -282,9 +282,6 @@
 ; shadow correctly.
 
 ; References
-(simple_identifier) @local.reference
-(type_identifier) @local.reference
-(interpolated_identifier) @local.reference
 
 ; Member access after `.` is not a local reference.
 
@@ -380,15 +377,6 @@
         (user_type) @kotlin.ctor_param.parameter_type) @kotlin.ctor_param.nullable_type) @kotlin.ctor_param.parameter)) @kotlin.ctor_param.context
 
 ; --- final_completion_generic_direct_literals_v1 ---
-(boolean_literal) @omega.literal.boolean
-(integer_literal) @omega.literal.integer
-(long_literal) @omega.literal.long
-(unsigned_literal) @omega.literal.unsigned
-(bin_literal) @omega.literal.bin
-(hex_literal) @omega.literal.hex
-(real_literal) @omega.literal.real
-(null_literal) @omega.literal.null
-(string_literal) @omega.literal.string
 
 ; --- final_completion_a4_import_provenance ---
 (import_header

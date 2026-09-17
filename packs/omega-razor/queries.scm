@@ -201,4 +201,4 @@
 
 ; Where the C# island is. Everything else in the file is markup, and asking
 ; whether a span is code or markup is answered by this and nothing else.
-(razor_block) @code_block
+

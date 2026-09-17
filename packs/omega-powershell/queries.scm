@@ -156,8 +156,7 @@
 (enum_statement (simple_name) @powershell.enum.name) @powershell.enum
 (enum_member (simple_name) @powershell.enum.member.name) @powershell.enum.member
 (attribute (attribute_name) @powershell.attribute.name) @powershell.attribute
-(pipeline) @powershell.pipeline
-(member_access) @powershell.member.access
+
 ((command command_name: (command_name) @powershell.import.module) @powershell.import (#eq? @powershell.import.module "Import-Module"))
 
 ; --- semantic_closure_v3_146_batch3 ---

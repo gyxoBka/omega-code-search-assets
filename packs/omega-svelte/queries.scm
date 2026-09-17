@@ -128,7 +128,7 @@
 ; --- semantic_closure_v3_146_batch2 ---
 
 (attribute_directive) @svelte.directive
-(shorthand_attribute) @svelte.shorthand.attribute
+
 (expression) @svelte.expression
 (each_block binding: (_) @svelte.each.binding expression: (expression) @svelte.each.expression) @svelte.each
 (key_block expression: (expression) @svelte.key.expression) @svelte.key

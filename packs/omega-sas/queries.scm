@@ -70,7 +70,7 @@
 ; --- semantic_closure_v3_146_batch2 ---
 
 (data_step_header (dataset_name) @sas.data.output) @sas.data.step
-(proc_sql_step) @sas.proc.sql
+
 (sql_create_statement output: (dataset_name) @sas.sql.create.output) @sas.sql.create
 (sql_insert_statement (dataset_name) @sas.sql.insert.target) @sas.sql.insert
 (sql_join_clause (table_reference) @sas.sql.join.target) @sas.sql.join

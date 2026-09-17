@@ -1,478 +1,279 @@
-; --- call_targets ---
+; omega-scala
+;
+; Scala is used for libraries, services and data pipelines. The questions asked
+; of a Scala file are: what does this file declare, what type does a name have,
+; what does this class extend or derive, what does this file import, and who
+; calls this method. Every pattern below answers one of them.
+;
+; Containment is never stated as a pattern: the tree already holds it, and a
+; declaration's body is emitted once as a region instead.
+;
+; Two capture namespaces are used deliberately.
+;   @decl.*   -- the parts every declaration may have: its span, its modifiers,
+;                its type parameters, its parameter list, its declared or
+;                returned type, its body. These names are shared across every
+;                declaration pattern, so one carrier template serves all of
+;                them rather than one per node type.
+;   @<kind>.name -- the capture that decides which declaration kind is emitted.
+;                Only one of these binds in any match, so the skip rule picks
+;                exactly one declaration template per match.
 
-(call_expression
-  function: (_) @call.target) @call.expression
-
-; --- completeness_modules ---
-
-(package_clause) @module.expression
-
-; --- completeness_types_high_confidence ---
-
-(class_definition) @type.expression
-(enum_definition) @type.expression
-(trait_definition) @type.expression
-(type_definition) @type.expression
-
-; --- declaration_category_class ---
+; ---------------------------------------------------------------------------
+; Type declarations
+; ---------------------------------------------------------------------------
 
 (class_definition
-  name: (_) @definition.category.class.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  [(modifiers) (access_modifier)]? @decl.modifiers
+  name: (_) @class.name @decl.name
+  type_parameters: (type_parameters)? @decl.type_parameters
+  class_parameters: (class_parameters)? @decl.parameters
+  body: (template_body)? @decl.declaration_body) @decl.span
 
-(class_parameter
-  name: (_) @definition.category.class.name
-) @definition.category.owner
-
-; --- declaration_category_enum ---
+(trait_definition
+  [(modifiers) (access_modifier)]? @decl.modifiers
+  name: (_) @trait.name @decl.name
+  type_parameters: (type_parameters)? @decl.type_parameters
+  class_parameters: (class_parameters)? @decl.parameters
+  body: (template_body)? @decl.declaration_body) @decl.span
 
 (enum_definition
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  [(modifiers) (access_modifier)]? @decl.modifiers
+  name: (_) @enum.name @decl.name
+  type_parameters: (type_parameters)? @decl.type_parameters
+  class_parameters: (class_parameters)? @decl.parameters
+  body: (enum_body)? @decl.declaration_body) @decl.span
 
-(full_enum_case
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+; `case A` and `case A(x: Int) extends E` are both declarations of an enum
+; member and are named the same way.
 
 (simple_enum_case
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @enum_case.name) @decl.span
 
-; --- declaration_category_function ---
+(full_enum_case
+  name: (_) @enum_case.name
+  type_parameters: (type_parameters)? @decl.type_parameters
+  class_parameters: (class_parameters)? @decl.parameters) @decl.span
 
-(function_declaration
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(function_definition
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_package ---
-
-(package_clause
-  name: (_) @definition.category.package.name @definition.identity.name @module.declaration_path.name
-) @definition.category.owner @definition.identity.owner @module.declaration_path.span
-
-(package_object
-  name: (_) @definition.category.package.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_trait ---
-
-(trait_definition
-  name: (_) @definition.category.trait.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_type ---
+; `type T = ...` and the abstract `type T <: Bound`.
 
 (type_definition
-  name: (_) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_modifiers ---
-
-(class_definition
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(class_parameter
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(enum_definition
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(function_declaration
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
-
-(function_definition
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
-
-(given_definition
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
-
-(object_definition
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(trait_definition
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(type_definition
-  name: (_) @definition.modifiers.name
-  (modifiers) @definition.modifiers.modifier
-) @definition.modifiers.owner
-
-(val_declaration
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(var_declaration
-  (modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-; --- declaration_visibility ---
-
-(class_definition
-  name: (_) @definition.visibility.name
-  (access_modifier) @definition.visibility.modifier
-) @definition.visibility.owner
-
-(enum_definition
-  name: (_) @definition.visibility.name
-  (access_modifier) @definition.visibility.modifier
-) @definition.visibility.owner
-
-(trait_definition
-  name: (_) @definition.visibility.name
-  (access_modifier) @definition.visibility.modifier
-) @definition.visibility.owner
-
-; --- definition_identity_hints ---
-
-; --- enclosing_owner_hints ---
-
-(class_definition 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(trait_definition 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- external-helix-tags ---
-
-; Omega coverage-first adapted external query
-; source=helix language=scala kind=tags
-; original baseline: audit-baselines/external/helix/scala/tags.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(class_definition name: (identifier) @name) @definition.class
-(object_definition name: (identifier) @name) @definition.module @definition.object
-(trait_definition name: (identifier) @name) @definition.interface
-(enum_definition name: (identifier) @name) @definition.enum
-(function_definition name: (identifier) @name @local.definition.function) @definition.function
-(val_definition pattern: (identifier) @name @local.definition.var @local.definition.variable) @definition.constant @definition.variable
-(var_definition pattern: (identifier) @name @local.definition.var @local.definition.variable) @definition.constant @definition.variable
-(type_definition name: (type_identifier) @name) @definition.type
-(given_definition name: (identifier) @name) @definition.constant @definition.variable
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=scala kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/scala/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Scopes
-[
-  (template_body)
-  (lambda_expression)
-  (function_definition)
-  (block)
-  (for_expression)
-] @local.scope
-
-; References
-(identifier) @local.reference
-
-; Definitions
-(function_declaration
-  name: (identifier) @local.definition.function)
-
-(parameter
-  name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
-(class_parameter name: (identifier) @local.definition.parameter @local.definition.variable.parameter @name) @definition.property
-
-(lambda_expression
-  parameters: (identifier) @local.definition.var @local.definition.variable.parameter)
-
-(binding
-  name: (identifier) @local.definition.var)
-(val_declaration name: (identifier) @local.definition.var @name) @definition.variable
-(var_declaration name: (identifier) @local.definition.var @name) @definition.variable
-
-(for_expression
-  enumerators: (enumerators
-    (enumerator
-      (tuple_pattern
-        (identifier) @local.definition.var))))
-
-; --- import_targets ---
-
-(import_declaration
-  path: (_) @import.target @import.module_path.target @import.path) @import.statement @import.module_path.statement
-
-; --- locals ---
-
-; OMEGA IMPORTED LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; SPDX-License-Identifier: Apache-2.0
-; Derived by composition only from content-addressed nvim-treesitter locals baselines.
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Omega adaptation source: direct
-; path=audit-baselines/external/nvim-treesitter/scala/locals.scm
-; sha256=06d053fab0a77e337bbf753f519b7645d74cf61cb596c9f8fb9bc817ad2abfe4
-; Scopes
-
-; References
-
-; Definitions
-
-(function_definition
-  name: (identifier) @local.definition.function
-  (#set! definition.var.scope parent))
-
-; --- member_access_hints ---
-
-(field_expression
-  value: (_) @reference.receiver
-  field: (_) @reference.member) @reference.member_expression
-
-; --- module_declaration_path_hints ---
-
-; --- module_path_hints ---
-
-; --- named_scope_owners ---
-
-(function_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-(object_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-(package_object
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- ownership_parameters ---
-
-(function_declaration
-  name: (_) @owner.name
-  parameters: (parameters
-    (lazy_parameter_type) @owned.parameter)) @owner.span
-
-(function_declaration
-  name: (_) @owner.name
-  parameters: (parameters
-    (parameter) @owned.parameter)) @owner.span
-
-(function_declaration
-  name: (_) @owner.name
-  parameters: (parameters
-    (repeated_parameter_type) @owned.parameter)) @owner.span
-
-(function_declaration
-  name: (_) @owner.name
-  parameters: (type_parameters
-    (contravariant_type_parameter) @owned.parameter)) @owner.span
-
-(function_declaration
-  name: (_) @owner.name
-  parameters: (type_parameters
-    (covariant_type_parameter) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (parameters
-    (lazy_parameter_type) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (parameters
-    (parameter) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (parameters
-    (repeated_parameter_type) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (type_parameters
-    (contravariant_type_parameter) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (type_parameters
-    (covariant_type_parameter) @owned.parameter)) @owner.span
-
-; --- p0-exact-helix-locals ---
-
-; Omega P0 exact-revision enrichment
-; source=helix language=scala file=locals.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/scala/locals.scm
-
-; Scopes
-
-[
-  (template_body)
-  (function_definition)
-  (lambda_expression)
-  (for_expression)
-  (block)
-  (case_clause)
-] @local.scope
-
-; `def`/method and `class`/constructor parameters; baseline highlight is plain
-; `variable`, so the parameter class is what makes these distinct.
-
-; Lambda parameters: `(x: Int) => …` (bindings) and bare `x => …`.
-(bindings
-  (binding
-    name: (identifier) @local.definition.variable.parameter))
+  [(modifiers) (opaque_modifier)]? @decl.modifiers
+  name: (_) @type_alias.name @decl.name
+  type_parameters: (type_parameters)? @decl.type_parameters
+  type: (_)? @decl.declared_type) @decl.span
+
+; A type parameter is declared so that the type references inside the body
+; have something of their own to resolve against.
 
 (type_parameters
-  name: (identifier) @local.definition.type.parameter)
-
-; Local `val`/`var` bindings; defined so inner references resolve and shadow.
-
-; References
-
-; Member access after `.` is a field/method name, not a local reference.
-
-; --- p0-exact-helix-tags ---
-
-; Omega P0 exact-revision enrichment
-; source=helix language=scala file=tags.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/scala/tags.scm
-
-; --- reexport_hints ---
-
-(export_declaration 
-  path: (_) @module.reexport.target
-) @module.reexport.statement
-
-; --- signature_parameters ---
-
-(function_declaration
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-(function_definition
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-; --- signature_return_type ---
-
-(function_declaration
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(function_definition
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; --- signature_type_parameters ---
-
-(class_definition
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(contravariant_type_parameter
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
+  name: (_) @type_parameter.name)
 
 (covariant_type_parameter
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
+  name: (_) @type_parameter.name)
 
-(enum_definition
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
+(contravariant_type_parameter
+  name: (_) @type_parameter.name)
 
-(full_enum_case
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(given_definition
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(trait_definition
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(type_definition
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(type_lambda
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(type_parameters
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-; --- static_delta ---
-
-(extends_clause) @relation.extends
-
-; --- upstream_tags ---
-
-; Definitions
+; ---------------------------------------------------------------------------
+; Namespaces: package, package object, object
+; ---------------------------------------------------------------------------
 
 (package_clause
-  name: (package_identifier) @name) @definition.module
+  name: (package_identifier) @package.name @decl.name
+  body: (template_body)? @decl.declaration_body) @decl.span
 
-(simple_enum_case
-  name: (identifier) @name) @definition.class
+(package_object
+  name: (_) @package_object.name @decl.name
+  body: (template_body)? @decl.declaration_body) @decl.span
 
-(full_enum_case
-  name: (identifier) @name) @definition.class
+; A Scala `object` is a singleton namespace: the members it holds are reached
+; through its name, which is what a Namespace answers.
 
-; References 
+(object_definition
+  (modifiers)? @decl.modifiers
+  name: (_) @object.name @decl.name
+  body: (template_body)? @decl.declaration_body) @decl.span
+
+; ---------------------------------------------------------------------------
+; Callables
+; ---------------------------------------------------------------------------
+
+(function_definition
+  (modifiers)? @decl.modifiers
+  name: (_) @function.name @decl.name
+  parameters: (type_parameters)? @decl.type_parameters
+  parameters: (parameters)? @decl.parameters
+  return_type: (_)? @decl.return_type
+  body: (_)? @decl.function_body) @decl.span
+
+; A `def` with no body: the member a subclass or given instance must supply.
+
+(function_declaration
+  (modifiers)? @decl.modifiers
+  name: (_) @abstract_function.name @decl.name
+  parameters: (type_parameters)? @decl.type_parameters
+  parameters: (parameters)? @decl.parameters
+  return_type: (_)? @decl.return_type) @decl.span
+
+; ---------------------------------------------------------------------------
+; Values
+; ---------------------------------------------------------------------------
+
+(given_definition
+  (modifiers)? @decl.modifiers
+  name: (_) @given.name @decl.name
+  type_parameters: (type_parameters)? @decl.type_parameters
+  return_type: (_)? @decl.return_type) @decl.span
+
+(val_definition
+  (modifiers)? @decl.modifiers
+  pattern: (identifier) @value.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+(val_declaration
+  (modifiers)? @decl.modifiers
+  name: (_) @value.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+(var_definition
+  (modifiers)? @decl.modifiers
+  pattern: (identifier) @variable.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+(var_declaration
+  (modifiers)? @decl.modifiers
+  name: (_) @variable.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+; A class parameter is the member a case class or a constructor names, and is
+; referenced from the body by that name.
+
+(class_parameter
+  (modifiers)? @decl.modifiers
+  name: (_) @field.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+(parameter
+  name: (_) @parameter.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+; Lambda and for-comprehension bindings: `(x: Int) => ...` and `x => ...`.
+
+(binding
+  name: (identifier) @parameter.name @decl.name
+  type: (_)? @decl.declared_type) @decl.span
+
+(lambda_expression
+  parameters: (identifier) @parameter.name @decl.span)
+
+; ---------------------------------------------------------------------------
+; What a type is built out of
+; ---------------------------------------------------------------------------
+;
+; `extends A with B` and `derives Show` both state that this declaration
+; supplies the interface of another type. Both are recorded under the one
+; relation the host knows for that, named by the supertype so it resolves
+; against the class or trait that declares it.
+
+(extends_clause
+  type: [(type_identifier) @implements.type
+         (generic_type
+           type: (type_identifier) @implements.type)
+         (stable_type_identifier
+           (type_identifier) @implements.type)])
+
+(derives_clause
+  type: [(type_identifier) @implements.type
+         (stable_type_identifier
+           (type_identifier) @implements.type)])
+
+; ---------------------------------------------------------------------------
+; References
+; ---------------------------------------------------------------------------
+;
+; Every type identifier, wherever it stands -- a parameter type, a return type,
+; a type argument, a `new`, an annotation -- is a reference to the class,
+; trait, enum or type alias of that name. One pattern, one leaf node, and it is
+; the reference that makes the declarations above reachable.
+
+(type_identifier) @type.reference
+
+; An applied name is a call. All four spellings of the applied thing are
+; alternations of one pattern, so a call costs one match.
 
 (call_expression
-  (identifier) @name) @reference.call
+  function: [(identifier) @call.name
+             (field_expression
+               field: (identifier) @call.name)
+             (generic_function
+               function: (identifier) @call.name)
+             (generic_function
+               function: (field_expression
+                 field: (identifier) @call.name))])
 
-(instance_expression
-  (type_identifier) @name) @reference.interface
+; `xs map f` is a method call spelled infix. Operator symbols are left out:
+; `+` and `::` name no method a question could be asked about.
 
-(instance_expression
-  (generic_type
-    (type_identifier) @name)) @reference.interface
+(infix_expression
+  operator: (identifier) @call.name)
 
-(extends_clause
-  (type_identifier) @name) @reference.class
+; ---------------------------------------------------------------------------
+; Imports and exports
+; ---------------------------------------------------------------------------
+;
+; `import a.b.C` -- the imported symbol is the last name in the path, so the
+; anchor requires it to be the last named child. That is also what excludes
+; the selector and wildcard forms, which are their own patterns below.
 
-(extends_clause
-  (generic_type
-    (type_identifier) @name)) @reference.class
+(import_declaration
+  (identifier) @import.name .)
+
+; `import a.b.{C, D => E, F as G}` -- one binding per selector, named by the
+; name in the exporting namespace so it resolves there.
+
+(import_declaration
+  (namespace_selectors
+    [(identifier) @import.name
+     (as_renamed_identifier
+       name: (identifier) @import.name)
+     (arrow_renamed_identifier
+       name: (identifier) @import.name)]))
+
+; The local name a renamed selector introduces.
+
+(import_declaration
+  (namespace_selectors
+    [(as_renamed_identifier
+       alias: (identifier) @import.alias)
+     (arrow_renamed_identifier
+       alias: (identifier) @import.alias)]))
+
+; `import a.b.*` / `import a.b._` -- no symbol is named, so what is recorded is
+; the package the file depends on.
+
+(import_declaration
+  (namespace_wildcard)) @import.wildcard
+
+(export_declaration
+  (identifier) @export.name .)
+
+(export_declaration
+  (namespace_selectors
+    [(identifier) @export.name
+     (as_renamed_identifier
+       name: (identifier) @export.name)
+     (arrow_renamed_identifier
+       name: (identifier) @export.name)]))
+
+; ---------------------------------------------------------------------------
+; Scala CLI `using` directives
+; ---------------------------------------------------------------------------
+;
+; `//> using dep "org::lib:1.0"` is the one place a Scala source file states a
+; dependency of its own. Only the dependency keys are taken; the predicate is
+; tree-sitter's own `#any-of?`, which the runtime does apply.
+
+(using_directive
+  (using_directive_key) @using.key
+  (using_directive_value) @using.value
+  (#any-of? @using.key "dep" "lib" "test.dep" "compileOnly.dep" "plugin"))

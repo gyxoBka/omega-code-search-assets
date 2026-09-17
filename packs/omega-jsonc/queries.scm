@@ -6,13 +6,8 @@
 
 ; --- literals ---
 
-(string) @data.string
 (string_content) @data.string.content
 (escape_sequence) @data.string.escape
-(number) @data.number
-(true) @data.true
-(false) @data.false
-(null) @data.null
 
 ; --- structure ---
 

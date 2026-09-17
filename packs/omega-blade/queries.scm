@@ -34,14 +34,8 @@
   ] @blade.attribute.value) @blade.attribute.with_value
 
 ; --- terminal_blade_structure_v1 ---
-(section) @blade.section
+
 (directive) @blade.directive
-[
-  (section)
-  (loop)
-  (conditional)
-  (switch)
-] @blade.scope
 
 ; --- omega_injection_runtime_v1:blade ---
 

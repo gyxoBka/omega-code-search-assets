@@ -132,4 +132,4 @@
       (string) @toml.array_string.value) @toml.array_string.array) @toml.array_string.entry) @toml.array_string.table
 
 ; --- final_completion_generic_direct_literals_v1 ---
-(string) @omega.literal.string
+

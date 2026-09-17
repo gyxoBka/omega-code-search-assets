@@ -563,7 +563,6 @@
 
 ; --- references ---
 
-(identifier) @reference.identifier
 (package_identifier) @reference.package
 (type_identifier) @reference.type
 (field_identifier) @reference.field

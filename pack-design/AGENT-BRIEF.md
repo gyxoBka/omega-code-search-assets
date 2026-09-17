@@ -191,6 +191,19 @@ kinds, so nearly every carrier in it attached to nothing.
 So a carrier must be emitted with the *declaration's* span, not the evidence's
 span. `definition.return_type_candidate` → `omega.pack.return_type`.
 
+**Five carried names build the signature line on a card**, and no others:
+`omega.pack.visibility`, `omega.pack.type_parameter_shape`,
+`omega.pack.parameter_shape`, `omega.pack.return_type`, `omega.pack.modifier`
+(`omega-runtime/src/build/production.rs`, `declared_signature`). Spell a carrier
+`definition.parameters_candidate` instead of `definition.parameter_shape_candidate`
+and the value is stored but the card reads `Foo -> Result` with the parameters
+missing. This has already happened once.
+
+**And the carrier's span must be the declaration it describes, not the thing
+that contains it.** A carrier whose span capture is the enclosing class writes
+its attribute onto that one class once per member, keeping the last. 289
+templates do this today.
+
 These carrier attribute names are dropped as provenance and never stored:
 `source`, `semantics`, `identity_semantics`, `ownership`, `signature_component`.
 
@@ -266,11 +279,16 @@ long name. This is the single most common mistake in the shipped Packs.
   `control_flow.*` emission
 - `reference_candidate.*` inside a `reference_candidate.lifetime` span
 
-**Read that second-to-last rule twice.** A `literal.*` or `control_flow.*`
-emission is discarded itself, but its *span* is used as a marker to suppress
-role emissions over the same bytes. Deleting "unread" literal templates once
-cost us 1 925 mentions that should have been dropped. Do not remove a
-`literal.*` or `control_flow.*` template on the grounds that nothing reads it.
+**Read that second-to-last rule twice, and note how narrow it is.** A
+`literal.*` or `control_flow.*` emission is discarded itself, but its *span*
+suppresses other emissions over the same bytes -- and only those whose kind
+starts with `reference_context.`. Deleting "unread" literal templates once cost
+us 1 925 mentions that should have been dropped, in a Pack that emits
+`reference_context.*`. **If your Pack emits no `reference_context.*` kind, its
+`literal.*` templates suppress nothing**: they are one query match per string,
+number and boolean in every file, for an emission the host drops. 83 such
+templates were removed from 16 Packs on that basis. So: keep them if you emit
+role captures, delete them if you do not.
 
 ---
 
@@ -378,12 +396,12 @@ each untouched type ask: *does this carry meaning a question could reach?* The
 Packs at the bottom of the table (xml 14/67, razor 61/262, dart 58/221, nginx
 7/26, c-sharp 64/224) are ignoring real constructs.
 
-**D — the name is a whole node.** 40 templates in 19 Packs. A `capture_ref`
-name is that capture's source text, so a name taken from `(document) @document`
-stores the entire file as a name. Find: for every template, look at what its
-name capture is attached to in `queries.scm`. If it is a container node
-(`document`, `object`, `array`, `block`, `element`, `body`, `program`,
-`source_file`, `text`, `string`), it is wrong. Names are names.
+**D — the name is a whole node.** 937 templates. A `capture_ref` name is that
+capture's source text, so a name taken from a node that has children stores that
+whole subtree. The test is not a list of container names: **if a template's
+`name` is its own `span_capture`, and that span is a node with named children,
+it is wrong.** Naming a leaf from its own text is correct and ordinary. This is
+the largest open class, and the fix is always the same: capture a name.
 
 **E — containment stated as a pattern.** The tree already holds containment,
 and a declaration nested inside another already carries its container through
@@ -409,21 +427,32 @@ question.
 `queries.scm` for `#`.
 
 **I — the universal capture.** A top-level `(_) @x` matches every named node of
-every file. Six Packs ship one; in three of them a template turns each match
-into a mention named with that node's whole text. Delete it.
+every file; six Packs shipped one. So does a bare capture on the language's
+general identifier node -- `(identifier) @local.reference`, inherited with an
+nvim-treesitter or helix `locals.scm` baseline -- which stores every identifier
+of every file. Both are closed at 0; do not reintroduce either.
+`(type_identifier) @type.reference` is *not* this: every type mention is an
+answer someone wants.
 
 **J — a name that is a constant.** 105 templates in 27 Packs set `name` to a
 `literal`, so every instance of a construct in the repository collapses onto one
 string. Find: grep `rules.json` for a `name` whose `kind` is `literal`.
 
-**K — the same template twice.** 78 templates in 14 Packs are byte-identical to
-another in the same file. Find: group templates on (capability, output_kind,
-span_capture, name, attributes).
+**K — the same template twice.** Byte-identical duplicates are closed at 0, but
+the generator ran two passes over the same captures, so a Pack often declares one
+construct twice under two spellings: `definition.class` and
+`definition.scala_class`, `binding.var` and `binding.cpp_variable`. Same span
+capture, same name, different kind. 45 remain; decide which spelling is right and
+delete the other.
 
 **L — a framework overlay inside a language Pack.** Forbidden by the contract
-and not enforced. omega-c-sharp held 21 templates of ASP.NET and EF Core;
-omega-dart held 3 of go_router under a comment denying it. If a pattern encodes
-a particular library's call shape, it belongs in `frameworks/`, not here.
+and not enforced, and **not closed**. The first sweep looked for an API name in a
+literal; the rest are spelled as tree shapes with no literal at all -- ten Unreal
+Engine patterns in omega-cpp, ActiveRecord in omega-ruby, Nextflow and Spock in
+omega-groovy, SwiftPM in omega-swift. Every one sat under a comment asserting
+"Framework-neutral" or "No X semantics here". **19 Packs still carry 103 such
+comment lines: the denial is the tell.** If a pattern encodes a particular
+library's call shape, it belongs in `frameworks/`.
 
 **M — a template no pattern can bind.** If no single pattern binds all the
 captures a template needs together, the skip rule drops it on every match and it

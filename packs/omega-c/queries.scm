@@ -295,11 +295,6 @@
 
 ; --- literals ---
 
-(number_literal) @literal.number
-(char_literal) @literal.char
-(string_literal) @literal.string
-(concatenated_string) @literal.concatenated_string
-
 ; --- member_access_hints ---
 
 (field_expression
@@ -380,7 +375,6 @@
 
 ; --- references ---
 
-(identifier) @reference.identifier
 (field_expression argument: (_) @reference.base field: (field_identifier) @reference.member)
 (subscript_expression argument: (_) @reference.index.base index: (_) @reference.index.expression)
 

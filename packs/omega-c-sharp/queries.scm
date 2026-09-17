@@ -64,8 +64,6 @@
 
 ; An indexer has no name of its own; it is written `this[...]`.
 
-(indexer_declaration parameters: (bracketed_parameter_list)) @member.indexer
-
 ; A field's name is on the declarator, not on the declaration, and one
 ; declaration may hold several. The declarator is the span of each.
 
@@ -236,13 +234,3 @@
 ; Dropped as data, but their spans mark bytes that are a written-out value, so
 ; a role boundary landing on one is not mistaken for a name.
 
-[(boolean_literal)
- (integer_literal)
- (real_literal)
- (character_literal)] @literal.value
-
-[(string_literal)
- (verbatim_string_literal)
- (raw_string_literal)] @literal.string
-
-(null_literal) @literal.null

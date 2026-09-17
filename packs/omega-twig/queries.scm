@@ -50,13 +50,9 @@
 (filter
   (filter_identifier) @twig.filter.name) @twig.filter.owner
 
-(template) @twig.template.owner
-
 ; --- semantic_closure_v3_146_batch2 ---
 
 (macro_statement (method) @twig.macro.name (parameters) @twig.macro.parameters) @twig.macro.definition
-(macro_statement) @twig.macro.scope
-(from_statement) @twig.from.statement
 
 ; --- semantic_closure_v3_146_batch3 ---
 
@@ -73,12 +69,4 @@
 ((tag_statement
   (tag) @twig.block_end.tag) @twig.block.end
  (#eq? @twig.block_end.tag "endblock"))
-
-((tag_statement
-  (tag) @twig.with.tag) @twig.with.scope
- (#eq? @twig.with.tag "with"))
-
-((tag_statement
-  (tag) @twig.apply.tag) @twig.apply.scope
- (#eq? @twig.apply.tag "apply"))
 

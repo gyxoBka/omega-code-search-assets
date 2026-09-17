@@ -39,18 +39,12 @@
 ; --- semantic_closure_v3_146_batch2 ---
 
 (variable_assignment (variable_name) @batch.assignment.name) @batch.assignment
-(arithmetic_assignment) @batch.arithmetic.assignment
+
 (for_stmt (for_variable) @batch.for.binding) @batch.for
-(call_stmt) @batch.call.statement
 
 ; --- semantic_closure_v3_146_batch4 ---
 
 (prompt_assignment
   (variable_name) @batch.prompt.name
   [(assignment_value) (quoted_assignment_value)] @batch.prompt.value) @batch.prompt.assignment
-
-(for_set) @batch.for.set
-(setlocal_stmt) @batch.setlocal
-(assignment_paren_group) @batch.assignment.group
-(if_stmt) @batch.if.scope
 

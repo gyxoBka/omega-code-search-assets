@@ -50,8 +50,6 @@
   operator: "->"
   rhs: (identifier) @local.definition)
 
-(identifier) @local.reference
-
 ; --- ownership_parameters ---
 
 (binary_operator

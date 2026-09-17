@@ -407,8 +407,6 @@
   (arguments (string) @import.path)) @import.require
   (#eq? @import.api "require"))
 
-[(table_constructor) (string) (number) (true) (false) (nil)] @data.literal
-
 ; --- three_segment_call_context ---
 
 (function_call

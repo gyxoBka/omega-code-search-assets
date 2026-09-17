@@ -56,27 +56,15 @@
 (workdir_instruction
   (path) @docker.workdir.path) @docker.workdir.context
 
-(cmd_instruction
-  [(json_string_array) (shell_command)]) @docker.cmd.context
-
-(entrypoint_instruction
-  [(json_string_array) (shell_command)]) @docker.entrypoint.context
-
 ; --- terminal_dockerfile_instruction_facts_v1 ---
 (label_pair key: (_) @docker.label.key value: (_) @docker.label.value) @docker.label
 (copy_instruction (path) @docker.copy.path) @docker.copy
 (add_instruction (path) @docker.add.path) @docker.add
 (user_instruction user: (_) @docker.user.name group: (_)? @docker.user.group) @docker.user
-(volume_instruction) @docker.volume
-(shell_instruction) @docker.shell
-(healthcheck_instruction) @docker.healthcheck
-(onbuild_instruction) @docker.onbuild
-(stopsignal_instruction) @docker.stopsignal
-(run_instruction) @docker.run
 
 ; --- semantic_closure_v3_146_batch2 ---
 
 ((copy_instruction (param) @docker.copy.param) @docker.copy.from (#match? @docker.copy.param "^--from="))
 ((add_instruction (param) @docker.add.param) @docker.add.from (#match? @docker.add.param "^--from="))
-(expansion) @docker.expansion
+
 (mount_param name: (_) @docker.mount.name value: (_) @docker.mount.value) @docker.mount

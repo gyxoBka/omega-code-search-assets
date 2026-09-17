@@ -43,8 +43,6 @@
 
 ; --- semantic_closure_v3_146_batch2 ---
 
-(array_identifier) @vbscript.array
-
 ; --- semantic_closure_v3_146_batch3 ---
 (variable_assignment) @vbscript.assignment
 (new_expression) @vbscript.new_expression

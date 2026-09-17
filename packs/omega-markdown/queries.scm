@@ -177,6 +177,4 @@
 (link_reference_definition
   (link_label) @markdown.reference.label
   (link_destination) @markdown.reference.destination) @markdown.reference.definition
-(pipe_table) @markdown.pipe_table
-(pipe_table_header) @markdown.pipe_table.header
-(pipe_table_row) @markdown.pipe_table.row
+

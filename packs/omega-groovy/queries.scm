@@ -1,191 +1,168 @@
-; --- call_targets ---
+; omega-groovy
+;
+; Groovy is the language of Gradle build scripts, Jenkins pipelines, Spock
+; specifications and JVM glue scripts. The questions asked of a Groovy file
+; are: what does this file declare, what type does it name, what does it call,
+; what block configures this setting, and what does it import or inherit from.
+; Every pattern below answers one of those.
+;
+; Containment is deliberately not stated. The tree already holds it, a class
+; body and a method body are emitted as regions, and a pattern per nesting
+; depth costs one match per tuple of nodes at that depth.
+;
+; Modifiers, return types, declared types and parameter shapes are captured on
+; the span of the declaration they belong to, so the host folds them into that
+; declaration's attribute bag instead of storing them as facts of their own.
 
-(function_call
-  function: (_) @call.target) @call.expression
+; --- the package this file belongs to ---
 
-(juxt_function_call
-  function: (_) @call.target) @call.expression
+(groovy_package [(dotted_identifier) (identifier)] @package.name) @package
 
-; --- completeness_imports ---
+; --- an import, and the local name an aliased import binds ---
 
-(groovy_import) @import.expression
+(groovy_import import: [(dotted_identifier) (identifier)] @import.path) @import
 
-; --- completeness_modules ---
+(groovy_import import_alias: (identifier) @import.alias) @import.alias.owner
 
-(groovy_package) @module.expression
-
-; --- completeness_types_high_confidence ---
-
-(class_definition) @type.expression
-
-; --- declaration_category_class ---
-
-(class_definition
-  name: (_) @definition.category.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_modifiers ---
-
-(class_definition
-  (modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(declaration
-  (modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-; --- declaration_visibility ---
+; --- a class, and its body as a region ---
 
 (class_definition
-  (access_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(declaration
-  (access_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-; --- definition_identity_hints ---
-
-; --- enclosing_owner_hints ---
-
-(class_definition 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- external-neovim-distributed-locals ---
-
-; Omega coverage-first adapted external query
-; source=neovim-distributed language=groovy kind=locals
-; original baseline: audit-baselines/external/neovim-distributed/groovy/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(function_definition) @local.scope
-
-(parameter
-  name: (identifier) @local.definition.parameter)
-
-(identifier) @local.reference
-
-; --- literal_nested_calls ---
-
-; Direct call whose first argument is a non-interpolated string-content literal.
-(function_call
-  function: (identifier) @groovy.string_call.name
-  args: (argument_list
-    . (string
-        (string_content) @groovy.string_call.arg0))) @groovy.string_call.call
-
-(juxt_function_call
-  function: (identifier) @groovy.string_call.name
-  args: (argument_list
-    . (string
-        (string_content) @groovy.string_call.arg0))) @groovy.string_call.call
-
-; Bounded nested-call ownership through exactly one intermediary closure call.
-; Example shape: owner("name") { container { nested ... } }
-(function_call
-  function: (identifier) @groovy.nested.owner_name
-  args: (argument_list
-    . (string
-        (string_content) @groovy.nested.owner_arg0)
-    (closure
-      (juxt_function_call
-        function: (identifier) @groovy.nested.container_name
-        args: (argument_list
-          (closure
-            (juxt_function_call
-              function: (identifier) @groovy.nested.call_name
-              args: (argument_list) @groovy.nested.call_args) @groovy.nested.call)) @groovy.nested.container_args) @groovy.nested.container_call))) @groovy.nested.owner_call
-
-; --- member_category_class ---
+  name: (identifier) @class.name
+  body: (closure) @class.body) @class
 
 (class_definition
-  name: (_) @owner.name
-  body: (closure
-    (class_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+  generics: (generic_parameters) @class.type_parameters) @class.type_parameters.owner
 
-; --- module_declaration_path_hints ---
-
-(groovy_package (dotted_identifier) @module.declaration_path.name) @module.declaration_path.span
-
-(groovy_package (identifier) @module.declaration_path.name) @module.declaration_path.span
-
-; --- named_scope_owners ---
-
-; --- nextflow_dsl_context ---
-
-; Framework-neutral Groovy DSL named/anonymous closure declarations and
-; direct identifier calls nested in a workflow-like closure.
-(juxt_function_call
-  function: (identifier) @groovy.dsl.keyword
-  args: (argument_list
-    (identifier) @groovy.dsl.declared_name
-    (closure) @groovy.dsl.body)) @groovy.dsl.named_context
-
-(juxt_function_call
-  function: (identifier) @groovy.dsl.anon_keyword
-  args: (argument_list
-    (closure) @groovy.dsl.anon_body)) @groovy.dsl.anonymous_context
-
-(juxt_function_call
-  function: (identifier) @groovy.dsl.outer_keyword
-  args: (argument_list
-    (closure
-      (function_call
-        function: (identifier) @groovy.dsl.step_name) @groovy.dsl.step_call))) @groovy.dsl.workflow_context
-
-; --- ownership_members ---
-
+; `extends` and `implements` fill the same field in this grammar, so both
+; arrive here; the supertype is stripped to its last segment so that it can
+; resolve against a class declared elsewhere in the repository.
 (class_definition
-  name: (_) @owner.name
-  body: (closure
-    (declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+  superclass: [(identifier) (dotted_identifier)] @class.superclass) @class.superclass.owner
 
-; --- priority_semantics ---
+; --- a type parameter is a type name a question can resolve to ---
 
-; Omega-owned Groovy semantic enrichment from grammar-backed highlight node shapes.
-(class_definition name: (identifier) @definition.class.name) @definition.class
-(function_definition function: (identifier) @definition.function.name) @definition.function
-(function_declaration function: (identifier) @definition.function.name) @definition.function
-(function_call function: (identifier) @call.function.name) @call.function
-(juxt_function_call function: (identifier) @call.function.name) @call.function
-(parameter type: (identifier) @type.reference name: (identifier) @binding.parameter.name) @binding.parameter
+(generic_param name: (identifier) @type_parameter.name) @type_parameter
 
-; --- signature_type_parameters ---
+; --- a method or function, with a body, and its body as a region ---
 
-(class_definition
-  name: (_) @definition.signature.name
-  generics: (_) @definition.signature.type_parameters
-) @definition.signature.owner
+(function_definition
+  function: (identifier) @function.name
+  parameters: (parameter_list) @function.parameters
+  body: (closure) @function.body) @function
 
-; --- spock_class_method_context ---
+; --- a method without a body (abstract, or an interface member) ---
 
-(class_definition
-  name: (identifier) @spock.class.name @groovy.class.name
-  superclass: (_) @spock.class.superclass @groovy.class.superclass) @spock.class @groovy.class.inheritance
+(function_declaration
+  function: (identifier) @declared_function.name
+  parameters: (parameter_list) @declared_function.parameters) @declared_function
 
-(class_definition
-  name: (identifier) @spock.method.owner
-  superclass: (_) @spock.method.superclass
-  body: (closure
-    (function_definition
-      function: (identifier) @spock.method.name) @spock.method)) @spock.method.class
+; --- the declared return type, carried on the callable it belongs to ---
+;
+; The return type is an optional field only in the sense that it may be the
+; anonymous `def` token, which no pattern can name, so it is asked for
+; separately rather than inside the callable pattern above.
 
-; --- semantic_closure_v3_146_batch2 ---
+[(function_definition
+   type: [(builtintype) (identifier) (dotted_identifier) (type_with_generics) (array_type)] @return_type.name)
+ (function_declaration
+   type: [(builtintype) (identifier) (dotted_identifier) (type_with_generics) (array_type)] @return_type.name)] @return_type.owner
 
-(annotation (identifier) @groovy.annotation.name) @groovy.annotation
-(closure) @groovy.closure
+; --- the declared type of a field, a local or a parameter ---
 
-; --- semantic_closure_v3_146_batch3 ---
-(groovy_import import: (_) @groovy.import.path import_alias: (identifier)? @groovy.import.alias) @groovy.import
-(declaration name: (identifier) @groovy.declaration.name type: (_)? @groovy.declaration.type value: (_)? @groovy.declaration.value) @groovy.declaration
-(for_in_loop variable: (identifier) @groovy.for.variable collection: (_) @groovy.for.collection body: (_) @groovy.for.body) @groovy.for
-(parameter name: (identifier) @groovy.parameter.name type: (_)? @groovy.parameter.type value: (_)? @groovy.parameter.default) @groovy.parameter
+[(declaration
+   type: [(builtintype) (identifier) (dotted_identifier) (type_with_generics) (array_type)] @declared_type.name)
+ (parameter
+   type: [(builtintype) (identifier) (dotted_identifier) (type_with_generics) (array_type)] @declared_type.name)] @declared_type.owner
 
+; --- every position where a type is named ---
+
+[(function_definition type: [(identifier) (dotted_identifier)] @type_use.name)
+ (function_declaration type: [(identifier) (dotted_identifier)] @type_use.name)
+ (declaration type: [(identifier) (dotted_identifier)] @type_use.name)
+ (parameter type: [(identifier) (dotted_identifier)] @type_use.name)
+ (generics [(identifier) (dotted_identifier)] @type_use.name)
+ (generic_param superclass: [(identifier) (dotted_identifier)] @type_use.name)]
+
+; --- a field or local declaration ---
+
+(declaration name: (identifier) @variable.name) @variable
+
+; --- a parameter ---
+
+(parameter name: (identifier) @parameter.name) @parameter
+
+; --- the variable a for-each loop binds ---
+
+(for_in_loop variable: (identifier) @loop.variable)
+
+; --- visibility and modifiers, carried on the declaration they qualify ---
+
+[(class_definition (access_modifier) @visibility.name)
+ (declaration (access_modifier) @visibility.name)
+ (function_definition (access_modifier) @visibility.name)
+ (function_declaration (access_modifier) @visibility.name)] @visibility.owner
+
+[(class_definition (modifier) @modifier.name)
+ (declaration (modifier) @modifier.name)
+ (function_definition (modifier) @modifier.name)
+ (function_declaration (modifier) @modifier.name)] @modifier.owner
+
+; --- an annotation names a type ---
+
+(annotation (identifier) @annotation.name) @annotation
+
+; --- a call ---
+;
+; Both spellings are one pattern: `foo(x)` and the command form `foo x`.
+; A qualified target is stripped to its last segment so that `p.q.run()`
+; resolves against a declaration of `run`.
+
+[(function_call function: [(identifier) (dotted_identifier)] @call.target)
+ (juxt_function_call function: [(identifier) (dotted_identifier)] @call.target)] @call
+
+; --- a configuration block: `name { ... }` ---
+;
+; The identifier-followed-by-closure form is Groovy's block syntax, and it is
+; what a build script or a pipeline is made of. It is declared under the
+; identifier that opens it; which DSL that identifier belongs to is not
+; stated here.
+
+; Three forms, anchored so they cannot overlap: `jacoco { }` is named by the
+; keyword itself, `task hello { }` by the name the keyword is given, and
+; `stage('Build') { }` by its label. Unanchored, the first form swallowed the
+; other two and every named block in a repository was declared under its
+; keyword -- one `task` for all of them, with `hello` nowhere in the index.
+
+[(juxt_function_call
+   function: (identifier) @block.name
+   args: (argument_list . (closure)))
+ (function_call
+   function: (identifier) @block.name
+   args: (argument_list . (closure)))] @block
+
+[(juxt_function_call
+   function: (identifier) @block.keyword
+   args: (argument_list . (identifier) @block.name . (closure)))
+ (function_call
+   function: (identifier) @block.keyword
+   args: (argument_list . (identifier) @block.name . (closure)))] @block
+
+; `stage('Build') { ... }` — the leading string literal labels the block, and
+; is carried on the block's own span.
+
+[(juxt_function_call
+   function: (identifier) @block.label.keyword
+   args: (argument_list . (string (string_content) @block.label) . (closure)))
+ (function_call
+   function: (identifier) @block.label.keyword
+   args: (argument_list . (string (string_content) @block.label) . (closure)))] @block.label.owner
+
+; --- a named entry in a map literal ---
+;
+; `apply plugin: 'java'` and `group: 'org.example'` are how a Groovy build
+; script states a setting, so the key is declared and the value is carried
+; with it.
+
+(map_item
+  key: [(identifier) (string)] @map.key
+  value: (_) @map.value) @map.item

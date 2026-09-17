@@ -391,17 +391,6 @@
 
 ; --- scalars ---
 
-(string_scalar) @data.string
-(plain_scalar) @data.scalar
-(single_quote_scalar) @data.string
-(double_quote_scalar) @data.string
-(integer_scalar) @data.integer
-(float_scalar) @data.float
-(boolean_scalar) @data.boolean
-(null_scalar) @data.null
-(timestamp_scalar) @data.timestamp
-(block_scalar) @data.block_scalar
-
 ; --- structure ---
 
 (document) @data.document

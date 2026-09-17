@@ -202,7 +202,7 @@
 
 [(start_tag) (self_closing_tag)] @data.element
 (attribute) @data.attribute
-[(text) (entity)] @data.textual
+
 (script_element) @embedded.script
 (style_element) @embedded.style
 

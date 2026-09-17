@@ -43,16 +43,11 @@
 
 ; --- semantic_closure_v3_146_batch2 ---
 
-(recipe) @make.recipe
-(recipe_line) @make.recipe.line
 (variable_assignment name: (_) @make.variable.name) @make.variable.assignment
-(conditional) @make.conditional
-(shell_function) @make.shell.function
 
 ; --- semantic_closure_v3_147_make_surface ---
 (variable_assignment target_or_pattern: (list) @make.target_variable.target name: (word) @make.target_variable.name) @make.target_variable.assignment
 (rule (targets (word) @make.order.owner) order_only: (prerequisites (word) @make.order.prerequisite)) @make.order.rule
 (define_directive name: (word) @make.define.name) @make.define.definition
 (VPATH_assignment value: (paths) @make.vpath.paths) @make.vpath.assignment
-(undefine_directive) @make.undefine
-(export_directive) @make.export
+

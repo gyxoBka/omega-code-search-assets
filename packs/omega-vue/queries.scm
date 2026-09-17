@@ -36,8 +36,6 @@
 (attribute
   (attribute_name) @vue.attribute.name) @vue.attribute
 
-(element) @vue.element.scope
-
 ; --- authored_attribute_value ---
 
 (attribute

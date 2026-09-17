@@ -1185,7 +1185,7 @@
 
 ; Exhaustive candidate pass. Role filtering removes definition/binding/import-name spans,
 ; while retaining value, type, field, path and lifetime references in every expression form.
-(identifier) @reference.identifier.candidate
+
 (type_identifier) @reference.type.candidate
 (field_identifier) @reference.field.candidate
 (shorthand_field_identifier) @reference.field_shorthand.candidate

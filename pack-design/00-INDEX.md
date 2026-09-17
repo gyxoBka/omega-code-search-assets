@@ -341,3 +341,111 @@ Totals across all Packs: 3 673 -> 3 394 templates, 1 348 -> 1 176 guards.
 | `relation.*` the host does not know | 69 | each has to be mapped onto one of the six, or demoted to a reference |
 | a pattern nothing reads | 65 | either a missing template or a pattern to delete; only the author knows which |
 | J a name that is a constant | 13 | each carries a value in its fields that should become the name |
+
+---
+
+# Wave 2 (groovy, swift, scala, ruby, cpp): three of the closures above were measured too narrowly
+
+Four agents, working independently on four Packs, each reported the same thing:
+the sweeps closed the spelling of a defect, not the defect. All three
+corrections are verified and `pack-design/audit.py` now measures them.
+
+## D was a floor, not a count
+
+The audit flagged a whole-node name only when the captured node type was in a
+fixed list (`document`, `object`, `block`, …). The real rule does not need a
+list: **a template whose `name` is its own `span_capture`, where that span is a
+node with named children**, stores that whole subtree as a name. Naming a leaf
+from its own text is correct and ordinary; naming a container is not.
+
+Measured that way: **937**, not 71. omega-groovy alone had eight the list
+missed -- a class named from the whole `class_definition`, a call from the whole
+call, a parameter from the whole `parameter`. This is now the largest open class
+and the fix is per Pack: capture a name.
+
+## I had a second spelling
+
+`(_) @structural.node` was closed at 0, but a bare capture on the language's
+general identifier node is the same failure restricted to one node type.
+`(identifier) @local.reference`, inherited with nvim-treesitter and helix
+`locals.scm` baselines, stores every identifier of every file. 16 of them, in 15
+Packs, now removed with the 33 templates they fed. `(type_identifier) @type.reference`
+is **not** this: every type mention is an answer someone wants.
+
+## K had a second half
+
+Byte-identical templates were closed at 0, but the generator ran two passes
+(`upstream_tags` and `external-helix-tags`) over the same captures, so a Pack
+declares one construct twice under two spellings: `definition.class` and
+`definition.scala_class`, `binding.var` and `binding.cpp_variable`,
+`scope.lexical` and `scope.cpp_lexical_scope`. Same span capture, same name
+expression, different kind, so nothing compared them. The measurable signature
+is exactly that: same `span_capture`, same `name`, different `output_kind`.
+
+63 found. 24 removed where one spelling was the other with the language's own
+name inserted; **45 remain** where the two kinds differ in meaning and only the
+Pack's author can say which is right.
+
+## L is not closed either
+
+The index said "0 measured" after c-sharp and dart. That sweep looked for an API
+name pinned in a literal, and the remaining overlays are spelled as **tree
+shapes with no literal at all**: ten Unreal Engine patterns and three Catch2
+ones in omega-cpp, two ActiveRecord ones in omega-ruby, Nextflow/Spock/Jenkins
+shapes in omega-groovy, SwiftPM and SwiftUI in omega-swift. Every one of them
+sat under a header comment asserting the opposite -- "Framework-neutral", "No
+Flutter/go_router semantics here", "semantics are left to overlays". **19 Packs
+still carry 103 such comment lines.** The denial is the tell; check the pattern
+under it.
+
+## A new class: a carrier folded onto its owner
+
+A carrier folds onto the declaration at its own span. Seven omega-swift
+templates gave a *member's* name a span capture bound to the *enclosing class*,
+so a class with N members wrote the same attribute N times onto one declaration
+and kept the last. Detectable as a carrier template whose name capture sits
+inside its span capture in the same pattern: **289** of them.
+
+## And the literal-marker rule is narrower than the brief said
+
+`literal.*` and `control_flow.*` spans suppress role emissions -- but only
+emissions whose kind starts with `reference_context.` (`ROLE_PREFIX`,
+`emission_roles.rs:54`). A Pack that emits no `reference_context.*` kind gets no
+suppression, so its `literal.*` templates are one match per string, number and
+boolean in every file for an emission the host then drops. **83 such templates
+removed from 16 Packs** (omega-javascript 14, omega-java 10, omega-kotlin 9,
+omega-yaml 8). The rule still holds for the Packs that do emit
+`reference_context.*`, which is where the +1 925 mentions came from.
+
+## Wave 2 results
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-ruby | 48 -> 31 | 80 -> 23 | 33 -> 7 | 46 -> 26 |
+| omega-groovy | 35 -> 26 | 39 -> 22 | 34 -> 5 | 19 -> 27 |
+| omega-cpp | 90 -> 35 | 124 -> 35 | 42 -> 6 | 74 -> 51 |
+| omega-scala | 57 -> 31 | 95 -> 35 | 37 -> 6 | 46 -> 49 |
+| omega-swift | 48 -> 43 | 76 -> 23 | 32 -> 7 | 53 -> 36 |
+
+Four blocking defects were found by review and fixed here:
+
+- **omega-swift**: `(attribute (simple_identifier) @attribute.name) @attribute`
+  was unanchored, and an attribute's arguments are direct children, so
+  `@available(iOS, deprecated, renamed: "x")` emitted four references over one
+  span. One token: `.` after `(attribute`.
+- **omega-scala**: three carriers were renamed to `modifiers`,
+  `type_parameters`, `parameters`. The signature line on a card is assembled in
+  `production.rs:3170` from exactly `omega.pack.visibility`,
+  `type_parameter_shape`, `parameter_shape`, `return_type` and `modifier`, so a
+  Scala card read `Foo -> Result` instead of `private final Foo[A](x: Int) ->
+  Result`. Restored. And a `def` captured no `parameters:` field at all, so
+  *what does this method take* was stated nowhere; both `function_definition`
+  and `function_declaration` now carry it.
+- **omega-groovy**: the config-block pattern was unanchored, so `task hello { }`
+  matched the bare-closure form and was declared as `task` -- one name for every
+  task in a repository, with `hello` nowhere. Three anchored forms now: a block
+  named by its keyword, by the name the keyword is given, and by its string
+  label.
+
+Totals after wave 2 and its sweeps: **3 160 templates, 1 026 guards** (from
+3 673 and 1 348 before any of this).

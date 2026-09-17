@@ -117,9 +117,3 @@
 
 (filter (filter_name) @pug.filter.name) @pug.filter
 
-[
-  (mixin_definition)
-  (each)
-  (conditional)
-  (while)
-] @pug.scope

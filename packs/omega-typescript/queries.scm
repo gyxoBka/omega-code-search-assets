@@ -917,7 +917,6 @@
 
 ; --- references ---
 
-(identifier) @reference.identifier
 (type_identifier) @reference.type_identifier
 
 ; --- root_member_call_context ---

@@ -101,10 +101,6 @@
 (variable_statement
   (name) @local.definition.var)
 
-(setter) @local.reference
-
-(getter) @local.reference
-
 ; Function Definition
 ((function_definition
   (name) @local.definition.function)
@@ -175,7 +171,6 @@
   (identifier) @local.definition.var)
 
 ; References
-(identifier) @local.reference
 
 ; --- ownership_members ---
 
@@ -229,7 +224,6 @@
 (constructor_definition) @gdscript.constructor
 (export_variable_statement name: (name) @gdscript.export.name) @gdscript.export
 (onready_variable_statement name: (name) @gdscript.onready.name) @gdscript.onready
-((call (identifier) @_fn) @gdscript.resource.load (#any-of? @_fn "preload" "load"))
 
 ; --- semantic_closure_v3_146_batch4 ---
 

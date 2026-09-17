@@ -437,8 +437,6 @@
 
 ; References
 
-(variable_name) @local.reference
-
 ; --- p0-exact-helix-tags ---
 
 ; Omega P0 exact-revision enrichment
@@ -584,11 +582,6 @@
     (argument (name) @php.hook.callback_name))) @php.hook.context
 
 ; --- final_completion_generic_direct_literals_v1 ---
-(boolean) @omega.literal.boolean
-(integer) @omega.literal.integer
-(float) @omega.literal.float
-(null) @omega.literal.null
-(string) @omega.literal.string
 
 ; --- final_completion_a4_import_provenance ---
 (namespace_use_clause

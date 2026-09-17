@@ -918,7 +918,6 @@
 
 ; --- references ---
 
-(identifier) @reference.identifier
 (type_identifier) @reference.type_identifier
 
 ; --- root_member_call_context ---
@@ -1547,9 +1546,8 @@
 (jsx_closing_element name: (_) @jsx.close.name) @jsx.closing
 (jsx_attribute) @jsx.attribute
 (jsx_expression) @jsx.expression
-(jsx_text) @jsx.text
+
 (jsx_namespace_name) @jsx.namespace
-(html_character_reference) @jsx.entity
 
 (function_declaration
   name: (identifier) @js.jsx_owner.owner_function

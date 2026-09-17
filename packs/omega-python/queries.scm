@@ -516,7 +516,6 @@
 
 (attribute object: (_) @reference.member.object attribute: (identifier) @reference.member.name) @reference.member
 (call function: (identifier) @reference.call.name) @reference.call
-(identifier) @reference.identifier
 
 ; --- scopes ---
 

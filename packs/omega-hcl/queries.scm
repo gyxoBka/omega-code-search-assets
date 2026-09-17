@@ -26,37 +26,6 @@
 ; module "app" { depends_on = [module.network] }
 ; Function calls, indexes, splats, conditionals and deeper traversal chains are intentionally excluded.
 
-(block
-  . (identifier) @hcl.list_ref.owner_kind
-  . (string_lit) @hcl.list_ref.owner_label0
-  . (string_lit) @hcl.list_ref.owner_label1
-  . (body
-      (attribute
-        . (identifier) @hcl.list_ref.attribute_key
-        . (expression
-            (collection_value
-              (tuple
-                (expression
-                  (variable_expr
-                    (identifier) @hcl.list_ref.target_root)
-                  (get_attr
-                    (identifier) @hcl.list_ref.target_name)) @hcl.list_ref.target_expression))) @hcl.list_ref.attribute_value) @hcl.list_ref.attribute)) @hcl.list_ref.owner_two_labels
-
-(block
-  . (identifier) @hcl.list_ref.owner_kind
-  . (string_lit) @hcl.list_ref.owner_label0
-  . (body
-      (attribute
-        . (identifier) @hcl.list_ref.attribute_key
-        . (expression
-            (collection_value
-              (tuple
-                (expression
-                  (variable_expr
-                    (identifier) @hcl.list_ref.target_root)
-                  (get_attr
-                    (identifier) @hcl.list_ref.target_name)) @hcl.list_ref.target_expression))) @hcl.list_ref.attribute_value) @hcl.list_ref.attribute)) @hcl.list_ref.owner_one_label
-
 ; --- block_traversal_context ---
 
 ; Framework-neutral HCL owner-aware direct two-segment traversal used as the complete value of a block attribute.
@@ -66,62 +35,9 @@
 ; output "peer" { value = module.network }
 ; Deeper traversal chains, functions, indexes, splats, conditionals and templates are intentionally excluded.
 
-(block
-  . (identifier) @hcl.ref.owner_kind
-  . (string_lit) @hcl.ref.owner_label0
-  . (string_lit) @hcl.ref.owner_label1
-  . (body
-      (attribute
-        . (identifier) @hcl.ref.attribute_key
-        . (expression
-            (variable_expr
-              (identifier) @hcl.ref.target_root)
-            (get_attr
-              (identifier) @hcl.ref.target_name)) @hcl.ref.target_expression) @hcl.ref.attribute)) @hcl.ref.owner_two_labels
-
-(block
-  . (identifier) @hcl.ref.owner_kind
-  . (string_lit) @hcl.ref.owner_label0
-  . (body
-      (attribute
-        . (identifier) @hcl.ref.attribute_key
-        . (expression
-            (variable_expr
-              (identifier) @hcl.ref.target_root)
-            (get_attr
-              (identifier) @hcl.ref.target_name)) @hcl.ref.target_expression) @hcl.ref.attribute)) @hcl.ref.owner_one_label
-
 ; Exact three-segment traversal used by typed Terraform data sources:
 ; data.<type>.<name>. Dynamic expressions, indexes, splats and deeper chains
 ; remain outside this fact.
-(block
-  . (identifier) @hcl.ref3.owner_kind
-  . (string_lit) @hcl.ref3.owner_label0
-  . (string_lit) @hcl.ref3.owner_label1
-  . (body
-      (attribute
-        . (identifier) @hcl.ref3.attribute_key
-        . (expression
-            (variable_expr
-              (identifier) @hcl.ref3.target_root)
-            (get_attr
-              (identifier) @hcl.ref3.target_type)
-            (get_attr
-              (identifier) @hcl.ref3.target_name)) @hcl.ref3.target_expression) @hcl.ref3.attribute)) @hcl.ref3.owner_two_labels
-
-(block
-  . (identifier) @hcl.ref3.owner_kind
-  . (string_lit) @hcl.ref3.owner_label0
-  . (body
-      (attribute
-        . (identifier) @hcl.ref3.attribute_key
-        . (expression
-            (variable_expr
-              (identifier) @hcl.ref3.target_root)
-            (get_attr
-              (identifier) @hcl.ref3.target_type)
-            (get_attr
-              (identifier) @hcl.ref3.target_name)) @hcl.ref3.target_expression) @hcl.ref3.attribute)) @hcl.ref3.owner_one_label
 
 ; --- distributed_web_structural ---
 

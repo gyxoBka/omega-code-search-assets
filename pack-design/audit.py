@@ -72,6 +72,24 @@ def is_scope(k):
     return k == 'scope' or k.startswith('scope.')
 
 
+GENERIC_NAME = {'identifier', 'word', 'name', 'simple_identifier', 'variable_name',
+                'atom', 'symbol', 'bare_word', 'plain_value'}
+
+
+def node_children(pack):
+    """Node types that hold named children, from the pinned grammar."""
+    path = 'grammars/%s/node-types.json' % pack
+    if not os.path.exists(path):
+        return set()
+    out = set()
+    for n in json.load(open(path, encoding='utf-8')):
+        kids = (n.get('children') or {}).get('types') or []
+        fields = n.get('fields') or {}
+        if kids or fields:
+            out.add(n['type'])
+    return out
+
+
 def audit(pack):
     q = 'packs/%s/queries.scm' % pack
     rp = 'packs/%s/rules.json' % pack
@@ -85,6 +103,7 @@ def audit(pack):
     every_cap = set().union(*cap_sets) if cap_sets else set()
     tpl_blob = json.dumps(templates)
     src = open(q, encoding='utf-8').read() if os.path.exists(q) else ''
+    HAS_CHILDREN = node_children(pack)
 
     # which node type is each capture attached to
     owner = {}
@@ -133,6 +152,65 @@ def audit(pack):
         if cap_sets and need <= every_cap and not any(need <= s for s in cap_sets):
             f['M'] += 1
             detail['M'].append('%s needs %s' % (k, sorted(need)))
+
+    # D2 - the name IS the span, and the span is a node with named children.
+    # Naming a leaf from its own text is correct and ordinary; naming a node
+    # that contains other nodes stores that whole subtree as a name.
+    for t in templates:
+        n = t.get('name')
+        if not (isinstance(n, dict) and n.get('kind') == 'capture_ref'):
+            continue
+        if n['name'] != t['span_capture']:
+            continue
+        node = owner.get(n['name'])
+        if node and node in HAS_CHILDREN:
+            f['D2'] += 1
+            detail['D2'].append('%s names itself from the whole (%s)' % (t['output_kind'], node))
+
+    # K2 - the same fact under two kinds: same span and same name, different kind
+    bysig = collections.defaultdict(set)
+    for t in templates:
+        bysig[(t['span_capture'], json.dumps(t.get('name'), sort_keys=True))].add(t['output_kind'])
+    for sig, kinds in bysig.items():
+        if len(kinds) > 1:
+            f['K2'] += len(kinds) - 1
+            detail['K2'].append('@%s -> %s' % (sig[0], ' / '.join(sorted(kinds))))
+
+    # I2 - a bare capture on the language's general identifier node, at pattern
+    # root. `(type_identifier) @type.reference` answers a question; `(identifier)
+    # @local.reference` stores every identifier of every file.
+    for pat in pats:
+        m = re.fullmatch(r'\((\w+)\)\s*@([\w.\-]+)', pat.strip())
+        if m and m.group(1) in GENERIC_NAME and ('"%s"' % m.group(2)) in tpl_blob:
+            f['I2'] += 1
+            detail['I2'].append('(%s) @%s is every identifier in the file'
+                                % (m.group(1), m.group(2)))
+
+    # carrier folding onto an owner: the name is a descendant of the span
+    for t in templates:
+        if not t['output_kind'].endswith('_candidate'):
+            continue
+        n = t.get('name')
+        if not (isinstance(n, dict) and n.get('kind') == 'capture_ref'):
+            continue
+        for pat in pats:
+            caps = set(re.findall(r'@([\w.\-]+)', pat))
+            if t['span_capture'] in caps and n['name'] in caps:
+                si = pat.find('@' + t['span_capture'])
+                ni = pat.find('@' + n['name'])
+                if si > ni:       # the span closes after the name: the name is inside it
+                    f['carrier_owner'] += 1
+                    detail['carrier_owner'].append('%s: name @%s sits inside span @%s'
+                                                   % (t['output_kind'], n['name'], t['span_capture']))
+                break
+
+    # a literal marker with nothing to suppress
+    kinds_all = {t['output_kind'] for t in templates}
+    has_marker = any(k.startswith(('literal.', 'control_flow.')) for k in kinds_all)
+    has_role = any(k.startswith('reference_context.') for k in kinds_all)
+    if has_marker and not has_role:
+        f['dead_marker'] = sum(1 for k in kinds_all if k.startswith(('literal.', 'control_flow.')))
+        detail['dead_marker'] = sorted(k for k in kinds_all if k.startswith(('literal.', 'control_flow.')))
 
     # K - the same template twice
     seen = collections.Counter(json.dumps(t, sort_keys=True) for t in templates)
@@ -187,6 +265,11 @@ LABEL = {
     'scope_is_def': '   scope that is also a declaration',
     'unread': '   pattern nothing reads',
     'cap_mismatch': '   manifest vs templates',
+    'D2': 'D2 the name is the span itself',
+    'K2': 'K2 same span and name, two kinds',
+    'I2': 'I2 a bare leaf capture, every one in the file',
+    'carrier_owner': '   carrier folded onto its owner, overwriting itself',
+    'dead_marker': '   literal marker with no reference_context to suppress',
 }
 
 

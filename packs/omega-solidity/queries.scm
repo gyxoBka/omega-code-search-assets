@@ -269,7 +269,6 @@
 (block_statement) @local.scope
 (function_definition (parameter name: (_) @local.definition))
 (assignment_expression left: (_) @local.definition)
-(identifier) @local.reference
 
 ; --- upstream_tags_exact ---
 
@@ -290,8 +289,7 @@
 (import_directive import_name: (_) @name) @reference.unknown
 
 ; --- terminal_solidity_special_definitions_v2 ---
-(constructor_definition) @solidity.constructor.definition
-(fallback_receive_definition) @solidity.fallback_receive.definition
+
 (enum_declaration
   name: (identifier) @solidity.enum.value.owner
   body: (enum_body (enum_value) @solidity.enum.value)) @solidity.enum.value.context

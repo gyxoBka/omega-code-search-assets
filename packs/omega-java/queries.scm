@@ -78,17 +78,6 @@
 
 ; --- control_flow ---
 
-(if_statement) @control.if
-(while_statement) @control.while
-(do_statement) @control.do
-(for_statement) @control.for
-(enhanced_for_statement) @control.enhanced_for
-(break_statement) @control.break
-(continue_statement) @control.continue
-(return_statement) @control.return
-(labeled_statement) @control.label
-(assert_statement) @control.assert
-
 ; --- declaration_category_class ---
 
 (class_declaration
@@ -754,7 +743,6 @@
 
 ; --- references ---
 
-(identifier) @reference.identifier
 (scoped_type_identifier) @reference.scoped_type @type.scoped
 (field_access) @reference.field_access
 
