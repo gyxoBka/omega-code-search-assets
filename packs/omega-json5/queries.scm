@@ -1,44 +1,73 @@
-; --- external-neovim-distributed-highlights ---
+; omega-json5
+;
+; JSON5 is JSON written for people to edit: `.babelrc`, a bundler config, a
+; game's data table, a tsconfig kept in the dialect that allows a comment. It
+; declares nothing of its own -- no function, no type, no import, no name it
+; defines for its own use. What it has is the key, and the key is what a
+; question reaches: *where is this setting defined and to what*, *which
+; package declares this dependency*, *which names does this list*.
+;
+; This Pack is a port of omega-json and states the same one construct: the
+; object member, named by its key and carrying its value when the value is a
+; scalar. A whole object is not an answer; it is the place the answers live.
+; The keys inside it already lie inside its span, so the host derives
+; `compilerOptions.strict` from the nesting and no pattern needs to say it.
+;
+; There is no pattern for the file, for the object, for the array, for
+; containment, or for comments: none of them names anything a question could
+; resolve to. There is no pattern keyed on a particular key spelling either --
+; what `name`, `type` or `extends` means is the knowledge of the tool that
+; reads the file, and that belongs in an overlay.
+;
+; Three differences from omega-json, all of them the grammar's:
+;
+;   * the member node is `member`, and its key field is `name:`, not `key:`;
+;   * a key may be a bare `identifier` as well as a `string`, so the key field
+;     is an alternation and both spellings feed one capture;
+;   * `string` is a leaf here -- no `string_content`, no `escape_sequence` --
+;     so a string carries its own quotes and there is nothing to anchor
+;     between. The quotes are removed in the template instead, which handles
+;     both `"k"` and `'k'` and leaves a bare identifier untouched.
+;
+; Trailing commas are anonymous punctuation and state nothing. Hex numbers,
+; leading `+`/`-`, `Infinity` and `NaN` are all spellings of `number`, and
+; reach the scalar pattern unchanged.
 
-; SOURCE-SYNTACTIC ROLE QUERY adapted from the pinned external highlighting baseline.
-; source=neovim-distributed
-; original=packs/omega-json5/third_party/neovim-distributed/queries/highlights.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(comment) @comment @spell @data.comment
-
-; --- literals ---
-
-; --- structure ---
-
-(file) @data.document
-(file (_) @data.root.value) @data.root
-(object) @data.object
-(object (member) @data.object.member) @data.object.container
-(array) @data.array
-(array (_) @data.array.element) @data.array.container
-(member name: (_) @data.key value: (_) @data.value) @data.pair
-
-; --- semantic_closure_v3_146_json5_structured_context ---
+; --- a key set to a string: name: "my-package" ---
+;
+; The commonest shape in a config file. Both the key and the value are
+; unquoted by the template.
 
 (member
-  name: (_) @json5.string.key
-  value: (string) @json5.string.value) @json5.string.pair
+  name: [(string) (identifier)] @string_pair.name
+  value: (string) @string_pair.value) @string_pair
+
+; --- a key set to a number, a boolean or null: strict: true ---
+;
+; The same declaration; the value is the token's own text and needs no
+; unquoting.
 
 (member
-  name: (_) @json5.parent.key
-  value: (object
-    (member
-      name: (_) @json5.child.key
-      value: (_) @json5.child.value) @json5.child.pair)) @json5.parent.pair
+  name: [(string) (identifier)] @scalar_pair.name
+  value: [(number) (true) (false) (null)] @scalar_pair.value) @scalar_pair
+
+; --- a key set to an object or an array: dependencies: { ... } ---
+;
+; The same declaration, stated without a value. What such a key is set to is
+; the keys and the strings inside it, and each of those is its own emission;
+; storing the compound's text here would store the same bytes again at every
+; level of nesting.
 
 (member
-  name: (_) @json5.naosp.parent_key
-  value: (object
-    (member
-      name: (_) @json5.naosp.array_key
-      value: (array
-        (object
-          (member
-            name: (_) @json5.naosp.key
-            value: (string) @json5.naosp.value) @json5.naosp.pair) @json5.naosp.object)) @json5.naosp.array_pair)) @json5.naosp.parent_pair
+  name: [(string) (identifier)] @compound_pair.name
+  value: [(object) (array)]) @compound_pair
+
+; --- a string listed in an array: required: ["name", "age"] ---
+;
+; An array of strings is how JSON5 names things that live elsewhere: a
+; required property, a workspace, a file to include, a plugin, an enum
+; member. Stated under its unquoted text, it resolves by name against a
+; declaration in the repository if there is one.
+
+(array
+  (string) @array.element)

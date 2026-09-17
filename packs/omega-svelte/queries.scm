@@ -1,95 +1,177 @@
-; --- await_bindings ---
+; omega-svelte
+;
+; A `.svelte` file is a component: a `<script>` of JavaScript or TypeScript, a
+; `<style>` of CSS, and markup with Svelte's own block and tag syntax. The
+; script and the style are handed to their own Packs by the injections at the
+; end of this file, so everything a question could ask about imports, props,
+; stores or selectors is answered there. What is left for this Pack is the
+; markup, and the questions asked of it are:
+;
+;   which components does this file use, and where
+;   what snippets does it declare, and where are they rendered
+;   which action, transition or attachment function does it apply
+;   which events does it handle
+;   what name does a block bind over its body, and how far does that body reach
+;
+; Two rules shape every pattern below.
+;
+; Containment is never stated. The tree already holds it; the three blocks that
+; bind a name emit one `scope.*` region so the extent is available once.
+;
+; The content of `{...}` is raw JavaScript or TypeScript that this grammar does
+; not parse -- it is one `js` or `ts` token. Storing that token as a name is how
+; the old Pack turned every expression in a file into a reference to nothing.
+; Here an expression is stated only when it is a single identifier, which is the
+; case where it resolves onto something the script Pack declared.
 
-(await_block binding: (pattern) @svelte.await.binding) @svelte.await.span
+; --- a snippet ---
+;
+; `{#snippet row(item)}` declares a callable that `{@render row(x)}` invokes.
+; One match carries the declaration, its signature, and the region its
+; parameters are bound over.
 
-; --- await_scope ---
+(snippet_block
+  name: (snippet_name) @snippet.name
+  type_parameters: (snippet_type_parameters)? @snippet.type_parameters
+  parameters: (snippet_parameters)? @snippet.parameters) @snippet
 
-(await_block) @svelte.scope @svelte.await_block
+; --- rendering a snippet ---
+;
+; The callee is taken from the text before `(`, so `{@render row(item)}`
+; resolves onto the `row` declared above.
 
-; --- data_await_block ---
+(render_tag expression: (expression_value) @render.expression) @render
 
-; --- data_declaration_tag ---
+; --- an attachment ---
+;
+; `{@attach tooltip(text)}` applies an attachment function to the element.
 
-(declaration_tag) @svelte.declaration_tag
+(attach_tag expression: (expression_value) @attach.expression) @attach
 
-; --- data_each_block ---
+; --- a local constant ---
+;
+; `{@const total = items.length}` names `total` for the rest of the block.
 
-(each_block) @svelte.each_block @svelte.scope
+(const_tag expression: (expression_value) @const.expression) @const
 
-; --- data_if_block ---
+; --- `{@html expr}` ---
 
-(if_block) @svelte.if_block @svelte.scope
+((html_tag expression: (expression_value [(js) (ts)] @html.name)) @html
+ (#match? @html.name "^[A-Za-z_$][A-Za-z0-9_$]*$"))
 
-; --- data_render_tag ---
+; --- `{#each list as item, i}` ---
+;
+; The names the loop binds. The item name is required to be an identifier: a
+; destructured binding has no single name and its pattern text is not one.
 
-(render_tag) @svelte.render_tag
+((each_block
+   binding: (pattern [(js) (ts)] @each.item.name) @each.item
+   index: (pattern [(js) (ts)] @each.index.name)? @each.index)
+ (#match? @each.item.name "^[A-Za-z_$][A-Za-z0-9_$]*$"))
 
-; --- each_bindings ---
+(each_block) @each.body
 
-(each_block binding: (pattern) @svelte.each.binding) @svelte.each.span
+; --- `{#await promise then value}` ---
 
-; --- each_scope ---
+((await_block
+   binding: (pattern [(js) (ts)] @await.value.name) @await.value)
+ (#match? @await.value.name "^[A-Za-z_$][A-Za-z0-9_$]*$"))
 
-; --- element_tag ---
+(await_block) @await.body
 
-[(start_tag name: (tag_name) @svelte.tag.name) @svelte.tag (self_closing_tag name: (tag_name) @svelte.tag.name) @svelte.tag]
+; `{:then value}` and `{:catch error}` bind on the branch instead.
 
-; --- event_directive_binding_context ---
+; The binding is a plain `pattern` child. It is not reachable through
+; `branch:`, which carries only the braces and the keyword, and the query
+; compiler rejects the `binding:` field this grammar's node-types names -- so
+; the pattern is written without a field at all.
 
-; Framework-neutral Svelte attribute directive with authored expression value.
-; Captures legacy on:event={handler} shape without resolving handler identity.
+((await_branch
+   (pattern [(js) (ts)] @branch.value.name)) @branch.value
+ (#match? @branch.value.name "^[A-Za-z_$][A-Za-z0-9_$]*$"))
 
-(attribute
-  name: (attribute_name
-    (attribute_directive) @svelte.event.directive
-    (attribute_identifier) @svelte.event.name)
-  value: (expression) @svelte.event.handler_expression) @svelte.event.binding
+; --- a component tag ---
+;
+; Svelte tells a component from an element by the capital letter, exactly as
+; JSX does. `<Foo.Bar/>` is reduced to `Foo`, the value `<script>` imported.
 
-; --- if_scope ---
+([(start_tag name: (tag_name) @component.name) @component.tag
+  (self_closing_tag name: (tag_name) @component.name) @component.tag]
+ (#match? @component.name "^[A-Z]"))
 
-; --- nvim_pinned_locals ---
+; --- a `svelte:` element ---
+;
+; `<svelte:options>`, `<svelte:window>`, `<svelte:head>` and the rest are the
+; language's own configuration elements, not markup.
 
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=6928e1e9b85792862f41c8a0f92e872ff2d7a0c94b8f7c77fbac70bb3a01c1a2
-; resolved_query_sha256=1926847b9a40b4e3d723101e87a067f671b9222be8ed1c97f8cce5a6d2990f2e
-; parser_revision=c9b9cc35709fff494a3a9e41cd9471b633649e45
-; source_name=svelte
-; direct_inherits=html
-; resolved_sources=html,svelte
+([(start_tag name: (tag_name namespace: (tag_namespace) @special.namespace) @special.name) @special.tag
+  (self_closing_tag name: (tag_name namespace: (tag_namespace) @special.namespace) @special.name) @special.tag]
+ (#eq? @special.namespace "svelte"))
 
-; ----- resolved nvim locals source: html sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74 -----
+; --- `use:action` ---
+;
+; The identifier after the directive is a function declared or imported in the
+; script, so it resolves.
 
-; ----- resolved nvim locals source: svelte sha256=6928e1e9b85792862f41c8a0f92e872ff2d7a0c94b8f7c77fbac70bb3a01c1a2 -----
-; inherits: html
+((attribute
+   name: (attribute_name
+     (attribute_directive) @use.directive
+     (attribute_identifier) @use.name)) @use
+ (#match? @use.directive "^use:?$"))
 
-; --- snippet_definition ---
+; --- `transition:`, `in:`, `out:`, `animate:` ---
 
-(snippet_block name: (snippet_name) @svelte.snippet.name) @svelte.snippet
+((attribute
+   name: (attribute_name
+     (attribute_directive) @transition.directive
+     (attribute_identifier) @transition.name)) @transition
+ (#match? @transition.directive "^(transition|in|out|animate):?$"))
 
-; --- snippet_parameters ---
+; --- `on:click={handler}` ---
 
-(snippet_block name: (snippet_name) @svelte.snippet.owner parameters: (snippet_parameters parameter: (pattern) @svelte.snippet.parameter)) @svelte.snippet.span
+((attribute
+   name: (attribute_name
+     (attribute_directive) @event.directive
+     (attribute_identifier) @event.name)) @event
+ (#match? @event.directive "^on:?$"))
 
-; --- snippet_scope ---
+; --- `onclick={handler}` ---
+;
+; Svelte 5 spells an event handler as an ordinary attribute. Anchored to the
+; first child so the `on:` form above does not match here as well.
 
-(snippet_block) @svelte.scope
+; `attribute_name` has children only when a directive is present, so
+; `onclick={handler}` -- the Svelte 5 spelling, and the common one -- is a bare
+; `attribute_name` leaf and the child pattern matched nothing. Both forms now:
+; the leaf, and the `on:click|modifier` directive spelling.
 
-; --- svelte_modern_event_attribute_context ---
+((attribute
+   name: (attribute_name) @event.attribute.name) @event.attribute
+ (#match? @event.attribute.name "^on[a-z][a-z]+$"))
 
-(attribute
-  name: (attribute_name) @svelte.event_attr.name
-  value: (expression) @svelte.event_attr.handler) @svelte.event_attr.attribute
+((attribute
+   name: (attribute_name
+           (attribute_directive) @_on
+           (attribute_identifier) @event.attribute.name)) @event.attribute
+ (#match? @_on "^on$"))
 
-; --- terminal_svelte_attribute_key_v2 ---
-(attribute name: (attribute_name) @svelte.attribute.name) @svelte.attribute
-(attribute name: (attribute_name) @svelte.attribute.value.name value: (_) @svelte.attribute.value) @svelte.attribute.with_value
-(shorthand_attribute content: (_) @svelte.attribute.shorthand.value) @svelte.attribute.shorthand
-(key_block expression: (_) @svelte.key.expression) @svelte.key.block
-(key_block) @svelte.scope
+; --- an expression that is one identifier ---
+;
+; `{count}`, `{#if ready}`, `label={caption}`, `bind:value={name}`. Anything
+; longer is JavaScript and is left to the script.
 
-; --- omega_injection_runtime_v1:svelte ---
+((expression [(js) (ts)] @expression.name) @expression
+ (#match? @expression.name "^[A-Za-z_$][A-Za-z0-9_$]*$"))
+
+; --- `<Foo {value}/>` ---
+
+((shorthand_attribute content: [(js) (ts)] @shorthand.name) @shorthand
+ (#match? @shorthand.name "^[A-Za-z_$][A-Za-z0-9_$]*$"))
+
+; --- the script and the style ---
+;
+; Where the rest of the component is. `lang="ts"` and `lang="scss"` are read
+; from the attribute; without one the default is JavaScript and CSS.
 
 ((element
   (start_tag name: (tag_name) @_tag) @_start
@@ -124,20 +206,3 @@
   (raw_text) @injection.content
   (#eq? @_tag "style")
   (#eq? @_lang "lang"))
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(attribute_directive) @svelte.directive
-
-(expression) @svelte.expression
-(each_block binding: (_) @svelte.each.binding expression: (expression) @svelte.each.expression) @svelte.each
-(key_block expression: (expression) @svelte.key.expression) @svelte.key
-
-; --- semantic_closure_v3_146_svelte_directive_context ---
-(attribute
-  name: (attribute_name
-    (attribute_directive) @svelte.directive_ctx.directive
-    (attribute_identifier)? @svelte.directive_ctx.identifier)
-  value: (expression)? @svelte.directive_ctx.value) @svelte.directive_ctx.attribute
-
-(render_tag expression: (expression_value) @svelte.render.expression) @svelte.render.context

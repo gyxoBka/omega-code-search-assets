@@ -385,8 +385,15 @@ def main():
         total.update(r['flags'])
         if sum(r['flags'].values()):
             rows.append((p, r))
-    if len(packs) == 1 and rows:
-        p, r = rows[0]
+    if len(packs) == 1:
+        # A clean Pack has no flags, so it never reached `rows` and the tool
+        # printed the empty cross-Pack table instead of the counts the agent was
+        # asked to report. Print the detail view whenever one Pack was asked for.
+        p = packs[0]
+        r = audit(p)
+        if r is None:
+            print('%s: no rules.json' % p)
+            return
         print('%s: %d templates over %d patterns, %d guards\n'
               % (p, r['templates'], r['patterns'], r['guards']))
         for k, v in sorted(r['flags'].items(), key=lambda x: -x[1]):

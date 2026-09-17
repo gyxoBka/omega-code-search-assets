@@ -4,12 +4,48 @@
  "templates": [
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.string_content",
-   "span_capture": "data.string.content",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "string_pair",
    "name": {
     "kind": "capture_ref",
-    "name": "data.string.content"
+    "name": "string_pair.name"
+   },
+   "attributes": {
+    "value": {
+     "kind": "capture_ref",
+     "name": "string_pair.value"
+    }
+   },
+   "fields": {},
+   "decoder": null
+  },
+  {
+   "query": "queries.scm",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "scalar_pair",
+   "name": {
+    "kind": "capture_ref",
+    "name": "scalar_pair.name"
+   },
+   "attributes": {
+    "value": {
+     "kind": "capture_ref",
+     "name": "scalar_pair.value"
+    }
+   },
+   "fields": {},
+   "decoder": null
+  },
+  {
+   "query": "queries.scm",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "compound_pair",
+   "name": {
+    "kind": "capture_ref",
+    "name": "compound_pair.name"
    },
    "attributes": {},
    "fields": {},
@@ -17,116 +53,12 @@
   },
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.escape_sequence",
-   "span_capture": "data.string.escape",
+   "capability": "references",
+   "output_kind": "relation.data",
+   "span_capture": "array.element",
    "name": {
     "kind": "capture_ref",
-    "name": "data.string.escape"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.document",
-   "span_capture": "data.document",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.document"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.object",
-   "span_capture": "data.object",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.object"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.array",
-   "span_capture": "data.array",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.array"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.object_pair",
-   "span_capture": "data.pair",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.key"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.object_key",
-   "span_capture": "data.key",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.key"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "relation.document_value",
-   "span_capture": "data.root",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.root"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "relation.object_contains_pair",
-   "span_capture": "data.object.container",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.object.container"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "relation.array_contains_value",
-   "span_capture": "data.array.container",
-   "name": {
-    "kind": "capture_ref",
-    "name": "data.array.container"
+    "name": "array.element"
    },
    "attributes": {},
    "fields": {},
@@ -139,16 +71,37 @@
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "definitions"
    ],
-   "reason": "Exact Helix grammar/query evidence proves this AST node shape only. Definition/reference/name-resolution semantics are not inferred."
+   "reason": "A key is stated where it is written, and nothing more is claimed about it. JSONC carries no schema of its own, so the Pack cannot tell a compiler option from an ordinary object, a property name from a value, or a version range from a file path; what a key means is the knowledge of the tool that reads the file."
   },
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "definitions"
    ],
-   "reason": "JSONC structure/literals are syntactically preserved; comments are accepted, while duplicate-key consumer semantics and schema validation are not inferred"
+   "reason": "A value is carried with its key only when it is a string, a number, a boolean or null. A key set to an object or an array is stated without a value, because the keys and strings inside it are their own emissions; asking what such a key is set to returns its members, not its text."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "A comment is not stated, and a comment above a key is not attached to that key. Comments are the one thing JSONC adds to JSON, and they are the only documentation a setting has here, but a comment is prose that resolves against no declaration; asking why a key is set to its value returns nothing, and a key commented out entirely is not stated at all."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "A key or a string value that is empty, or that contains an escape sequence such as \\n or \\u0041, is not stated at all. The Pack does not decode escapes, so it could only store the escaped spelling, which matches neither the decoded string nor any other spelling of it; a half-name would be worse than silence."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "references"
+   ],
+   "reason": "A string listed in an array is stated under its own text and nothing else. JSONC has no syntax that says what such a string refers to, so a link to a declaration elsewhere is by name alone: a file path, a glob, a plugin id and an enum member are indistinguishable, and a match is not proof of a dependency."
   }
  ],
  "legacy_rules": []

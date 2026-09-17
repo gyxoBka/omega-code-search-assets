@@ -896,3 +896,55 @@ its helpers. Untracked and gitignored.
 
 Totals: **1 467 templates, 296 guards** (from 3 673 and 1 348 at the start).
 Forty-one Packs rewritten, 20 to go.
+
+---
+
+# Wave 10 (json5, jsonc, pug, svelte, caddyfile)
+
+| Pack | templates | patterns | guards |
+|---|---|---|---|
+| omega-svelte | 23 -> 22 | 28 -> 22 | 5 -> 5 |
+| omega-pug | 14 -> 15 | 21 -> 16 | 3 -> 4 |
+| omega-caddyfile | 13 -> 13 | 14 -> 12 | 7 -> 4 |
+| omega-json5 | 12 -> 4 | 11 -> 4 | 3 -> 5 |
+| omega-jsonc | 10 -> 4 | 9 -> 4 | 2 -> 5 |
+
+json5 and jsonc came out as ports of omega-json: the same `definition.config_key`
+kind, the same silence about the document, the object, the array and
+containment, and only their dialect's additions. json5 departs in one place and
+says why -- tree-sitter-json5 has no `string_content`, so a string is a leaf
+carrying its own quotes and the template unquotes with a `strip_prefix`/
+`strip_suffix` chain instead of anchoring inside the node.
+
+Two blocking defects, both **Defect M**, both in omega-svelte, and both a
+pattern whose author read `node-types.json` without checking the tree:
+
+- `attribute_name` has children only when a directive is present, so
+  `onclick={handler}` -- the Svelte 5 spelling, and the common one -- parses as
+  a bare `attribute_name` leaf. The pattern required a child, matched nothing,
+  and the Pack went on claiming it stated event handlers. Both spellings now
+  feed one template.
+- `await_branch`'s `branch:` field carries only the braces and the keyword; the
+  binding of `{:then value}` sits in a plain `pattern` child. The author tried
+  the `binding:` field the grammar names, got `Impossible pattern`, and drew the
+  wrong conclusion from the refusal -- the field is rejected, but the child is
+  reachable without one. Written without a field, it matches.
+
+That second one is worth keeping in mind next to wave 9's lesson: the validator
+refuting a pattern tells you the tree is not that shape, not what shape it is.
+
+## Two repository-level tidyings
+
+`pack-design/audit.py`'s single-Pack view printed nothing when a Pack was clean:
+`main()` only entered the detail branch when the Pack had at least one flag, so
+the counts an agent is asked to report verbatim were exactly what the tool
+withheld from a finished Pack. Every agent from wave 6 on hit it. Fixed.
+
+Four Packs carried a `NOTICE` deriving query fragments from nvim-treesitter and
+declared `license = "MIT AND Apache-2.0"` on that basis. omega-twig and
+omega-json5 are rewritten from scratch and no derived line remains, so both drop
+the NOTICE and revert to `MIT`. omega-blade and omega-godot-resource keep theirs
+until their own rewrites, which are in the waves that follow.
+
+Totals: **1 453 templates, 299 guards** (from 3 673 and 1 348 at the start).
+Forty-six Packs rewritten, 15 to go.

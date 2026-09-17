@@ -1,119 +1,149 @@
-; --- completeness_imports_6 ---
+; omega-pug
+;
+; Pug is the template layer of a Node project: a layout is extended, partials
+; are included, named blocks are overridden, and mixins are the reusable pieces
+; of markup. The questions asked of a `.pug` file are: which layout does this
+; template extend, which partials does it pull in, which block does it
+; override, where is this mixin defined and where is it used, which element is
+; `#main`, and what does the page load. Every pattern below answers one of
+; them.
+;
+; Four things are deliberately not stated.
+;
+; The tag. `div`, `p`, `li` name nothing a question can reach, and one emission
+; per tag of every template was the single largest thing the previous Pack
+; produced. Only a hyphenated tag -- a custom element defined elsewhere -- and
+; a heading's or a title's text are stated.
+;
+; The bare attribute. An attribute whose name the Pack does not recognise
+; answers no question. `id`, and the attributes that fetch something, are
+; stated; the rest are not. The attribute patterns are rooted at `attributes`
+; rather than at `attribute`, because this grammar spells a mixin's *arguments*
+; with the same `attribute` node: `+link(href='/x')` passes an argument named
+; `href`, it does not load a page.
+;
+; Containment. The tree already holds it, and an `id` in the rendered document
+; is global, so a tag's ancestry is not a namespace for it. There is no scope
+; region and no parent/child pattern.
+;
+; The JavaScript expression. This grammar holds every expression -- an
+; interpolation, an attribute's unquoted value, a loop's iterator, a condition
+; -- as one opaque `javascript` token with no structure inside it, so a name
+; read in a template cannot be stated as a reference to anything. The two
+; places the token is a whole program rather than a fragment, `script.` and
+; `- ...`, are handed to the JavaScript grammar as injections instead.
 
-(include) @import.expression
+; --- what this template pulls in ---
+;
+; `extends layout` and `include ../partials/head` are the same fact: this file
+; is not complete without that one.
 
-; --- completeness_scopes ---
+[(extends (filename) @dependency.path)
+ (include (filename) @dependency.path)] @dependency
 
-(script_block) @scope.lexical
+; A filter names a jstransformer package the project must have installed --
+; `:markdown-it`, `:scss`, `:babel` -- whether it is written on a block, on a
+; tag's text or after `include:`. The same pattern reaches all three.
 
-; --- distributed_highlights ---
+(filter (filter_name) @filter.name) @filter
 
-; OMEGA EXACT-PARSER EXTERNAL STRUCTURAL EVIDENCE — RUNTIME-COMPILE-GATED
-; source=https://github.com/neovim-treesitter/nvim-treesitter-queries-pug
-; parser_revision=13e9195370172c86a8b88184cc358b23b677cc46
-; source_sha256=cc01b3f32d5365626882269eaf3ac30f006f093fb9bd5dc8f2da39d695073714
+; --- named blocks: the joints of template inheritance ---
+;
+; A layout declares `block content`; a child overrides it with `block content`,
+; `append content` or `prepend content`. The declaration and the override are
+; recorded under the same name so they meet.
 
-((tag_name) @constant.builtin
-  ; https://www.script-example.com/html-tag-liste
-  (#any-of? @constant.builtin
-    "head" "title" "base" "link" "meta" "style" "body" "article" "section" "nav" "aside" "h1" "h2"
-    "h3" "h4" "h5" "h6" "hgroup" "header" "footer" "address" "p" "hr" "pre" "blockquote" "ol" "ul"
-    "menu" "li" "dl" "dt" "dd" "figure" "figcaption" "main" "div" "a" "em" "strong" "small" "s"
-    "cite" "q" "dfn" "abbr" "ruby" "rt" "rp" "data" "time" "code" "var" "samp" "kbd" "sub" "sup" "i"
-    "b" "u" "mark" "bdi" "bdo" "span" "br" "wbr" "ins" "del" "picture" "source" "img" "iframe"
-    "embed" "object" "param" "video" "audio" "track" "map" "area" "table" "caption" "colgroup" "col"
-    "tbody" "thead" "tfoot" "tr" "td" "th " "form" "label" "input" "button" "select" "datalist"
-    "optgroup" "option" "textarea" "output" "progress" "meter" "fieldset" "legend" "details"
-    "summary" "dialog" "script" "noscript" "template" "slot" "canvas"))
+(block_definition (block_name) @block.definition.name) @block.definition
 
-[
-  "("
-  ")"
-  "#{"
-  "}"
-  ; unsupported
-  ; "!{"
-  ; "#[" "]"
-] @punctuation.bracket
+[(block_append (block_name) @block.override.name)
+ (block_prepend (block_name) @block.override.name)] @block.override
 
-; --- distributed_injections ---
+; --- mixins: the callables of the language ---
+;
+; One pattern, two templates: the declaration and its parameter list. The
+; parameter list is optional -- `mixin spacer` is legal -- and the carrier
+; template is skipped on a match that did not bind it.
 
-; OMEGA EXACT-PARSER EXTERNAL STRUCTURAL EVIDENCE — RUNTIME-COMPILE-GATED
-; source=https://github.com/neovim-treesitter/nvim-treesitter-queries-pug
-; parser_revision=13e9195370172c86a8b88184cc358b23b677cc46
-; source_sha256=fd88cb919d82f0332510d2f0f87f758060c91e5d34cf365821cdeb9fce838f9a
+(mixin_definition
+  (mixin_name) @mixin.definition.name
+  (mixin_attributes)? @mixin.definition.parameters) @mixin.definition
 
-; --- highlights ---
+(mixin_use (mixin_name) @mixin.use.name) @mixin.use
 
-; OMEGA EXACT-PARSER EXTERNAL STRUCTURAL EVIDENCE — RUNTIME-COMPILE-GATED
-; source=https://github.com/neovim-treesitter/nvim-treesitter-queries-pug
-; parser_revision=13e9195370172c86a8b88184cc358b23b677cc46
-; source_sha256=cc01b3f32d5365626882269eaf3ac30f006f093fb9bd5dc8f2da39d695073714
+; --- the names the rendered document carries ---
+;
+; `#main` is the one name Pug itself declares: a CSS `#main` rule, an
+; `href="#main"` and `getElementById("main")` all resolve onto it. `.card` is
+; the other direction -- the template uses a class a stylesheet declares -- so
+; it is stated as a reference to that declaration. The sigil is stripped either
+; way so both sides are the same string; `strip_prefix` returns its input
+; unchanged when the affix is absent, so this is correct whether or not the
+; grammar folds the sigil into the token.
 
-((tag_name) @constant.builtin
-  ; https://www.script-example.com/html-tag-liste
-  (#any-of? @constant.builtin
-    "head" "title" "base" "link" "meta" "style" "body" "article" "section" "nav" "aside" "h1" "h2"
-    "h3" "h4" "h5" "h6" "hgroup" "header" "footer" "address" "p" "hr" "pre" "blockquote" "ol" "ul"
-    "menu" "li" "dl" "dt" "dd" "figure" "figcaption" "main" "div" "a" "em" "strong" "small" "s"
-    "cite" "q" "dfn" "abbr" "ruby" "rt" "rp" "data" "time" "code" "var" "samp" "kbd" "sub" "sup" "i"
-    "b" "u" "mark" "bdi" "bdo" "span" "br" "wbr" "ins" "del" "picture" "source" "img" "iframe"
-    "embed" "object" "param" "video" "audio" "track" "map" "area" "table" "caption" "colgroup" "col"
-    "tbody" "thead" "tfoot" "tr" "td" "th " "form" "label" "input" "button" "select" "datalist"
-    "optgroup" "option" "textarea" "output" "progress" "meter" "fieldset" "legend" "details"
-    "summary" "dialog" "script" "noscript" "template" "slot" "canvas"))
+(id) @element.id
 
-[
-  "("
-  ")"
-  "#{"
-  "}"
-  ; unsupported
-  ; "!{"
-  ; "#[" "]"
-] @punctuation.bracket
+(class) @element.class
 
-; --- injections ---
+; A tag name with a hyphen is not HTML's; it is a component registered by
+; `customElements.define("my-widget", ...)` or by a framework. The use is
+; stated so the definition can be found from it.
 
-; OMEGA EXACT-PARSER EXTERNAL STRUCTURAL EVIDENCE — RUNTIME-COMPILE-GATED
-; source=https://github.com/neovim-treesitter/nvim-treesitter-queries-pug
-; parser_revision=13e9195370172c86a8b88184cc358b23b677cc46
-; source_sha256=fd88cb919d82f0332510d2f0f87f758060c91e5d34cf365821cdeb9fce838f9a
+((tag_name) @custom.element
+ (#match? @custom.element "^[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+$"))
 
-((javascript) @injection.content
-  (#set! injection.language "javascript"))
+; The `id="main"` spelling of the same declaration, for the templates that
+; compute it or copy it from HTML.
 
-((attribute_name) @_attribute_name
-  (quoted_attribute_value
-    (attribute_value) @injection.content
-    (#set! injection.language "javascript"))
-  (#match? @_attribute_name "^(:|v-bind|v-|\\@)"))
+((attributes
+   (attribute
+     (attribute_name) @_id
+     (quoted_attribute_value (attribute_value) @attribute.id.value)) @attribute.id)
+ (#match? @_id "^(?i)id$"))
 
-; --- terminal_source_semantics_v1 ---
+; --- what the page loads ---
+;
+; Only a literal, quoted value: `a(href='/about')` names a page, `a(href=url)`
+; names a variable this Pack cannot resolve. Fragments and the non-fetching
+; schemes are excluded; a fragment is a reference to an id, and this grammar
+; gives no structure to tell which id.
 
-(include (filename) @pug.import.path) @pug.import.include
-(extends (filename) @pug.import.path) @pug.import.extends
+((attributes
+   (attribute
+     (attribute_name) @_resource
+     (quoted_attribute_value (attribute_value) @attribute.resource.value)) @attribute.resource)
+ (#match? @_resource "^(?i)(href|src|srcset|action|formaction|poster)$")
+ (#not-match? @attribute.resource.value "^(?i)(#|javascript:|data:|mailto:|tel:|about:|blob:)"))
 
-(mixin_definition (mixin_name) @pug.mixin.definition.name) @pug.mixin.definition
-(mixin_use (mixin_name) @pug.mixin.call.name) @pug.mixin.call
-(mixin_definition (mixin_attributes (attribute_name) @pug.mixin.parameter)) @pug.mixin.parameter.context
+; --- what the page says about itself ---
+;
+; `title My Page` and `h1 Welcome`. `content` is the tag's own inline text, so
+; a heading whose content is nested markup (`h1: span Hi`) binds nothing and is
+; not stated rather than stated wrongly.
 
-; One pattern, because the binding template needs the variable, the iterator
-; and the `each` together: split across two patterns, no match ever bound all
-; three and the template was skipped every time.
-(each
-  (iteration_variable) @pug.each.binding
-  (iteration_iterator) @pug.each.iterator) @pug.each.owner
+((tag (tag_name) @_title (content) @title.text) @title
+ (#match? @_title "^(?i)title$"))
 
-(block_definition (block_name) @pug.block.definition.name) @pug.block.definition
-(block_append (block_name) @pug.block.reference.name) @pug.block.reference
-(block_prepend (block_name) @pug.block.reference.name) @pug.block.reference
+((tag (tag_name) @heading.tag (content) @heading.text) @heading
+ (#match? @heading.tag "^(?i)h[1-6]$"))
 
-(tag (tag_name) @pug.tag.name) @pug.tag
-(attribute (attribute_name) @pug.attribute.name) @pug.attribute
-(attribute
-  (attribute_name) @pug.attribute.value.name
-  (quoted_attribute_value) @pug.attribute.value) @pug.attribute.with_value
+; --- the one local Pug itself binds ---
+;
+; `each item in items` binds `item` for the block below it. The iterator on the
+; right is an opaque JavaScript token and is not stated; the name on the left
+; is the template's own declaration. `each user, i in users` binds two, and
+; both are declared.
 
-(filter (filter_name) @pug.filter.name) @pug.filter
+(each (iteration_variable (javascript) @loop.variable.name) @loop.variable)
 
+; --- embedded JavaScript ---
+;
+; A `script.` block and a `- ...` code line are whole JavaScript programs and
+; are parsed as such by omega-javascript, which states its own facts about
+; them. Interpolations and attribute values are expression fragments and are
+; not injected.
+
+((script_block (javascript) @injection.content)
+ (#set! injection.language "javascript"))
+
+((unbuffered_code (javascript) @injection.content)
+ (#set! injection.language "javascript"))
