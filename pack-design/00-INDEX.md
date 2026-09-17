@@ -165,3 +165,118 @@ templates, three of them that token.
    xml, razor, dart, nginx, c-sharp, erlang, groovy, swift, scala, ruby.
 3. json, json5, toml, markdown are already at their boundary; they are rewritten
    last and only for what their documents flag.
+
+---
+
+# Found by the first rewrite wave (razor, dart, nginx, c-sharp, erlang)
+
+Each of these was reported by an agent rewriting one Pack and then measured
+here across all 61.
+
+## Defect H - a filter the runtime never applies
+
+43 Packs write tree-sitter predicates into `queries.scm`: 233 `#eq?`, 107
+`#any-of?`, 46 `#match?`, 45 `#lua-match?`, 12 `#not-match?`, and a tail of
+`#not-eq?`, `#not-any-of?`, `#is-not?`, `#has-ancestor?`, `#not-has-parent?`.
+**None of them runs.** Nothing in `crates/` reads `general_predicates` or the
+text predicates; the one predicate call site,
+`runtime.rs:1490 query.property_settings(...)`, serves injections and reads
+`#set!` only.
+
+So a pattern written to match one thing matches every node of its root type,
+and the author cannot tell from reading the file. omega-razor shipped
+`(#eq? @n "href")` next to a coverage guard reading `plain_literal_href_only`;
+it matched every attribute with a string value. This is a wrong-output defect,
+not a cost one, and it is the largest single source of over-emission we have
+found.
+
+Two separate problems underneath it:
+
+- `#eq?`, `#match?`, `#any-of?` and their negations **are** tree-sitter's own,
+  applied by the Rust binding inside `QueryMatches::advance`. The engine bypasses
+  that path, so they are the host's to enable.
+- `#lua-match?`, `#is-not?`, `#has-ancestor?`, `#not-has-parent?` (54 uses in 13
+  Packs) are nvim-treesitter extensions that tree-sitter has never had. No host
+  change will make them work; those 13 Packs must state the filter structurally.
+
+## Defect I - the universal capture
+
+Six Packs ship `(_) @structural.node` as a top-level pattern: it matches every
+named node of every file.
+
+In omega-editorconfig, omega-prisma and omega-vue no template reads it — one
+query match per node per file for zero emissions.
+
+In omega-csv, omega-sas and omega-vbscript it is worse. A template turns it
+into `semantic_hint.syntax_node`, a mention, **named `capture_ref` of the same
+capture** — so every named node in the file is stored, under its own full text
+as its name. On a CSV that is every row and every field, plus the document. This
+is Defect D taken to its limit and it lands on exactly the data files that
+dominated the original row count.
+
+## Defect J - a name that is a constant
+
+105 templates in 27 Packs set `name` to a `literal`. Every `-spec` in a corpus
+was stored under the name `erlang_spec`, every Dockerfile instruction of a kind
+under that kind's name, while the real name sat two nodes away. Worse than
+Defect D: a whole-node name is at least distinct per emission, a constant name
+collapses every instance of a construct in the repository onto one string.
+
+Leaders: omega-dockerfile 12, omega-sql 9, omega-julia 8, omega-make 8,
+omega-batch 6, omega-twig 6, omega-zig 6, omega-bash 5.
+
+## Defect K - the same template twice
+
+78 templates in 14 Packs are byte-identical to another template in the same
+file — same capability, same `output_kind`, same span capture, same name
+expression, same attributes. Each duplicate is a second emission at the same
+span saying the same thing. They come from concatenating generator passes
+(`external-helix-tags` and `upstream_tags` over the same captures) without
+reconciling them. Leaders: omega-cpp 11, omega-scala 10, omega-zig 9,
+omega-elixir 7, omega-lua 7.
+
+## Defect L - a framework overlay inside a language Pack
+
+`00-CONTRACT.md` §6 forbids it and nothing enforces it. omega-c-sharp held 21
+templates encoding ASP.NET Core and EF Core (`app.MapGet`,
+`builder.Services.AddScoped<..>`, an EF navigation-property rule spelled as a
+tree shape); omega-dart held 3 encoding go_router, under a header comment
+asserting "No Flutter/go_router semantics here". Both are now removed. Not yet
+measured across the other 56 Packs — the same generator wrote omega-java
+(Spring), omega-typescript and omega-php, so expect more.
+
+## Defect M - a template no pattern can bind
+
+7 templates in 4 Packs (omega-c-sharp 3, omega-cpp 2, omega-c 1, omega-rust 1)
+require a set of captures that no single pattern binds together. By the skip
+rule the template is skipped on **every** match, so it emits nothing, while the
+manifest and the coverage layer go on claiming the capability. The shipped
+omega-dart declared no Dart method at all for this reason.
+
+`validate_external_assets` does not catch it: it checks that each referenced
+capture exists somewhere in the file, which passes when another pattern binds
+it. The compiled Query already knows each pattern's capture set, so a
+per-pattern check is available and worth adding.
+
+## Two host rules that are traps, not defects
+
+Both are real behaviour of `content_builder.rs`, and both are now in
+`AGENT-BRIEF.md`.
+
+**A carrier must also pass `is_definition_kind`.** Line 103 folds an emission
+only when `is_definition_kind(kind) && is_carrier_kind(kind)`. A kind ending
+`_candidate` that contains no `definition` and ends in none of
+`.type/.function/.class/.method/.trait` is not folded onto the declaration at
+its span — it falls through to the mention branch and is stored as a reference
+to nothing. 247 templates in 35 Packs end in `_candidate` without passing the
+definition test. Some of those are deliberate (the runtime's own
+`reference_candidate.*` family is meant to be a mention), so treat the number
+as an upper bound and judge per Pack. The rewritten omega-xml tripped over this
+and is fixed.
+
+**A scope kind must not also read as a declaration.** Line 94 selects
+declarations and line 234 selects regions, independently. `scope.function` ends
+with `.function`, so it becomes both a region and a declaration of that name. 9
+kinds in 5 Packs do this today: `scope.function` and `scope.class` in
+omega-javascript, omega-python, omega-tsx and omega-typescript, and one in
+omega-rust.

@@ -1,113 +1,177 @@
-; --- behaviour_context ---
+; omega-erlang
+;
+; Erlang source is a flat list of module attributes and function definitions.
+; The questions asked of it are: what does this module declare, what behaviour
+; does it implement, what is its public API, what does it depend on, and where
+; is a function, record, type or macro used. Every pattern below answers one
+; of those.
+;
+; Containment is not stated anywhere: Erlang declares nothing inside anything
+; else, so the only region worth naming is a function's own extent, and that
+; is a second template over the function pattern rather than a pattern of its
+; own.
+;
+; One note on the grammar. It parses everything after `-name(` as ordinary
+; expressions, so a type application in `-spec`, `-type`, `-record` or
+; `-callback` (`integer()`, `server_ref()`) is the same `call` node as a local
+; function call. On three OTP modules 742 of 2 112 bare applications were type
+; applications. Only a qualified `m:f(...)` is therefore stated as a call; a
+; bare application is stated as a plain reference, which is true of both.
+
+; --- the module header ---
 
 ((attribute
-  name: (atom) @erlang.behaviour.kind
-  (arguments . (atom) @erlang.behaviour.name)) @erlang.behaviour.context
-  (#any-of? @erlang.behaviour.kind "behaviour" "behavior"))
+   name: (atom) @_module
+   (arguments . (atom) @module.name)) @module
+ (#eq? @_module "module"))
 
-; --- call_targets ---
+; `-behaviour(gen_server)` is the one implements relation Erlang has.
 
-(call
-  function: (_) @call.target) @call.expression
+((attribute
+   name: (atom) @_behaviour
+   (arguments . (atom) @behaviour.name)) @behaviour
+ (#any-of? @_behaviour "behaviour" "behavior"))
 
-; --- completeness_scopes ---
-
-(block) @scope.lexical
-
-; --- declaration_category_function ---
+; --- a function ---
+;
+; A `function` node holds every clause of one function. The anchor takes the
+; first clause only, so a four-clause function is one declaration and not four.
+; The declaration, its parameter list and its extent are three templates over
+; this one match.
 
 (function
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  . (function_clause
+      name: (atom) @function.name
+      pattern: (arguments) @function.parameters)) @function
 
-(function_clause
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+; --- what the module exports and imports ---
+;
+; `-export([f/0, g/1])` is the module's public API, one emission per entry so
+; each names the function it exports. `-import` is the same shape and states a
+; dependency on another module's function.
 
-; --- declaration_category_macro ---
+((attribute
+   name: (atom) @export.kind
+   (arguments
+     (list
+       (binary_operator
+         left: (atom) @export.name
+         right: (integer) @export.arity) @export.entry)))
+ (#any-of? @export.kind "export" "export_type"))
 
-(macro
-  name: (_) @definition.category.macro.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+((attribute
+   name: (atom) @_import
+   (arguments . (atom) @import.module)) @import
+ (#eq? @_import "import"))
 
-; --- declaration_category_record ---
+((attribute
+   name: (atom) @_import_fn
+   (arguments
+     . (atom) @import.fn.module
+     (list
+       (binary_operator
+         left: (atom) @import.fn.name
+         right: (integer) @import.fn.arity) @import.fn.entry)))
+ (#eq? @_import_fn "import"))
+
+; The header path is taken from the quoted content, so the name is a path and
+; not `("kernel/include/file.hrl")`.
+
+((attribute
+   name: (atom) @include.kind
+   (arguments . (string (quoted_content) @include.path))) @include
+ (#any-of? @include.kind "include" "include_lib"))
+
+; --- records ---
+;
+; `-record(state, {count = 0 :: integer(), name})`. The record is one
+; declaration; each field is declared as `state.count`, the same spelling a
+; `#state.count` access uses, so the two resolve against each other. A field is
+; written bare, with a default, or with a default and a type, which is the
+; three-way alternation.
+
+((attribute
+   name: (atom) @_record
+   (arguments . (atom) @record.name)) @record
+ (#eq? @_record "record"))
+
+((attribute
+   name: (atom) @_record_field
+   (arguments
+     . (atom) @field.record
+     (tuple
+       [(atom) @field.name
+        (binary_operator left: (atom) @field.name)
+        (binary_operator left: (binary_operator left: (atom) @field.name))])))
+ (#eq? @_record_field "record"))
+
+; `#state{...}` and `R#state.count` are the same node; the field is optional
+; and only the second binds it.
 
 (record
-  name: (_) @definition.category.record.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (atom) @record.ref.name
+  field: (atom)? @record.ref.field) @record.ref
 
-; --- definition_identity_hints ---
+; --- types, callbacks and specs ---
+;
+; `-type opt() :: ...` puts the name inside a `::` operator, so the name is
+; reached through it. `-callback` and `-spec` are parsed as stab clauses and
+; carry the function name directly.
 
+((attribute
+   name: (atom) @_type
+   (arguments . (binary_operator left: (call function: (atom) @type.name)))) @type
+ (#any-of? @_type "type" "opaque" "nominal"))
 
+((attribute
+   name: (atom) @_callback
+   (stab_clause
+     name: (atom) @callback.name
+     pattern: (arguments) @callback.parameters)) @callback
+ (#eq? @_callback "callback"))
 
+; A spec declares nothing; it names the function it constrains. The anchor
+; takes the first clause of a multi-clause spec only.
 
+((attribute
+   name: (atom) @_spec
+   . (stab_clause name: (atom) @spec.name)) @spec
+ (#eq? @_spec "spec"))
 
-; --- function_list_context ---
+; --- macros ---
+;
+; `-define(TIMEOUT, 5000)` and `-define(LOG(X), ...)`, with the name written as
+; a variable or as an atom. `?TIMEOUT` is stripped to `TIMEOUT` by capturing
+; the name rather than the macro node.
 
-(function_clause
-  name: (atom) @erlang.function.name
-  pattern: (arguments) @erlang.function.arguments) @erlang.function.clause
+((attribute
+   name: (atom) @_define
+   (arguments
+     . [(variable) @macro.name
+        (atom) @macro.name
+        (call function: (variable) @macro.name)
+        (call function: (atom) @macro.name)])) @macro.def
+ (#eq? @_define "define"))
 
-((function_clause
-  name: (atom) @erlang.list_owner.function_name
-  pattern: (arguments) @erlang.list_owner.arguments
-  body: (list
-    (atom) @erlang.list_owner.item) @erlang.list_owner.list) @erlang.list_owner.clause
-  (#eq? @erlang.list_owner.arguments "()"))
+(macro name: [(variable) (atom)] @macro.ref.name) @macro.ref
 
-; --- named_scope_owners ---
-
-(function
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-(function_clause
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- practical-p0-semantics ---
-
-; Exact pinned Erlang grammar roles.
-(function_clause name: (atom) @definition.function.name pattern: (arguments)? @definition.function.parameters body: (_) @definition.function.body) @definition.function
-(call module: (atom)? @call.module function: (atom) @call.function) @call
-(function_capture module: (atom)? @capture.module @erlang.capture.module function: (atom) @capture.function @erlang.capture.function) @reference.function_capture @erlang.capture
-((attribute name: (atom) @attribute.kind (arguments . (atom) @definition.module.name)) @definition.module (#any-of? @attribute.kind "module" "behaviour" "behavior"))
-((attribute name: (atom) @attribute.kind (arguments . (atom) @import.module)) @import (#eq? @attribute.kind "import"))
-((attribute name: (atom) @attribute.kind (arguments . (atom) @definition.type.name)) @definition.type (#any-of? @attribute.kind "type" "opaque" "nominal"))
-((attribute name: (atom) @attribute.kind (arguments . (atom) @definition.record.name)) @definition.record (#eq? @attribute.kind "record"))
-(variable) @reference.variable
-(function_clause pattern: (arguments (variable) @binding.parameter))
-(stab_clause pattern: (arguments (variable) @binding.parameter))
-
-; --- qualified_call_context ---
+; --- calls and function values ---
+;
+; `m:f(...)` names its target unambiguously. The anchored pattern below is the
+; bare application, which the grammar cannot separate from a type application
+; (see the note at the top).
 
 (call
-  module: (atom) @erlang.qualified_call.module
-  function: (atom) @erlang.qualified_call.function) @erlang.qualified_call.context
+  module: (atom) @call.q.module
+  function: (atom) @call.q.name) @call.q
 
-; --- qualified_chain_hints ---
+(call . function: (atom) @call.l.name) @call.l
 
-(attribute
-  name: (_) @reference.qualified_chain.leaf
-  module: (_) @reference.qualified_chain.base
-) @reference.qualified_chain.span
+(function_capture
+  module: (atom) @fc.q.module
+  function: (atom) @fc.q.name
+  arity: (integer) @fc.q.arity) @fc.q
 
-; --- structural-fallback ---
-
-; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
-; This is structural indexing only, not semantic completeness.
-(_) @structural.node
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(attribute name: (atom) @erlang.attribute.name) @erlang.attribute
-((attribute name: (atom) @_n (arguments) @erlang.behaviour.arguments) @erlang.behaviour (#any-of? @_n "behaviour" "behavior"))
-((attribute name: (atom) @_n (arguments) @erlang.callback.arguments) @erlang.callback (#eq? @_n "callback"))
-((attribute name: (atom) @_n (arguments) @erlang.spec.arguments) @erlang.spec (#eq? @_n "spec"))
-((attribute name: (atom) @_n (arguments) @erlang.export.arguments) @erlang.export (#eq? @_n "export"))
-
-; --- semantic_closure_v3_146_batch3 ---
-(binary_operator left: (_) @erlang.send.sender operator: "!" right: (_) @erlang.send.message) @erlang.send
-((attribute name: (atom) @_n (arguments) @erlang.include.arguments) @erlang.include (#any-of? @_n "include" "include_lib"))
-((attribute name: (atom) @_n (arguments) @erlang.on_load.arguments) @erlang.on_load (#eq? @_n "on_load"))
-
+(function_capture
+  . function: (atom) @fc.l.name
+  arity: (integer) @fc.l.arity) @fc.l

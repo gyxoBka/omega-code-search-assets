@@ -176,6 +176,18 @@ attribute bag of the declaration **at the same span**, as `omega.pack.<name>`,
 with the emission's own name as the value. A carrier with no declaration at its
 span is materialised on its own.
 
+**A carrier must also pass `is_definition_kind`.** The fold is
+`is_definition_kind(kind) && is_carrier_kind(kind)`. So `text_candidate` is not
+a carrier: it contains no `definition` and ends in none of the five suffixes, so
+it falls through to the mention branch and is stored as a reference to nothing.
+Name it `definition.text_candidate`. 247 templates in 35 Packs end in
+`_candidate` without passing the definition test.
+
+**And the declaration it attaches to must exist.** A carrier folds onto a
+declaration at the same span; if the Pack never declares anything there, the
+carrier carries nothing. omega-razor had 20 carrier kinds and 2 declaration
+kinds, so nearly every carrier in it attached to nothing.
+
 So a carrier must be emitted with the *declaration's* span, not the evidence's
 span. `definition.return_type_candidate` → `omega.pack.return_type`.
 
@@ -187,6 +199,13 @@ These carrier attribute names are dropped as provenance and never stored:
 `is_scope_kind` — the kind is exactly `scope` or starts with `scope.`. It
 becomes a region. Its span is the point of it; do not give it the container's
 text as a name.
+
+**A scope kind must not also read as a declaration.** Declarations and regions
+are selected by two independent filters, so `scope.function` — which ends with
+`.function` — becomes a region *and* a declaration of that name. Never end a
+scope kind with `.type`, `.function`, `.class`, `.method` or `.trait`, and never
+put `definition` in one. `scope.function_body` and `scope.code_block` are safe;
+9 kinds in 5 Packs are not.
 
 ### Which family does a declaration get?
 
@@ -284,6 +303,22 @@ verbatim and could never have matched a declaration.
 `strip_prefix`/`strip_suffix` take 2 args, `replace_fixed` 3, `select` takes a
 numeric string index, `split` returns a list.
 
+## 6a. Query predicates do not work
+
+`#eq?`, `#match?`, `#any-of?`, `#not-eq?` and the rest are parsed and **never
+evaluated**. Nothing in the engine reads tree-sitter's text predicates; the one
+predicate call site serves `#set!` for injections. A pattern carrying a
+predicate matches every node of its root type, exactly as if the predicate were
+not written, and nothing warns you.
+
+43 Packs currently filter with 460 predicates that do nothing. Do not add one.
+State the filter structurally — a distinct node type, a field, an anchor, an
+alternation — or do not state it, and write a coverage guard saying so.
+
+`#lua-match?`, `#is-not?`, `#has-ancestor?` and `#not-has-parent?` are
+nvim-treesitter extensions that tree-sitter never had; they will not work even
+if the engine starts evaluating predicates.
+
 ## 7. Capabilities
 
 Ten are understood by the engine: `definitions`, `references`, `data`,
@@ -366,6 +401,32 @@ mentions do not.) Delete every constant attribute that does not answer a
 question.
 
 **G — a guard whose reason is a label.** See §8.
+
+**H — a filter the runtime never applies.** See §6a. Find: grep your
+`queries.scm` for `#`.
+
+**I — the universal capture.** A top-level `(_) @x` matches every named node of
+every file. Six Packs ship one; in three of them a template turns each match
+into a mention named with that node's whole text. Delete it.
+
+**J — a name that is a constant.** 105 templates in 27 Packs set `name` to a
+`literal`, so every instance of a construct in the repository collapses onto one
+string. Find: grep `rules.json` for a `name` whose `kind` is `literal`.
+
+**K — the same template twice.** 78 templates in 14 Packs are byte-identical to
+another in the same file. Find: group templates on (capability, output_kind,
+span_capture, name, attributes).
+
+**L — a framework overlay inside a language Pack.** Forbidden by the contract
+and not enforced. omega-c-sharp held 21 templates of ASP.NET and EF Core;
+omega-dart held 3 of go_router under a comment denying it. If a pattern encodes
+a particular library's call shape, it belongs in `frameworks/`, not here.
+
+**M — a template no pattern can bind.** If no single pattern binds all the
+captures a template needs together, the skip rule drops it on every match and it
+emits nothing — while the manifest still claims the capability. The shipped
+omega-dart declared no method at all this way. The validator does not catch it:
+it only checks each capture exists somewhere in the file. Check per pattern.
 
 ---
 
