@@ -165,7 +165,6 @@
 (body) @scope.body
 (block) @scope.block
 
-
 ; --- semantic_closure_v3_146_hcl_owner_attributes_nested_blocks ---
 ; Framework-neutral block-owned authored attributes and nested block shape.
 
@@ -272,7 +271,6 @@
         . (identifier) @hcl.nested0.child_kind
         . (body) @hcl.nested0.child_body) @hcl.nested0.context)) @hcl.nested0.owner_unlabeled_child
 
-
 ; --- semantic_closure_v3_146_hcl_list_traversal3 ---
 ; Owner-aware authored three-segment traversal within a tuple-valued block attribute.
 (block
@@ -304,8 +302,6 @@
                   (get_attr (identifier) @hcl.list_ref3.target_type)
                   (get_attr (identifier) @hcl.list_ref3.target_name)) @hcl.list_ref3.target_expression))) @hcl.list_ref3.attribute_value) @hcl.list_ref3.attribute)) @hcl.list_ref3.owner_one_label
 ; --- generic_hcl_function_context_v3_146 ---
-
-
 
 ; --- semantic_closure_v3_146_hcl_block_object_entries ---
 

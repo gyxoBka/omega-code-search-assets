@@ -126,11 +126,6 @@
 (alias) @local.reference @module @name @reference.module
 
 ; Module Definitions
-(call
-  target: ((identifier) @_identifier
-    (#eq? @_identifier "defmodule"))
-  (arguments
-    (alias) @local.definition.type))
 
 ; Pattern Match Definitions
 (binary_operator
@@ -223,100 +218,12 @@
 
 ; Aliases
 ; format-ignore
-(call
-  target:
-    ((identifier) @_identifier
-      (#any-of? @_identifier "require" "alias" "use" "import"))
-  (arguments
-    [
-      (alias) @local.definition.import
-      (_ (alias) @local.definition.import)
-      (_ (_ (alias) @local.definition.import))
-      (_ (_ (_ (alias) @local.definition.import)))
-      (_ (_ (_ (_ (alias) @local.definition.import))))
-    ]))
 
 ; Local Function Definitions & Scopes
 ; format-ignore
-(call
-  target:
-    ((identifier) @_identifier
-      (#any-of? @_identifier "def" "defp" "defmacro" "defmacrop" "defguard" "defguardp" "defn" "defnp" "for"))
-  (arguments
-    [
-      (identifier) @local.definition.function
-      (binary_operator
-        left: (identifier) @local.definition.function
-        operator: "when")
-      (binary_operator
-        (identifier) @local.definition.parameter)
-      (call
-        target: (identifier) @local.definition.function
-        (arguments
-          [
-            (identifier) @local.definition.parameter
-            (_ (identifier) @local.definition.parameter)
-            (_ (_ (identifier) @local.definition.parameter))
-            (_ (_ (_ (identifier) @local.definition.parameter)))
-            (_ (_ (_ (_ (identifier) @local.definition.parameter))))
-            (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))
-            (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))
-            (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))))))))
-          ]))
-    ]?)
-  (#set! definition.function.scope parent)(do_block)?) @local.scope
 
 ; ExUnit Test Definitions & Scopes
 ; format-ignore
-(call
-  target:
-    ((identifier) @_identifier
-      (#eq? @_identifier "test"))
-  (arguments
-    [
-      (string)
-      ((string)
-        .
-        ","
-        .
-        [
-          (identifier) @local.definition.parameter
-          (_ (identifier) @local.definition.parameter)
-          (_ (_ (identifier) @local.definition.parameter))
-          (_ (_ (_ (identifier) @local.definition.parameter)))
-          (_ (_ (_ (_ (identifier) @local.definition.parameter))))
-          (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))
-          (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))
-          (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter)))))))))))))))))))
-          (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.parameter))))))))))))))))))))
-        ])
-    ])
-  (do_block)?) @local.scope
 
 ; Stab Clause Scopes
 (stab_clause) @local.scope
@@ -329,7 +236,6 @@
 ; sha256=e5cf2d79b4872bec580e66be8ec4b5ab559efdbe2d0bcb633786ce8ffeb0e95b
 
 ; References
-
 
 ; Module Definitions
 (call
@@ -474,7 +380,7 @@
 
 ; Unused Identifiers
 ((identifier) @comment
-  (#lua-match? @comment "^_"))
+  (#match? @comment "^_"))
 
 ; Comments
 (comment) @comment @spell
@@ -746,7 +652,6 @@
 
 ; ----- resolved nvim locals source: elixir sha256=e5cf2d79b4872bec580e66be8ec4b5ab559efdbe2d0bcb633786ce8ffeb0e95b -----
 ; References
-
 
 ; Module Definitions
 (call

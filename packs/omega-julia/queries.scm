@@ -28,7 +28,6 @@
 
 ; --- definition_identity_hints ---
 
-
 ; --- external_highlights ---
 
 ; OMEGA PINNED EXTERNAL HIGHLIGHTS — SYNTAX-ROLE EVIDENCE ONLY
@@ -266,9 +265,6 @@
 (import_alias
   "as" @keyword.import)
 
-(selected_import
-  ":" @punctuation.delimiter)
-
 (struct_definition
   [
     "mutable"
@@ -301,11 +297,6 @@
 
 (arrow_function_expression
   "->" @operator)
-
-[
-  "."
-  "..."
-] @punctuation.special
 
 [
   ","
@@ -351,8 +342,7 @@
   (#any-of? @constant.builtin "nothing" "missing"))
 
 ((identifier) @variable.builtin
-  (#any-of? @variable.builtin "begin" "end")
-  (#has-ancestor? @variable.builtin index_expression))
+  (#any-of? @variable.builtin "begin" "end"))
 
 ; Literals
 (boolean_literal) @boolean
@@ -592,13 +582,9 @@
 ; ----- resolved nvim highlights source: julia sha256=7bb322f3c048a7e951b64e4c8a0bc97e782034f95dff15385b946eded569d94d -----
 ; Identifiers
 
-
 ; Symbols
 
 ; Function calls
-
-
-
 
 (binary_expression
   (_)
@@ -607,7 +593,6 @@
   (#any-of? @_pipe "|>" ".|>"))
 
 ; Macros
-
 
 ; Built-in functions
 ; print.("\"", filter(name -> getglobal(Core, name) isa Core.Builtin, names(Core)), "\" ")
@@ -621,9 +606,6 @@
 ; Type definitions
 
 ; Type annotations
-
-
-
 
 (unary_expression
   (operator) @operator
@@ -655,81 +637,30 @@
 
 ; Keywords
 
-
-
-
-
-
-
-
-
-
-
-
-
 ; comprehensions
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ; Operators & Punctuation
-
-
-
-
-
 
 ; Treat `::` as operator in type contexts, see
 ; https://github.com/nvim-treesitter/nvim-treesitter/pull/7392
 
-
-
 ; Interpolation
-
 
 ; Keyword operators
 ((operator) @keyword.operator
   (#any-of? @keyword.operator "in" "isa"))
-
 
 ; Built-in constants
 ((identifier) @constant.builtin
   (#any-of? @constant.builtin "nothing" "missing"))
 
 ((identifier) @variable.builtin
-  (#any-of? @variable.builtin "begin" "end")
-  (#has-ancestor? @variable.builtin index_expression))
+  (#any-of? @variable.builtin "begin" "end"))
 
 ; Literals
 
-
-
 ((identifier) @number.float
   (#any-of? @number.float "NaN" "NaN16" "NaN32" "Inf" "Inf16" "Inf32"))
-
-
-
-
-
-
-
-
-
 
 ; --- nvim_pinned_injections ---
 
@@ -799,18 +730,6 @@
 ; References
 
 ; Definitions
-
-
-
-
-
-
-
-
-
-
-
-
 
 ; Scopes
 

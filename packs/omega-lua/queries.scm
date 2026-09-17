@@ -17,7 +17,6 @@
 
 ; --- definition_identity_hints ---
 
-
 ; --- dsl_string_declarations ---
 
 ; Framework-neutral Lua DSL calls carrying an authored literal string.
@@ -39,23 +38,6 @@
 (assignment_statement (variable_list (identifier) @local.definition.var))
 (assignment_statement (variable_list (dot_index_expression . (_) @local.definition.associated (identifier) @local.definition.var)))
 
-((function_declaration
-  name: (identifier) @local.definition.function)
-  (#set! definition.function.scope "parent"))
-
-((function_declaration
-  name: (dot_index_expression
-    .
-    (_) @local.definition.associated
-    (identifier) @local.definition.function))
-  (#set! definition.method.scope "parent"))
-
-((function_declaration
-  name: (method_index_expression
-    .
-    (_) @local.definition.associated
-    (identifier) @local.definition.method))
-  (#set! definition.method.scope "parent"))
 (for_generic_clause (variable_list (identifier) @local.definition.var))
 (for_numeric_clause name: (identifier) @local.definition.var)
 (parameters (identifier) @local.definition.parameter @variable.parameter)
@@ -71,28 +53,6 @@
 ; Scopes
 
 ; Definitions
-
-
-((function_declaration
-  name: (identifier) @local.definition.function)
-  (#set! definition.function.scope "parent"))
-
-((function_declaration
-  name: (dot_index_expression
-    .
-    (_) @local.definition.associated
-    (identifier) @local.definition.function))
-  (#set! definition.method.scope "parent"))
-
-((function_declaration
-  name: (method_index_expression
-    .
-    (_) @local.definition.associated
-    (identifier) @local.definition.method))
-  (#set! definition.method.scope "parent"))
-
-
-
 
 ; References
 
@@ -120,74 +80,7 @@
   "local"
 ] @keyword
 
-(break_statement) @keyword
-
-(do_statement
-  [
-    "do"
-    "end"
-  ] @keyword)
-
-(while_statement
-  [
-    "while"
-    "do"
-    "end"
-  ] @keyword.repeat)
-
-(repeat_statement
-  [
-    "repeat"
-    "until"
-  ] @keyword.repeat)
-
-(if_statement
-  [
-    "if"
-    "elseif"
-    "else"
-    "then"
-    "end"
-  ] @keyword.conditional)
-
-(elseif_statement
-  [
-    "elseif"
-    "then"
-    "end"
-  ] @keyword.conditional)
-
-(else_statement
-  [
-    "else"
-    "end"
-  ] @keyword.conditional)
-
-(for_statement
-  [
-    "for"
-    "do"
-    "end"
-  ] @keyword.repeat)
-
-(function_declaration
-  [
-    "function"
-    "end"
-  ] @keyword.function)
-
-(function_definition
-  [
-    "function"
-    "end"
-  ] @keyword.function)
-
 ; Operators
-(binary_expression
-  operator: _ @operator)
-
-(unary_expression
-  operator: _ @operator)
 
 "=" @operator
 
@@ -245,7 +138,7 @@
 
 ; Constants
 ((identifier) @constant
-  (#lua-match? @constant "^[A-Z][A-Z_0-9]*$"))
+  (#match? @constant "^[A-Z][A-Z_0-9]*$"))
 
 (nil) @constant.builtin
 
@@ -291,10 +184,10 @@
 (comment) @comment @spell
 
 ((comment) @comment.documentation
-  (#lua-match? @comment.documentation "^[-][-][-]"))
+  (#match? @comment.documentation "^[-][-][-]"))
 
 ((comment) @comment.documentation
-  (#lua-match? @comment.documentation "^[-][-](%s?)@"))
+  (#match? @comment.documentation "^[-][-](\\s?)@"))
 
 (hash_bang_line) @keyword.directive
 
@@ -463,80 +356,18 @@
 ; highlight string as query if starts with `;; query`
 (string
   content: _ @injection.content
-  (#lua-match? @injection.content "^%s*;+%s?query")
+  (#match? @injection.content "^\\s*;+\\s?query")
   (#set! injection.language "query"))
 
-(comment
-  content: (_) @injection.content
-  (#lua-match? @injection.content "^[-][%s]*[@|]")
-  (#set! injection.language "luadoc")
-  (#offset! @injection.content 0 1 0 0))
-
 ; string.match("123", "%d+")
-(function_call
-  (dot_index_expression
-    field: (identifier) @_method
-    (#any-of? @_method "find" "match" "gmatch" "gsub"))
-  arguments: (arguments
-    .
-    (_)
-    .
-    (string
-      content: (string_content) @injection.content
-      (#set! injection.language "luap")
-      (#set! injection.include-children))))
 
 ;("123"):match("%d+")
-(function_call
-  (method_index_expression
-    method: (identifier) @_method
-    (#any-of? @_method "find" "match" "gmatch" "gsub"))
-  arguments: (arguments
-    .
-    (string
-      content: (string_content) @injection.content
-      (#set! injection.language "luap")
-      (#set! injection.include-children))))
 
 ; string.format("pi = %.2f", 3.14159)
-((function_call
-  (dot_index_expression
-    field: (identifier) @_method)
-  arguments: (arguments
-    .
-    (string
-      (string_content) @injection.content)))
-  (#eq? @_method "format")
-  (#set! injection.language "printf"))
 
 ; ("pi = %.2f"):format(3.14159)
-((function_call
-  (method_index_expression
-    table: (_
-      (string
-        (string_content) @injection.content))
-    method: (identifier) @_method))
-  (#eq? @_method "format")
-  (#set! injection.language "printf"))
-
-(comment
-  content: (_) @injection.content
-  (#set! injection.language "comment"))
 
 ; vim.filetype.add({ pattern = { ["some lua pattern here"] = "filetype" } })
-((function_call
-  name: (_) @_filetypeadd_identifier
-  arguments: (arguments
-    (table_constructor
-      (field
-        name: (_) @_pattern_key
-        value: (table_constructor
-          (field
-            name: (string
-              content: _ @injection.content)))))))
-  (#set! injection.language "luap")
-  (#eq? @_filetypeadd_identifier "vim.filetype.add")
-  (#eq? @_pattern_key "pattern"))
 
 ((function_declaration
   name: (identifier) @local.definition.function)

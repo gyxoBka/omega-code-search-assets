@@ -30,7 +30,6 @@
 
 ; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
 ; This is structural indexing only, not semantic completeness.
-(_) @structural.node
 
 ; --- template_attribute_scope ---
 

@@ -13,7 +13,6 @@
 (true) @data.true
 (false) @data.false
 (null) @data.null
-(comment) @data.comment
 
 ; --- structure ---
 

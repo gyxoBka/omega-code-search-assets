@@ -41,7 +41,6 @@
 (attribute
   (attribute_name) @astro.attribute.name) @astro.attribute
 
-
 ; --- authored_attribute_value ---
 
 (attribute
@@ -53,7 +52,6 @@
   ] @astro.attribute.value) @astro.attribute.with_value
 
 ; --- frontmatter_scope ---
-
 
 ; --- omega_injection_runtime_v1:astro ---
 

@@ -206,10 +206,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
 ; --- definitions ---
 
 (function_declaration name: (identifier) @definition.function.name @package.function.name @test.function.name) @definition.function @package.function @test.function
@@ -371,9 +367,7 @@
 
 ; --- labels ---
 
-
 ; --- lexical_surface ---
-
 
 ; --- method_builder_qualified_resource_context ---
 
@@ -445,7 +439,6 @@
 
 ; --- module_path_hints ---
 
-
 ; --- modules ---
 
 (package_clause (package_identifier) @module.package.name @package.name) @module.package @package.clause
@@ -493,7 +486,6 @@
     (variadic_parameter_declaration) @owned.parameter)) @owner.span
 
 ; --- package_init ---
-
 
 ; --- qualified_composite_identifier_field_context ---
 
@@ -627,9 +619,7 @@
 
 ; --- tests ---
 
-
 ; --- type_operations ---
-
 
 ; --- types ---
 

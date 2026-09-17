@@ -83,16 +83,6 @@
     (type_identifier) @local.definition.import)?)
 
 ; Functions
-(function_declaration
-  .
-  (simple_identifier) @local.definition.function
-  (#set! definition.function.scope "parent"))
-
-(class_body
-  (function_declaration
-    .
-    (simple_identifier) @local.definition.method)
-  (#set! definition.method.scope "parent"))
 
 ; Variables
 (function_declaration
@@ -123,13 +113,6 @@
   (simple_identifier) @local.definition.var @local.definition.variable)
 
 ; Types
-(class_declaration
-  (type_identifier) @local.definition.type
-  (#set! definition.type.scope "parent"))
-
-(type_alias
-  (type_identifier) @local.definition.type
-  (#set! definition.type.scope "parent"))
 
 ; Scopes
 [
@@ -205,7 +188,6 @@
 ; sha256=c97567b90fc0d306f594d9820bf3e89bd5db19fab4efcae32f31831602c4786e
 ; Imports
 
-
 ; Functions
 (function_declaration
   .
@@ -220,14 +202,11 @@
 
 ; Variables
 
-
 ; NOTE: temporary fix for treesitter bug that causes delay in file opening
 ;(class_body
 ;  (property_declaration
 ;    (variable_declaration
 ;      (simple_identifier) @local.definition.field)))
-
-
 
 ; Types
 (class_declaration
@@ -245,7 +224,6 @@
 (package_header (identifier) @module.declaration_path.name) @module.declaration_path.span
 
 ; --- module_path_hints ---
-
 
 ; --- named_scope_owners ---
 
@@ -300,7 +278,6 @@
 (parameter
   (simple_identifier) @local.definition.variable.parameter)
 
-
 ; Loop and local `val`/`var` bindings; defined so inner references resolve and
 ; shadow correctly.
 
@@ -310,8 +287,6 @@
 (interpolated_identifier) @local.reference
 
 ; Member access after `.` is not a local reference.
-(navigation_suffix
-  (simple_identifier) @_)
 
 ; --- p0-exact-helix-tags ---
 
@@ -319,10 +294,6 @@
 ; source=helix language=kotlin file=tags.scm
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/kotlin/tags.scm
-
-
-
-
 
 ; --- receiver_hints ---
 
@@ -418,7 +389,6 @@
 (real_literal) @omega.literal.real
 (null_literal) @omega.literal.null
 (string_literal) @omega.literal.string
-
 
 ; --- final_completion_a4_import_provenance ---
 (import_header

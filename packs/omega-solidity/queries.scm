@@ -89,16 +89,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
-
-
 ; --- distributed_web_structural ---
 
 ; OMEGA-INDEPENDENTLY-AUTHORED structural query.
@@ -216,7 +206,6 @@
 
 ; --- module_path_hints ---
 
-
 ; --- named_scope_owners ---
 
 (contract_declaration
@@ -227,18 +216,13 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-
-
 ; --- ownership_members ---
 
-
 (contract_declaration
   name: (_) @owner.name
   body: (contract_body
     (error_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
-
 
 (contract_declaration
   name: (_) @owner.name
@@ -252,16 +236,11 @@
     (state_variable_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-
-
-
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (error_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
-
 
 (interface_declaration
   name: (_) @owner.name
@@ -274,9 +253,6 @@
   body: (contract_body
     (state_variable_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
-
-
 
 ; --- signature_return_type ---
 

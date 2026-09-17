@@ -214,17 +214,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
-
-
-
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
 
@@ -530,7 +519,6 @@
 
 ; --- module_declaration_path_hints ---
 
-
 ; --- module_scope ---
 
 (module_body) @java.module.scope
@@ -546,14 +534,9 @@
 
 ; --- named_scope_owners ---
 
-
-
-
-
 (method_declaration
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
-
 
 ; --- objects_arrays ---
 
@@ -562,29 +545,6 @@
 (class_literal) @class.literal
 
 ; --- ownership_members ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ; --- ownership_parameters ---
 
@@ -772,14 +732,12 @@
 
 ; --- qualified_chain_hints ---
 
-
 (scoped_identifier
   scope: (_) @reference.qualified_chain.base @reference.qualifier
   name: (_) @reference.qualified_chain.leaf @reference.qualified_name
 ) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
-
 
 ; --- receiver_hints ---
 
@@ -888,7 +846,6 @@
 (boolean_type) @type.boolean
 (void_type) @type.void
 (catch_type) @type.catch
-
 
 ; --- package_constructor_parameter_import_bound_type_context ---
 

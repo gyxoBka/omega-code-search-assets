@@ -70,11 +70,6 @@
 
 (important) @keyword.modifier
 
-[
-  (nesting_selector)
-  (universal_selector)
-] @character.special
-
 (attribute_selector
   (plain_value) @string)
 
@@ -92,10 +87,10 @@
 (keyframes_name) @variable
 
 ((property_name) @variable
-  (#lua-match? @variable "^[-][-]"))
+  (#match? @variable "^[-][-]"))
 
 ((plain_value) @variable
-  (#lua-match? @variable "^[-][-]"))
+  (#match? @variable "^[-][-]"))
 
 [
   (string_value)
@@ -136,7 +131,6 @@
 ; ----- resolved nvim injections source: css sha256=e8bc96da2faabe257a32d805d3954e200215d94a85fce4d521530c89e0969244 -----
 ((comment) @injection.content
   (#set! injection.language "comment"))
-
 
 ; --- terminal_css_source_semantics_v1 ---
 (call_expression (function_name) @css.call.name @css.function.name) @css.call @css.function.call

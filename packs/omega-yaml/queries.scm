@@ -4,7 +4,6 @@
 
 ; --- deep_context ---
 
-
 ; --- deep_context_depth5_v3_150 ---
 ; Generic depth-5 mapping leaf: a0 -> a1 -> a2 -> a3 -> a4 -> leaf.
 (block_mapping_pair
@@ -439,7 +438,6 @@
             (block_sequence_item
               (_) @yaml.topseq.item.value) @yaml.topseq.item))) @yaml.topseq.pair)))
 
-
 ; First mapping pair of each mapping item in a top-level sequence.
 (block_mapping_pair
   key: (_) @yaml.topmapseq.key
@@ -665,7 +663,6 @@
           (block_mapping_pair key: (_) @yaml.docseqn1.owner_name_key value: (_) @yaml.docseqn1.owner_name)
           (block_mapping_pair key: (_) @yaml.docseqn1.key value: (_) @yaml.docseqn1.value) @yaml.docseqn1.pair)))))))))))) @yaml.docseqn1.span
 
-
 (document (block_node (block_mapping
       (block_mapping_pair key: (_) @yaml.docseqn3.kind.key value: (_) @yaml.docseqn3.kind.value)
       (block_mapping_pair key: (_) @yaml.docseqn3.metadata.key value: (block_node (block_mapping
@@ -675,7 +672,6 @@
         (block_sequence_item (block_node (block_mapping
           (block_mapping_pair key: (_) @yaml.docseqn3.owner_name_key value: (_) @yaml.docseqn3.owner_name)
           (block_mapping_pair key: (_) @yaml.docseqn3.key value: (_) @yaml.docseqn3.value) @yaml.docseqn3.pair)))))))))))))))))) @yaml.docseqn3.span
-
 
 ; --- semantic_closure_v3_146_yaml_document_identity_no_namespace ---
 ; Document identity when metadata.name is authored but metadata.namespace is not.
@@ -742,7 +738,6 @@
 
 (document (block_node (block_mapping (block_mapping_pair key: (_) @yaml.docnontopseq.kind.key value: (_) @yaml.docnontopseq.kind.value) (block_mapping_pair key: (_) @yaml.docnontopseq.metadata.key value: (block_node (block_mapping (block_mapping_pair key: (_) @yaml.docnontopseq.name.key value: (_) @yaml.docnontopseq.name.value) ))) (block_mapping_pair key: (_) @yaml.docnontopseq.sequence_key value: (block_node (block_sequence (block_sequence_item (block_node (block_mapping (block_mapping_pair key: (_) @yaml.docnontopseq.key value: (_) @yaml.docnontopseq.value) @yaml.docnontopseq.pair))))))))) @yaml.docnontopseq.span
 
-
 ; --- semantic_closure_v3_146_yaml_named_nested2 ---
 
 (document (block_node (block_mapping
@@ -762,7 +757,6 @@
                   (block_mapping_pair key: (_) @yaml.bnest2.nested2_key value: (block_node (block_mapping
                     (block_mapping_pair key: (_) @yaml.bnest2.key value: (_) @yaml.bnest2.value))))))))))))))))))))))))))))))) @yaml.bnest2.span
 
-
 ; --- semantic_closure_v3_146_yaml_named_nested_seq_map ---
 
 (document (block_node (block_mapping
@@ -780,7 +774,6 @@
                 (block_mapping_pair key: (_) @yaml.bseqmap.nested1_key value: (block_node (block_mapping
                   (block_mapping_pair key: (_) @yaml.bseqmap.key value: (_) @yaml.bseqmap.value)))))))))))))))))))))))))))) @yaml.bseqmap.span
 
-
 ; --- semantic_closure_v3_146_yaml_named_map2 ---
 
 (document (block_node (block_mapping
@@ -796,7 +789,6 @@
             (block_mapping_pair key: (_) @yaml.bmap2.nested1_key value: (block_node (block_mapping
               (block_mapping_pair key: (_) @yaml.bmap2.nested2_key value: (block_node (block_mapping
                 (block_mapping_pair key: (_) @yaml.bmap2.key value: (_) @yaml.bmap2.value))))))))))))))))))))))))) @yaml.bmap2.span
-
 
 ; --- semantic_closure_v3_146_yaml_named_projected_nested ---
 
@@ -815,7 +807,6 @@
                 (block_sequence_item (block_node (block_mapping
                   (block_mapping_pair key: (_) @yaml.bproj.nested2_key value: (block_node (block_mapping
                     (block_mapping_pair key: (_) @yaml.bproj.key value: (_) @yaml.bproj.value))))))))))))))))))))))))))))))) @yaml.bproj.span
-
 
 ; --- semantic_closure_v3_146_yaml_ingress_like_backend ---
 
@@ -852,7 +843,6 @@
                   (block_mapping_pair
                     key: (_) @yaml.ownedmapseq.item.key
                     value: (_) @yaml.ownedmapseq.item.value) @yaml.ownedmapseq.item.pair))))))))) @yaml.ownedmapseq.owner.pair
-
 
 ; --- owned_nested_sequence_mapping_field_v3_150 ---
 ; Generic bounded nested sequence field:

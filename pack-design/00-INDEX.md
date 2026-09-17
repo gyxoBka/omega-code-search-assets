@@ -173,31 +173,41 @@ templates, three of them that token.
 Each of these was reported by an agent rewriting one Pack and then measured
 here across all 61.
 
-## Defect H - a filter the runtime never applies
+## Defect H - a filter that is not tree-sitter's
 
-43 Packs write tree-sitter predicates into `queries.scm`: 233 `#eq?`, 107
-`#any-of?`, 46 `#match?`, 45 `#lua-match?`, 12 `#not-match?`, and a tail of
-`#not-eq?`, `#not-any-of?`, `#is-not?`, `#has-ancestor?`, `#not-has-parent?`.
-**None of them runs.** Nothing in `crates/` reads `general_predicates` or the
-text predicates; the one predicate call site,
-`runtime.rs:1490 query.property_settings(...)`, serves injections and reads
-`#set!` only.
+**Corrected 2026-09-17.** The first report of this said no predicate runs at
+all. That is wrong, and it was checked the wrong way: grepping the engine for
+`general_predicates` finds nothing, but the engine never needed to look. The
+match loop is `cursor.matches(&q.query, tree.root_node(), source.as_bytes())`,
+and the Rust binding applies text predicates itself inside
+`QueryMatches::advance` (tree-sitter 0.25.10, `binding_rust/lib.rs:3450`,
+`satisfies_text_predicates`). So `#eq?`, `#not-eq?`, `#match?`, `#not-match?`,
+`#any-of?` and `#not-any-of?` **do filter** -- 386 uses across the Packs work as
+written.
 
-So a pattern written to match one thing matches every node of its root type,
-and the author cannot tell from reading the file. omega-razor shipped
-`(#eq? @n "href")` next to a coverage guard reading `plain_literal_href_only`;
-it matched every attribute with a string value. This is a wrong-output defect,
-not a cost one, and it is the largest single source of over-emission we have
-found.
+What does not work is everything tree-sitter never had. Those go into
+`general_predicates`, which nothing reads, so the pattern fires unfiltered:
 
-Two separate problems underneath it:
+| operator | uses | Packs |
+|---|---|---|
+| `#lua-match?` | 45 | nix, ruby, html, zig, lua, bash, … |
+| `#strip!`, `#select-adjacent!`, `#gsub!` | 15 | ruby, html, nix |
+| `#not-lua-match?` | 4 | nix, lua |
+| `#is-not?` | 3 | html |
+| `#has-ancestor?` | 2 | zig |
+| `#not-has-parent?` | 1 | css |
 
-- `#eq?`, `#match?`, `#any-of?` and their negations **are** tree-sitter's own,
-  applied by the Rust binding inside `QueryMatches::advance`. The engine bypasses
-  that path, so they are the host's to enable.
-- `#lua-match?`, `#is-not?`, `#has-ancestor?`, `#not-has-parent?` (54 uses in 13
-  Packs) are nvim-treesitter extensions that tree-sitter has never had. No host
-  change will make them work; those 13 Packs must state the filter structurally.
+70 uses in 13 Packs: omega-nix 21, omega-ruby 15, omega-html 8, omega-zig 6,
+omega-lua 5, then bash, sql, cmake, css, julia, c, dockerfile, elixir. 55 of
+them are filters, so those patterns emit for every node of their root type
+rather than the ones the author named; the other 15 are nvim-treesitter
+*directives* that were meant to rewrite the captured text and instead leave it
+raw.
+
+These are nvim-treesitter extensions, inherited when the generator copied
+`locals.scm`/`highlights.scm` baselines out of that project. No host change can
+make them work. Each has to be restated structurally in the Pack, or dropped
+with a coverage guard saying what is no longer filtered.
 
 ## Defect I - the universal capture
 
@@ -280,3 +290,54 @@ with `.function`, so it becomes both a region and a declaration of that name. 9
 kinds in 5 Packs do this today: `scope.function` and `scope.class` in
 omega-javascript, omega-python, omega-tsx and omega-typescript, and one in
 omega-rust.
+
+---
+
+# What is closed, and what is left
+
+Closed on 2026-09-17, across all 61 Packs, each change validated by
+`validate_external_assets`. `pack-design/audit.py` measures every class below;
+run it before and after any Pack you touch.
+
+| class | was | now | how |
+|---|---|---|---|
+| H operator tree-sitter does not have | 70 | **0** | 46 Lua patterns translated to `#match?` regex, 21 no-op operators deleted with a coverage guard where the removal admits it, 3 in patterns that were deleted outright |
+| I the universal capture | 6 | **0** | `(_) @structural.node` and the `semantic_hint.syntax_node` template it fed, which stored every named node of every CSV, SAS and VBScript file under its own text |
+| J a name that is a constant | 105 | **13** | 88 templates whose whole content was a constant name deleted; 4 renamed from a capture (`var(--brand)` now references `--brand`, a compose `env_file` its path, an R subset its target); 13 remain that carry captured values in fields and belong to their Pack's rewrite |
+| K the same template twice | 78 | **0** | byte-identical templates removed, plus 25 duplicate coverage guards and 33 repeated query patterns |
+| L a framework overlay in a language Pack | 24+ | **0 measured** | the 24 in c-sharp and dart went with their rewrites; a sweep for API names pinned in literals then found Neovim's `vim.api.*` and the `regex` crate, both in injection patterns targeting a language Omega has no grammar for |
+| M a template no pattern can bind | 7→2 | **0** | the first count was my own measurement bug (a capture trailing `]` was cut off). Two were real: omega-pug's `each` binding needed three captures split over two patterns, and omega-typescript's parameter-decorator pattern had its `decorator:` line orphaned outside the closing parens since before this work |
+
+Two further sweeps came out of the same measurements:
+
+- **161 syntax-highlighting patterns in 27 Packs.** `@punctuation.bracket`,
+  `@operator`, `@string`, `@tag`, `@spell` — whole `highlights.scm` files pasted
+  in from nvim-treesitter, matching a large share of the nodes in every file and
+  feeding no template. omega-bash alone had 40.
+- **23 injection patterns into a language with no grammar** (`comment`,
+  `printf`, `regex`, `vim`, `luap`, `re2c`, `asm`, `query`, `readline`,
+  `doxygen`, `luadoc`, `markdown_inline`), and the four orphaned injection rules
+  left behind. omega-c and omega-rust keep theirs, because a template there does
+  record the embedded region even when the inner language is unknown.
+- **Defect F closed to 7**: 2 391 constant attributes removed from 54 Packs --
+  `source` 1 316, `semantics` 265, `role` 218, `symbol_category` 120 and a long
+  tail. The 7 that stay are constants under names the engine reads, such as
+  `receiver_semantics`.
+- **The scope/declaration trap closed to 0**: `scope.function` and
+  `scope.class` became `scope.function_body` and `scope.class_body` in four
+  Packs, and `scope.macro_definition` became `scope.macro_body` in omega-rust --
+  the first rename was not enough, because `_body` still left `definition` in
+  the kind.
+
+Totals across all Packs: 3 673 -> 3 394 templates, 1 348 -> 1 176 guards.
+
+## What is left, and why it is not mechanical
+
+| class | count | why it needs the Pack's own rewrite |
+|---|---|---|
+| G a guard whose reason is a label | 266 | each has to be replaced by a sentence about that language, or deleted |
+| a carrier the host will not fold | 240 | some are deliberate mentions; each needs the Pack author to say which |
+| D a name is a whole node | 71 | the fix is a name capture that the pattern does not have yet |
+| `relation.*` the host does not know | 69 | each has to be mapped onto one of the six, or demoted to a reference |
+| a pattern nothing reads | 65 | either a missing template or a pattern to delete; only the author knows which |
+| J a name that is a constant | 13 | each carries a value in its fields that should become the name |

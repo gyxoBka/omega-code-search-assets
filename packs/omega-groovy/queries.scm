@@ -50,7 +50,6 @@
 
 ; --- definition_identity_hints ---
 
-
 ; --- enclosing_owner_hints ---
 
 (class_definition 
@@ -119,7 +118,6 @@
 
 ; --- named_scope_owners ---
 
-
 ; --- nextflow_dsl_context ---
 
 ; Framework-neutral Groovy DSL named/anonymous closure declarations and
@@ -143,7 +141,6 @@
         function: (identifier) @groovy.dsl.step_name) @groovy.dsl.step_call))) @groovy.dsl.workflow_context
 
 ; --- ownership_members ---
-
 
 (class_definition
   name: (_) @owner.name

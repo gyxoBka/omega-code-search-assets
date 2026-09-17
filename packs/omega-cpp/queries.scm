@@ -80,10 +80,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
 ; --- direct_and_member_call_site_context ---
 
 (call_expression
@@ -148,7 +144,6 @@
   name: (type_identifier) @definition.type @local.definition.type)
 (function_declarator declarator: (identifier) @local.definition.function @name) @definition.function
 
-
 (pointer_declarator
   declarator: (identifier) @local.definition.var)
 
@@ -174,20 +169,12 @@
 (field_declaration
   declarator: (field_identifier) @local.definition.field)
 
-
-
 ; goto
 (labeled_statement
   (statement_identifier) @local.definition)
 
 ; References
 (identifier) @local.reference
-
-((field_identifier) @local.reference
-  (#set! reference.kind "field"))
-
-((type_identifier) @local.reference
-  (#set! reference.kind "type"))
 
 (goto_statement
   (statement_identifier) @local.reference)
@@ -224,11 +211,9 @@
     name: (type_identifier) @local.definition.type))
 (class_specifier name: (type_identifier) @local.definition.type @name) @definition.class
 
-
 (class_specifier
   name: (qualified_identifier
     name: (type_identifier) @local.definition.type))
-
 
 ;template <typename T>
 (type_parameter_declaration
@@ -244,9 +229,6 @@
 (namespace_definition
   name: (nested_namespace_specifier) @local.definition.namespace
   body: (_) @local.scope)
-
-((namespace_identifier) @local.reference
-  (#set! reference.kind "namespace"))
 
 ; Function definitions
 (template_function
@@ -303,17 +285,7 @@
 ; sha256=b3ecf04dadb49555af03644686fb68c3ce3ccfd98af33f003371beb5a37652b0
 ; Functions definitions
 
-
-
-
-
-
-
-
-
 ; Type / Struct / Enum
-
-
 
 ; goto
 
@@ -325,7 +297,6 @@
 ((type_identifier) @local.reference
   (#set! reference.kind "type"))
 
-
 ; Scope
 
 ; Omega adaptation source: direct
@@ -335,34 +306,18 @@
 
 ; Parameters
 
-
 ; Class / struct definitions
-
-
-
-
-
-
-
 
 ;template <typename T>
 
-
 ; Namespaces
-
 
 ((namespace_identifier) @local.reference
   (#set! reference.kind "namespace"))
 
 ; Function definitions
 
-
-
-
-
 ; Control structures
-
-
 
 ; --- member_access_hints ---
 
@@ -400,16 +355,9 @@
 
 ; --- module_declaration_path_hints ---
 
-
-
 ; --- module_path_hints ---
 
-
-
 ; --- named_scope_owners ---
-
-
-
 
 ; --- ownership_members ---
 
@@ -418,8 +366,6 @@
   body: (field_declaration_list
     (alias_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
-
 
 (namespace_definition
   name: (_) @owner.name
@@ -445,13 +391,11 @@
     (namespace_definition
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-
 (struct_specifier
   name: (_) @owner.name
   body: (field_declaration_list
     (alias_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
 
 ; --- p0-exact-helix-locals ---
 
@@ -498,11 +442,9 @@
 
 ;; References
 
-
 ; A call's function name is not a variable reference; keep its class
 ; even when a same-named local is in scope.
-(call_expression
-  function: (identifier) @_)
+
 ; C++-specific scopes on top of c's function_definition / declaration scopes.
 [
   (lambda_expression)
@@ -522,17 +464,6 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/cpp/tags.scm
 
-
-
-
-
-
-
-
-
-
-
-
 ; --- qualified_chain_hints ---
 
 (attribute
@@ -546,7 +477,6 @@
 ) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
-
 
 ; --- receiver_hints ---
 
@@ -572,7 +502,6 @@
 ; --- static_delta ---
 
 (call_expression) @call.expression
-
 
 (import_declaration) @import.module
 
@@ -645,7 +574,6 @@
     type: (_) @cpp.operator_cast.type
     declarator: (_) @cpp.operator_cast.declarator)) @cpp.operator_cast.context
 
-
 ; --- semantic_closure_v3_146_cpp_macro_adjacency ---
 
 (translation_unit
@@ -697,7 +625,6 @@
         parameters: (parameter_list) @cpp.adjmacro_smember.arguments) @cpp.adjmacro_smember.macro_call) @cpp.adjmacro_smember.macro_stmt
     .
     (field_declaration) @cpp.adjmacro_smember.member_decl)) @cpp.adjmacro_smember.context
-
 
 ; --- semantic_closure_v3_146_unreal_macro_argument_items ---
 

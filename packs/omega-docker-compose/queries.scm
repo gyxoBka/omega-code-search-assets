@@ -76,7 +76,6 @@
 
 ; OMEGA-INDEPENDENTLY-AUTHORED SHARED-GRAMMAR DIALECT STRUCTURAL QUERY
 ; language=docker-compose; shared_grammar=yaml
-(stream) @structural.document
 
 ; --- semantic_closure_v3_146 ---
 

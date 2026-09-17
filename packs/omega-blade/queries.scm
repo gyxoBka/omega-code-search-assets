@@ -17,17 +17,6 @@
   (directive_end)
 ] @tag
 
-[
-  (php_tag)
-  (php_end_tag)
-  "{{"
-  "}}"
-  "{!!"
-  "!!}"
-  "("
-  ")"
-] @punctuation.bracket
-
 ; --- html_attribute_name_context ---
 
 (attribute

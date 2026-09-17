@@ -175,15 +175,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
-
 ; --- enclosing_owner_hints ---
 
 (class_declaration 
@@ -372,27 +363,17 @@
 
 ; --- module_declaration_path_hints ---
 
-
 ; --- named_scope_owners ---
-
 
 (function_definition
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-
 (method_declaration
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-
-
 ; --- ownership_members ---
-
-
-
-
-
 
 ; --- ownership_parameters ---
 
@@ -465,13 +446,6 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/php/tags.scm
 
-
-
-
-
-
-
-
 ; --- php_class_method_context ---
 
 (class_declaration
@@ -516,8 +490,6 @@
 
 ; --- qualified_name_hints ---
 
-
-
 ; --- signature_parameters ---
 
 (function_definition
@@ -557,21 +529,12 @@
 (trait_declaration
   name: (name) @name) @definition.interface
 
-
 (class_interface_clause [(name) (qualified_name)] @name) @reference.implementation
-
-
-
-
-
-
 
 ; --- generic_direct_and_member_calls ---
 
 (function_call_expression
   function: (name) @call.target) @call.direct
-
-
 
 ; --- php_framework_string_call_and_attribute_context ---
 
@@ -626,7 +589,6 @@
 (float) @omega.literal.float
 (null) @omega.literal.null
 (string) @omega.literal.string
-
 
 ; --- final_completion_a4_import_provenance ---
 (namespace_use_clause

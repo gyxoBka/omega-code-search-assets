@@ -62,8 +62,7 @@
 ] @function.call
 
 ((object_reference
-  name: (identifier) @type) @_obj_ref
-  (#not-has-parent? @_obj_ref invocation))
+  name: (identifier) @type) @_obj_ref)
 (cte (identifier) @type @definition.cte.name) @definition.cte
 
 (relation
@@ -90,11 +89,10 @@
 (marginalia) @comment
 
 ((literal) @number
-  (#lua-match? @number "^%d+$"))
+  (#match? @number "^[0-9]+$"))
 
 ((literal) @number.float
-  (#lua-match? @number.float "^[-]?%d*%.%d*$"))
-
+  (#match? @number.float "^[-]?[0-9]*\\.[0-9]*$"))
 
 [
   (keyword_true)

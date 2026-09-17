@@ -1,11 +1,10 @@
 ; --- asset-exact-helix-highlights ---
 
 (tag_name) @tag
-(erroneous_end_tag_name) @error
+
 (doctype) @constant
 (attribute_name) @attribute
 (entity) @string.special.symbol
-(comment) @comment
 
 ((attribute
   (attribute_name) @attribute
@@ -17,8 +16,6 @@
     (tag_name) @tag)
   (text) @markup.link.label)
   (#eq? @tag "a"))
-
-(attribute [(attribute_value) (quoted_attribute_value)] @string)
 
 ((element
   (start_tag
@@ -38,14 +35,6 @@
   (text) @markup.strikethrough)
   (#any-of? @tag "s" "del"))
 
-[
-  "<"
-  ">"
-  "</"
-  "/>"
-  "<!"
-] @punctuation.bracket
-
 "=" @punctuation.delimiter
 
 ; --- external-nvim-treesitter-locals ---
@@ -64,7 +53,6 @@
 ; source=audit-baselines/external/nvim-treesitter/html/locals.scm
 ; sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74
 
-
 ; --- nvim_pinned_injections ---
 
 ; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
@@ -74,8 +62,6 @@
 ; source_name=html
 
 ; ----- resolved nvim injections source: html_tags sha256=1abf3c61023ba40944533f38712580c0fb14bade1479915fc8743fe5381f6d57 -----
-((comment) @injection.content
-  (#set! injection.language "comment"))
 
 ; <style>...</style>
 ; <style blocking> ...</style>
@@ -84,8 +70,8 @@
 ((style_element
   (start_tag) @_no_type_lang
   (raw_text) @injection.content)
-  (#not-lua-match? @_no_type_lang "%slang%s*=")
-  (#not-lua-match? @_no_type_lang "%stype%s*=")
+  (#not-match? @_no_type_lang "\\slang\\s*=")
+  (#not-match? @_no_type_lang "\\stype\\s*=")
   (#set! injection.language "css"))
 ((style_element
   (start_tag
@@ -102,8 +88,8 @@
 ((script_element
   (start_tag) @_no_type_lang
   (raw_text) @injection.content)
-  (#not-lua-match? @_no_type_lang "%slang%s*=")
-  (#not-lua-match? @_no_type_lang "%stype%s*=")
+  (#not-match? @_no_type_lang "\\slang\\s*=")
+  (#not-match? @_no_type_lang "\\stype\\s*=")
   (#set! injection.language "javascript"))
 ; <script type="foo/bar">
 (script_element
@@ -113,8 +99,7 @@
       (#eq? @_attr "type")
       (quoted_attribute_value
         (attribute_value) @injection.language)))
-  (raw_text) @injection.content
-  (#gsub! @injection.language "(.+)/(.+)" "%2"))
+  (raw_text) @injection.content)
 ; <script type="importmap">
 ((script_element
   (start_tag
@@ -151,33 +136,21 @@
 ((attribute
   (quoted_attribute_value
     (attribute_value) @injection.content))
-  (#lua-match? @injection.content "%${")
+  (#match? @injection.content "\\$\\{")
   (#offset! @injection.content 0 2 0 -1)
   (#set! injection.language "javascript"))
 
 ((attribute
   (attribute_value) @injection.content)
-  (#lua-match? @injection.content "%${")
+  (#match? @injection.content "\\$\\{")
   (#offset! @injection.content 0 2 0 -2)
   (#set! injection.language "javascript"))
 ; <input pattern="[0-9]"> or <input pattern=[0-9]>
-(element
-  (_
-    (tag_name) @_tagname
-    (#eq? @_tagname "input")
-    (attribute
-      (attribute_name) @_attr
-      [
-        (quoted_attribute_value
-          (attribute_value) @injection.content)
-        (attribute_value) @injection.content
-      ]
-      (#eq? @_attr "pattern"))
-    (#set! injection.language "regex")))
+
 ; <input type="checkbox" onchange="this.closest('form').elements.output.value = this.checked">
 (attribute
   (attribute_name) @_name
-  (#lua-match? @_name "^on[a-z]+$")
+  (#match? @_name "^on[a-z]+$")
   (quoted_attribute_value
     (attribute_value) @injection.content)
   (#set! injection.language "javascript"))
@@ -232,7 +205,6 @@
 [(text) (entity)] @data.textual
 (script_element) @embedded.script
 (style_element) @embedded.style
-
 
 ; --- semantic_closure_v3_146_html_element_attribute_context ---
 

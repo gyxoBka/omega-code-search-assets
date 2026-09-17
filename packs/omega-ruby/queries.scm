@@ -122,9 +122,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
 ; --- direct_string_call_context ---
 
 ; Framework-neutral direct Ruby call with a literal first string argument.
@@ -156,47 +153,10 @@
 
 ; Method definitions
 
-(
-  (comment)* @doc
-  .
-  [
-    (method
-      name: (_) @name) @definition.method
-    (singleton_method
-      name: (_) @name) @definition.method
-  ]
-  (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.method)
-)
-
 (alias
   name: (_) @name) @definition.method
 
-(setter
-  (identifier) @_ignore @ignore)
-
 ; Class definitions
-
-(
-  (comment)* @doc
-  .
-  [
-    (class
-      name: [
-        (constant) @name
-        (scope_resolution
-          name: (_) @name)
-      ]) @definition.class
-    (singleton_class
-      value: [
-        (constant) @name
-        (scope_resolution
-          name: (_) @name)
-      ]) @definition.class
-  ]
-  (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.class)
-)
 
 ; Module definitions
 
@@ -209,12 +169,6 @@
     ]) @definition.module
 )
 (call method: (identifier) @name @_) @reference.call
-
-(
-  [(identifier) (constant)] @name @reference.call
-  (#is-not? local)
-  (#not-match? @name "^(lambda|load|require|require_relative|__FILE__|__LINE__)$")
-)
 
 ; --- external-nvim-treesitter-locals ---
 
@@ -356,35 +310,11 @@
 ; SOFTWARE.
 ; DECLARATIONS AND SCOPES
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ; --- named_scope_owners ---
-
 
 (method
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
-
 
 (singleton_method
   name: (_) @scope.owner.name
@@ -507,55 +437,11 @@
 
 ; Method definitions
 
-(
-  (comment)* @doc
-  .
-  [
-    (method
-      name: (_) @name) @definition.method
-    (singleton_method
-      name: (_) @name) @definition.method
-  ]
-  (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.method)
-)
-
-
-
 ; Class definitions
-
-(
-  (comment)* @doc
-  .
-  [
-    (class
-      name: [
-        (constant) @name
-        (scope_resolution
-          name: (_) @name)
-      ]) @definition.class
-    (singleton_class
-      value: [
-        (constant) @name
-        (scope_resolution
-          name: (_) @name)
-      ]) @definition.class
-  ]
-  (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.class)
-)
 
 ; Module definitions
 
-
 ; Calls
-
-
-(
-  [(identifier) (constant)] @name @reference.call
-  (#is-not? local)
-  (#not-match? @name "^(lambda|load|require|require_relative|__FILE__|__LINE__)$")
-)
 
 ; --- receiver_hints ---
 
@@ -597,11 +483,7 @@
     (singleton_method
       name: (_) @name) @definition.method
   ]
-  (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.method)
 )
-
-
 
 ; Class definitions
 
@@ -622,19 +504,14 @@
           name: (_) @name)
       ]) @definition.class
   ]
-  (#strip! @doc "^#\\s*")
-  (#select-adjacent! @doc @definition.class)
 )
 
 ; Module definitions
 
-
 ; Calls
-
 
 (
   [(identifier) (constant)] @name @reference.call
-  (#is-not? local)
   (#not-match? @name "^(lambda|load|require|require_relative|__FILE__|__LINE__)$")
 )
 

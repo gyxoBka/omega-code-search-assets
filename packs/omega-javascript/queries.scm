@@ -318,11 +318,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
 
@@ -464,7 +459,6 @@
 
 ; --- module_path_hints ---
 
-
 ; --- modules ---
 
 (export_statement) @module.export
@@ -487,8 +481,6 @@
   source: (string (string_fragment) @js.named_import.module_source)) @js.named_import.statement
 
 ; --- named_scope_owners ---
-
-
 
 (function_declaration
   name: (_) @scope.owner.name
@@ -854,8 +846,6 @@
           key: (property_identifier) @ecma.exported_object.field
           value: (_) @ecma.exported_object.value) @ecma.exported_object.pair))) @ecma.exported_object.declaration) @ecma.exported_object.context
 
-
-
 ; --- semantic_closure_v3_149_jsx_owned_attributes ---
 (function_declaration
   name: (identifier) @jsx.owned.owner_function
@@ -927,7 +917,6 @@
 (jsx_self_closing_element
   name: (member_expression) @jsx.member_tag.name) @jsx.member_tag.context
 
-
 ; --- semantic_closure_v3_150_ecma_import_provenance ---
 (import_statement
   (import_clause
@@ -967,7 +956,6 @@
     property: (property_identifier) @js.member_ctor.member)
   arguments: (arguments) @js.member_ctor.arguments) @js.member_ctor.context
 
-
 ; --- semantic_closure_v3_150_ecma_nested_member_string_identifier ---
 (call_expression
   function: (member_expression
@@ -979,7 +967,6 @@
     (string (string_fragment) @js.nested_member.arg0)
     (identifier) @js.nested_member.arg1)) @js.nested_member.context
 
-
 ; --- semantic_closure_v3_151_ecma_member_identifier_call ---
 (call_expression
   function: (member_expression
@@ -987,7 +974,6 @@
     property: (property_identifier) @js.member_identifier.member)
   arguments: (arguments
     (identifier) @js.member_identifier.arg0)) @js.member_identifier.context
-
 
 ; --- semantic_closure_v3_151_ecma_three_level_object_string ---
 ; directCall({outer:{middle:{key:"value"}}})
@@ -1021,7 +1007,6 @@
               key: (property_identifier) @js.three_export.key
               value: (string (string_fragment) @js.three_export.value)))))))) @js.three_export.context
 
-
 ; --- assignment_export_nested_object_array_object_field_context_v3_150 ---
 ; CommonJS assignment -> object -> nested object -> array of object items -> authored field.
 ; Example: module.exports = { module: { rules: [ { loader: "x" } ] } }.
@@ -1040,7 +1025,6 @@
               (pair
                 key: (_) @ecma.assignment_export_nested_array.item_key
                 value: (_) @ecma.assignment_export_nested_array.item_value) @ecma.assignment_export_nested_array.item_pair) @ecma.assignment_export_nested_array.item_object) @ecma.assignment_export_nested_array.array) @ecma.assignment_export_nested_array.array_pair) @ecma.assignment_export_nested_array.nested_object) @ecma.assignment_export_nested_array.outer_pair) @ecma.assignment_export_nested_array.object) @ecma.assignment_export_nested_array.context
-
 
 ; --- final_completion_b3_top_level_const_values ---
 ; Framework-neutral immutable module-scope value origins.

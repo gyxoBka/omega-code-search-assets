@@ -152,17 +152,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
-
-
-
 ; --- enclosing_owner_hints ---
 
 (class_declaration 
@@ -194,8 +183,6 @@
 ; SPDX-License-Identifier: Apache-2.0
 ; source=audit-baselines/external/nvim-treesitter/swift/locals.scm
 ; sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52
-
-
 
 ; Scopes
 
@@ -304,7 +291,6 @@
 
 ; --- named_scope_owners ---
 
-
 (function_declaration
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
@@ -330,14 +316,6 @@
 ; source_name=swift
 
 ; ----- resolved nvim injections source: swift sha256=da7c2b36de7e8d17fd10bd5b3bba3563b9445dfba06646a937d615da20c60c29 -----
-((regex_literal) @injection.content
-  (#set! injection.language "regex"))
-
-([
-  (comment)
-  (multiline_comment)
-] @injection.content
-  (#set! injection.language "comment"))
 
 ; --- nvim_pinned_locals ---
 
@@ -353,21 +331,15 @@
 
 ; ----- resolved nvim locals source: swift sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52 -----
 
-
 ; Scopes
 
 ; --- ownership_members ---
 
-
-
-
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (init_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
-
 
 (class_declaration
   name: (_) @owner.name
@@ -375,25 +347,17 @@
     (subscript_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-
-
-
-
-
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (init_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-
-
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (subscript_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
-
 
 ; --- receiver_hints ---
 
@@ -535,7 +499,6 @@
       (attribute
         [(simple_identifier) (user_type (type_identifier))] @swift.attrprop.attribute_name)
       name: (_) @swift.attrprop.property_name) @swift.attrprop.property)) @swift.attrprop.owner
-
 
 ; --- semantic_closure_v3_146_swift_receiver_member_literal_segments ---
 

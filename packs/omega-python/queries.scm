@@ -144,8 +144,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
 ; --- definitions ---
 
 (function_definition name: (identifier) @definition.function.name) @definition.function
@@ -467,19 +465,15 @@
 
 ; --- module_path_hints ---
 
-
-
 (import_from_statement 
   module_name: (_) @import.module_path.target
 ) @import.module_path.statement
-
 
 ; --- modules ---
 
 (if_statement condition: (comparison_operator (identifier) @module.guard.identifier (string) @module.guard.literal)) @module.main_guard
 
 ; --- named_scope_owners ---
-
 
 (function_definition
   name: (_) @scope.owner.name
@@ -615,7 +609,6 @@
       (assignment
         left: (identifier) @python.class_field.field_name
         type: (type) @python.class_field.field_type) @python.class_field.assignment))) @python.class_field.class
-
 
 ; --- class_imported_base_context ---
 
@@ -813,8 +806,6 @@
             (keyword_argument
               name: (identifier) @python.class_field_kw.keyword_name
               value: (_) @python.class_field_kw.keyword_value))) @python.class_field_kw.call) @python.class_field_kw.assignment)))
-
-
 
 ; --- import_bound_member_call_two_identifier_context_v3_151 ---
 ; Framework-neutral bounded Python dataflow: explicit import alias member call

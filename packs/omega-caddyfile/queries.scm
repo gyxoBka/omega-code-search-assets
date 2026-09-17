@@ -23,11 +23,6 @@
 ; original baseline: audit-baselines/external/helix/caddyfile/locals.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-
-(named_matcher (matcher_identifier (matcher_name)) @local.definition.function.macro)
-
-(matcher) @local.reference
-
 ; --- helix_independent_structural ---
 
 ; OMEGA-INDEPENDENTLY-AUTHORED from normalized exact-grammar AST evidence only.

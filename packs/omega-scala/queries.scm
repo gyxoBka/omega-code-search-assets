@@ -146,14 +146,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
 ; --- enclosing_owner_hints ---
 
 (class_definition 
@@ -206,10 +198,6 @@
 (function_declaration
   name: (identifier) @local.definition.function)
 
-(function_definition
-  name: (identifier) @local.definition.function
-  (#set! definition.var.scope parent))
-
 (parameter
   name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
 (class_parameter name: (identifier) @local.definition.parameter @local.definition.variable.parameter @name) @definition.property
@@ -253,15 +241,6 @@
   name: (identifier) @local.definition.function
   (#set! definition.var.scope parent))
 
-
-
-
-
-
-
-
-
-
 ; --- member_access_hints ---
 
 (field_expression
@@ -270,12 +249,9 @@
 
 ; --- module_declaration_path_hints ---
 
-
 ; --- module_path_hints ---
 
-
 ; --- named_scope_owners ---
-
 
 (function_definition
   name: (_) @scope.owner.name
@@ -288,7 +264,6 @@
 (package_object
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
-
 
 ; --- ownership_parameters ---
 
@@ -375,10 +350,7 @@
 
 ; References
 
-
 ; Member access after `.` is a field/method name, not a local reference.
-(field_expression
-  field: (identifier) @_)
 
 ; --- p0-exact-helix-tags ---
 
@@ -386,7 +358,6 @@
 ; source=helix language=scala file=tags.scm
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/scala/tags.scm
-
 
 ; --- reexport_hints ---
 
@@ -472,7 +443,6 @@
 
 ; --- static_delta ---
 
-
 (extends_clause) @relation.extends
 
 ; --- upstream_tags ---
@@ -481,8 +451,6 @@
 
 (package_clause
   name: (package_identifier) @name) @definition.module
-
-
 
 (simple_enum_case
   name: (identifier) @name) @definition.class

@@ -303,21 +303,24 @@ verbatim and could never have matched a declaration.
 `strip_prefix`/`strip_suffix` take 2 args, `replace_fixed` 3, `select` takes a
 numeric string index, `split` returns a list.
 
-## 6a. Query predicates do not work
+## 6a. Which query predicates work
 
-`#eq?`, `#match?`, `#any-of?`, `#not-eq?` and the rest are parsed and **never
-evaluated**. Nothing in the engine reads tree-sitter's text predicates; the one
-predicate call site serves `#set!` for injections. A pattern carrying a
-predicate matches every node of its root type, exactly as if the predicate were
-not written, and nothing warns you.
+`#eq?`, `#not-eq?`, `#match?`, `#not-match?`, `#any-of?` and `#not-any-of?` are
+tree-sitter's own and **do** filter: the runtime iterates matches with the
+source as the text provider, and the binding applies them itself. Use them.
 
-43 Packs currently filter with 460 predicates that do nothing. Do not add one.
-State the filter structurally — a distinct node type, a field, an anchor, an
-alternation — or do not state it, and write a coverage guard saying so.
+Everything else does not exist. `#lua-match?`, `#not-lua-match?`, `#is-not?`,
+`#has-ancestor?`, `#not-has-parent?`, `#strip!`, `#gsub!` and
+`#select-adjacent!` are nvim-treesitter extensions that arrived with copied
+`locals.scm` baselines. tree-sitter parses them into a bucket nothing reads, so
+the pattern matches **everything** and the author cannot tell from reading the
+file. 70 uses survive in 13 Packs.
 
-`#lua-match?`, `#is-not?`, `#has-ancestor?` and `#not-has-parent?` are
-nvim-treesitter extensions that tree-sitter never had; they will not work even
-if the engine starts evaluating predicates.
+`#set!` is read, but only by the injection layer.
+
+So: if you need a filter, use one of the six that work, or state it
+structurally — a distinct node type, a field, an anchor, an alternation. Never
+write an operator that is not in that list of six.
 
 ## 7. Capabilities
 

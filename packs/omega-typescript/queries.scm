@@ -261,7 +261,6 @@
 
 ; --- constructor_identifier_context ---
 
-
 ; --- data ---
 
 (object) @data.object
@@ -436,20 +435,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
 
@@ -525,7 +510,6 @@
 
 ; --- heritage_members ---
 
-(class_heritage) @class.heritage
 (extends_clause (_) @relation.extends.target) @relation.extends
 (implements_clause (_) @relation.implements.target) @relation.implements
 (index_signature) @member.index_signature
@@ -719,14 +703,11 @@
 
 ; --- module_path_hints ---
 
-
-
 ; --- modules_extended ---
 
 (export_statement) @module.export.extended @module.export
 
 ; --- modules ---
-
 
 ; --- named_import_source_context ---
 
@@ -747,9 +728,6 @@
 
 ; --- named_scope_owners ---
 
-
-
-
 (function_declaration
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
@@ -766,12 +744,9 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-
-
 (method_definition
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
-
 
 ; --- object_fluent_procedure_context ---
 
@@ -828,21 +803,6 @@
             arguments: (arguments)) @ecma.fluent.property_value) @ecma.fluent.property_pair))) @ecma.fluent.owner_initializer) @ecma.fluent.context
 
 ; --- ownership_members ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ; --- ownership_parameters ---
 
@@ -1237,7 +1197,6 @@
         key: (property_identifier) @ecma.root_member_object_identifier.field_key
         value: (identifier) @ecma.root_member_object_identifier.value_identifier)))) @ecma.root_member_object_identifier.context
 
-
 ; --- semantic_closure_v3_146_ts_member_decorators ---
 
 (class_declaration
@@ -1269,7 +1228,6 @@
           pattern: (identifier) @ts.ctor_param_decorator.parameter_name) @ts.ctor_param_decorator.parameter))) @ts.ctor_param_decorator.class_context
  (#eq? @ts.ctor_param_decorator.constructor_name "constructor"))
 
-
 ; --- class_decorator_object_array_string_context ---
 (class_declaration
   decorator: (decorator
@@ -1283,7 +1241,6 @@
               (string
                 (string_fragment) @ts.decorator_array_string.item_string)))))))
   name: (type_identifier) @ts.decorator_array_string.owner_class) @ts.decorator_array_string.class
-
 
 ; --- semantic_closure_v3_146_ts_constructor_parameter_type ---
 (class_declaration
@@ -1404,8 +1361,8 @@
       name: (property_identifier) @ts.method_param_marker.method_name
       parameters: (formal_parameters
         (required_parameter
-          name: (identifier) @ts.method_param_marker.parameter_name) @ts.method_param_marker.parameter))) @ts.method_param_marker.class_context)
           decorator: (decorator (identifier) @ts.method_param_marker.decorator_full)
+          pattern: (identifier) @ts.method_param_marker.parameter_name) @ts.method_param_marker.parameter))) @ts.method_param_marker.class_context)
 
 ; --- exported_named_object_field_v3_146 ---
 (export_statement
@@ -1416,8 +1373,6 @@
         (pair
           key: (property_identifier) @ecma.exported_object.field
           value: (_) @ecma.exported_object.value) @ecma.exported_object.pair))) @ecma.exported_object.declaration) @ecma.exported_object.context
-
-
 
 ; --- semantic_closure_v3_150_ecma_import_provenance ---
 (import_statement
@@ -1458,7 +1413,6 @@
     property: (property_identifier) @ts.member_ctor.member)
   arguments: (arguments) @ts.member_ctor.arguments) @ts.member_ctor.context
 
-
 ; --- semantic_closure_v3_150_ecma_nested_member_string_identifier ---
 (call_expression
   function: (member_expression
@@ -1470,7 +1424,6 @@
     (string (string_fragment) @ts.nested_member.arg0)
     (identifier) @ts.nested_member.arg1)) @ts.nested_member.context
 
-
 ; --- semantic_closure_v3_151_ecma_member_identifier_call ---
 (call_expression
   function: (member_expression
@@ -1478,7 +1431,6 @@
     property: (property_identifier) @ts.member_identifier.member)
   arguments: (arguments
     (identifier) @ts.member_identifier.arg0)) @ts.member_identifier.context
-
 
 ; --- semantic_closure_v3_151_ecma_three_level_object_string ---
 ; directCall({outer:{middle:{key:"value"}}})
@@ -1512,7 +1464,6 @@
               key: (property_identifier) @ts.three_export.key
               value: (string (string_fragment) @ts.three_export.value)))))))) @ts.three_export.context
 
-
 ; --- assignment_export_nested_object_array_object_field_context_v3_150 ---
 ; CommonJS assignment -> object -> nested object -> array of object items -> authored field.
 ; Example: module.exports = { module: { rules: [ { loader: "x" } ] } }.
@@ -1531,7 +1482,6 @@
               (pair
                 key: (_) @ecma.assignment_export_nested_array.item_key
                 value: (_) @ecma.assignment_export_nested_array.item_value) @ecma.assignment_export_nested_array.item_pair) @ecma.assignment_export_nested_array.item_object) @ecma.assignment_export_nested_array.array) @ecma.assignment_export_nested_array.array_pair) @ecma.assignment_export_nested_array.nested_object) @ecma.assignment_export_nested_array.outer_pair) @ecma.assignment_export_nested_array.object) @ecma.assignment_export_nested_array.context
-
 
 ; --- final_completion_b3_top_level_const_values ---
 ; Framework-neutral immutable module-scope value origins.

@@ -7,7 +7,6 @@
 
 ; Omega static call facts for Zig.
 
-
 ; --- completeness_imports_5 ---
 
 (using_namespace_declaration) @import.expression @zig.usingnamespace
@@ -36,8 +35,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
 ; --- external_highlights ---
 
 ; OMEGA PINNED EXTERNAL HIGHLIGHTS — SYNTAX-ROLE EVIDENCE ONLY
@@ -58,7 +55,7 @@
   type: (identifier) @type)
 
 ((identifier) @type
-  (#lua-match? @type "^[A-Z_][a-zA-Z0-9_]*"))
+  (#match? @type "^[A-Z_][a-zA-Z0-9_]*"))
 
 (variable_declaration
   (identifier) @type
@@ -77,7 +74,7 @@
 
 ; Constants
 ((identifier) @constant
-  (#lua-match? @constant "^[A-Z][A-Z_0-9]+$"))
+  (#match? @constant "^[A-Z][A-Z_0-9]+$"))
 
 [
   "null"
@@ -298,14 +295,6 @@
 (escape_sequence) @string.escape
 
 ; Punctuation
-[
-  "["
-  "]"
-  "("
-  ")"
-  "{"
-  "}"
-] @punctuation.bracket
 
 [
   ";"
@@ -323,7 +312,7 @@
 (comment) @comment @spell
 
 ((comment) @comment.documentation
-  (#lua-match? @comment.documentation "^//!"))
+  (#match? @comment.documentation "^//!"))
 
 ; --- external_injections ---
 
@@ -348,7 +337,6 @@
 
 ; Definitions
 
-
 (variable_declaration
   (identifier) @local.definition.var)
 
@@ -371,7 +359,6 @@
   (function_declaration
     name: (identifier) @local.definition.method))
 
-
 (variable_declaration
   (identifier) @local.definition.type
   (union_declaration))
@@ -379,8 +366,6 @@
 (union_declaration
   (function_declaration
     name: (identifier) @local.definition.method))
-
-
 
 ; References
 
@@ -417,7 +402,6 @@
   function: (field_expression
     member: (identifier) @local.reference
     (#set! reference.kind "function")))
-
 
 [
   (for_statement)
@@ -455,33 +439,20 @@
 
 ; Parameters
 
-
 ; Types
 
 ((identifier) @type
-  (#lua-match? @type "^[A-Z_][a-zA-Z0-9_]*"))
-
-
+  (#match? @type "^[A-Z_][a-zA-Z0-9_]*"))
 
 ; Constants
 ((identifier) @constant
-  (#lua-match? @constant "^[A-Z][A-Z_0-9]+$"))
-
-
-
+  (#match? @constant "^[A-Z][A-Z_0-9]+$"))
 
 ; Labels
 
-
 ; Fields
 
-
-
-
 ; Functions
-
-
-
 
 ; Modules
 (variable_declaration
@@ -495,18 +466,7 @@
 ((identifier) @variable.builtin
   (#eq? @variable.builtin "_"))
 
-
 ; Keywords
-
-
-
-
-
-
-
-
-
-
 
 ; Operator
 
@@ -518,18 +478,12 @@
 ] @string
   (#set! "priority" 95))
 
-
-
-
-
 ; Punctuation
-
-
 
 ; Comments
 
 ((comment) @comment.documentation
-  (#lua-match? @comment.documentation "^//!"))
+  (#match? @comment.documentation "^//!"))
 
 ; --- nvim_pinned_injections ---
 
@@ -564,18 +518,6 @@
 
 ; ----- resolved nvim locals source: zig sha256=a2d345afc59d9a9b514984f9101030bfb774631f2e4ae2ee4ace83dbb3171be5 -----
 ; Definitions
-
-
-
-
-
-
-
-
-
-
-
-
 
 ; References
 
@@ -613,10 +555,7 @@
     member: (identifier) @local.reference
     (#set! reference.kind "function")))
 
-
-
 ; --- qualified_chain_hints ---
-
 
 ; --- signature_return_type ---
 
@@ -645,7 +584,6 @@
 
 (using_namespace_declaration
   (expression) @zig.usingnamespace.target) @zig.usingnamespace.typed
-
 
 (comptime_expression) @zig.comptime.expression
 (comptime_type_expression) @zig.comptime.type_expression

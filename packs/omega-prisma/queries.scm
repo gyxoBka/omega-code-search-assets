@@ -19,7 +19,6 @@
 
 ; --- completeness_types_high_confidence ---
 
-
 ; --- declaration_category_enum ---
 
 (enum_declaration
@@ -40,9 +39,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
 ; --- semantic_datasource ---
 
 (datasource_declaration
@@ -50,7 +46,6 @@
 ) @prisma.datasource
 
 ; --- semantic_enum ---
-
 
 ; --- semantic_field ---
 
@@ -71,7 +66,6 @@
 ) @prisma.generator
 
 ; --- semantic_model ---
-
 
 ; --- semantic_relation ---
 
@@ -97,7 +91,6 @@
 
 ; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
 ; This is structural indexing only, not semantic completeness.
-(_) @structural.node
 
 ; --- terminal_prisma_view_v1 ---
 (view_declaration) @definition.expression @type.expression

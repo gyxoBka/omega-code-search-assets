@@ -17,86 +17,11 @@
 ; original=packs/omega-twig/third_party/neovim-distributed/queries/highlights.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-(comment) @comment @spell
-
-(filter_identifier) @function.call
-
-(function_identifier) @function.call
-
 (test) @function.builtin @twig.test.name
 
 (variable) @variable @twig.variable.ref
 
-(string) @string
-
-(interpolated_string) @string
-
-(operator) @operator
-
-(number) @number
-
-(boolean) @boolean
-
-(null) @constant.builtin
-
-(keyword) @keyword
-
 (attribute) @attribute @twig.attribute.ref
-
-(tag) @tag
-
-(conditional) @keyword.conditional
-
-(repeat) @keyword.repeat
-
-(method) @function.method
-
-
-[
-  "{{"
-  "}}"
-  "{{-"
-  "-}}"
-  "{{~"
-  "~}}"
-  "{%"
-  "%}"
-  "{%-"
-  "-%}"
-  "{%~"
-  "~%}"
-] @tag.delimiter
-
-[
-  ","
-  "."
-] @punctuation.delimiter
-
-[
-  "?"
-  ":"
-  "="
-  "|"
-] @operator
-
-(interpolated_string
-  [
-    "#{"
-    "}"
-  ] @punctuation.special)
-
-[
-  "("
-  ")"
-  "["
-  "]"
-] @punctuation.bracket
-
-(hash
-  [
-    "{"
-    "}"
-  ] @punctuation.bracket)
 
 ; --- twig_structural_semantics ---
 

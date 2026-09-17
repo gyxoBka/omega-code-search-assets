@@ -1,6 +1,5 @@
 ; --- asset-exact-helix-highlights ---
 
-
 (setext_heading (paragraph) @markup.heading.1 (setext_h1_underline) @markup.heading.marker @markup.heading.1)
 (setext_heading (paragraph) @markup.heading.2 (setext_h2_underline) @markup.heading.marker @markup.heading.2)
 (atx_heading (atx_h1_marker) @markup.heading.marker) @markup.heading.1
@@ -15,12 +14,6 @@
   (fenced_code_block)
 ] @markup.raw.block
 
-(info_string) @label
-
-[
-  (fenced_code_block_delimiter)
-] @punctuation.bracket
-
 [
   (link_destination)
 ] @markup.link.url
@@ -29,26 +22,8 @@
   (link_label)
 ] @markup.link.label
 
-[
-  (list_marker_plus)
-  (list_marker_minus)
-  (list_marker_star)
-] @markup.list.unnumbered
-
-[
-  (list_marker_dot)
-  (list_marker_parenthesis)
-] @markup.list.numbered
-
 (task_list_marker_checked) @markup.list.checked
 (task_list_marker_unchecked) @markup.list.unchecked
-
-(thematic_break) @punctuation.special
-
-[
-  (block_continuation)
-  (block_quote_marker)
-] @punctuation.special
 
 [
   (backslash_escape)
@@ -56,27 +31,13 @@
 
 (block_quote) @markup.quote
 
-(pipe_table_row
-  "|" @punctuation.special)
-(pipe_table_header
-  "|" @punctuation.special)
-(pipe_table_delimiter_row) @punctuation.special
-
 ; --- completeness_definitions_semantic2 ---
 
 (atx_heading) @definition.expression
 (setext_heading) @definition.expression
 
-
 (pipe_table_header
   (pipe_table_cell) @markup.heading)
-
-
-
-(pipe_table_delimiter_row
-  "|" @punctuation.special)
-
-(pipe_table_delimiter_cell) @punctuation.special
 
 ; Code blocks (conceal backticks and language annotation)
 (indented_code_block) @markup.raw.block
@@ -101,10 +62,6 @@
   (link_title)
   (link_label)
 ] @markup.link.label
-
-((link_label)
-  .
-  ":" @punctuation.delimiter)
 
 [
   (list_marker_plus)
@@ -136,8 +93,6 @@
 ;   (#eq? @punctuation.special "-")
 ;   (#set! conceal "—"))
 
-
-
 ((block_quote) @markup.quote
   (#set! priority 90))
 
@@ -147,10 +102,7 @@
 ] @keyword.directive
   (#set! priority 90))
 
-
 (backslash_escape) @string.escape
-
-(inline) @spell
 
 ; --- nvim_pinned_injections ---
 
@@ -180,12 +132,6 @@
   (#set! injection.language "toml")
   (#offset! @injection.content 1 0 -1 0)
   (#set! injection.include-children))
-
-([
-  (inline)
-  (pipe_table_cell)
-] @injection.content
-  (#set! injection.language "markdown_inline"))
 
 ; --- section_h1_h2_h3_context ---
 

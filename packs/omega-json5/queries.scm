@@ -5,11 +5,6 @@
 ; original=packs/omega-json5/third_party/neovim-distributed/queries/highlights.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-[
-  (true)
-  (false)
-] @boolean
-
 (null) @constant @data.null
 
 (string) @string @data.string
@@ -17,9 +12,6 @@
 (number) @number @data.number
 
 (comment) @comment @spell @data.comment
-
-(member
-  name: (_) @keyword)
 
 ; --- literals ---
 
@@ -36,7 +28,6 @@
 (array) @data.array
 (array (_) @data.array.element) @data.array.container
 (member name: (_) @data.key value: (_) @data.value) @data.pair
-
 
 ; --- semantic_closure_v3_146_json5_structured_context ---
 

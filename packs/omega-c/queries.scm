@@ -97,7 +97,6 @@
 
 ; --- definition_identity_hints ---
 
-
 ; --- definitions ---
 
 (function_definition declarator: (function_declarator declarator: (identifier) @definition.function.name)) @definition.function
@@ -124,7 +123,7 @@
   (#set! injection.language "re2c"))
 
 ((comment) @injection.content
-  (#lua-match? @injection.content "/[*/][!*/]<?[^a-zA-Z]")
+  (#match? @injection.content "/[*/][!*/]<?[^a-zA-Z]")
   (#set! injection.language "doxygen"))
 
 ((call_expression
@@ -285,7 +284,6 @@
 
 ; --- imports_modules ---
 
-
 ; --- initialization ---
 
 (initializer_list) @init.aggregate
@@ -326,9 +324,7 @@
 
 ; --- module_path_hints ---
 
-
 ; --- named_scope_owners ---
-
 
 ; --- operators ---
 
@@ -352,8 +348,6 @@
         function: (identifier) @callee.name) @call.expression))) @caller.function
 
 ; --- ownership_members ---
-
-
 
 ; --- preprocessor ---
 
@@ -404,7 +398,6 @@
 ) @definition.signature.owner
 
 ; --- storage_qualifiers ---
-
 
 ; --- types ---
 

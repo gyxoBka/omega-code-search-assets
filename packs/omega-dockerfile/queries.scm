@@ -7,71 +7,11 @@
 ; source_name=dockerfile
 
 ; ----- resolved nvim highlights source: dockerfile sha256=1f5e293fe9065c5bee5565ba5423e3ad7f3211ed13791a259db74f297c00df93 -----
-[
-  "FROM"
-  "AS"
-  "RUN"
-  "CMD"
-  "LABEL"
-  "EXPOSE"
-  "ENV"
-  "ADD"
-  "COPY"
-  "ENTRYPOINT"
-  "VOLUME"
-  "USER"
-  "WORKDIR"
-  "ARG"
-  "ONBUILD"
-  "STOPSIGNAL"
-  "HEALTHCHECK"
-  "SHELL"
-  "MAINTAINER"
-  "CROSS_BUILD"
-] @keyword
-
-[
-  ":"
-  "@"
-] @operator
-
-(comment) @comment @spell
-
-(image_spec
-  (image_tag
-    ":" @punctuation.special)
-  (image_digest
-    "@" @punctuation.special))
-
-(double_quoted_string) @string
-
-[
-  (heredoc_marker)
-  (heredoc_end)
-] @label
 
 ((heredoc_block
   (heredoc_line) @string)
   (#set! priority 90))
 
-(expansion
-  [
-    "$"
-    "{"
-    "}"
-  ] @punctuation.special)
-
-((variable) @constant
-  (#lua-match? @constant "^[A-Z][A-Z_0-9]*$"))
-
-(arg_instruction
-  .
-  (unquoted_string) @property)
-
-(env_instruction
-  (env_pair
-    .
-    (unquoted_string) @property))
 (expose_instruction (expose_port) @number @docker.expose.port) @docker.expose.context
 
 ; --- nvim_pinned_injections ---
@@ -83,8 +23,6 @@
 ; source_name=dockerfile
 
 ; ----- resolved nvim injections source: dockerfile sha256=528e6508f127cf583b2d8770e171f884b39fbcb31fe9b59b24daaf04248b7112 -----
-((comment) @injection.content
-  (#set! injection.language "comment"))
 
 ((shell_command
   (shell_fragment) @injection.content)

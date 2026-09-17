@@ -48,22 +48,10 @@
   ","
 ] @punctuation.delimiter
 
-[
-  "["
-  "]"
-  "[["
-  "]]"
-  "{"
-  "}"
-] @punctuation.bracket
-
 ; --- external_injections ---
 
 ; OMEGA PINNED EXTERNAL INJECTIONS — BOUNDED CANDIDATE EVIDENCE ONLY
 ; sha256=e8bc96da2faabe257a32d805d3954e200215d94a85fce4d521530c89e0969244
-
-((comment) @injection.content
-  (#set! injection.language "comment"))
 
 ; --- external_locals ---
 
@@ -86,16 +74,6 @@
 
 ; ----- resolved nvim highlights source: toml sha256=059618709a4c7e6b287643a68282257e197c5a05cfb9d82b6ac517d32230cb12 -----
 
-
-
-
-
-
-
-
-
-
-
 ; --- nvim_pinned_injections ---
 
 ; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
@@ -105,8 +83,6 @@
 ; source_name=toml
 
 ; ----- resolved nvim injections source: toml sha256=e8bc96da2faabe257a32d805d3954e200215d94a85fce4d521530c89e0969244 -----
-((comment) @injection.content
-  (#set! injection.language "comment"))
 
 ; --- nvim_pinned_locals ---
 

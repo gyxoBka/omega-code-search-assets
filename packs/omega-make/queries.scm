@@ -7,7 +7,6 @@
 
 ; Omega bounded static call extraction derived from pinned grammar node-types.
 
-
 ; --- completeness_imports_2 ---
 
 (include_directive) @import.expression @reference.path
@@ -24,7 +23,6 @@
 
 (rule
   (targets) @definition.target)
-
 
 (function_call) @reference.function
 

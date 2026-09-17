@@ -86,9 +86,6 @@
 
 ; functions and parameters
 
-
-
-
 ; --- nvim_pinned_highlights ---
 
 ; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
@@ -99,21 +96,8 @@
 
 ; ----- resolved nvim highlights source: nix sha256=56fd3a06df812415ea583b363624539d625dd7b2dfbc37522a1653eb07ac9fef -----
 ; basic keywords
-[
-  "assert"
-  "in"
-  "inherit"
-  "let"
-  "rec"
-  "with"
-] @keyword
 
 ; if/then/else
-[
-  "if"
-  "then"
-  "else"
-] @keyword.conditional
 
 ; field access default (`a.b or c`)
 "or" @keyword.operator
@@ -122,25 +106,10 @@
 (comment) @comment @spell
 
 ; strings
-(string_fragment) @string
-
-(string_expression
-  "\"" @string)
-
-(indented_string_expression
-  "''" @string)
 
 ; paths and URLs
-[
-  (path_expression)
-  (hpath_expression)
-  (spath_expression)
-] @string.special.path
-
-(uri_expression) @string.special.url
 
 ; escape sequences
-(escape_sequence) @string.escape
 
 ; delimiters
 [
@@ -325,7 +294,6 @@ function: (select_expression
     (indented_string_expression
       (string_fragment) @injection.content)
   ]
-  (#gsub! @injection.language "/%*%s*([%w%p]+)%s*%*/" "%1")
   (#set! injection.combined))
 
 ; #-style Comments
@@ -337,7 +305,6 @@ function: (select_expression
     (indented_string_expression
       (string_fragment) @injection.content)
   ]
-  (#gsub! @injection.language "#%s*([%w%p]+)%s*" "%1")
   (#set! injection.combined))
 
 (apply_expression
@@ -350,7 +317,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "regex")))
   ]
-  (#lua-match? @_func "^%a*%.*match$")
+  (#match? @_func "^[A-Za-z]*\\.*match$")
   (#set! injection.combined))
 
 (binding
@@ -364,7 +331,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ]
-  (#lua-match? @_path "^%a+Phase$")
+  (#match? @_path "^[A-Za-z]+Phase$")
   (#set! injection.combined))
 
 (binding
@@ -378,7 +345,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ]
-  (#lua-match? @_path "^pre%a+$")
+  (#match? @_path "^pre[A-Za-z]+$")
   (#set! injection.combined))
 
 (binding
@@ -392,7 +359,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ]
-  (#lua-match? @_path "^post%a+$")
+  (#match? @_path "^post[A-Za-z]+$")
   (#set! injection.combined))
 
 (binding
@@ -406,7 +373,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ]
-  (#lua-match? @_path "^script$")
+  (#match? @_path "^script$")
   (#set! injection.combined))
 
 (apply_expression
@@ -426,8 +393,8 @@ function: (select_expression
             ((string_fragment) @injection.content
               (#set! injection.language "bash")))
         ])))
-  (#lua-match? @_func "^%a*%.*writeShellApplication$")
-  (#lua-match? @_path "^text$")
+  (#match? @_func "^[A-Za-z]*\\.*writeShellApplication$")
+  (#match? @_path "^text$")
   (#set! injection.combined))
 
 (apply_expression
@@ -442,7 +409,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ]
-  (#lua-match? @_func "^%a*%.*runCommand%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*runCommand[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -456,7 +423,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ])
-  (#lua-match? @_func "^%a*%.*writeBash%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeBash[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -470,7 +437,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ])
-  (#lua-match? @_func "^%a*%.*writeDash%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeDash[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -484,7 +451,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "bash")))
   ])
-  (#lua-match? @_func "^%a*%.*writeShellScript%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeShellScript[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -498,7 +465,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "fish")))
   ])
-  (#lua-match? @_func "^%a*%.*writeFish%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeFish[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -513,7 +480,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "haskell")))
   ])
-  (#lua-match? @_func "^%a*%.*writeHaskell%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeHaskell[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -527,7 +494,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "javascript")))
   ])
-  (#lua-match? @_func "^%a*%.*writeJS%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeJS[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -541,7 +508,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "perl")))
   ])
-  (#lua-match? @_func "^%a*%.*writePerl%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writePerl[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -555,7 +522,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "python")))
   ])
-  (#lua-match? @_func "^%a*%.*writePy%a*%d*%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writePy[A-Za-z]*[0-9]*[A-Za-z]*$")
   (#set! injection.combined))
 
 ((apply_expression
@@ -568,7 +535,7 @@ function: (select_expression
       ((string_fragment) @injection.content
         (#set! injection.language "rust")))
   ])
-  (#lua-match? @_func "^%a*%.*writeRust%a*$")
+  (#match? @_func "^[A-Za-z]*\\.*writeRust[A-Za-z]*$")
   (#set! injection.combined))
 
 ; (runTest) testScript
@@ -583,7 +550,7 @@ function: (select_expression
           (string_fragment) @injection.content
           (#set! injection.language "python")))
       (#eq? @_func_name "testScript")
-      (#lua-match? @_func "^.*%.*runTest$")
+      (#match? @_func "^.*\\.*runTest$")
       (#set! injection.combined))))
 
 ; (nixosTest) testScript
@@ -598,7 +565,7 @@ function: (select_expression
           (string_fragment) @injection.content
           (#set! injection.language "python")))
       (#eq? @_func_name "testScript")
-      (#lua-match? @_func "^.*%.*nixosTest$")
+      (#match? @_func "^.*\\.*nixosTest$")
       (#set! injection.combined))))
 
 ; home-manager Neovim plugin config
@@ -636,9 +603,6 @@ function: (select_expression
 ; rec attrsets
 
 ; functions and parameters
-
-
-
 
 ; --- static_delta ---
 

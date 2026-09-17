@@ -119,7 +119,6 @@
   (function_name) @scope.owner.name
   (script_block) @scope.owner.body) @scope.owner
 
-
 ; --- ownership_members ---
 
 (class_statement

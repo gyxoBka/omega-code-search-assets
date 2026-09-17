@@ -33,13 +33,11 @@
 ; original baseline: audit-baselines/external/neovim-distributed/godot-resource/locals.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-(section) @local.scope
-
 ; --- godot_resource_semantics ---
 
 (resource) @godot.resource
 (section (identifier) @godot.section.kind) @godot.section
-(section (attribute) @godot.section.attribute) @godot.section.attribute_owner
+
 (property (path) @godot.property.path (_) @godot.property.value) @godot.property
 (constructor (identifier) @godot.constructor.kind (arguments) @godot.constructor.arguments) @godot.constructor
 

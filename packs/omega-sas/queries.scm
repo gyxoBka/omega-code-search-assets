@@ -18,14 +18,12 @@
 
 ; --- definition_identity_hints ---
 
-
 ; --- import_targets ---
 
 (include_statement
   source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 ; --- module_path_hints ---
-
 
 ; --- practical-p1-calls ---
 
@@ -60,7 +58,6 @@
 
 ; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
 ; This is structural indexing only, not semantic completeness.
-(_) @structural.node
 
 ; --- terminal_sas_source_semantics_v1 ---
 

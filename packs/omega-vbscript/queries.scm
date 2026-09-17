@@ -22,12 +22,10 @@
 
 ; --- completeness_types_high_confidence ---
 
-
 ; --- structural-fallback ---
 
 ; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
 ; Supplemental structural indexing only; semantic capabilities are exactly those declared and emitted by this Pack.
-(_) @structural.node
 
 ; --- terminal_vbscript_source_semantics_v1 ---
 

@@ -36,9 +36,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
 ; --- enclosing_owner_hints ---
 
 (class_definition 
@@ -47,7 +44,6 @@
 ) @scope.enclosing_owner.span @scope.owner
 
 ; --- named_scope_owners ---
-
 
 (function_definition
   name: (_) @scope.owner.name

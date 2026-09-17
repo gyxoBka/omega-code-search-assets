@@ -390,17 +390,6 @@
 
 ; --- definition_identity_hints ---
 
-
-
-
-
-
-
-
-
-
-
-
 ; --- definitions_functions ---
 
 ; The type an `impl` block's functions belong to, carried onto each function
@@ -534,7 +523,6 @@
 (line_comment) @comment.line
 (block_comment) @comment.block
 (shebang) @source.shebang
-
 
 (dynamic_type) @guard.dynamic_type @type.dynamic
 (abstract_type) @guard.impl_trait @type.impl_trait
@@ -867,7 +855,6 @@
   path: (_) @import.group.path
   list: (use_list) @import.group.list) @import.group
 
-
 (extern_crate_declaration
   name: (identifier) @import.extern_crate.name) @import.extern_crate
 
@@ -962,9 +949,6 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-
-
-
 ; --- operator_calls ---
 
 ; Rust operator-like syntax can invoke trait/compiler dispatch. We index the
@@ -991,9 +975,6 @@
 (try_expression (_) @operator.try.value @reference.role.try_operand) @operator.try
 
 ; --- ownership_members ---
-
-
-
 
 ; --- ownership_parameters ---
 
@@ -1700,7 +1681,6 @@
     value: (identifier) @rust.receiver_noarg.receiver
     field: (field_identifier) @rust.receiver_noarg.method)
   arguments: (arguments)) @rust.receiver_noarg.context
-
 
 ; --- rust_derive_owner_generalized_v1 ---
 ; Direct #[derive(...)] trait items bound to a following struct or enum declaration,

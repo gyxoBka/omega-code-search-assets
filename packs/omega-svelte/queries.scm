@@ -8,7 +8,6 @@
 
 ; --- data_await_block ---
 
-
 ; --- data_declaration_tag ---
 
 (declaration_tag) @svelte.declaration_tag
@@ -31,7 +30,6 @@
 
 ; --- each_scope ---
 
-
 ; --- element_tag ---
 
 [(start_tag name: (tag_name) @svelte.tag.name) @svelte.tag (self_closing_tag name: (tag_name) @svelte.tag.name) @svelte.tag]
@@ -49,7 +47,6 @@
 
 ; --- if_scope ---
 
-
 ; --- nvim_pinned_locals ---
 
 ; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
@@ -63,7 +60,6 @@
 ; resolved_sources=html,svelte
 
 ; ----- resolved nvim locals source: html sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74 -----
-(element) @local.scope
 
 ; ----- resolved nvim locals source: svelte sha256=6928e1e9b85792862f41c8a0f92e872ff2d7a0c94b8f7c77fbac70bb3a01c1a2 -----
 ; inherits: html
@@ -136,7 +132,6 @@
 (expression) @svelte.expression
 (each_block binding: (_) @svelte.each.binding expression: (expression) @svelte.each.expression) @svelte.each
 (key_block expression: (expression) @svelte.key.expression) @svelte.key
-
 
 ; --- semantic_closure_v3_146_svelte_directive_context ---
 (attribute

@@ -31,8 +31,6 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/batch/tags.scm
 
-
-
 ; --- terminal_batch_for_semantics_v1 ---
 
 (for_variable) @batch.for.variable

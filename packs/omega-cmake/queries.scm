@@ -53,13 +53,12 @@
   (argument_list
     (argument
       (unquoted_argument)) @constant)
-  (#lua-match? @constant "^[%u@][%u%d_]+$"))
+  (#match? @constant "^[A-Z@][A-Z0-9_]+$"))
 
 [
   (quoted_argument)
   (bracket_argument)
 ] @string
-
 
 (variable) @variable
 
@@ -75,17 +74,6 @@
   "ENV"
   "CACHE"
 ] @module
-
-[
-  "$"
-  "{"
-  "}"
-] @punctuation.special
-
-[
-  "("
-  ")"
-] @punctuation.bracket
 
 [
   (function)
@@ -267,7 +255,7 @@
 ((source_file
   .
   (line_comment) @keyword.directive @nospell)
-  (#lua-match? @keyword.directive "^#!/"))
+  (#match? @keyword.directive "^#!/"))
 
 ; --- nvim_pinned_injections ---
 
@@ -278,11 +266,6 @@
 ; source_name=cmake
 
 ; ----- resolved nvim injections source: cmake sha256=e1610c4b058fc5b3b646c4dffcc7327ceaa1a049cdd2058471eb845bd2f08d4d -----
-([
-  (bracket_comment)
-  (line_comment)
-] @injection.content
-  (#set! injection.language "comment"))
 
 ; --- semantic_closure_v3_146 ---
 
