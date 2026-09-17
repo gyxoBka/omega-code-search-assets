@@ -14,10 +14,7 @@
         (new_expression
           constructor: (identifier) @ecma.assignment_export_array_new.constructor
           arguments: (arguments) @ecma.assignment_export_array_new.arguments) @ecma.assignment_export_array_new.item) @ecma.assignment_export_array_new.array) @ecma.assignment_export_array_new.pair) @ecma.assignment_export_array_new.object) @ecma.assignment_export_array_new.context
-
-; --- async_generators ---
-
-(await_expression (_) @async.await.value) @async.await
+(await_expression (_) @async.await.value @ref.role.await_value) @async.await
 (yield_expression (_)? @generator.yield.value) @generator.yield
 (generator_function_declaration) @generator.declaration
 (generator_function) @generator.expression
@@ -250,9 +247,7 @@
 (call_expression
   function: (_) @call.target
   arguments: (arguments) @call.arguments) @call.expression
-
-(new_expression
-  constructor: (_) @call.constructor) @call.new
+(new_expression constructor: (_) @call.constructor @ref.role.constructor) @call.new
 
 ; --- classes ---
 
@@ -263,7 +258,7 @@
 (field_definition property: (_) @class.field.name value: (_)? @class.field.value) @class.field
 (class_static_block body: (statement_block) @class.static.body) @class.static
 (private_property_identifier) @class.private.identifier @reference.private_property.candidate
-(decorator (_) @class.decorator.value) @class.decorator
+(decorator (_) @class.decorator.value @ref.role.decorator_expression) @class.decorator
 
 ; --- completeness_types_high_confidence ---
 
@@ -430,11 +425,7 @@
 ; --- import_namespace_binding ---
 
 (import_clause (namespace_import (identifier) @js.import.namespace)) @js.import.clause
-
-; --- import_targets ---
-
-(import_specifier
-  name: (_) @import.target) @import.statement
+(import_specifier name: (_) @import.target @ref.role.import_selector) @import.statement
 
 (import_statement
   source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
@@ -459,12 +450,7 @@
 (jsx_text) @jsx.text
 (jsx_namespace_name) @jsx.namespace
 (html_character_reference) @jsx.entity
-
-; --- member_access_hints ---
-
-(member_expression
-  object: (_) @reference.receiver
-  property: (_) @reference.member) @reference.member_expression
+(member_expression object: (_) @reference.receiver @ref.role.member_receiver property: (_) @reference.member @ref.role.member_name) @reference.member_expression
 
 ; --- member_string_identifier_call_context ---
 
@@ -527,7 +513,7 @@
 ; --- objects_properties ---
 
 (shorthand_property_identifier) @object.shorthand @reference.shorthand.candidate
-(computed_property_name (_) @object.computed.value) @object.computed
+(computed_property_name (_) @object.computed.value @ref.role.computed_property_expression) @object.computed
 
 ; --- ownership_parameters ---
 
@@ -609,7 +595,6 @@
 
 (call_expression function: (_) @ref.role.callee arguments: (arguments (_) @ref.role.call_argument))
 (call_expression function: (member_expression object: (_) @ref.role.receiver property: (_) @ref.role.member))
-(new_expression constructor: (_) @ref.role.constructor)
 (return_statement (_) @ref.role.return_value)
 (throw_statement (_) @ref.role.throw_value)
 (assignment_expression left: (_) @ref.role.assignment_lhs right: (_) @ref.role.assignment_rhs)
@@ -618,7 +603,6 @@
 (unary_expression argument: (_) @ref.role.unary_operand)
 (update_expression argument: (_) @ref.role.update_operand)
 (subscript_expression object: (_) @ref.role.index_receiver index: (_) @ref.role.index_key)
-(member_expression object: (_) @ref.role.member_receiver property: (_) @ref.role.member_name)
 (if_statement condition: (_) @ref.role.condition)
 (while_statement condition: (_) @ref.role.condition)
 (do_statement condition: (_) @ref.role.condition)
@@ -627,15 +611,11 @@
 (variable_declarator value: (_) @ref.role.initializer)
 (assignment_pattern right: (_) @ref.role.default_value)
 (spread_element (_) @ref.role.spread_value)
-(await_expression (_) @ref.role.await_value)
 (yield_expression (_) @ref.role.yield_value)
 (template_substitution (_) @ref.role.template_expression)
-(computed_property_name (_) @ref.role.computed_property_expression)
 (export_specifier name: (_) @ref.role.export_selector)
-(import_specifier name: (_) @ref.role.import_selector)
 (import_specifier alias: (_) @ref.role.import_alias_target)
 (jsx_expression (_) @ref.role.jsx_expression)
-(decorator (_) @ref.role.decorator_expression)
 
 ; --- references ---
 

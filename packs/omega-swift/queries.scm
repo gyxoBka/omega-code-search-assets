@@ -169,19 +169,8 @@
   name: (_) @scope.enclosing_owner.name @scope.owner.name
   body: (_) @scope.enclosing_owner.body @scope.owner.body
 ) @scope.enclosing_owner.span @scope.owner
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=swift kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/swift/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(import_declaration
-  (identifier) @local.definition.import)
-
-(function_declaration
-  name: (simple_identifier) @local.definition.function)
+(import_declaration (identifier) @local.definition.import @import.module_path.target) @import.module_path.statement
+(function_declaration name: (simple_identifier) @local.definition.function @name) @definition.function
 
 ; Scopes
 [
@@ -299,11 +288,6 @@
   body: (enum_class_body
     (typealias_declaration
       name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-; --- module_path_hints ---
-
-(import_declaration
-  (identifier) @import.module_path.target) @import.module_path.statement
 
 ; --- named_array_string_argument_context ---
 
@@ -521,9 +505,6 @@
 (property_declaration
     (pattern (simple_identifier) @name)
 ) @definition.property
-
-(function_declaration
-    name: (simple_identifier) @name) @definition.function
 
 ; --- nominal_conformance_context ---
 

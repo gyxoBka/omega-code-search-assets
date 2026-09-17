@@ -528,11 +528,7 @@
 
 (binary_operator
   operator: _ @operator)
-
-; Pipe Operator
-(binary_operator
-  operator: "|>"
-  right: (identifier) @function)
+(binary_operator operator: "|>" right: (identifier) @function @name) @reference.call
 
 (dot
   operator: _ @operator)
@@ -910,12 +906,7 @@
 (call
   target: (identifier) @ignore
   (#any-of? @ignore "def" "defp" "defdelegate" "defguard" "defguardp" "defmacro" "defmacrop" "defn" "defnp" "defmodule" "defprotocol" "defimpl" "defstruct" "defexception" "defoverridable" "alias" "case" "cond" "else" "for" "if" "import" "quote" "raise" "receive" "require" "reraise" "super" "throw" "try" "unless" "unquote" "unquote_splicing" "use" "with"))
-
-; ignore module attributes
-(unary_operator
-  operator: "@"
-  operand: (call
-    target: (identifier) @ignore))
+(unary_operator operator: "@" operand: (call target: (identifier) @ignore @elixir.attribute.name)) @elixir.attribute
 
 ; * function call
 (call
@@ -926,11 +917,6 @@
    (dot
      right: (identifier) @name)
   ]) @reference.call
-
-; * pipe into function call
-(binary_operator
-  operator: "|>"
-  right: (identifier) @name) @reference.call
 
 ; * modules
 
@@ -944,6 +930,5 @@
 ; --- semantic_closure_v3_146_batch3 ---
 ((call target: (identifier) @_op (arguments) @elixir.struct.fields) @elixir.struct (#eq? @_op "defstruct"))
 ((call target: (identifier) @_op (arguments) @elixir.exception.fields) @elixir.exception (#eq? @_op "defexception"))
-(unary_operator operator: "@" operand: (call target: (identifier) @elixir.attribute.name)) @elixir.attribute
 (binary_operator left: (_) @elixir.pipe.input operator: "|>" right: (_) @elixir.pipe.target) @elixir.pipe
 

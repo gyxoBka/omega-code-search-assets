@@ -173,11 +173,7 @@
 (function_expression
   universal: (identifier) @variable.parameter
   ":" @punctuation.special)
-
-; function calls
-(apply_expression
-  function: (variable_expression
-    name: (identifier) @function.call))
+(apply_expression function: (variable_expression name: (identifier) @function.call @name)) @reference.call
 
 ; basic identifiers
 (variable_expression) @variable
@@ -690,11 +686,6 @@ function: (select_expression
 ;; Any bare identifier used as a value expression is a reference.
 (variable_expression
   name: (identifier) @name) @reference
-
-;; Function application — the thing being called is a reference.call.
-(apply_expression
-  function: (variable_expression
-    name: (identifier) @name)) @reference.call
 
 ;; Method-style call: `foo.bar.baz arg` — tag the leaf attrname.
 (apply_expression

@@ -286,11 +286,7 @@
     (#set! reference.kind "var"))
   (variable_name
     (name) @local.definition.var))
-
-(property_declaration
-  (property_element
-    (variable_name
-      (name) @local.definition.field)))
+(property_declaration (property_element (variable_name (name) @local.definition.field @name))) @definition.field
 
 (namespace_use_clause
   (qualified_name
@@ -563,9 +559,6 @@
 
 
 (class_interface_clause [(name) (qualified_name)] @name) @reference.implementation
-
-(property_declaration
-  (property_element (variable_name (name) @name))) @definition.field
 
 
 

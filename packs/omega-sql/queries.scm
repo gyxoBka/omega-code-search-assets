@@ -64,9 +64,7 @@
 ((object_reference
   name: (identifier) @type) @_obj_ref
   (#not-has-parent? @_obj_ref invocation))
-
-(cte
-  (identifier) @type)
+(cte (identifier) @type @definition.cte.name) @definition.cte
 
 (relation
   alias: (identifier) @variable)
@@ -526,7 +524,6 @@
 (create_type (object_reference) @definition.type.name) @definition.type
 (create_procedure) @definition.procedure
 (create_function) @definition.function
-(cte (identifier) @definition.cte.name) @definition.cte
 (object_reference) @reference.object
 (invocation) @call.invocation
 

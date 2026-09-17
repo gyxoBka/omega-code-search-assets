@@ -33,24 +33,14 @@
       (call_expression
         (simple_identifier) @kotlin.annotated_call.callee_name) @kotlin.annotated_call.call))
   @kotlin.annotated_call.body) @kotlin.annotated_call.owner
-
-; --- declaration_category_class ---
-
-(class_declaration
-  (type_identifier) @definition.category.class.name @definition.identity.name @name
-) @definition.category.owner @definition.identity.owner @definition.class
+(class_declaration (type_identifier) @definition.category.class.name @definition.identity.name @name @definition.class) @definition.category.owner @definition.identity.owner @definition.class
 
 ; --- declaration_category_component ---
 
 (object_declaration
   (type_identifier) @definition.category.component.name @definition.identity.name @name
 ) @definition.category.owner @definition.identity.owner @definition.class
-
-; --- declaration_category_function ---
-
-(function_declaration
-  (simple_identifier) @definition.category.function.name @definition.identity.name @name
-) @definition.category.owner @definition.identity.owner @definition.function
+(function_declaration (simple_identifier) @definition.category.function.name @definition.identity.name @name @definition.function) @definition.category.owner @definition.identity.owner @definition.function
 
 ; --- declaration_category_type ---
 
@@ -70,31 +60,9 @@
   (type_identifier) @definition.modifiers.name
 ) @definition.modifiers.owner
 
-; --- definition_identity_hints ---
-
-
-
-
-
-; --- external-helix-tags ---
-
-; Omega coverage-first adapted external query
-; source=helix language=kotlin kind=tags
-; original baseline: audit-baselines/external/helix/kotlin/tags.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(class_declaration
-  (type_identifier) @definition.class)
-
 (object_declaration
   "object" (type_identifier) @definition.class)
-
-(function_declaration
-  (simple_identifier) @definition.function)
-
-(property_declaration
-  (variable_declaration
-    (simple_identifier) @definition.constant))
+(property_declaration (variable_declaration (simple_identifier) @definition.constant @name)) @definition.constant
 
 ; --- external-nvim-treesitter-locals ---
 
@@ -373,19 +341,6 @@
 
 (class_declaration
   (delegation_specifier) @relation.supertype) @relation.owner
-
-; --- upstream_tags ---
-
-; Classes
-
-; Objects
-
-; Functions (top-level and member)
-
-; Properties
-(property_declaration
-  (variable_declaration
-    (simple_identifier) @name)) @definition.constant
 
 ; Enum entries
 (enum_entry

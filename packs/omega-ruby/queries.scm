@@ -208,10 +208,7 @@
         name: (_) @name)
     ]) @definition.module
 )
-
-; Calls
-
-(call method: (identifier) @name) @reference.call
+(call method: (identifier) @name @_) @reference.call
 
 (
   [(identifier) (constant)] @name @reference.call
@@ -500,12 +497,6 @@
 ] @local.scope
 
 (block_parameter (identifier) @local.definition.variable.parameter)
-
-
-; A method-call name is not a variable reference (the grammar only forms `call`
-; when it's syntactically a call), so a same-named local must not capture it.
-(call
-  method: (identifier) @_)
 
 ; --- p0-exact-helix-tags ---
 

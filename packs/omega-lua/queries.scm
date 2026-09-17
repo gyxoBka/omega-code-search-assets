@@ -35,37 +35,9 @@
         name: (identifier) @_trigger_key
         value: (string) @lua.action.trigger)))) @lua.action.context
 (#eq? @_trigger_key "trigger"))
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=lua kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/lua/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Scopes
-[
-  (chunk)
-  (do_statement)
-  (while_statement)
-  (repeat_statement)
-  (if_statement)
-  (for_statement)
-  (function_declaration)
-  (function_definition)
-] @local.scope
-
-; Definitions
-(assignment_statement
-  (variable_list
-    (identifier) @local.definition.var))
-
-(assignment_statement
-  (variable_list
-    (dot_index_expression
-      .
-      (_) @local.definition.associated
-      (identifier) @local.definition.var)))
+[(chunk) (do_statement) (while_statement) (repeat_statement) (if_statement) (for_statement) (function_declaration) (function_definition)] @local.scope
+(assignment_statement (variable_list (identifier) @local.definition.var))
+(assignment_statement (variable_list (dot_index_expression . (_) @local.definition.associated (identifier) @local.definition.var)))
 
 ((function_declaration
   name: (identifier) @local.definition.function)
@@ -84,18 +56,9 @@
     (_) @local.definition.associated
     (identifier) @local.definition.method))
   (#set! definition.method.scope "parent"))
-
-(for_generic_clause
-  (variable_list
-    (identifier) @local.definition.var))
-
-(for_numeric_clause
-  name: (identifier) @local.definition.var)
-
-(parameters
-  (identifier) @local.definition.parameter @variable.parameter)
-
-; References
+(for_generic_clause (variable_list (identifier) @local.definition.var))
+(for_numeric_clause name: (identifier) @local.definition.var)
+(parameters (identifier) @local.definition.parameter @variable.parameter)
 (identifier) @local.reference @variable
 
 ; --- locals ---
@@ -307,43 +270,11 @@
 ; Functions
 
 (vararg_expression) @variable.parameter.builtin
-
-(function_declaration
-  name: [
-    (identifier) @function
-    (dot_index_expression
-      field: (identifier) @function)
-  ])
-
-(function_declaration
-  name: (method_index_expression
-    method: (identifier) @function.method))
-
-(assignment_statement
-  (variable_list
-    .
-    name: [
-      (identifier) @function
-      (dot_index_expression
-        field: (identifier) @function)
-    ])
-  (expression_list
-    .
-    value: (function_definition)))
-
-(table_constructor
-  (field
-    name: (identifier) @function
-    value: (function_definition)))
-
-(function_call
-  name: [
-    (identifier) @function.call
-    (dot_index_expression
-      field: (identifier) @function.call)
-    (method_index_expression
-      method: (identifier) @function.method.call)
-  ])
+(function_declaration name: [(identifier) @function @name (dot_index_expression field: (identifier) @function @name)]) @definition.function
+(function_declaration name: (method_index_expression method: (identifier) @function.method @name)) @definition.method
+(assignment_statement (variable_list . name: [(identifier) @function @name (dot_index_expression field: (identifier) @function @name)]) (expression_list . value: (function_definition))) @definition.function
+(table_constructor (field name: (identifier) @function @name value: (function_definition))) @definition.function
+(function_call name: [(identifier) @function.call @name (dot_index_expression field: (identifier) @function.call @name) (method_index_expression method: (identifier) @function.method.call @name)]) @reference.call
 
 (function_call
   (identifier) @function.builtin
@@ -607,43 +538,6 @@
   (#eq? @_filetypeadd_identifier "vim.filetype.add")
   (#eq? @_pattern_key "pattern"))
 
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=826bec7f13e70d25dc78ac06bd4bd67e89a2011ebd1dc6b8442cf67c2bd2290b
-; resolved_query_sha256=70020b86d8ae33ffedd0cdca69a54ff0856a0f2595173eaff6ef535f3738f053
-; parser_revision=10fe0054734eec83049514ea2e718b2a56acd0c9
-; source_name=lua
-; direct_inherits=
-; resolved_sources=lua
-
-; ----- resolved nvim locals source: lua sha256=826bec7f13e70d25dc78ac06bd4bd67e89a2011ebd1dc6b8442cf67c2bd2290b -----
-; Scopes
-[
-  (chunk)
-  (do_statement)
-  (while_statement)
-  (repeat_statement)
-  (if_statement)
-  (for_statement)
-  (function_declaration)
-  (function_definition)
-] @local.scope
-
-; Definitions
-(assignment_statement
-  (variable_list
-    (identifier) @local.definition.var))
-
-(assignment_statement
-  (variable_list
-    (dot_index_expression
-      .
-      (_) @local.definition.associated
-      (identifier) @local.definition.var)))
-
 ((function_declaration
   name: (identifier) @local.definition.function)
   (#set! definition.function.scope "parent"))
@@ -661,19 +555,6 @@
     (_) @local.definition.associated
     (identifier) @local.definition.method))
   (#set! definition.method.scope "parent"))
-
-(for_generic_clause
-  (variable_list
-    (identifier) @local.definition.var))
-
-(for_numeric_clause
-  name: (identifier) @local.definition.var)
-
-(parameters
-  (identifier) @local.definition.parameter)
-
-; References
-(identifier) @local.reference
 
 ; --- ownership_parameters ---
 
@@ -705,42 +586,3 @@
       table: (identifier) @lua.three_call.root
       field: (identifier) @lua.three_call.namespace)
     field: (identifier) @lua.three_call.member)) @lua.three_call.context
-
-; --- upstream_tags ---
-
-(function_declaration
-  name: [
-    (identifier) @name
-    (dot_index_expression
-      field: (identifier) @name)
-  ]) @definition.function
-
-(function_declaration
-  name: (method_index_expression
-    method: (identifier) @name)) @definition.method
-
-(assignment_statement
-  (variable_list
-    .
-    name: [
-      (identifier) @name
-      (dot_index_expression
-        field: (identifier) @name)
-    ])
-  (expression_list
-    .
-    value: (function_definition))) @definition.function
-
-(table_constructor
-  (field
-    name: (identifier) @name
-    value: (function_definition))) @definition.function
-
-(function_call
-  name: [
-    (identifier) @name
-    (dot_index_expression
-      field: (identifier) @name)
-    (method_index_expression
-      method: (identifier) @name)
-  ]) @reference.call

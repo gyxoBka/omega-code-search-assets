@@ -4,10 +4,7 @@
 (union_specifier name: (type_identifier)? @aggregate.union.name body: (field_declaration_list)? @aggregate.union.body) @aggregate.union
 (enum_specifier name: (type_identifier)? @aggregate.enum.name body: (enumerator_list)? @aggregate.enum.body) @aggregate.enum
 (enumerator name: (identifier) @definition.enumerator.name value: (_)? @definition.enumerator.value) @definition.enumerator
-
-; --- assertions_tests ---
-
-(preproc_include path: (_) @test.include)
+(preproc_include path: (_) @test.include @import.target @module.include.path @import.module_path.target @preproc.include.path) @import.statement @module.include @import.module_path.statement @preproc.include
 (call_expression function: (identifier) @test.call.name @concurrency.call.name @call.direct.name) @test.call @concurrency.call @call.direct
 
 ; --- atomic_threading ---
@@ -49,8 +46,8 @@
 (do_statement condition: (_) @control.do.condition) @control.do
 (for_statement) @control.for @scope.for
 (return_statement (_) ? @control.return.value @data.return.value) @control.return @data.return
-(goto_statement label: (statement_identifier) @control.goto.label) @control.goto
-(labeled_statement label: (statement_identifier) @definition.label.name) @definition.label
+(goto_statement label: (statement_identifier) @control.goto.label @reference.label) @control.goto
+(labeled_statement label: (statement_identifier) @definition.label.name @definition.label) @definition.label
 (break_statement) @control.break
 (continue_statement) @control.continue
 
@@ -286,11 +283,6 @@
 
 (generic_expression) @generic.selection
 
-; --- import_targets ---
-
-(preproc_include
-  path: (_) @import.target @module.include.path @import.module_path.target @preproc.include.path) @import.statement @module.include @import.module_path.statement @preproc.include
-
 ; --- imports_modules ---
 
 
@@ -298,11 +290,6 @@
 
 (initializer_list) @init.aggregate
 (compound_literal_expression type: (_) @init.compound.type value: (initializer_list) @init.compound.value) @init.compound
-
-; --- labels ---
-
-(labeled_statement label: (statement_identifier) @definition.label)
-(goto_statement label: (statement_identifier) @reference.label)
 
 ; --- linkage_visibility ---
 

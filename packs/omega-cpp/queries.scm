@@ -121,24 +121,18 @@
 
 (function_declarator
   declarator: [(identifier) (field_identifier)] @definition.function)
-
-(preproc_function_def name: (identifier) @definition.function)
+(preproc_function_def name: (identifier) @definition.function @local.definition.macro) @local.scope
 
 (preproc_def name: (identifier) @definition.constant @local.definition.macro)
-
-(type_definition
-  declarator: (type_identifier) @definition.type @local.definition.type)
+(type_definition declarator: (type_identifier) @definition.type @local.definition.type @name) @definition.type
 
 (struct_specifier
   name: (type_identifier) @definition.struct @local.definition.type)
-
-(enum_specifier
-  name: (type_identifier) @definition.enum)
+(enum_specifier name: (type_identifier) @definition.enum @name) @definition.type
 
 (union_specifier
   name: (type_identifier) @definition.struct)
-(function_declarator
-  declarator: (qualified_identifier name: (identifier) @definition.function))
+(function_declarator declarator: (qualified_identifier name: (identifier) @definition.function @local.definition.function)) @local.scope
 
 (class_specifier
   name: (type_identifier) @definition.class
@@ -152,20 +146,7 @@
 
 (alias_declaration
   name: (type_identifier) @definition.type @local.definition.type)
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=cpp kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/cpp/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Functions definitions
-(function_declarator
-  declarator: (identifier) @local.definition.function)
-
-(preproc_function_def
-  name: (identifier) @local.definition.macro) @local.scope
+(function_declarator declarator: (identifier) @local.definition.function @name) @definition.function
 
 
 (pointer_declarator
@@ -241,9 +222,7 @@
 (struct_specifier
   name: (qualified_identifier
     name: (type_identifier) @local.definition.type))
-
-(class_specifier
-  name: (type_identifier) @local.definition.type)
+(class_specifier name: (type_identifier) @local.definition.type @name) @definition.class
 
 
 (class_specifier
@@ -275,10 +254,6 @@
 
 (template_method
   name: (field_identifier) @local.definition.method) @local.scope
-
-(function_declarator
-  declarator: (qualified_identifier
-    name: (identifier) @local.definition.function)) @local.scope
 
 (field_declaration
   declarator: (function_declarator
@@ -629,17 +604,9 @@
 
 (declaration type: (union_specifier name: (type_identifier) @name)) @definition.class
 
-(function_declarator declarator: (identifier) @name) @definition.function
-
 (function_declarator declarator: (field_identifier) @name) @definition.function
 
 (function_declarator declarator: (qualified_identifier scope: (namespace_identifier) @local.scope name: (identifier) @name)) @definition.method
-
-(type_definition declarator: (type_identifier) @name) @definition.type
-
-(enum_specifier name: (type_identifier) @name) @definition.type
-
-(class_specifier name: (type_identifier) @name) @definition.class
 
 ; --- semantic_closure_v3_146_cpp ---
 (concept_definition

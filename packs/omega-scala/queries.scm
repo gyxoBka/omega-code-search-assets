@@ -177,9 +177,9 @@
 (object_definition name: (identifier) @name) @definition.module @definition.object
 (trait_definition name: (identifier) @name) @definition.interface
 (enum_definition name: (identifier) @name) @definition.enum
-(function_definition name: (identifier) @name) @definition.function
-(val_definition pattern: (identifier) @name) @definition.constant @definition.variable
-(var_definition pattern: (identifier) @name) @definition.constant @definition.variable
+(function_definition name: (identifier) @name @local.definition.function) @definition.function
+(val_definition pattern: (identifier) @name @local.definition.var @local.definition.variable) @definition.constant @definition.variable
+(var_definition pattern: (identifier) @name @local.definition.var @local.definition.variable) @definition.constant @definition.variable
 (type_definition name: (type_identifier) @name) @definition.type
 (given_definition name: (identifier) @name) @definition.constant @definition.variable
 
@@ -212,27 +212,15 @@
 
 (parameter
   name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
-
-(class_parameter
-  name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
+(class_parameter name: (identifier) @local.definition.parameter @local.definition.variable.parameter @name) @definition.property
 
 (lambda_expression
   parameters: (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (binding
   name: (identifier) @local.definition.var)
-
-(val_definition
-  pattern: (identifier) @local.definition.var @local.definition.variable)
-
-(var_definition
-  pattern: (identifier) @local.definition.var @local.definition.variable)
-
-(val_declaration
-  name: (identifier) @local.definition.var)
-
-(var_declaration
-  name: (identifier) @local.definition.var)
+(val_declaration name: (identifier) @local.definition.var @name) @definition.variable
+(var_declaration name: (identifier) @local.definition.var @name) @definition.variable
 
 (for_expression
   enumerators: (enumerators
@@ -372,11 +360,6 @@
   (case_clause)
 ] @local.scope
 
-; Definitions
-
-(function_definition
-  name: (identifier) @local.definition.function)
-
 ; `def`/method and `class`/constructor parameters; baseline highlight is plain
 ; `variable`, so the parameter class is what makes these distinct.
 
@@ -506,22 +489,6 @@
 
 (full_enum_case
   name: (identifier) @name) @definition.class
-
-
-
-
-
-
-
-(val_declaration
-  name: (identifier) @name) @definition.variable
-
-(var_declaration
-  name: (identifier) @name) @definition.variable
-
-
-(class_parameter
-  name: (identifier) @name) @definition.property
 
 ; References 
 

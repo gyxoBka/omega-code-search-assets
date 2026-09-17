@@ -352,23 +352,14 @@
 ; --- event_field_definition ---
 
 (event_field_declaration (variable_declaration (variable_declarator name: (identifier) @csharp.event.name) @csharp.event.declarator)) @csharp.event
-
-; --- external-helix-tags ---
-
-; Omega coverage-first adapted external query
-; source=helix language=c-sharp kind=tags
-; original baseline: audit-baselines/external/helix/c-sharp/tags.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(class_declaration name: (identifier) @name) @definition.class
+(class_declaration name: (identifier) @name @local.definition) @definition.class
 
 (class_declaration (base_list (_) @name @relation.base)) @reference.class @relation.owner
 
 (interface_declaration name: (identifier) @name) @definition.interface
 
 (interface_declaration (base_list (_) @name @relation.base)) @reference.interface @relation.owner
-
-(method_declaration name: (identifier) @name) @definition.method
+(method_declaration name: (identifier) @name @local.definition.method) @definition.method
 
 (object_creation_expression type: (identifier) @name) @reference.class
 
@@ -411,9 +402,6 @@
 (parameter
   (identifier) @local.definition.parameter)
 
-(method_declaration
-  name: (identifier) @local.definition.method)
-
 (local_function_statement
   name: (identifier) @local.definition.method)
 
@@ -422,9 +410,6 @@
 
 (type_parameter
   (identifier) @local.definition.type)
-
-(class_declaration
-  name: (identifier) @local.definition)
 
 ; References
 (identifier) @local.reference

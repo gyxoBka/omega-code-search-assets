@@ -150,15 +150,7 @@
 
 (get_attr
   (identifier) @reference.member)
-
-; Framework-neutral local value declaration inside an unlabeled locals block.
-; The block owner and attribute name are both authored in the same AST scope.
-(block
-  . (identifier) @hcl.local.block_kind
-  . (body
-      (attribute
-        . (identifier) @hcl.local.name
-        . (expression) @hcl.local.value) @hcl.local.attribute) @hcl.local.body) @hcl.local.block
+(block . (identifier) @hcl.local.block_kind @hcl.owner0_attr.owner_kind . (body (attribute . (identifier) @hcl.local.name @hcl.owner0_attr.key . (expression) @hcl.local.value @hcl.owner0_attr.value) @hcl.local.attribute @hcl.owner0_attr.context) @hcl.local.body) @hcl.local.block @hcl.owner0_attr.owner
 
 (for_intro
   (identifier) @binding.for)
@@ -254,15 +246,6 @@
       (block
         . (identifier) @hcl.nested.child_kind
         . (body) @hcl.nested.child_body) @hcl.nested.context)) @hcl.nested.owner_one_label_unlabeled_child
-
-
-; --- semantic_closure_v3_146_hcl_zero_label_context ---
-(block
-  . (identifier) @hcl.owner0_attr.owner_kind
-  . (body
-      (attribute
-        . (identifier) @hcl.owner0_attr.key
-        . (expression) @hcl.owner0_attr.value) @hcl.owner0_attr.context)) @hcl.owner0_attr.owner
 
 (block
   . (identifier) @hcl.owner0_string.owner_kind

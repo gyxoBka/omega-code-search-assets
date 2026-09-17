@@ -55,9 +55,7 @@
 (call_expression
   (field_expression
     (identifier) @function.call .))
-
-(broadcast_call_expression
-  (identifier) @function.call)
+(broadcast_call_expression (identifier) @function.call @julia.broadcast.callee) @julia.broadcast.direct_call
 
 (broadcast_call_expression
   (field_expression
@@ -73,12 +71,7 @@
 (macro_identifier
   "@" @function.macro
   (identifier) @function.macro)
-
-(macro_definition
-  (signature
-    (call_expression
-      .
-      (identifier) @function.macro)))
+(macro_definition (signature (call_expression . (identifier) @function.macro @local.definition.function))) @local.scope
 
 ; Built-in functions
 ; print.("\"", filter(name -> getglobal(Core, name) isa Core.Builtin, names(Core)), "\" ")
@@ -489,9 +482,7 @@
   .
   (tuple_expression
     (identifier) @local.definition.var))
-
-(import_statement
-  (identifier) @local.definition.import)
+(import_statement (identifier) @local.definition.import @import.module_path.target) @import.module_path.statement
 
 (using_statement
   (identifier) @local.definition.import)
@@ -512,12 +503,6 @@
     (identifier) @local.definition.type))
 
 (function_definition
-  (signature
-    (call_expression
-      .
-      (identifier) @local.definition.function))) @local.scope
-
-(macro_definition
   (signature
     (call_expression
       .
@@ -589,12 +574,6 @@
 ; --- module_declaration_path_hints ---
 
 (module_definition name: (identifier) @module.declaration_path.name) @module.declaration_path.span
-
-; --- module_path_hints ---
-
-
-(import_statement
-  (identifier) @import.module_path.target) @import.module_path.statement
 
 ; --- named_scope_owners ---
 
@@ -849,9 +828,4 @@
 
 (using_statement
   (import_path) @julia.using.path) @julia.using.path_owner
-
-
-
-(broadcast_call_expression
-  (identifier) @julia.broadcast.callee) @julia.broadcast.direct_call
 

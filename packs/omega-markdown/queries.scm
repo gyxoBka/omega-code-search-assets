@@ -3,7 +3,6 @@
 
 (setext_heading (paragraph) @markup.heading.1 (setext_h1_underline) @markup.heading.marker @markup.heading.1)
 (setext_heading (paragraph) @markup.heading.2 (setext_h2_underline) @markup.heading.marker @markup.heading.2)
-
 (atx_heading (atx_h1_marker) @markup.heading.marker) @markup.heading.1
 (atx_heading (atx_h2_marker) @markup.heading.marker) @markup.heading.2
 (atx_heading (atx_h3_marker) @markup.heading.marker) @markup.heading.3
@@ -67,36 +66,6 @@
 
 (atx_heading) @definition.expression
 (setext_heading) @definition.expression
-
-; --- nvim_pinned_highlights ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=7b71d4994cf3968e16d033ac59d28bb034427dd41be6a057b7a2985e2dfbe5b8
-; source_name=markdown
-
-; ----- resolved nvim highlights source: markdown sha256=7b71d4994cf3968e16d033ac59d28bb034427dd41be6a057b7a2985e2dfbe5b8 -----
-;From MDeiml/tree-sitter-markdown & Helix
-
-
-(atx_heading
-  (atx_h1_marker)) @markup.heading.1
-
-(atx_heading
-  (atx_h2_marker)) @markup.heading.2
-
-(atx_heading
-  (atx_h3_marker)) @markup.heading.3
-
-(atx_heading
-  (atx_h4_marker)) @markup.heading.4
-
-(atx_heading
-  (atx_h5_marker)) @markup.heading.5
-
-(atx_heading
-  (atx_h6_marker)) @markup.heading.6
 
 
 (pipe_table_header

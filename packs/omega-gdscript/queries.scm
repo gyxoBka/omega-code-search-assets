@@ -95,11 +95,7 @@
 
 (typed_default_parameter
   (identifier) @local.definition.parameter)
-
-; Signals
-; Can gdscript 2 signals be considered fields?
-(signal_statement
-  (name) @local.definition.field)
+(signal_statement (name) @local.definition.field @gdscript.signal.name) @gdscript.signal
 
 ; Variable Definitions
 (const_statement
@@ -122,10 +118,7 @@
 ; lambda names are not accessible and are only for debugging.
 (lambda
   (name) @local.definition.function)
-
-; Source
-(class_name_statement
-  (name) @local.definition.type)
+(class_name_statement (name) @local.definition.type @gdscript.class_name.name) @gdscript.class_name
 
 (source
   (variable_statement
@@ -238,11 +231,6 @@
 (enumerator
   left: (identifier) @gdscript.enum.member) @gdscript.enum.member.owner
 (constructor_definition) @gdscript.constructor
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(signal_statement (name) @gdscript.signal.name) @gdscript.signal
-(class_name_statement (name) @gdscript.class_name.name) @gdscript.class_name
 (export_variable_statement name: (name) @gdscript.export.name) @gdscript.export
 (onready_variable_statement name: (name) @gdscript.onready.name) @gdscript.onready
 ((call (identifier) @_fn) @gdscript.resource.load (#any-of? @_fn "preload" "load"))

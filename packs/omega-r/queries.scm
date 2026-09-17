@@ -36,9 +36,7 @@
 
 (argument
   name: (identifier) @local.definition)
-
-(parameter
-  name: (identifier) @local.definition)
+(parameter name: (identifier) @local.definition @binding.parameter.name) @binding.parameter
 
 (binary_operator
   lhs: (identifier) @local.definition
@@ -69,7 +67,6 @@
 (call function: (identifier) @call.function.name) @call.function
 (call function: (namespace_operator rhs: (identifier) @call.function.name)) @call.function
 (namespace_operator lhs: (identifier) @module.name) @module.reference
-(parameter name: (identifier) @binding.parameter.name) @binding.parameter
 
 ; --- qualified_call_assignment_identifier_context ---
 

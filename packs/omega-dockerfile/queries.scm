@@ -72,9 +72,7 @@
   (env_pair
     .
     (unquoted_string) @property))
-
-(expose_instruction
-  (expose_port) @number)
+(expose_instruction (expose_port) @number @docker.expose.port) @docker.expose.context
 
 ; --- nvim_pinned_injections ---
 
@@ -119,9 +117,6 @@
 
 (workdir_instruction
   (path) @docker.workdir.path) @docker.workdir.context
-
-(expose_instruction
-  (expose_port) @docker.expose.port) @docker.expose.context
 
 (cmd_instruction
   [(json_string_array) (shell_command)]) @docker.cmd.context

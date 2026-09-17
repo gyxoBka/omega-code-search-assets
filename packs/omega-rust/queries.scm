@@ -1,41 +1,18 @@
-; --- aggregate_members ---
-
-; Explicit aggregate ownership relations for named fields and enum variants.
-(struct_item
-  name: (_) @relation.struct.owner
-  body: (field_declaration_list
-    (field_declaration
-      name: (_) @relation.struct.field))) @relation.struct.field_relation
+(struct_item name: (_) @relation.struct.owner @owner.member_category.field.name @owner.name body: (field_declaration_list (field_declaration name: (_) @relation.struct.field @owned.member_category.field.name @owned.member.name) @owned.member)) @relation.struct.field_relation @owner.span
 
 (union_item
   name: (_) @relation.union.owner
   body: (field_declaration_list
     (field_declaration
       name: (_) @relation.union.field))) @relation.union.field_relation
-
-(enum_item
-  name: (_) @relation.enum.owner
-  body: (enum_variant_list
-    (enum_variant
-      name: (_) @relation.enum.variant))) @relation.enum.variant_relation
+(enum_item name: (_) @relation.enum.owner @owner.member_category.enum.name @owner.name body: (enum_variant_list (enum_variant name: (_) @relation.enum.variant @owned.member_category.enum.name @owned.member.name) @owned.member)) @relation.enum.variant_relation @owner.span
 
 (enum_variant
   name: (_) @relation.enum_variant.owner
   value: (_) @relation.enum_variant.discriminant) @relation.enum_variant.discriminant_relation
-
-; --- assignments ---
-
-(assignment_expression
-  left: (_) @assignment.target @relation.data.assignment.target
-  right: (_) @assignment.value @relation.data.assignment.value) @assignment.simple @relation.data.assignment
-
-(compound_assignment_expr
-  left: (_) @assignment.target @relation.data.assignment.target
-  right: (_) @assignment.value @relation.data.assignment.value) @assignment.compound @relation.data.compound_assignment
-
-(let_declaration
-  pattern: (_) @assignment.binding_pattern @relation.data.initializer.target
-  value: (_) @assignment.initializer @relation.data.initializer.value) @assignment.let @relation.data.initializer
+(assignment_expression left: (_) @assignment.target @relation.data.assignment.target @reference.role.assignment_lhs right: (_) @assignment.value @relation.data.assignment.value @reference.role.assignment_rhs) @assignment.simple @relation.data.assignment
+(compound_assignment_expr left: (_) @assignment.target @relation.data.assignment.target @reference.role.assignment_lhs right: (_) @assignment.value @relation.data.assignment.value @reference.role.assignment_rhs) @assignment.compound @relation.data.compound_assignment
+(let_declaration pattern: (_) @assignment.binding_pattern @relation.data.initializer.target @reference.role.pattern_position value: (_) @assignment.initializer @relation.data.initializer.value @reference.role.initializer) @assignment.let @relation.data.initializer
 
 (const_item
   name: (identifier) @assignment.const.name
@@ -97,11 +74,7 @@
 (field_pattern
   name: (shorthand_field_identifier) @binding.field_shorthand.name) @binding.field_shorthand
 (const_block) @binding.pattern_shape.const_block @expression.const_block
-
-; --- call_targets ---
-
-(call_expression
-  function: (_) @call.target @guard.dynamic_call.target) @call.expression @guard.dynamic_call
+(call_expression function: (_) @call.target @guard.dynamic_call.target @reference.role.callee) @call.expression @guard.dynamic_call
 
 ; --- calls ---
 
@@ -211,10 +184,7 @@
 (call_expression
   function: (scoped_identifier) @config.api.target
   arguments: (arguments) @config.api.arguments) @config.api.call
-
-; --- control_flow ---
-
-(if_expression condition: (_) @control.if.condition) @control.if
+(if_expression condition: (_) @control.if.condition @reference.role.condition) @control.if
 (match_expression value: (_) @control.match.value body: (match_block) @control.match.body) @control.match
 (while_expression condition: (_) @control.while.condition body: (block) @control.while.body) @control.while
 (loop_expression body: (block) @control.loop.body) @control.loop
@@ -225,7 +195,7 @@
 (continue_expression) @control.continue
 (await_expression) @control.await
 (try_expression) @control.try
-(let_condition pattern: (_) @control.let.pattern value: (_) @control.let.value) @control.let
+(let_condition pattern: (_) @control.let.pattern @reference.role.pattern_position value: (_) @control.let.value @reference.role.condition_value) @control.let
 (let_chain) @control.let_chain
 (const_block body: (block) @control.const.body) @control.const
 (unsafe_block (block) @control.unsafe.body) @control.unsafe
@@ -243,15 +213,8 @@
   function: (_) @relation.data.argument.callee
   arguments: (arguments
     (_) @relation.data.argument.value)) @relation.data.argument
-
-
-
-
-(return_expression
-  (_) @relation.data.return.value) @relation.data.return
-
-(yield_expression
-  (_) @relation.data.yield.value) @relation.data.yield
+(return_expression (_) @relation.data.return.value @reference.role.return_value) @relation.data.return
+(yield_expression (_) @relation.data.yield.value @reference.role.yield_value) @relation.data.yield
 
 ; --- data ---
 
@@ -262,9 +225,7 @@
 (field_initializer
   field: (_) @data.field.name
   value: (_) @data.field.value) @data.field
-
-(shorthand_field_initializer
-  (identifier) @data.field_shorthand.name) @data.field_shorthand
+(shorthand_field_initializer (identifier) @data.field_shorthand.name @reference.role.field_shorthand_value) @data.field_shorthand
 
 (base_field_initializer) @data.field_base
 (array_expression) @data.array
@@ -824,17 +785,8 @@
   .
   (function_item
     name: (identifier) @rust.fn_string_attr.function_name) @rust.fn_string_attr.function)
-
-; --- generic_applications ---
-
-; Explicit generic application relations for type and callable paths.
-(generic_type
-  type: (_) @relation.generic_type.base
-  type_arguments: (_) @relation.generic_type.arguments) @relation.generic_type.application
-
-(generic_function
-  function: (_) @relation.generic_function.base
-  type_arguments: (_) @relation.generic_function.arguments) @relation.generic_function.application
+(generic_type type: (_) @relation.generic_type.base @reference.role.generic_base_type type_arguments: (_) @relation.generic_type.arguments @reference.role.generic_argument_list) @relation.generic_type.application
+(generic_function function: (_) @relation.generic_function.base @reference.role.generic_callable type_arguments: (_) @relation.generic_function.arguments @reference.role.generic_argument_list) @relation.generic_function.application
 
 (type_parameter
   name: (_) @relation.type_default.owner
@@ -859,11 +811,7 @@
 (higher_ranked_trait_bound type_parameters: (_) @field.generic_parameters)
 
 (use_wildcard) @guard.glob.any @import.glob
-
-; --- implementations ---
-
-(impl_item
-  type: (_) @implementation.target @type.impl.target) @implementation.inherent @type.impl
+(impl_item type: (_) @implementation.target @type.impl.target @reference.role.trait_or_impl_type) @implementation.inherent @type.impl
 
 (impl_item
   trait: (_) @implementation.trait @relation.implements.trait @type.impl.trait
@@ -909,11 +857,7 @@
     body: (declaration_list
       (function_signature_item
         name: (identifier) @rust.import_foreign.function_name))) @rust.import_foreign.block)
-
-; --- imports ---
-
-(use_declaration
-  argument: (_) @import.argument) @import.declaration
+(use_declaration argument: (_) @import.argument @reference.role.import_selector) @import.declaration
 
 (use_as_clause
   path: (_) @import.alias.path
@@ -986,23 +930,9 @@
   value: (_) @reference.receiver
   field: (_) @reference.member) @reference.member_expression
 
-; --- member_category_enum_member ---
-
-(enum_item
-  name: (_) @owner.member_category.enum.name @owner.name
-  body: (enum_variant_list
-    (enum_variant
-      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
-
 ; --- member_category_field ---
 
 (enum_variant
-  name: (_) @owner.member_category.field.name @owner.name
-  body: (field_declaration_list
-    (field_declaration
-      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
-
-(struct_item
   name: (_) @owner.member_category.field.name @owner.name
   body: (field_declaration_list
     (field_declaration
@@ -1058,9 +988,7 @@
 (index_expression
   (_) @operator.index.base
   (_) @operator.index.key) @operator.index
-
-(try_expression
-  (_) @operator.try.value) @operator.try
+(try_expression (_) @operator.try.value @reference.role.try_operand) @operator.try
 
 ; --- ownership_members ---
 
@@ -1171,44 +1099,20 @@
 
 (await_expression
   (_) @reference.role.await_operand)
-(try_expression
-  (_) @reference.role.try_operand)
 (break_expression
   (_) @reference.role.break_target_or_value)
-
-(generic_type
-  type: (_) @reference.role.generic_base_type
-  type_arguments: (_) @reference.role.generic_argument_list)
-(generic_function
-  function: (_) @reference.role.generic_callable
-  type_arguments: (_) @reference.role.generic_argument_list)
-
-(where_predicate
-  left: (_) @reference.role.where_predicate_subject
-  bounds: (_) @reference.role.where_predicate_bound)
-
-(function_item
-  return_type: (_) @reference.role.return_type_position)
-(function_signature_item
-  return_type: (_) @reference.role.return_type_position)
-(closure_expression
-  return_type: (_) @reference.role.return_type_position)
-(field_declaration
-  type: (_) @reference.role.field_type_position)
-(const_item
-  type: (_) @reference.role.field_type_position)
-(static_item
-  type: (_) @reference.role.field_type_position)
-(type_item
-  type: (_) @reference.role.field_type_position)
-(let_declaration
-  type: (_) @reference.role.field_type_position)
+(where_predicate left: (_) @reference.role.where_predicate_subject @relation.where.subject bounds: (_) @reference.role.where_predicate_bound @relation.where.bound) @relation.where.bound_relation
+(function_item return_type: (_) @reference.role.return_type_position @type.return.function) @type.owner.function
+(function_signature_item return_type: (_) @reference.role.return_type_position @type.return.signature) @type.owner.signature
+(closure_expression return_type: (_) @reference.role.return_type_position @type.return.closure) @type.owner.closure
+(field_declaration type: (_) @reference.role.field_type_position @type.annotation.field) @type.owner.field
+(const_item type: (_) @reference.role.field_type_position @type.annotation.const) @type.owner.const
+(static_item type: (_) @reference.role.field_type_position @type.annotation.static) @type.owner.static
+(type_item type: (_) @reference.role.field_type_position @type.alias.target) @type.owner.alias
+(let_declaration type: (_) @reference.role.field_type_position @type.annotation.let) @type.owner.let
 
 (const_parameter
   value: (_) @reference.role.const_parameter_value)
-
-(use_declaration
-  argument: (_) @reference.role.import_selector)
 (use_as_clause
   path: (_) @reference.role.import_selector)
 
@@ -1217,26 +1121,15 @@
 
 (impl_item
   trait: (_) @reference.role.trait_or_impl_type)
-(impl_item
-  type: (_) @reference.role.trait_or_impl_type)
 (trait_item
   bounds: (_) @reference.role.trait_bound)
 (type_parameter
   bounds: (_) @reference.role.trait_bound)
-(type_parameter
-  default_type: (_) @reference.role.type_default)
+(type_parameter default_type: (_) @reference.role.type_default @type.parameter.default) @type.parameter.with_default
 (associated_type
   bounds: (_) @reference.role.trait_bound)
 (lifetime_parameter
   bounds: (_) @reference.role.lifetime_bound)
-
-; --- reference_roles_rust_specific ---
-
-; Rust-specific syntactic reference roles that are easy to lose if all
-; identifier-like nodes are treated as one generic reference candidate.
-
-(shorthand_field_initializer
-  (identifier) @reference.role.field_shorthand_value)
 
 (reference_type
   (lifetime) @reference.role.lifetime_reference)
@@ -1266,15 +1159,6 @@
 (token_tree
   (metavariable) @reference.role.macro_metavariable_use)
 
-; --- reference_roles ---
-
-; Explicit syntactic reference-role boundaries. These captures complement the
-; broad reference candidate query; rules join nested reference candidates to
-; the nearest captured role boundary without pretending name resolution.
-
-(call_expression
-  function: (_) @reference.role.callee)
-
 (call_expression
   arguments: (arguments
     (_) @reference.role.argument))
@@ -1282,14 +1166,6 @@
 (field_expression
   value: (_) @reference.role.receiver
   field: (field_identifier) @reference.role.member)
-
-(assignment_expression
-  left: (_) @reference.role.assignment_lhs
-  right: (_) @reference.role.assignment_rhs)
-
-(compound_assignment_expr
-  left: (_) @reference.role.assignment_lhs
-  right: (_) @reference.role.assignment_rhs)
 
 (binary_expression
   left: (_) @reference.role.binary_operand
@@ -1302,25 +1178,12 @@
 (reference_expression
   value: (_) @reference.role.borrowed_value)
 
-(return_expression
-  (_) @reference.role.return_value)
-
-(yield_expression
-  (_) @reference.role.yield_value)
-
-(if_expression
-  condition: (_) @reference.role.condition)
-
 (while_expression
   condition: (_) @reference.role.condition)
 
 (for_expression
   pattern: (_) @reference.role.pattern_position
   value: (_) @reference.role.iterator_value)
-
-(let_condition
-  pattern: (_) @reference.role.pattern_position
-  value: (_) @reference.role.condition_value)
 
 (match_expression
   value: (_) @reference.role.match_scrutinee)
@@ -1331,10 +1194,6 @@
 
 (field_initializer
   field: (field_identifier) @reference.role.member
-  value: (_) @reference.role.initializer)
-
-(let_declaration
-  pattern: (_) @reference.role.pattern_position
   value: (_) @reference.role.initializer)
 
 (parameter
@@ -1669,10 +1528,6 @@
   name: (_) @relation.type_parameter.owner
   bounds: (_) @relation.type_parameter.bound) @relation.type_parameter.bound_relation
 
-(where_predicate
-  left: (_) @relation.where.subject
-  bounds: (_) @relation.where.bound) @relation.where.bound_relation
-
 (associated_type
   name: (_) @relation.associated_type.owner
   bounds: (_) @relation.associated_type.bound) @relation.associated_type.bound_relation
@@ -1684,14 +1539,6 @@
 ; --- types ---
 
 (parameter type: (_) @type.annotation.parameter) @type.owner.parameter
-(let_declaration type: (_) @type.annotation.let) @type.owner.let
-(field_declaration type: (_) @type.annotation.field) @type.owner.field
-(const_item type: (_) @type.annotation.const) @type.owner.const
-(static_item type: (_) @type.annotation.static) @type.owner.static
-(function_item return_type: (_) @type.return.function) @type.owner.function
-(function_signature_item return_type: (_) @type.return.signature) @type.owner.signature
-(closure_expression return_type: (_) @type.return.closure) @type.owner.closure
-(type_item type: (_) @type.alias.target) @type.owner.alias
 (const_parameter type: (_) @type.annotation.const_parameter) @type.owner.const_parameter
 (type_parameter) @type.parameter
 (lifetime_parameter) @type.lifetime_parameter
@@ -1717,9 +1564,6 @@
 
 (type_parameter
   bounds: (trait_bounds) @type.parameter.bounds) @type.parameter.with_bounds
-
-(type_parameter
-  default_type: (_) @type.parameter.default) @type.parameter.with_default
 
 (lifetime_parameter
   bounds: (trait_bounds) @type.lifetime.bounds) @type.lifetime.with_bounds

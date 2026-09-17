@@ -91,23 +91,11 @@
   (identifier) @name) @definition.interface
 (extension_declaration
   name: (identifier) @name) @definition.class @definition.extension
-(function_signature
-  name: (identifier) @name) @definition.function
+(function_signature name: (identifier) @name @local.definition.function) @definition.function
 (constructor_signature
   name: (identifier) @name) @definition.function
 (type_alias
   "typedef" . (type_identifier) @name) @definition.type
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=dart kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/dart/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Definitions
-(function_signature
-  name: (identifier) @local.definition.function)
 
 (formal_parameter
   name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
