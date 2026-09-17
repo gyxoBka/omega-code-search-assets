@@ -400,28 +400,28 @@
 ; --- declaration_visibility ---
 
 (abstract_method_signature
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (method_definition
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (method_signature
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (property_signature
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 (public_field_definition
-  name: (_) @definition.visibility.name
   (accessibility_modifier) @definition.visibility.modifier
+  name: (_) @definition.visibility.name
 ) @definition.visibility.owner
 
 ; --- declarations_extended ---
@@ -515,7 +515,8 @@
 
 (as_expression) @expression.as @type.as_expression
 (satisfies_expression) @expression.satisfies @type.satisfies
-(type_assertion) @expression.type_assertion @type.assertion
+; TSX has no `<T>expr` assertion: that syntax is JSX here, so the
+; TypeScript grammar's `type_assertion` node does not exist in this one.
 (non_null_expression) @expression.non_null @type.non_null
 (instantiation_expression function: (_) @expression.instantiation.function type_arguments: (type_arguments) @expression.instantiation.type_arguments) @expression.instantiation
 (assignment_expression left: (_) @expression.assignment.left right: (_) @expression.assignment.right) @expression.assignment
@@ -1256,18 +1257,20 @@
       decorator: (decorator
         (identifier) @ts.member_marker.decorator_name)
       name: [(property_identifier) (private_property_identifier) (string)] @ts.member_marker.member_name) @ts.member_marker.member)) @ts.member_marker.class_context
-
-(class_declaration
-  name: (type_identifier) @ts.ctor_param_decorator.owner_class
-  body: (class_body
-    (method_definition
-      name: (property_identifier) @ts.ctor_param_decorator.constructor_name
-      parameters: (formal_parameters
-        (required_parameter
-          decorator: (decorator
-            (call_expression function: (identifier) @ts.ctor_param_decorator.decorator_name))
-          name: (identifier) @ts.ctor_param_decorator.parameter_name) @ts.ctor_param_decorator.parameter))) @ts.ctor_param_decorator.class_context
- (#eq? @ts.ctor_param_decorator.constructor_name "constructor"))
+; The TSX grammar rejects this pattern as impossible. It is kept in
+; the TypeScript Pack, where it compiles; TSX is a different parser.
+;
+; (class_declaration
+;   name: (type_identifier) @ts.ctor_param_decorator.owner_class
+;   body: (class_body
+;     (method_definition
+;       name: (property_identifier) @ts.ctor_param_decorator.constructor_name
+;       parameters: (formal_parameters
+;         (required_parameter
+;           decorator: (decorator
+;             (call_expression function: (identifier) @ts.ctor_param_decorator.decorator_name))
+;           name: (identifier) @ts.ctor_param_decorator.parameter_name) @ts.ctor_param_decorator.parameter))) @ts.ctor_param_decorator.class_context
+;  (#eq? @ts.ctor_param_decorator.constructor_name "constructor"))
 
 
 ; --- class_decorator_object_array_string_context ---
@@ -1320,18 +1323,22 @@
     (_)
     (array
       (identifier) @ecma.direct_array.item))) @ecma.direct_array.context
-
-(class_declaration
-  name: (_) @ecma.class_extends.class_name
-  (class_heritage
-    (identifier) @ecma.class_extends.superclass)) @ecma.class_extends.context
-
-(class_declaration
-  name: (_) @ecma.class_extends_member.class_name
-  (class_heritage
-    (member_expression
-      object: (identifier) @ecma.class_extends_member.object
-      property: (property_identifier) @ecma.class_extends_member.member)) @ecma.class_extends_member.superclass) @ecma.class_extends_member.context
+; The TSX grammar rejects this pattern as impossible. It is kept in
+; the TypeScript Pack, where it compiles; TSX is a different parser.
+; ; The TSX grammar rejects this pattern as impossible. It is kept in
+; ; the TypeScript Pack, where it compiles; TSX is a different parser.
+; ;
+; ; (class_declaration
+; ;   name: (_) @ecma.class_extends.class_name
+; ;   (class_heritage
+; ;     (identifier) @ecma.class_extends.superclass)) @ecma.class_extends.context
+;
+; (class_declaration
+;   name: (_) @ecma.class_extends_member.class_name
+;   (class_heritage
+;     (member_expression
+;       object: (identifier) @ecma.class_extends_member.object
+;       property: (property_identifier) @ecma.class_extends_member.member)) @ecma.class_extends_member.superclass) @ecma.class_extends_member.context
 
 ; --- semantic_closure_v3_146_ecma_direct_array_first_argument ---
 (call_expression
@@ -1381,29 +1388,33 @@
     (expression_statement
       (string
         (string_fragment) @ecma.function_directive.value)))) @ecma.function_directive.context
-
-; --- framework_neutral_ts_method_parameter_decorator_v1 ---
-
-(class_declaration
-  name: (type_identifier) @ts.method_param_decorator.owner_class
-  body: (class_body
-    (method_definition
-      name: (property_identifier) @ts.method_param_decorator.method_name
-      parameters: (formal_parameters
-        (required_parameter
-          decorator: (decorator
-            (call_expression function: (identifier) @ts.method_param_decorator.decorator_name))
-          name: (identifier) @ts.method_param_decorator.parameter_name) @ts.method_param_decorator.parameter))) @ts.method_param_decorator.class_context)
-
-(class_declaration
-  name: (type_identifier) @ts.method_param_marker.owner_class
-  body: (class_body
-    (method_definition
-      name: (property_identifier) @ts.method_param_marker.method_name
-      parameters: (formal_parameters
-        (required_parameter
-          decorator: (decorator (identifier) @ts.method_param_marker.decorator_full)
-          name: (identifier) @ts.method_param_marker.parameter_name) @ts.method_param_marker.parameter))) @ts.method_param_marker.class_context)
+; The TSX grammar rejects this pattern as impossible. It is kept in
+; the TypeScript Pack, where it compiles; TSX is a different parser.
+; ; The TSX grammar rejects this pattern as impossible. It is kept in
+; ; the TypeScript Pack, where it compiles; TSX is a different parser.
+; ;
+; ; ; --- framework_neutral_ts_method_parameter_decorator_v1 ---
+; ;
+; ; (class_declaration
+; ;   name: (type_identifier) @ts.method_param_decorator.owner_class
+; ;   body: (class_body
+; ;     (method_definition
+; ;       name: (property_identifier) @ts.method_param_decorator.method_name
+; ;       parameters: (formal_parameters
+; ;         (required_parameter
+; ;           decorator: (decorator
+; ;             (call_expression function: (identifier) @ts.method_param_decorator.decorator_name))
+; ;           name: (identifier) @ts.method_param_decorator.parameter_name) @ts.method_param_decorator.parameter))) @ts.method_param_decorator.class_context)
+;
+; (class_declaration
+;   name: (type_identifier) @ts.method_param_marker.owner_class
+;   body: (class_body
+;     (method_definition
+;       name: (property_identifier) @ts.method_param_marker.method_name
+;       parameters: (formal_parameters
+;         (required_parameter
+;           decorator: (decorator (identifier) @ts.method_param_marker.decorator_full)
+;           name: (identifier) @ts.method_param_marker.parameter_name) @ts.method_param_marker.parameter))) @ts.method_param_marker.class_context)
 
 ; --- exported_named_object_field_v3_146 ---
 (export_statement
@@ -1595,7 +1606,7 @@
   body: (statement_block
     (return_statement
       (jsx_self_closing_element
-        name: (identifier) @js.jsx_owner.child_component) @js.jsx_owner.jsx)))
+        name: (identifier) @js.jsx_owner.child_component) @js.jsx_owner.jsx))
 ) @js.jsx_owner.function
 
 (function_declaration
