@@ -141,12 +141,15 @@ def audit(pack):
     # which node type is each capture attached to
     owner = {}
     for pat in pats:
-        for m in re.finditer(r'\((\w+)[^()]*?\)[\]\s]*@([\w.\-]+)', pat):
+        # `(type)? @cap` and `[...]* @cap` -- a quantifier between the closing
+        # bracket and the capture. Without it every optional capture in every
+        # Pack had no owner recorded and was checked for neither D nor D2.
+        for m in re.finditer(r'\((\w+)[^()]*?\)[\]\s?*+]*@([\w.\-]+)', pat):
             owner.setdefault(m.group(2), m.group(1))
         # `[ (a) (b) ] @cap` -- the capture trails the alternation. A plain
         # `(node)...@cap` regex cannot see past the `]`, so such captures were
         # never checked for D or D2 at all.
-        for m in re.finditer(r'\[\s*\((\w+)[^\]]*\]\s*@([\w.\-]+)', pat):
+        for m in re.finditer(r'\[\s*\((\w+)[^\]]*\][\s?*+]*@([\w.\-]+)', pat):
             owner.setdefault(m.group(2), m.group(1))
         for m in re.finditer(r'^\((\w+)\b', pat):
             for c in re.findall(r'@([\w.\-]+)\s*$', pat):

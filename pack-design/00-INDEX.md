@@ -725,3 +725,56 @@ yet; `pack-design/omega-json.md` says what they must copy.
 
 Totals: **1 637 templates, 365 guards** (from 3 673 and 1 348 at the start).
 Twenty-six Packs rewritten, 35 to go.
+
+---
+
+# Wave 7 (gdscript, sas, bash, make, powershell)
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-gdscript | 30 -> 29 | 50 -> 23 | 19 -> 5 | 40 -> 27 |
+| omega-powershell | 26 -> 31 | 34 -> 21 | 10 -> 4 | 48 -> 50 |
+| omega-sas | 27 -> 15 | 26 -> 13 | 9 -> 5 | 25 -> 23 |
+| omega-bash | 17 -> 11 | 22 -> 11 | 10 -> 5 | 17 -> 15 |
+| omega-make | 16 -> 7 | 15 -> 10 | 9 -> 4 | 14 -> 22 |
+
+omega-powershell is the third Pack to grow, and omega-make now touches 22 node
+types where it touched 14 while halving its templates.
+
+Two blocking defects, both a pattern that could not reach the construct it
+existed for:
+
+- **omega-bash** matched a `case` alternative as `(word)`. tree-sitter-bash
+  lexes an alternative adjacent to `|` as `extglob_pattern`, so
+  `start|begin|go)` gives two `extglob_pattern`s and one `word`: exactly one
+  name per branch was declared, and which one depended on the lexer. The
+  multi-alternative form is the CLI dispatch the template exists for.
+- **omega-sas** matched `(libname_statement (string_literal) @libname.path)`
+  unanchored. An external-engine LIBNAME states its target in options, so
+  `libname odb odbc dsn="PRODDB" user="svc_etl" password="x";` emitted four
+  library paths -- a DSN, a user id and a password among them, each shown to an
+  agent as *where this library points*. Anchored to the string that follows the
+  libref, with a guard for the engine form.
+
+## Two findings about the audit itself
+
+**A quantifier hid every optional capture.** The owner regex required the
+capture to follow the closing bracket directly, so `type: (type)? @cap` and
+`(parameters)? @cap` recorded no owner at all and were checked for neither D nor
+D2 nor carrier-overwrite -- in every Pack, for the whole of this work. Fixed;
+the numbers below are the first honest ones for optional captures, and
+`carrier_owner` rose from 15 to 45 because it can now see them.
+
+**The nvim-treesitter `locals.scm` inheritance is not closed.** Earlier sweeps
+took out the `highlights.scm` patterns and the bare `(identifier)
+@local.reference` spelling, but a wired-up locals baseline survived in five
+Packs: omega-nix carries `@local.definition.field`, `@local.definition.parameter`,
+`@local.definition.var` and `@local.reference` with templates on all four, so
+its declaration set is an editor's highlighting model rather than an answer set.
+omega-html and omega-r have one each; omega-julia and omega-razor use the
+spelling for captures of their own. Twelve Packs still name nvim-treesitter in a
+provenance header. nix, r and html are in the waves that follow and will take it
+with them.
+
+Totals: **1 614 templates, 332 guards** (from 3 673 and 1 348 at the start).
+Thirty-one Packs rewritten, 30 to go.

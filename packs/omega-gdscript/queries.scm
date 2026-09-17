@@ -1,251 +1,132 @@
-; --- calls ---
+; omega-gdscript -- what a GDScript file declares, what it references, what it calls.
+;
+; One pattern per node. Several templates hang off one match where one match
+; answers several questions (a function and its signature, a field and its
+; declared type). Containment is not stated: the tree already holds it and the
+; host carries an inner class through the `within:` namespace segment.
 
-; Omega call facts for GDScript. Bounded to syntax visible in tree-sitter-gdscript.
+; ---------------------------------------------------------------- declarations
 
-(call
-  (identifier) @call.target) @call.expression
+; `class_name Player` -- the script's own globally registered type.
+(class_name_statement
+  (name) @class_name.name) @class_name
 
-(attribute_call
-  (identifier) @call.target) @call.expression
-
-(base_call
-  (identifier) @call.target) @call.expression
-
-; --- completeness_types_high_confidence ---
-
-(class_definition) @type.expression
-(enum_definition) @type.expression
-
-; --- declaration_category_class ---
-
+; `class Inner:` -- an inner class, and its body as a region.
 (class_definition
-  name: (_) @definition.category.class.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (name) @class.name
+  body: (body) @class.body) @class
 
-; --- declaration_category_enum ---
+; `func move(delta: float) -> void:` -- the declaration, its parameter shape,
+; its return type, and its body as a region.
+(function_definition
+  name: (name) @function.name
+  parameters: (parameters) @function.parameters
+  return_type: (type)? @function.return_type
+  body: (body) @function.body) @function
 
+; `func _init(...)` -- the constructor. This grammar spells `_init` as a
+; keyword token of the rule, so the node carries no name of its own.
+(constructor_definition
+  parameters: (parameters) @constructor.parameters) @constructor
+
+; `signal damaged(amount: int)`
+(signal_statement
+  .
+  (name) @signal.name
+  (parameters)? @signal.parameters) @signal
+
+; `enum Direction { UP, DOWN }` and each of its members.
 (enum_definition
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (name) @enum.name) @enum
 
-; --- declaration_category_function ---
+(enumerator
+  left: (identifier) @enumerator.name) @enumerator
 
-(function_definition
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- definition_identity_hints ---
-
-; --- enclosing_owner_hints ---
-
-(class_definition 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- named_scope_owners ---
-
-(function_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=b40c6fdfe8670ff0f73fb55f96c8d80c1233c4de50aea656a60a5a3414ba3794
-; resolved_query_sha256=7cdeee60974931981bbce5fa66f7f4e44e2b3e87aeebfb561b646ad513123b5b
-; parser_revision=1f1e782fe2600f50ae57b53876505b8282388d77
-; source_name=gdscript
-; direct_inherits=
-; resolved_sources=gdscript
-
-; ----- resolved nvim locals source: gdscript sha256=b40c6fdfe8670ff0f73fb55f96c8d80c1233c4de50aea656a60a5a3414ba3794 -----
-; Scopes
-[
-  (if_statement)
-  (elif_clause)
-  (else_clause)
-  (for_statement)
-  (while_statement)
-  (function_definition)
-  (constructor_definition)
-  (class_definition)
-  (match_statement)
-  (pattern_section)
-  (lambda)
-  (get_body)
-  (set_body)
-] @local.scope
-
-; Parameters
-(parameters
-  (identifier) @local.definition.parameter)
-
-(default_parameter
-  (identifier) @local.definition.parameter)
-
-(typed_parameter
-  (identifier) @local.definition.parameter)
-
-(typed_default_parameter
-  (identifier) @local.definition.parameter)
-(signal_statement (name) @local.definition.field @gdscript.signal.name) @gdscript.signal
-
-; Variable Definitions
-(const_statement
-  (name) @local.definition.constant)
-
-; onready and export variations are only properties.
-(variable_statement
-  (name) @local.definition.var)
-
-; Function Definition
-((function_definition
-  (name) @local.definition.function)
-  (#set! definition.function.scope "parent"))
-
-; Lambda
-; lambda names are not accessible and are only for debugging.
-(lambda
-  (name) @local.definition.function)
-(class_name_statement (name) @local.definition.type @gdscript.class_name.name) @gdscript.class_name
-
+; `var speed: float = 3.0` at file scope or in an inner class body -- a property
+; of the script's class. A `var` anywhere else is a local; see the guard.
 (source
   (variable_statement
-    (name) @local.definition.field))
-
-(source
-  (onready_variable_statement
-    (name) @local.definition.field))
-
-(source
-  (export_variable_statement
-    (name) @local.definition.field))
-
-; Class
-((class_definition
-  (name) @local.definition.type)
-  (#set! definition.type.scope "parent"))
+    name: (name) @field.name
+    type: (type)? @field.type) @field)
 
 (class_definition
-  (body
-    (variable_statement
-      (name) @local.definition.field)))
-
-(class_definition
-  (body
-    (onready_variable_statement
-      (name) @local.definition.field)))
-
-(class_definition
-  (body
-    (export_variable_statement
-      (name) @local.definition.field)))
-
-(class_definition
-  (body
-    (signal_statement
-      (name) @local.definition.field)))
-
-; Although a script is also a class, let's only define functions in an inner class as
-; methods.
-((class_definition
-  (body
-    (function_definition
-      (name) @local.definition.method)))
-  (#set! definition.method.scope "parent"))
-
-; Enum
-(enum_definition
-  (name) @local.definition.enum)
-
-; Repeat
-(for_statement
-  .
-  (identifier) @local.definition.var)
-
-; Match Statement
-(pattern_binding
-  (identifier) @local.definition.var)
-
-; References
-
-; --- ownership_members ---
-
-(class_definition
-  name: (_) @owner.name
-  body: (body
-    (export_variable_statement
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(class_definition
-  name: (_) @owner.name
-  body: (body
-    (onready_variable_statement
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(class_definition
-  name: (_) @owner.name
   body: (body
     (variable_statement
-      name: (_) @owned.member.name) @owned.member)) @owner.span
+      name: (name) @field.name
+      type: (type)? @field.type) @field))
 
-; --- ownership_parameters ---
+; `const MAX_HP = 100`
+(source
+  (const_statement
+    name: (name) @constant.name
+    type: (type)? @constant.type) @constant)
 
-(function_definition
-  name: (_) @owner.name
-  parameters: (parameters
-    (_parameters) @owned.parameter)) @owner.span
+(class_definition
+  body: (body
+    (const_statement
+      name: (name) @constant.name
+      type: (type)? @constant.type) @constant))
 
-; --- signature_parameters ---
-
-(function_definition
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-; --- signature_return_type ---
-
-(function_definition
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; --- terminal_gdscript_source_semantics_v1 ---
-
-(extends_statement
-  (string) @gdscript.extends.target) @gdscript.extends
-(extends_statement
-  (type) @gdscript.extends.target) @gdscript.extends
-(enumerator
-  left: (identifier) @gdscript.enum.member) @gdscript.enum.member.owner
-(constructor_definition) @gdscript.constructor
-(export_variable_statement name: (name) @gdscript.export.name) @gdscript.export
-(onready_variable_statement name: (name) @gdscript.onready.name) @gdscript.onready
-
-; --- semantic_closure_v3_146_batch4 ---
-
-(signal_statement
-  (name) @gdscript.signal.typed.name
-  (parameters) @gdscript.signal.parameters) @gdscript.signal.typed
-
-(class_name_statement
-  (name) @gdscript.class_name.typed.name
-  icon_path: (string)? @gdscript.class_name.icon) @gdscript.class_name.typed
-
+; `export(int) var speed` -- a field the editor's inspector shows.
 (export_variable_statement
-  name: (name) @gdscript.export.typed.name
-  type: (_) @gdscript.export.type
-  value: (_expression)? @gdscript.export.value) @gdscript.export.typed
+  name: (name) @export.name
+  type: (type)? @export.type) @export
 
+; `onready var sprite = $Sprite` -- a field initialised when the node enters
+; the tree.
 (onready_variable_statement
-  name: (name) @gdscript.onready.typed.name
-  type: (_) @gdscript.onready.type
-  value: (_expression)? @gdscript.onready.value) @gdscript.onready.typed
+  name: (name) @onready.name
+  type: (type)? @onready.type) @onready
 
+; ------------------------------------------------------------------ references
+
+; `extends Node2D` / `extends A.B` -- the base class this script derives from.
+(extends_statement
+  (type) @extends.type)
+
+; `extends "res://actor.gd"` -- the same edge, spelled as a script path.
+(extends_statement
+  (string) @extends.path)
+
+; `preload("res://enemy.tscn")` / `load(path)` -- a file this script depends on.
+(call
+  .
+  (identifier) @load.function
+  (arguments
+    .
+    (string) @load.path)
+  (#any-of? @load.function "preload" "load"))
+
+; `@export`, `@onready`, `@tool`, `@rpc(...)` -- the annotation by name.
 (annotation
-  (identifier) @gdscript.annotation.name
-  (arguments)? @gdscript.annotation.arguments) @gdscript.annotation
+  .
+  (identifier) @annotation.name) @annotation
 
+; `var hp setget _set_hp, _get_hp` -- the accessor methods named on a property.
+(setget
+  set: (setter) @accessor.name)
+
+(setget
+  get: (getter) @accessor.name)
+
+; Any type written in an annotation position: `var x: Enemy`, `-> Enemy`,
+; `func f(e: Enemy)`.
+(type
+  (identifier) @type.reference)
+
+; ----------------------------------------------------------------------- calls
+
+; `move(1)` -- a free call with a named callee.
+(call
+  .
+  (identifier) @call.function.name)
+
+; `sprite.play("run")` -- a method call on a receiver.
+(attribute_call
+  .
+  (identifier) @call.method.name)
+
+; `.ready()` / `super.ready()` -- a call into the base class.
+(base_call
+  .
+  (identifier) @call.method.name)

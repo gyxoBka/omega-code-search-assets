@@ -1,204 +1,122 @@
-; --- call_targets ---
+; omega-bash
+;
+; Bash files are entrypoints, build and CI scripts, installers and dotfiles.
+; The questions asked of one are: what does this script define, where is this
+; variable set and what is it set to, what does this script run, what does it
+; pull in with `source`, and where is this subcommand handled. Every pattern
+; below answers one of those.
+;
+; Containment is deliberately not stated. A function's extent is emitted once
+; as a region; a pattern per level of nesting would restate what the tree
+; already holds. Highlighting captures -- punctuation, keywords, the builtin
+; variable list -- are gone: no question reaches them.
 
-(command
-  name: (_) @call.target) @call.expression
-
-; --- declaration_category_function ---
-
-(function_definition
-  name: (_) @definition.category.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- definition_identity_hints ---
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=bash kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/bash/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Scopes
-
-; Definitions
-
-; References
-
-; --- locals ---
-
-; OMEGA IMPORTED LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; SPDX-License-Identifier: Apache-2.0
-; source=audit-baselines/external/nvim-treesitter/bash/locals.scm
-; sha256=cc82e0fccf88c4e47f8e7b968ea19babb799fda492d834d90959bfd213c49e97
-
-; Scopes
-
-; Definitions
-
-; References
-
-; --- named_scope_owners ---
+; --- a function ---
+;
+; `foo() { ... }` and `function foo { ... }` are one node. The declaration and
+; the region over its body are two templates over this one match.
 
 (function_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
+  name: (word) @function.name
+  body: (_) @function.body) @function
 
-; --- nvim_pinned_highlights ---
+; --- a variable, and what it is set to ---
+;
+; `PORT=8080` is where PORT is set, so the assignment is declared under the
+; variable's own name and carries its value. This one pattern covers every
+; position an assignment occurs in: at file scope, as a command prefix
+; (`FOO=1 cmd`), inside `declare`/`export`/`local`, and in a C-style for
+; initializer.
 
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=a4e5e1afa7656c3275629467170362997a7b36f51405b0fc0e6c0be080693acd
-; source_name=bash
+(variable_assignment
+  name: [
+    (variable_name) @assignment.name
+    (subscript name: (variable_name) @assignment.name)
+  ]
+  value: (_) @assignment.value) @assignment
 
-; ----- resolved nvim highlights source: bash sha256=a4e5e1afa7656c3275629467170362997a7b36f51405b0fc0e6c0be080693acd -----
+; --- how it was declared ---
+;
+; `export`, `local`, `readonly`, `declare` and `typeset` answer whether a
+; variable is in the environment of the commands that follow, private to a
+; function, or fixed. The keyword is carried onto the declaration that occupies
+; the same span -- the assignment node above -- as `omega.pack.modifier`.
 
-[
-  ";"
-  ";;"
-  ";&"
-  ";;&"
-  "&"
-] @punctuation.delimiter
+(declaration_command
+  [ "declare" "typeset" "export" "readonly" "local" ] @declaration.keyword
+  (variable_assignment) @declaration.assignment)
 
-; Do *not* spell check strings since they typically have some sort of
-; interpolation in them, or, are typically used for things like filenames, URLs,
-; flags and file content.
+; A declaration without a value -- `local tmp`, `export PATH`, `declare -A map`
+; -- still names a variable, and is the only place the name occurs.
 
- ; bare dollar
+(declaration_command
+  [ "declare" "typeset" "export" "readonly" "local" ] @declared.keyword
+  (variable_name) @declared.name)
 
-"export" @keyword.import
+; --- a loop variable ---
+;
+; `for host in "${hosts[@]}"` binds `host` for the body; it is the one other
+; place bash introduces a name.
 
-"function" @keyword.function
+(for_statement
+  variable: (variable_name) @for.variable)
 
-(special_variable_name) @constant
-
-; help trap
-
-; trap -l
-
-"``" @punctuation.special
-
-(variable_name) @variable
-
-((variable_name) @variable.builtin
-  (#any-of? @variable.builtin
-    ; https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Variables.html
-    "CDPATH" "HOME" "IFS" "MAIL" "MAILPATH" "OPTARG" "OPTIND" "PATH" "PS1" "PS2"
-    ; https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html
-    "_" "BASH" "BASHOPTS" "BASHPID" "BASH_ALIASES" "BASH_ARGC" "BASH_ARGV" "BASH_ARGV0" "BASH_CMDS"
-    "BASH_COMMAND" "BASH_COMPAT" "BASH_ENV" "BASH_EXECUTION_STRING" "BASH_LINENO"
-    "BASH_LOADABLES_PATH" "BASH_REMATCH" "BASH_SOURCE" "BASH_SUBSHELL" "BASH_VERSINFO"
-    "BASH_VERSION" "BASH_XTRACEFD" "CHILD_MAX" "COLUMNS" "COMP_CWORD" "COMP_LINE" "COMP_POINT"
-    "COMP_TYPE" "COMP_KEY" "COMP_WORDBREAKS" "COMP_WORDS" "COMPREPLY" "COPROC" "DIRSTACK" "EMACS"
-    "ENV" "EPOCHREALTIME" "EPOCHSECONDS" "EUID" "EXECIGNORE" "FCEDIT" "FIGNORE" "FUNCNAME"
-    "FUNCNEST" "GLOBIGNORE" "GROUPS" "histchars" "HISTCMD" "HISTCONTROL" "HISTFILE" "HISTFILESIZE"
-    "HISTIGNORE" "HISTSIZE" "HISTTIMEFORMAT" "HOSTFILE" "HOSTNAME" "HOSTTYPE" "IGNOREEOF" "INPUTRC"
-    "INSIDE_EMACS" "LANG" "LC_ALL" "LC_COLLATE" "LC_CTYPE" "LC_MESSAGES" "LC_NUMERIC" "LC_TIME"
-    "LINENO" "LINES" "MACHTYPE" "MAILCHECK" "MAPFILE" "OLDPWD" "OPTERR" "OSTYPE" "PIPESTATUS"
-    "POSIXLY_CORRECT" "PPID" "PROMPT_COMMAND" "PROMPT_DIRTRIM" "PS0" "PS3" "PS4" "PWD" "RANDOM"
-    "READLINE_ARGUMENT" "READLINE_LINE" "READLINE_MARK" "READLINE_POINT" "REPLY" "SECONDS" "SHELL"
-    "SHELLOPTS" "SHLVL" "SRANDOM" "TIMEFORMAT" "TMOUT" "TMPDIR" "UID"))
+; --- a command the script runs ---
+;
+; The name is taken only when it is a literal word, so it can match a function
+; declared in this repository. `source` and `.` are excluded here and stated as
+; imports below.
 
 ((command
-  name: (command_name
-    (word) @_printf)
+  name: (command_name (word) @call.name)) @call
+  (#not-any-of? @call.name "source" "."))
+
+; --- what the script pulls in ---
+;
+; `source lib/common.sh` and `. ./lib/common.sh` are the only way a shell
+; script includes another file. Anchored to the first argument: the rest are
+; positional parameters for the sourced file, not the file.
+
+((command
+  name: (command_name (word) @import.keyword)
   .
-  argument: (word) @_v
-  .
-  argument: (word) @variable)
-  (#eq? @_printf "printf")
-  (#eq? @_v "-v")
-  (#match? @variable "^[a-zA-Z_][a-zA-Z0-9_]*$"))
+  argument: (_) @import.target) @import
+  (#any-of? @import.keyword "source" "."))
 
-; --- nvim_pinned_injections ---
+; --- a variable being read ---
+;
+; `$name` and `${name}` / `${name[i]}`, stripped to the bare name so they
+; resolve onto the declarations above.
 
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=cdadaef6c336ca6d75e53be80d1689f6b1d65182c2d51fc55226acded40ccc5c
-; source_name=bash
+(simple_expansion
+  (variable_name) @variable.reference.name) @variable.reference
 
-; ----- resolved nvim injections source: bash sha256=cdadaef6c336ca6d75e53be80d1689f6b1d65182c2d51fc55226acded40ccc5c -----
+(expansion
+  [
+    (variable_name) @variable.reference.name
+    (subscript name: (variable_name) @variable.reference.name)
+  ]) @variable.reference
+
+; --- a dispatch branch ---
+;
+; `case "$1" in deploy) ... ;; esac` is how a shell script spells its
+; subcommands, and "where is `deploy` handled" is a question about a name.
+; Bare glob branches (`*`, `?`) name nothing and are excluded.
+
+; An alternative adjacent to `|` is lexed as `extglob_pattern`, not `word`:
+; `start|begin|go)` gives two extglob_patterns and one word, so matching `word`
+; alone declared one name per branch and which one was lexer-dependent.
+
+((case_item
+  value: [(word) (extglob_pattern)] @case.value) @case.item
+  (#not-match? @case.value "^[*?]+$"))
+
+; --- another language embedded in a heredoc ---
+;
+; `<<SQL ... SQL` and `<<PYTHON ... PYTHON` carry a real body of another
+; language; the delimiter is its name. `<<EOF` names no registered language and
+; resolves to nothing, which is the correct outcome.
 
 (heredoc_redirect
   (heredoc_body) @injection.content
   (heredoc_end) @injection.language)
-
-; printf 'format'
-
-; printf -v var 'format'
-
-; printf -- 'format'
-
-((command
-  name: (command_name) @_command
-  .
-  argument: [
-    (string)
-    (raw_string)
-  ] @injection.content)
-  (#eq? @_command "trap")
-  (#offset! @injection.content 0 1 0 -1)
-  (#set! injection.include-children)
-  (#set! injection.self))
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=cc82e0fccf88c4e47f8e7b968ea19babb799fda492d834d90959bfd213c49e97
-; resolved_query_sha256=2e84182204734335aef8f1d62dec548212a239bf8e9d54697775a4bc71028394
-; parser_revision=a06c2e4415e9bc0346c6b86d401879ffb44058f7
-; source_name=bash
-; direct_inherits=
-; resolved_sources=bash
-
-; ----- resolved nvim locals source: bash sha256=cc82e0fccf88c4e47f8e7b968ea19babb799fda492d834d90959bfd213c49e97 -----
-; Scopes
-(function_definition) @local.scope
-
-; Definitions
-(variable_assignment
-  name: (variable_name) @local.definition.var)
-
-(function_definition
-  name: (word) @local.definition.function)
-
-; References
-
-; --- static_delta ---
-
-(command
-  name: (command_name) @call.target) @call.command
-
-((command
-  name: (command_name) @import.api
-  argument: (_) @import.target) @import.command
-  (#match? @import.api "^(source|\\.)$"))
-
-(variable_assignment
-  name: (variable_name) @data.assignment.name
-  value: (_) @data.assignment.value) @data.assignment
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(for_statement variable: (variable_name) @bash.for.binding value: (_) @bash.for.sequence) @bash.for
-
-(variable_assignment name: (variable_name) @bash.assignment.name value: (_) @bash.assignment.value) @bash.assignment
-
-; --- semantic_closure_v3_146_batch4 ---
-
-(file_redirect
-  destination: (_) @bash.redirect.file_destination) @bash.redirect.file
-
-(simple_expansion
-  (variable_name) @bash.expansion.variable) @bash.expansion.simple_variable
-
-(expansion
-  (variable_name) @bash.expansion.variable) @bash.expansion.parameter
-
-(pipeline
-  (_) @bash.pipeline.statement) @bash.pipeline.owned_statement
-
