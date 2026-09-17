@@ -1,161 +1,160 @@
-; --- completeness_types_high_confidence ---
+; omega-graphql
+;
+; One grammar, two languages. A `.graphql` file is either a schema -- the
+; types, fields, arguments and directives an API offers -- or an executable
+; document: the operations and fragments a client sends. The questions asked
+; of them are: where is this type defined, what fields does it have, what type
+; does a field return, who uses this type, where is this fragment declared and
+; where is it spread, and which schema field does this selection reach.
+;
+; Containment is deliberately not stated. A field nested in a type already
+; carries its type through the host's `within:` segment, and a pattern per
+; nesting level costs one match per tuple of nodes at that level.
+;
+; Two patterns are rooted at a parent on purpose: `input_value_definition` is
+; the same node for a field argument and for an input object's field, and only
+; its parent says which. That is disambiguation, not containment -- neither
+; pattern states anything about the parent.
 
-(enum_type_definition) @type.expression
-(input_object_type_definition) @type.expression
-(interface_type_definition) @type.expression
-(object_type_definition) @type.expression @structural.candidate
-(root_operation_type_definition) @type.expression
-(scalar_type_definition) @type.expression
-(type_definition) @type.expression
-(union_type_definition) @type.expression
+; --- the six type definitions ---
+;
+; Every one of these names a type, and every kind below carries a word from
+; the host's Type vocabulary, so all six land in the Type family.
 
-; --- distributed_web_structural ---
+(object_type_definition (name) @object_type.name) @object_type
 
-; OMEGA-INDEPENDENTLY-AUTHORED structural query.
-; External Neovim query body is NOT copied. Exact parser-target evidence: https://raw.githubusercontent.com/neovim-treesitter/nvim-treesitter-queries-graphql/main/parser.json
-; Structural node fact observed at: https://raw.githubusercontent.com/neovim-treesitter/nvim-treesitter-queries-graphql/main/queries/highlights.scm
+(interface_type_definition (name) @interface.name) @interface
 
-; --- root_field_schema_context ---
+(union_type_definition (name) @union.name) @union
 
-; Framework-neutral GraphQL root operation field -> named response/input type context.
-; Covers Query/Mutation/Subscription structurally; framework overlays decide which owners are operation roots.
+(enum_type_definition (name) @enum.name) @enum
 
-; Response named type, direct.
-(object_type_definition
-  (name) @graphql.root_field.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_field.field_name
-      (type (named_type (name) @graphql.root_field.response_type)) @graphql.root_field.type) @graphql.root_field.field)) @graphql.root_field.owner
+(input_object_type_definition (name) @input_type.name) @input_type
 
-; Response named type, non-null.
-(object_type_definition
-  (name) @graphql.root_field.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_field.field_name
-      (type (non_null_type (named_type (name) @graphql.root_field.response_type))) @graphql.root_field.type) @graphql.root_field.field)) @graphql.root_field.owner
+(scalar_type_definition (name) @scalar.name) @scalar
 
-; Response named type, list.
-(object_type_definition
-  (name) @graphql.root_field.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_field.field_name
-      (type (list_type (type (named_type (name) @graphql.root_field.response_type)))) @graphql.root_field.type) @graphql.root_field.field)) @graphql.root_field.owner
+; --- extending a type ---
+;
+; `extend type Query { me: User }` is how a federated subgraph declares its
+; part of a root type, and in a schema split across files it may be the only
+; declaration of that type in this repository. So an extension is a
+; declaration under the same name, not a reference to one: the fields inside
+; it then have an enclosing declaration to hang from.
 
-; Response named type, list item non-null.
-(object_type_definition
-  (name) @graphql.root_field.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_field.field_name
-      (type (list_type (type (non_null_type (named_type (name) @graphql.root_field.response_type))))) @graphql.root_field.type) @graphql.root_field.field)) @graphql.root_field.owner
+[
+  (object_type_extension (name) @extension.name)
+  (interface_type_extension (name) @extension.name)
+  (input_object_type_extension (name) @extension.name)
+  (enum_type_extension (name) @extension.name)
+  (scalar_type_extension (name) @extension.name)
+  (union_type_extension (name) @extension.name)
+] @extension
 
-; Response named type, outer non-null list.
-(object_type_definition
-  (name) @graphql.root_field.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_field.field_name
-      (type (non_null_type (list_type (type (named_type (name) @graphql.root_field.response_type))))) @graphql.root_field.type) @graphql.root_field.field)) @graphql.root_field.owner
+; --- a field of an object type, an interface, or either one's extension ---
+;
+; One pattern reaches all of them, because `field_definition` is the same node
+; everywhere. Three templates over the one match: the field itself, its
+; arguments as the signature's parameter shape, and its type as the return
+; type. A GraphQL field *is* the call: `user(id: ID!): User` reads on a card
+; exactly as a function does.
 
-; Response named type, outer non-null list with non-null item.
-(object_type_definition
-  (name) @graphql.root_field.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_field.field_name
-      (type (non_null_type (list_type (type (non_null_type (named_type (name) @graphql.root_field.response_type)))))) @graphql.root_field.type) @graphql.root_field.field)) @graphql.root_field.owner
+(field_definition
+  (name) @field.name
+  (arguments_definition)? @field.arguments
+  (type) @field.type) @field
 
-; Request argument named type, direct.
-(object_type_definition
-  (name) @graphql.root_arg.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_arg.field_name
-      (arguments_definition
-        (input_value_definition
-          (name) @graphql.root_arg.argument_name
-          (type (named_type (name) @graphql.root_arg.argument_type)) @graphql.root_arg.type) @graphql.root_arg.argument) ) @graphql.root_arg.field)) @graphql.root_arg.owner
+; --- an argument ---
+;
+; The same node under `arguments_definition` is an argument of a field or of a
+; directive; under `input_fields_definition` it is a field of an input object.
+; They answer different questions and are named apart.
 
-; Request argument named type, non-null.
-(object_type_definition
-  (name) @graphql.root_arg.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_arg.field_name
-      (arguments_definition
-        (input_value_definition
-          (name) @graphql.root_arg.argument_name
-          (type (non_null_type (named_type (name) @graphql.root_arg.argument_type))) @graphql.root_arg.type) @graphql.root_arg.argument) ) @graphql.root_arg.field)) @graphql.root_arg.owner
+(arguments_definition
+  (input_value_definition
+    (name) @argument.name
+    (type) @argument.type) @argument)
 
-; Request argument named type, list.
-(object_type_definition
-  (name) @graphql.root_arg.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_arg.field_name
-      (arguments_definition
-        (input_value_definition
-          (name) @graphql.root_arg.argument_name
-          (type (list_type (type (named_type (name) @graphql.root_arg.argument_type)))) @graphql.root_arg.type) @graphql.root_arg.argument) ) @graphql.root_arg.field)) @graphql.root_arg.owner
+(input_fields_definition
+  (input_value_definition
+    (name) @input_field.name
+    (type) @input_field.type) @input_field)
 
-; Request argument named type, list item non-null / outer wrappers.
-(object_type_definition
-  (name) @graphql.root_arg.owner_type
-  (fields_definition
-    (field_definition
-      (name) @graphql.root_arg.field_name
-      (arguments_definition
-        (input_value_definition
-          (name) @graphql.root_arg.argument_name
-          (type (non_null_type (list_type (type (non_null_type (named_type (name) @graphql.root_arg.argument_type)))))) @graphql.root_arg.type) @graphql.root_arg.argument) ) @graphql.root_arg.field)) @graphql.root_arg.owner
+; --- an enum member ---
+;
+; A member is a constant, not a type. Any kind with the word `enum` in it is
+; filed under Type by the host, so the word is left out deliberately.
 
-; --- schema_semantics ---
+(enum_value_definition (enum_value (name) @enum_member.name)) @enum_member
 
-; Omega-owned GraphQL schema/executable semantics.
-; Node shapes are derived from the exact pinned tree-sitter-graphql node-types contract.
+; --- a directive declaration ---
+;
+; Where it may be written is the whole of what a directive declaration says
+; that its name does not, so the locations are carried on the declaration.
 
-(object_type_definition (name) @definition.object_type)
-(interface_type_definition (name) @definition.interface_type)
-(input_object_type_definition (name) @definition.input_object_type)
-(enum_type_definition (name) @definition.enum_type)
-(scalar_type_definition (name) @definition.scalar_type)
-(directive_definition (name) @definition.directive)
-(field_definition (name) @definition.field)
-(input_value_definition (name) @definition.input_value)
-(enum_value_definition (enum_value (name) @definition.enum_value))
-(fragment_definition (fragment_name (name) @definition.fragment))
-(operation_definition (name) @definition.operation)
+(directive_definition
+  (name) @directive.name
+  (directive_locations) @directive.locations) @directive
 
-(named_type (name) @reference.type)
-(fragment_spread (fragment_name (name) @reference.fragment))
-(field (name) @reference.field)
-(directive (name) @reference.directive)
+; --- the schema's roots ---
+;
+; `schema { query: Query, mutation: Mutation }`, and the same node inside
+; `extend schema`. This is the one piece of configuration a GraphQL document
+; holds: which type answers which kind of operation.
 
-; --- terminal_graphql_extension_schema_variables_v1 ---
-(object_type_extension (name) @graphql.extension.object.name) @graphql.extension.object
-(interface_type_extension (name) @graphql.extension.interface.name) @graphql.extension.interface
-(input_object_type_extension (name) @graphql.extension.input.name) @graphql.extension.input
-(enum_type_extension (name) @graphql.extension.enum.name) @graphql.extension.enum
-(scalar_type_extension (name) @graphql.extension.scalar.name) @graphql.extension.scalar
-(union_type_extension (name) @graphql.extension.union.name) @graphql.extension.union
+(root_operation_type_definition
+  (operation_type) @schema.root.operation
+  (named_type (name) @schema.root.type)) @schema.root
 
-(variable_definition (variable) @graphql.variable.name (type) @graphql.variable.type) @graphql.variable.definition
+; --- an executable document ---
+;
+; A named operation declares itself; the variables it takes are its parameter
+; shape. An anonymous `{ ... }` operation declares nothing and does not match:
+; it binds neither the operation type nor a name.
 
-; --- semantic_closure_v3_146_batch2 ---
+(operation_definition
+  (operation_type) @operation.type
+  (name) @operation.name
+  (variable_definitions)? @operation.variables) @operation
 
-(implements_interfaces (named_type) @graphql.implements.type) @graphql.implements
-(union_type_definition (name) @graphql.union.name (union_member_types (named_type) @graphql.union.member)) @graphql.union
+(fragment_definition (fragment_name (name) @fragment.name)) @fragment
 
-(directive_definition (name) @graphql.directive.name (directive_locations) @graphql.directive.locations) @graphql.directive
-(argument (name) @graphql.argument.name (value) @graphql.argument.value) @graphql.argument
+(variable_definition
+  (variable (name) @variable.name)
+  (type) @variable.type) @variable
 
-; --- semantic_closure_v3_147_graphql_surface ---
-(object_type_definition (name) @graphql.implements.owner (implements_interfaces (named_type (name) @graphql.implements.target)) @graphql.implements.edge)
-(interface_type_definition (name) @graphql.interface_implements.owner (implements_interfaces (named_type (name) @graphql.interface_implements.target)) @graphql.interface_implements.edge)
-(union_type_definition (name) @graphql.union_ref.owner (union_member_types (named_type (name) @graphql.union_ref.target)) @graphql.union_ref.edge)
-(directive_definition (name) @graphql.directive_arg.owner (arguments_definition (input_value_definition (name) @graphql.directive_arg.name (type) @graphql.directive_arg.type) @graphql.directive_arg.definition))
-(directive_definition (name) @graphql.directive_location.owner (directive_locations (directive_location) @graphql.directive_location.value) @graphql.directive_location.edge)
-(input_value_definition (name) @graphql.default.owner (type) @graphql.default.type (default_value) @graphql.default.explicit) @graphql.default.definition
+; --- every mention of a type ---
+;
+; `named_type` is the one node a type name is ever written as: a field's type,
+; an argument's type, a variable's type, a union member, a fragment's type
+; condition, a schema root, an implemented interface. One pattern covers all
+; of them, and the name is taken without its list or non-null wrappers so it
+; resolves onto the declaration.
+
+(named_type (name) @type.reference)
+
+; --- implementing an interface ---
+;
+; `type Dog implements Pet` is one of the six relations the host knows. The
+; clause nests for `A & B`, so each level contributes its own named type.
+; The general pattern above also sees these names; the relation is what makes
+; the edge, and it is the rarer of the two.
+
+(implements_interfaces (named_type (name) @implements.interface))
+
+; --- what an executable document reaches ---
+;
+; A selection names a field of the schema, a spread names a fragment, a
+; directive names a directive declaration, an argument names the argument
+; declared beside the field. Each resolves onto a declaration above.
+; `(field (name))` cannot pick up an alias: an alias spells its name inside an
+; `alias` node, not as a direct child.
+
+(field (name) @selection.name)
+
+(fragment_spread (fragment_name (name) @fragment.reference))
+
+(directive (name) @directive.reference)
+
+(argument
+  (name) @argument.reference
+  (value) @argument.reference.value)

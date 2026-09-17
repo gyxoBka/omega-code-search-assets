@@ -838,3 +838,61 @@ went with its rewrite too.
 
 Totals: **1 542 templates, 309 guards** (from 3 673 and 1 348 at the start).
 Thirty-six Packs rewritten, 25 to go.
+
+---
+
+# Wave 9 (sql, css, hcl, twig, graphql)
+
+| Pack | templates | patterns | guards |
+|---|---|---|---|
+| omega-sql | 52 -> 33 | 58 -> 27 | 10 -> 5 |
+| omega-graphql | 36 -> 28 | 50 -> 22 | 4 -> 4 |
+| omega-css | 32 -> 10 | 34 -> 10 | 6 -> 5 |
+| omega-hcl | 31 -> 9 | 36 -> 9 | 9 -> 4 |
+| omega-twig | 19 -> 15 | 18 -> 14 | 7 -> 5 |
+
+The rewritten omega-sql finally makes SQL's one link: every name on both sides
+is reduced to the last segment of its object reference, so `CREATE TABLE
+public.users` and `FROM users` resolve to each other. The old Pack stored the
+declaration as `public.users` and the reference as `users`, and the two could
+never meet.
+
+One blocking defect: **omega-sql**'s `DROP INDEX` branch. `drop_index` has a
+required `name:` field -- the index -- and an optional `object_reference`
+reachable only after `ON`. The pattern read the `object_reference`, so
+`DROP INDEX idx_users_email;` (the standard form, no `ON`) bound nothing and was
+not stated at all, while `DROP INDEX idx ON users;` reported **the table** as
+the dropped object. The other nine branches of the same alternation were right.
+
+## tree-sitter's static analysis is an oracle, and the brief now says so
+
+The sql agent learned the shape of `create_index` from the validator rather than
+from `node-types.json`: writing `(object_reference) . (keyword_on)` produced
+`Impossible pattern`, which is how it found that the index's own name is the
+field spelled `column:`. `node-types.json` records a field but not its order,
+and a field's name can be misleading. Write the anchored pattern you believe is
+true and let the validator refute it.
+
+## A recurring shape, now named
+
+A grammar that spells two different roles with the same node type under one
+parent, told apart only by an anchor against a keyword token. It has produced a
+*confidently wrong* answer every time it appeared, never a missing one:
+omega-kotlin's `user_type` (wave 4) made `com` and `example` into supertypes,
+omega-sas's `libname` (wave 7) made a password into a library path,
+omega-sql's `create_index` reported the index's name as a table it depends on
+and `drop_index` reported the table as the dropped object. When a pattern's
+children are of one type and their roles differ, anchor them.
+
+`carrier_owner` over-fires in a third way, beyond the modifier grouping the
+label already names: tree-sitter-sql puts *every* child of `create_function`
+into one `"multiple": true` group, `function_arguments` beside `keyword_create`,
+so a correct parameter carrier reads as self-overwriting. Any Pack over such a
+grammar reports it for every carrier it writes.
+
+`pack-design/__pycache__/` was tracked -- committed by me when the audit was
+added -- and CPython rewrites it whenever an agent imports `audit.py` to reuse
+its helpers. Untracked and gitignored.
+
+Totals: **1 467 templates, 296 guards** (from 3 673 and 1 348 at the start).
+Forty-one Packs rewritten, 20 to go.

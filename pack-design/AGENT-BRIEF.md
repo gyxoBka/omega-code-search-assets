@@ -546,6 +546,25 @@ If you change anything in `D:\WebProjects\omega-code-search`, build with
 daemons first (`Stop-Process -Name omega-daemon -Force`) or the link step fails
 with "Отказано в доступе" on `omega-daemon.exe`.
 
+## 12a. Two things the waves keep proving
+
+**tree-sitter's static analysis is an oracle. Use it.** `node-types.json`
+records that a node has a field; it does not record the field's order, and a
+field's name can be misleading. Write the anchored pattern you believe is true
+and run the validator: `Impossible pattern` is it telling you the tree is not
+that shape. That is how omega-sql found that an index's own name is the field
+spelled `column:` on `create_index`.
+
+**Anchor when one node type plays two roles under one parent.** This has
+produced a confidently wrong answer every time it has appeared, never a missing
+one: omega-kotlin spelled a dotted supertype as a flat run of `type_identifier`,
+so `class Foo : com.example.Base()` made `com` and `example` into supertypes;
+omega-sas matched every quoted option of a LIBNAME as its path, storing a
+password as *where this library points*; omega-sql read `drop_index`'s optional
+`ON` table as the dropped object and `create_index`'s own name as a table it
+depends on. If a pattern's children share a type and differ only in role, an
+anchor is not a refinement -- it is the difference between an answer and a lie.
+
 ## 13. The questions to ask of every Pack
 
 Answer all of these in the `.md` before writing a line of the new Pack.
