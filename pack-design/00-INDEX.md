@@ -948,3 +948,59 @@ until their own rewrites, which are in the waves that follow.
 
 Totals: **1 453 templates, 299 guards** (from 3 673 and 1 348 at the start).
 Forty-six Packs rewritten, 15 to go.
+
+---
+
+# Wave 11 (batch, docker-compose, ini, godot-resource, blade)
+
+| Pack | templates | patterns | guards |
+|---|---|---|---|
+| omega-docker-compose | 28 -> 9 | 28 -> 9 | 4 -> 5 |
+| omega-batch | 13 -> 13 | 11 -> 12 | 3 -> 3 |
+| omega-blade | 12 -> 14 | 13 -> 16 | 3 -> 6 |
+| omega-godot-resource | 7 -> 14 | 8 -> 14 | 6 -> 5 |
+| omega-ini | 9 -> 3 | 7 -> 3 | 1 -> 3 |
+
+Four blocking defects, and three of them are the same mistake in three
+different grammars: **a pattern that reads the wrong argument**.
+
+- **omega-batch**: `call :build` has no `command_name` child -- the label is an
+  anonymous token, exactly as in `goto_stmt`, which the Pack already handled
+  that way. So `call.procedure` emitted nothing on any batch file, and the
+  subroutine-call edge -- who enters the label the Pack declares -- was the one
+  thing the rewrite claimed to fix and did not. Both `call` forms are captured
+  whole now and told apart by whether the statement text begins `call :`.
+- **omega-blade**: `@includeWhen($cond, 'view')` and `@includeUnless` put the
+  *condition* first and `@includeFirst` takes an array, so the three emitted
+  `$user->isAdmin`, `$guest` and `['custom.admin'` as the templates a view
+  depends on. The first-argument directives keep their pattern, the two
+  conditional ones get their own that skips the condition, and `@includeFirst`
+  is left unstated with a guard.
+- **omega-docker-compose**: a family/role mismatch that made every edge
+  unresolvable. `relation.depends` admits only Artifact, Namespace, Callable and
+  Contract at either end, and every declaration in the Pack was
+  `definition.config.*` -- Config family. So `depends_on: db` resolved to
+  nothing. The declarations drop `config` from their kind (Value family) and the
+  edges become `relation.data`, whose source is Value and whose target includes
+  Value and Config.
+
+## The second cross-asset break, and why this one was restored
+
+**omega-godot-resource** killed four of the nine rules in
+`frameworks/omega-framework-godot`, which reads three Pack-specific kinds with
+fields and joins them by resource id to build Scene, GameEntity and the script
+attachment.
+
+This is not the omega-json case and was treated differently. The json overlays
+read `a0` … `a6` -- a path of ancestor keys restated by one pattern per nesting
+depth, which is Defect E written into a contract, so it stayed removed. These
+three are one specific triple each about a scene file: an ext_resource's id and
+path, a node's name and the script resource it points at, a section's kind,
+attribute and value. Nothing about them is a defect, so all three are restored
+verbatim and the overlay works again.
+
+The rule that separates the two cases: **restore a cross-asset fact when it
+states something; leave it removed when it only restates where something sits.**
+
+Totals: **1 436 templates, 304 guards** (from 3 673 and 1 348 at the start).
+Fifty-one Packs rewritten, 10 to go -- one wave and a tail.

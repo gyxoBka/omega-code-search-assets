@@ -1,50 +1,103 @@
-; --- calls_references ---
+; omega-batch
+;
+; Windows batch files (.bat, .cmd) are build steps, installers, launchers and
+; CI entry points. The questions asked of one are: which subroutines does this
+; script define and who jumps into them, which environment variables does it
+; set and where are they read, which programs does it run, which other scripts
+; does it call, and which files does it write.
+;
+; Every pattern below is rooted at one node type and answers one of those.
+; Containment is not stated: the tree already holds it, and a batch file has no
+; nesting worth a pattern per depth.
+;
+; Batch is case-insensitive in labels, variable names and command words, so
+; every name is lowered on both sides of a link. That is a fact about the
+; language, not a normalisation habit: `GOTO :Build` and `:build` are the same
+; target and must resolve to each other.
 
-; Exact pinned tree-sitter-batch node shapes.
-(call_stmt (command_name) @call.target) @call.statement
-(call_stmt (variable_reference) @reference.dynamic_call_target)
-(cmd (command_name) @call.command) @call.command_statement
-(variable_reference) @reference.variable @batch.variable.reference
+; --- the only named code unit batch has ---
+;
+; A label is a jump target and, with `call`, a subroutine entry. `::` at the
+; start of a line is the idiomatic comment; it is excluded here in case the
+; grammar lexes it as a label rather than a comment.
 
-; --- external-helix-tags ---
+((label) @label
+  (#not-match? @label "^::"))
 
-; Omega coverage-first adapted external query
-; source=helix language=batch kind=tags
-; original baseline: audit-baselines/external/helix/batch/tags.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(label) @definition.function @structural.candidate
+; --- an environment variable ---
+;
+; `set NAME=value`. The value is carried onto the declaration rather than
+; emitted as a mention: it is a value, and a mention of it resolves to nothing.
+; The value is optional because `set NAME=` clears a variable and still
+; declares it; making it optional binds one more capture on the same matches,
+; it does not admit new ones.
 
 (variable_assignment
-  (set_keyword)
-  (variable_name) @definition.constant)
+  (variable_name) @assign.name
+  [(assignment_value)
+   (quoted_assignment_value)
+   (caret_quoted_assignment_value)]? @assign.value) @assign
 
-; --- helix_independent_structural ---
+; `set /p NAME=prompt` reads the value from the console. Its own kind, because
+; "where does this value come from" has a different answer.
 
-; OMEGA-INDEPENDENTLY-AUTHORED from normalized exact-grammar AST evidence only.
-; Helix MPL query body is NOT copied. language=batch
+(variable_assignment
+  (prompt_assignment (variable_name) @prompt.name)) @prompt
 
-; --- p1-exact-helix-tags ---
+; `set /a NAME=expr` spells the target inside the arithmetic token; the name is
+; the text before the first `=`.
 
-; Omega P1 exact-revision enrichment
-; source=helix language=batch file=tags.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/batch/tags.scm
+(variable_assignment
+  (arithmetic_assignment (arithmetic_expression) @arith.expression)) @arith
 
-; --- terminal_batch_for_semantics_v1 ---
+; --- the loop variable ---
+;
+; `for %%i in (...) do` binds `%%i`, and the body spells uses of it as ordinary
+; variable references, so both sides strip the sigil and meet. One match, two
+; facts: the binding and the extent it is live over.
 
-(for_variable) @batch.for.variable
-(for_stmt) @batch.for.scope
+(for_stmt (for_variable) @for.variable) @for
 
-; --- semantic_closure_v3_146_batch2 ---
+; --- reading a variable ---
+;
+; `%NAME%`, `!NAME!`, `%NAME:~0,3%`, `%~dp0`, `%1`. Stripped to the bare name so
+; it resolves against `set NAME=`.
 
-(variable_assignment (variable_name) @batch.assignment.name) @batch.assignment
+(variable_reference) @variable.read
 
-(for_stmt (for_variable) @batch.for.binding) @batch.for
+; --- calling into this script ---
 
-; --- semantic_closure_v3_146_batch4 ---
+; `call :build` has no `command_name` child: the label is an anonymous token,
+; exactly as in `goto_stmt` below. So the statement is captured whole and the
+; target is read out of its text, and the two forms are told apart by whether
+; that text begins with a colon. With a `command_name` child required, the
+; subroutine call -- the edge from a `call` to the label it enters, which is the
+; whole point of declaring labels -- was emitted on no batch file at all.
 
-(prompt_assignment
-  (variable_name) @batch.prompt.name
-  [(assignment_value) (quoted_assignment_value)] @batch.prompt.value) @batch.prompt.assignment
+((call_stmt) @call.label (#match? @call.label "(?i)^call[ 	]+:"))
 
+; --- calling another script or program ---
+
+((call_stmt) @call.script (#not-match? @call.script "(?i)^call[ 	]+:"))
+
+; --- jumping to a label ---
+;
+; The target of `goto` is an anonymous token in this grammar -- goto_stmt has
+; no named child for it -- so the statement is captured whole and the label is
+; taken from its text.
+
+(goto_stmt) @goto
+
+; --- running a program ---
+;
+; Every command line: `msbuild`, `docker`, `robocopy`, `echo`. This is what an
+; agent means by "what does this script do".
+
+(cmd (command_name) @command.name) @command
+
+; --- writing a file ---
+;
+; `> build.log`, `>> %TEMP%\out.txt`, `< input.txt`. `2>&1` has no target node
+; and is not stated.
+
+(redirection (redirect_target) @redirect.target) @redirect

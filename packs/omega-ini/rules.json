@@ -4,12 +4,18 @@
  "templates": [
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_lexical_role",
-   "span_capture": "comment",
+   "capability": "definitions",
+   "output_kind": "definition.config_section",
+   "span_capture": "section",
    "name": {
-    "kind": "capture_ref",
-    "name": "comment"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "capture_ref",
+      "name": "section.name"
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -17,111 +23,51 @@
   },
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_lexical_role",
-   "span_capture": "markup.heading",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "setting",
    "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "capture_ref",
+      "name": "setting.name"
+     }
+    ]
    },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_lexical_role",
-   "span_capture": "operator",
-   "name": {
-    "kind": "capture_ref",
-    "name": "operator"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_value_hint",
-   "span_capture": "property",
-   "name": {
-    "kind": "capture_ref",
-    "name": "property"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_lexical_role",
-   "span_capture": "punctuation.bracket",
-   "name": {
-    "kind": "capture_ref",
-    "name": "punctuation.bracket"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_lexical_role",
-   "span_capture": "spell",
-   "name": {
-    "kind": "capture_ref",
-    "name": "spell"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.ini_literal_hint",
-   "span_capture": "string",
-   "name": {
-    "kind": "capture_ref",
-    "name": "string"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.ini_section",
-   "span_capture": "ini.section",
-   "name": {
-    "kind": "capture_ref",
-    "name": "ini.section.name"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.ini_setting",
-   "span_capture": "ini.setting",
-   "name": {
-    "kind": "capture_ref",
-    "name": "ini.setting.name"
-   },
-   "attributes": {},
-   "fields": {
+   "attributes": {
     "value": {
-     "kind": "capture_ref",
-     "name": "ini.setting.value"
+     "kind": "call",
+     "op": "trim",
+     "args": [
+      {
+       "kind": "capture_ref",
+       "name": "setting.value"
+      }
+     ]
     }
    },
+   "fields": {},
+   "decoder": null
+  },
+  {
+   "query": "queries.scm",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "empty",
+   "name": {
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "capture_ref",
+      "name": "empty.name"
+     }
+    ]
+   },
+   "attributes": {},
+   "fields": {},
    "decoder": null
   }
  ],
@@ -131,9 +77,23 @@
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "definitions"
    ],
-   "reason": "INI section and key/value structure is exact authored data; interpolation, application-specific schema and effective configuration semantics remain external to this Pack"
+   "reason": "A section is stated in the form it was written. INI has no standard, so a header repeated later in the file, a dotted header such as [core.hooks] and a header the consuming tool treats as a continuation of an earlier one are all separate declarations here; the merged effective configuration must be asked of the tool that reads the file."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "A value is stored as the text the grammar took to the end of the line, trimmed and otherwise unaltered. Quoting conventions differ by dialect, and interpolation such as %(home)s, ${VAR} or $ENV is not expanded, so the stored value is what was authored and not what the application will see."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "This grammar recognises only the `key = value` spelling with a whole-line comment. A dialect that separates with `:`, continues a value on an indented following line, or ends a value with a trailing `;` comment is parsed by those rules anyway, so such a setting may be missing or may carry more text than its value."
   }
  ],
  "legacy_rules": []

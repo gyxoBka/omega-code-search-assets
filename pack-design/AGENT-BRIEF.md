@@ -565,6 +565,24 @@ password as *where this library points*; omega-sql read `drop_index`'s optional
 depends on. If a pattern's children share a type and differ only in role, an
 anchor is not a refinement -- it is the difference between an answer and a lie.
 
+## 12b. Two more the waves keep proving
+
+**A `binding.*` kind is a mention, not a declaration.** The `bindings`
+capability exists and the host maps it to the `binding` IR kind, but
+`binding.foo` fails `is_definition_kind`, so it lands in the mention branch as a
+plain reference and **nothing can ever resolve to it**. omega-batch declared a
+loop variable, a prompt assignment and two more that way, and every later use of
+those names referred to a declaration the Pack never made. If the construct
+binds a name that other spans mention, it is `definition.*` under `definitions`.
+
+**Check the relation's families before you choose its kind.** `surface.rs` gives
+each relation role a source and a target family set, and a mismatch is silent:
+`relation.depends` admits only Artifact, Namespace, Callable and Contract at
+either end, so omega-docker-compose's `depends_on: db` -- pointing at a
+`definition.config.service`, which is Config family -- resolved to nothing at
+all. `relation.data` takes a Value source and a Value, Config, Contract,
+Callable or SchemaData target; `relation.config` takes a Config target.
+
 ## 13. The questions to ask of every Pack
 
 Answer all of these in the `.md` before writing a line of the new Pack.

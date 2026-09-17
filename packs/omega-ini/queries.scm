@@ -1,34 +1,42 @@
-; --- distributed_highlights ---
+; omega-ini
+;
+; INI is a configuration format with no standard: php.ini, tox.ini, setup.cfg,
+; .gitconfig, .editorconfig, systemd units, MySQL's my.cnf, pip.conf. A file in
+; this format states settings, optionally grouped under section headers, and
+; nothing else. The questions asked of one are *where is this setting
+; declared*, *what is it set to*, and *what sections does this file define*.
+;
+; There are three patterns, each rooted at one node, and each answers one of
+; those. There is no pattern for the document, for comments, for the brackets
+; or for the `=`: none of them names anything a question reaches. There is no
+; pattern for containment either -- a setting written under a section header is
+; already inside that section's declaration span, and the host derives the
+; qualified name from the nesting.
 
-; OMEGA EXACT-PARSER EXTERNAL STRUCTURAL EVIDENCE — RUNTIME-COMPILE-GATED
-; source=https://github.com/neovim-treesitter/nvim-treesitter-queries-ini
-; parser_revision=e4018b5176132b4f3c5d6e61cea383f42288d0f5
-; source_sha256=29a9cc5c000a944b3f04a9b8c3903598023f9b57f52ed4960b870f3eccc7811c
+; --- a section header: [client] ---
+;
+; The span is the whole section, so every setting written under the header lies
+; inside this declaration. `section_name` carries the brackets; the name is the
+; `text` between them.
 
-(section_name
-  (text) @markup.heading)
+(section
+  . (section_name (text) @section.name)) @section
 
-(comment) @comment @spell
-
-[
-  "["
-  "]"
-] @punctuation.bracket
-
-"=" @operator
+; --- a setting with a value: max_connections = 100 ---
+;
+; The one place a question about configuration lands. The value is short and
+; authored, so it is carried with the key rather than stated separately.
 
 (setting
-  (setting_name) @property)
+  . (setting_name) @setting.name
+  . (setting_value) @setting.value) @setting
 
-(setting_value) @string
+; --- a setting written with no value: no_auto_abbrev= ---
+;
+; An empty value is how several dialects spell "present but unset", so the key
+; is still declared. The trailing anchor is what separates this from the shape
+; above: it holds only when `setting_name` is the last named child.
 
-; --- distributed_injections ---
-
-; OMEGA EXACT-PARSER EXTERNAL STRUCTURAL EVIDENCE — RUNTIME-COMPILE-GATED
-; source=https://github.com/neovim-treesitter/nvim-treesitter-queries-ini
-; parser_revision=e4018b5176132b4f3c5d6e61cea383f42288d0f5
-; source_sha256=977ec24890da3b3fee8cb2aa16ea1c5d8fc48720836a4923457d85f7af08e3b6
-
-; --- terminal_structured_ini_v1 ---
-(section (section_name) @ini.section.name) @ini.section
-(setting (setting_name) @ini.setting.name (setting_value) @ini.setting.value) @ini.setting
+(setting
+  . (setting_name) @empty.name
+  .) @empty
