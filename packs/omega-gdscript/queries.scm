@@ -19,44 +19,35 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
 (enum_definition
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(class_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- enclosing_owner_hints ---
 
 (class_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- named_scope_owners ---
 
-(class_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_definition
   name: (_) @scope.owner.name

@@ -1,13 +1,13 @@
 ; --- completeness_types_high_confidence ---
 
-(class_statement) @type.expression
+(class_statement) @type.expression @local.scope
 (enum_statement) @type.expression
 
 ; --- declaration_category_class ---
 
 (class_statement
-  (simple_name) @definition.category.class.name
-) @definition.category.owner
+  (simple_name) @definition.category.class.name @scope.owner.name
+) @definition.category.owner @scope.owner
 
 ; --- declaration_category_function ---
 
@@ -30,7 +30,6 @@
 
 ; Scopes
 ;-------
-(class_statement) @local.scope
 
 (class_method_definition) @local.scope
 
@@ -120,8 +119,6 @@
   (function_name) @scope.owner.name
   (script_block) @scope.owner.body) @scope.owner
 
-(class_statement
-  (simple_name) @scope.owner.name) @scope.owner
 
 ; --- ownership_members ---
 

@@ -577,33 +577,33 @@
 (document
   (block_node
     (block_mapping
-      (block_mapping_pair key: (_) @yaml.docitem.kind.key value: (_) @yaml.docitem.kind.value)
+      (block_mapping_pair key: (_) @yaml.docitem.kind.key @yaml.docseqf3.kind.key value: (_) @yaml.docitem.kind.value @yaml.docseqf3.kind.value)
       (block_mapping_pair
-  key: (_) @yaml.docitem.metadata.key
+  key: (_) @yaml.docitem.metadata.key @yaml.docseqf3.metadata.key
   value: (block_node
     (block_mapping
-      (block_mapping_pair key: (_) @yaml.docitem.name.key value: (_) @yaml.docitem.name.value)
-      (block_mapping_pair key: (_) @yaml.docitem.namespace.key value: (_) @yaml.docitem.namespace.value))))
+      (block_mapping_pair key: (_) @yaml.docitem.name.key @yaml.docseqf3.name.key value: (_) @yaml.docitem.name.value @yaml.docseqf3.name.value)
+      (block_mapping_pair key: (_) @yaml.docitem.namespace.key @yaml.docseqf3.namespace.key value: (_) @yaml.docitem.namespace.value @yaml.docseqf3.namespace.value))))
       (block_mapping_pair
-  key: (_) @yaml.docitem.a0
-  value: (block_node
-    (block_mapping
-      (block_mapping_pair
-  key: (_) @yaml.docitem.a1
+  key: (_) @yaml.docitem.a0 @yaml.docseqf3.a0
   value: (block_node
     (block_mapping
       (block_mapping_pair
-  key: (_) @yaml.docitem.a2
+  key: (_) @yaml.docitem.a1 @yaml.docseqf3.a1
   value: (block_node
     (block_mapping
       (block_mapping_pair
-  key: (_) @yaml.docitem.sequence_key
+  key: (_) @yaml.docitem.a2 @yaml.docseqf3.a2
+  value: (block_node
+    (block_mapping
+      (block_mapping_pair
+  key: (_) @yaml.docitem.sequence_key @yaml.docseqf3.sequence_key
   value: (block_node
     (block_sequence
       (block_sequence_item
         (block_node
           (block_mapping
-            (block_mapping_pair key: (_) @yaml.docitem.key value: (_) @yaml.docitem.value) @yaml.docitem.pair)))))))))))))))))) @yaml.docitem.span
+            (block_mapping_pair key: (_) @yaml.docitem.key @yaml.docseqf3.key value: (_) @yaml.docitem.value @yaml.docseqf3.value) @yaml.docitem.pair @yaml.docseqf3.pair)))))))))))))))))) @yaml.docitem.span @yaml.docseqf3.span
 
 (document
   (block_node
@@ -665,14 +665,6 @@
           (block_mapping_pair key: (_) @yaml.docseqn1.owner_name_key value: (_) @yaml.docseqn1.owner_name)
           (block_mapping_pair key: (_) @yaml.docseqn1.key value: (_) @yaml.docseqn1.value) @yaml.docseqn1.pair)))))))))))) @yaml.docseqn1.span
 
-(document (block_node (block_mapping
-      (block_mapping_pair key: (_) @yaml.docseqf3.kind.key value: (_) @yaml.docseqf3.kind.value)
-      (block_mapping_pair key: (_) @yaml.docseqf3.metadata.key value: (block_node (block_mapping
-        (block_mapping_pair key: (_) @yaml.docseqf3.name.key value: (_) @yaml.docseqf3.name.value)
-        (block_mapping_pair key: (_) @yaml.docseqf3.namespace.key value: (_) @yaml.docseqf3.namespace.value))))
-      (block_mapping_pair key: (_) @yaml.docseqf3.a0 value: (block_node (block_mapping (block_mapping_pair key: (_) @yaml.docseqf3.a1 value: (block_node (block_mapping (block_mapping_pair key: (_) @yaml.docseqf3.a2 value: (block_node (block_mapping (block_mapping_pair key: (_) @yaml.docseqf3.sequence_key value: (block_node (block_sequence
-        (block_sequence_item (block_node (block_mapping
-          (block_mapping_pair key: (_) @yaml.docseqf3.key value: (_) @yaml.docseqf3.value) @yaml.docseqf3.pair)))))))))))))))))) @yaml.docseqf3.span
 
 (document (block_node (block_mapping
       (block_mapping_pair key: (_) @yaml.docseqn3.kind.key value: (_) @yaml.docseqn3.kind.value)

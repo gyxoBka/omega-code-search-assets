@@ -60,42 +60,42 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
 (enum_case
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.interface.name
-) @definition.category.owner
+  name: (_) @definition.category.interface.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_namespace ---
 
 (namespace_definition
-  name: (_) @definition.category.namespace.name
-) @definition.category.owner
+  name: (_) @definition.category.namespace.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 ; --- declaration_category_property ---
 
@@ -110,14 +110,14 @@
 ; --- declaration_category_trait ---
 
 (trait_declaration
-  name: (_) @definition.category.trait.name
-) @definition.category.owner
+  name: (_) @definition.category.trait.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_variable ---
 
 (static_variable_declaration
-  name: (_) @definition.category.variable.name
-) @definition.category.owner
+  name: (_) @definition.category.variable.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_modifiers ---
 
@@ -175,54 +175,36 @@
 
 ; --- definition_identity_hints ---
 
-(class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_case
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(interface_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(namespace_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(static_variable_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(trait_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- enclosing_owner_hints ---
 
 (class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (interface_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (namespace_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (trait_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- external-helix-tags ---
 
@@ -253,10 +235,10 @@
   ]) @reference.call
 
 (scoped_call_expression
-  name: (name) @name) @reference.call
+  name: (name) @name @call.target) @reference.call @call.member
 
 (member_call_expression
-  name: (name) @name) @reference.call
+  name: (name) @name @call.target) @reference.call @call.member
 
 ; --- locals ---
 
@@ -364,7 +346,7 @@
   name: (_) @owner.name
   body: (enum_declaration_list
     (enum_case
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_method ---
 
@@ -372,89 +354,49 @@
   name: (_) @owner.name
   body: (declaration_list
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_declaration
   name: (_) @owner.name
   body: (enum_declaration_list
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (declaration_list
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (trait_declaration
   name: (_) @owner.name
   body: (declaration_list
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- module_declaration_path_hints ---
 
-(namespace_definition
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
 ; --- named_scope_owners ---
 
-(class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_definition
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(interface_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (method_declaration
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(namespace_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(trait_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- ownership_members ---
 
-(class_declaration
-  name: (_) @owner.name
-  body: (declaration_list
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_declaration_list
-    (enum_case
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_declaration_list
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (declaration_list
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(trait_declaration
-  name: (_) @owner.name
-  body: (declaration_list
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- ownership_parameters ---
 
@@ -527,32 +469,12 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/php/tags.scm
 
-(class_declaration
-  name: (name) @name) @definition.class
 
-(function_definition
-  name: (name) @name) @definition.function
 
-(method_declaration
-  name: (name) @name) @definition.function
 
-(object_creation_expression
-  [
-    (qualified_name (name) @name)
-    (variable_name (name) @name)
-  ]) @reference.class
 
-(function_call_expression
-  function: [
-    (qualified_name (name) @name)
-    (variable_name (name)) @name
-  ]) @reference.call
 
-(scoped_call_expression
-  name: (name) @name) @reference.call
 
-(member_call_expression
-  name: (name) @name) @reference.call
 
 ; --- php_class_method_context ---
 
@@ -587,24 +509,18 @@
 ) @reference.qualified_chain.span
 
 (scoped_call_expression
-  scope: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
+  scope: (_) @reference.qualified_chain.base @reference.qualifier
+  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
+) @reference.qualified_chain.span @reference.qualified_expression
 
 (scoped_property_access_expression
-  scope: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
+  scope: (_) @reference.qualified_chain.base @reference.qualifier
+  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
+) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
 
-(scoped_call_expression
-  scope: (_) @reference.qualifier
-  name: (_) @reference.qualified_name) @reference.qualified_expression
 
-(scoped_property_access_expression
-  scope: (_) @reference.qualifier
-  name: (_) @reference.qualified_name) @reference.qualified_expression
 
 ; --- signature_parameters ---
 
@@ -645,48 +561,24 @@
 (trait_declaration
   name: (name) @name) @definition.interface
 
-(class_declaration
-  name: (name) @name) @definition.class
 
 (class_interface_clause [(name) (qualified_name)] @name) @reference.implementation
 
 (property_declaration
   (property_element (variable_name (name) @name))) @definition.field
 
-(function_definition
-  name: (name) @name) @definition.function
 
-(method_declaration
-  name: (name) @name) @definition.function
 
-(object_creation_expression
-  [
-    (qualified_name (name) @name)
-    (variable_name (name) @name)
-  ]) @reference.class
 
-(function_call_expression
-  function: [
-    (qualified_name (name) @name)
-    (variable_name (name)) @name
-  ]) @reference.call
 
-(scoped_call_expression
-  name: (name) @name) @reference.call
 
-(member_call_expression
-  name: (name) @name) @reference.call
 
 ; --- generic_direct_and_member_calls ---
 
 (function_call_expression
   function: (name) @call.target) @call.direct
 
-(member_call_expression
-  name: (name) @call.target) @call.member
 
-(scoped_call_expression
-  name: (name) @call.target) @call.member
 
 ; --- php_framework_string_call_and_attribute_context ---
 

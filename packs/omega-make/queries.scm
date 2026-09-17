@@ -1,18 +1,16 @@
 ; --- call_targets ---
 
 (function_call
-  function: (_) @call.target) @call.expression
+  function: (_) @call.target @make.function.name) @call.expression @make.function.call
 
 ; --- calls_omega ---
 
 ; Omega bounded static call extraction derived from pinned grammar node-types.
 
-(function_call
-  function: (_) @call.target) @call.expression
 
 ; --- completeness_imports_2 ---
 
-(include_directive) @import.expression
+(include_directive) @import.expression @reference.path
 
 ; --- omega_runtime_minimal ---
 
@@ -27,7 +25,6 @@
 (rule
   (targets) @definition.target)
 
-(include_directive) @reference.path
 
 (function_call) @reference.function
 
@@ -44,17 +41,14 @@
 ; --- terminal_make_reference_semantics_v1 ---
 
 (variable_reference) @make.variable.reference
-(automatic_variable) @make.automatic.reference
+(automatic_variable) @make.automatic.reference @make.automatic.variable
 
 ; --- semantic_closure_v3_146_batch2 ---
 
 (recipe) @make.recipe
 (recipe_line) @make.recipe.line
 (variable_assignment name: (_) @make.variable.name) @make.variable.assignment
-(variable_reference) @make.variable.reference
-(automatic_variable) @make.automatic.variable
 (conditional) @make.conditional
-(function_call function: (_) @make.function.name) @make.function.call
 (shell_function) @make.shell.function
 
 ; --- semantic_closure_v3_147_make_surface ---

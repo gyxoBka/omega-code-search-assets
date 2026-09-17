@@ -5,7 +5,7 @@
 
 ; --- completeness_imports_3 ---
 
-(import_declaration) @import.expression
+(import_declaration) @import.expression @module.import
 
 ; --- completeness_types_high_confidence ---
 
@@ -15,8 +15,8 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_constructor ---
 
@@ -27,8 +27,8 @@
 ; --- declaration_category_enum ---
 
 (enum_entry
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_type_parameters
   name: (_) @definition.category.enum.name
@@ -37,46 +37,46 @@
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_type
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (protocol_function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_property ---
 
 (property_declaration
-  name: (_) @definition.category.property.name
-) @definition.category.owner
+  name: (_) @definition.category.property.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_protocol ---
 
 (protocol_declaration
-  name: (_) @definition.category.protocol.name
-) @definition.category.owner
+  name: (_) @definition.category.protocol.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (protocol_property_declaration
-  name: (_) @definition.category.protocol.name
-) @definition.category.owner
+  name: (_) @definition.category.protocol.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
 (associatedtype_declaration
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (tuple_type_item
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (typealias_declaration
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_modifiers ---
 
@@ -152,45 +152,23 @@
 
 ; --- definition_identity_hints ---
 
-(associatedtype_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_entry
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_type
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(property_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(protocol_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(protocol_function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(protocol_property_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(tuple_type_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(typealias_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- enclosing_owner_hints ---
 
 (class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- external-nvim-treesitter-locals ---
 
@@ -228,27 +206,9 @@
 ; source=audit-baselines/external/nvim-treesitter/swift/locals.scm
 ; sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52
 
-(import_declaration
-  (identifier) @local.definition.import)
 
-(function_declaration
-  name: (simple_identifier) @local.definition.function)
 
 ; Scopes
-[
-  (statements)
-  (for_statement)
-  (while_statement)
-  (repeat_while_statement)
-  (do_statement)
-  (if_statement)
-  (guard_statement)
-  (switch_statement)
-  (property_declaration)
-  (function_declaration)
-  (class_declaration)
-  (protocol_declaration)
-] @local.scope
 
 ; --- member_category_class ---
 
@@ -256,13 +216,13 @@
   name: (_) @owner.name
   body: (class_body
     (class_declaration
-      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (class_declaration
-      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_enum ---
 
@@ -270,7 +230,7 @@
   name: (_) @owner.name
   body: (enum_class_body
     (enum_entry
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -278,13 +238,13 @@
   name: (_) @owner.name
   body: (class_body
     (function_declaration
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (function_declaration
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_property ---
 
@@ -292,13 +252,13 @@
   name: (_) @owner.name
   body: (class_body
     (property_declaration
-      name: (_) @owned.member_category.property.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.property.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (property_declaration
-      name: (_) @owned.member_category.property.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.property.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_protocol ---
 
@@ -306,13 +266,13 @@
   name: (_) @owner.name
   body: (class_body
     (protocol_declaration
-      name: (_) @owned.member_category.protocol.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.protocol.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (protocol_declaration
-      name: (_) @owned.member_category.protocol.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.protocol.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_type ---
 
@@ -320,25 +280,25 @@
   name: (_) @owner.name
   body: (class_body
     (associatedtype_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (typealias_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (associatedtype_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (enum_class_body
     (typealias_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- module_path_hints ---
 
@@ -360,9 +320,6 @@
 
 ; --- named_scope_owners ---
 
-(class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_declaration
   name: (_) @scope.owner.name
@@ -411,47 +368,14 @@
 ; resolved_sources=swift
 
 ; ----- resolved nvim locals source: swift sha256=25a2cc839769cdd69791e9db4832fd232844b7e69a86231a34d046c55d883e52 -----
-(import_declaration
-  (identifier) @local.definition.import)
 
-(function_declaration
-  name: (simple_identifier) @local.definition.function)
 
 ; Scopes
-[
-  (statements)
-  (for_statement)
-  (while_statement)
-  (repeat_while_statement)
-  (do_statement)
-  (if_statement)
-  (guard_statement)
-  (switch_statement)
-  (property_declaration)
-  (function_declaration)
-  (class_declaration)
-  (protocol_declaration)
-] @local.scope
 
 ; --- ownership_members ---
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (associatedtype_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (function_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
@@ -459,17 +383,7 @@
     (init_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (property_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (protocol_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
@@ -477,35 +391,10 @@
     (subscript_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (typealias_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (associatedtype_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (enum_entry
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (function_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
@@ -513,17 +402,7 @@
     (init_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (property_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (protocol_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
@@ -531,11 +410,6 @@
     (subscript_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (enum_class_body
-    (typealias_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- receiver_hints ---
 
@@ -564,7 +438,6 @@
 
 (call_expression) @call.expression
 (navigation_expression) @reference.navigation
-(import_declaration) @module.import
 (inheritance_specifier
   inherits_from: (_) @relation.supertype) @relation.inheritance
 

@@ -8,12 +8,11 @@
 ; --- assertions_tests ---
 
 (preproc_include path: (_) @test.include)
-(call_expression function: (identifier) @test.call.name) @test.call
+(call_expression function: (identifier) @test.call.name @concurrency.call.name @call.direct.name) @test.call @concurrency.call @call.direct
 
 ; --- atomic_threading ---
 
-(type_qualifier) @concurrency.qualifier
-(call_expression function: (identifier) @concurrency.call.name) @concurrency.call
+(type_qualifier) @concurrency.qualifier @modifier.type_qualifier
 
 ; --- call_targets ---
 
@@ -22,7 +21,6 @@
 
 ; --- calls_indirect ---
 
-(call_expression function: (identifier) @call.direct.name) @call.direct
 (call_expression function: (field_expression) @call.member.target) @call.member
 (call_expression function: (pointer_expression) @call.pointer.target) @call.pointer
 
@@ -36,7 +34,7 @@
 
 ; --- complex_numbers ---
 
-(primitive_type) @type.numeric
+(primitive_type) @type.numeric @type.primitive
 
 ; --- compound_designators ---
 
@@ -49,8 +47,8 @@
 (case_statement value: (_)? @control.case.value) @control.case
 (while_statement condition: (_) @control.while.condition) @control.while
 (do_statement condition: (_) @control.do.condition) @control.do
-(for_statement) @control.for
-(return_statement (_) ? @control.return.value) @control.return
+(for_statement) @control.for @scope.for
+(return_statement (_) ? @control.return.value @data.return.value) @control.return @data.return
 (goto_statement label: (statement_identifier) @control.goto.label) @control.goto
 (labeled_statement label: (statement_identifier) @definition.label.name) @definition.label
 (break_statement) @control.break
@@ -59,8 +57,7 @@
 ; --- data_flow ---
 
 (assignment_expression left: (_) @data.write.target right: (_) @data.write.value) @data.write
-(init_declarator declarator: (_) @data.init.target value: (_) @data.init.value) @data.init
-(return_statement (_) ? @data.return.value) @data.return
+(init_declarator declarator: (_) @data.init.target @binding.name @init.target value: (_) @data.init.value @binding.initializer @init.value) @data.init @binding.initialized @init
 
 ; --- declaration_category_enum ---
 
@@ -69,8 +66,8 @@
 ) @definition.category.owner
 
 (enumerator
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
@@ -99,13 +96,10 @@
 ; --- declarations ---
 
 (declaration type: (_) @declaration.type declarator: (_) @declaration.declarator) @declaration
-(init_declarator declarator: (_) @binding.name value: (_) @binding.initializer) @binding.initialized
 (parameter_declaration type: (_) @parameter.type declarator: (_) @parameter.name) @parameter
 
 ; --- definition_identity_hints ---
 
-(enumerator
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- definitions ---
 
@@ -257,9 +251,9 @@
 ; --- enclosing_owner_hints ---
 
 (struct_specifier 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- errors ---
 
@@ -277,7 +271,7 @@
 ; --- extensions ---
 
 (gnu_asm_expression) @extension.gnu_asm
-(attribute_specifier) @extension.attribute
+(attribute_specifier) @extension.attribute @linkage.attribute @modifier.attribute
 
 ; --- function_contracts ---
 
@@ -295,15 +289,13 @@
 ; --- import_targets ---
 
 (preproc_include
-  path: (_) @import.target) @import.statement
+  path: (_) @import.target @module.include.path @import.module_path.target @preproc.include.path) @import.statement @module.include @import.module_path.statement @preproc.include
 
 ; --- imports_modules ---
 
-(preproc_include path: (_) @module.include.path) @module.include
 
 ; --- initialization ---
 
-(init_declarator declarator: (_) @init.target value: (_) @init.value) @init
 (initializer_list) @init.aggregate
 (compound_literal_expression type: (_) @init.compound.type value: (initializer_list) @init.compound.value) @init.compound
 
@@ -314,8 +306,7 @@
 
 ; --- linkage_visibility ---
 
-(storage_class_specifier) @linkage.storage
-(attribute_specifier) @linkage.attribute
+(storage_class_specifier) @linkage.storage @modifier.storage
 
 ; --- literals ---
 
@@ -336,7 +327,7 @@
   name: (_) @owner.name
   body: (enumerator_list
     (enumerator
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -344,19 +335,13 @@
   name: (_) @owner.name
   body: (field_declaration_list
     (preproc_function_def
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- module_path_hints ---
 
-(preproc_include 
-  path: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- named_scope_owners ---
 
-(struct_specifier
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- operators ---
 
@@ -381,21 +366,10 @@
 
 ; --- ownership_members ---
 
-(enum_specifier
-  name: (_) @owner.name
-  body: (enumerator_list
-    (enumerator
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(struct_specifier
-  name: (_) @owner.name
-  body: (field_declaration_list
-    (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- preprocessor ---
 
-(preproc_include path: (_) @preproc.include.path) @preproc.include
 (preproc_def name: (identifier) @preproc.macro.name) @preproc.macro
 (preproc_function_def name: (identifier) @preproc.function_macro.name) @preproc.function_macro
 (preproc_if condition: (_) @preproc.condition) @preproc.conditional
@@ -434,7 +408,6 @@
 (translation_unit) @scope.file
 (function_definition body: (compound_statement) @scope.function.body) @scope.function
 (compound_statement) @scope.block
-(for_statement) @scope.for
 
 ; --- signature_parameters ---
 
@@ -445,13 +418,9 @@
 
 ; --- storage_qualifiers ---
 
-(storage_class_specifier) @modifier.storage
-(type_qualifier) @modifier.type_qualifier
-(attribute_specifier) @modifier.attribute
 
 ; --- types ---
 
-(primitive_type) @type.primitive
 (type_identifier) @type.named
 (pointer_declarator declarator: (_) @type.pointer.target) @type.pointer
 (array_declarator declarator: (_) @type.array.target size: (_)? @type.array.size) @type.array

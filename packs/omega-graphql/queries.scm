@@ -3,7 +3,7 @@
 (enum_type_definition) @type.expression
 (input_object_type_definition) @type.expression
 (interface_type_definition) @type.expression
-(object_type_definition) @type.expression
+(object_type_definition) @type.expression @structural.candidate
 (root_operation_type_definition) @type.expression
 (scalar_type_definition) @type.expression
 (type_definition) @type.expression
@@ -14,7 +14,6 @@
 ; OMEGA-INDEPENDENTLY-AUTHORED structural query.
 ; External Neovim query body is NOT copied. Exact parser-target evidence: https://raw.githubusercontent.com/neovim-treesitter/nvim-treesitter-queries-graphql/main/parser.json
 ; Structural node fact observed at: https://raw.githubusercontent.com/neovim-treesitter/nvim-treesitter-queries-graphql/main/queries/highlights.scm
-(object_type_definition) @structural.candidate
 
 ; --- root_field_schema_context ---
 

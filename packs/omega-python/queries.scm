@@ -2,8 +2,8 @@
 
 (function_definition) @function.definition.candidate
 (await) @async.await
-(for_statement) @async.for_candidate
-(with_statement) @async.with_candidate
+(for_statement) @async.for_candidate @control.for
+(with_statement) @async.with_candidate @context.with
 
 ; --- augmented_assignment_binding ---
 
@@ -23,7 +23,7 @@
 (parameters (identifier) @binding.parameter.name) @binding.parameter
 (default_parameter name: (identifier) @binding.parameter.name) @binding.parameter
 (typed_parameter (identifier) @binding.parameter.name) @binding.parameter
-(assignment left: (identifier) @binding.local.name) @binding.local
+(assignment left: (identifier) @binding.local.name @definition.variable.name) @binding.local @definition.variable
 (for_statement left: (identifier) @binding.loop.name) @binding.loop
 (aliased_import alias: (identifier) @binding.import_alias.name) @binding.import_alias
 
@@ -92,7 +92,6 @@
 ; --- control_flow_extended ---
 
 (if_statement) @control.if
-(for_statement) @control.for
 (while_statement) @control.while
 (break_statement) @control.break
 (continue_statement) @control.continue
@@ -100,33 +99,33 @@
 (raise_statement) @control.raise
 (assert_statement) @control.assert
 (delete_statement) @control.delete
-(global_statement) @scope.global
-(nonlocal_statement) @scope.nonlocal
+(global_statement) @scope.global @scope.global.extended
+(nonlocal_statement) @scope.nonlocal @scope.nonlocal.extended
 
 ; --- data ---
 
-(dictionary) @data.dictionary
-(list) @data.list
-(set) @data.set
-(tuple) @data.tuple
-(string) @data.string
-(integer) @data.integer
-(float) @data.float
-(true) @data.boolean
-(false) @data.boolean
-(none) @data.none
+(dictionary) @data.dictionary @literal.dictionary
+(list) @data.list @literal.list
+(set) @data.set @literal.set
+(tuple) @data.tuple @literal.tuple
+(string) @data.string @literal.string
+(integer) @data.integer @literal.integer
+(float) @data.float @literal.float
+(true) @data.boolean @literal.true
+(false) @data.boolean @literal.false
+(none) @data.none @literal.none
 
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- decorators_classes_extended ---
 
@@ -140,30 +139,24 @@
       (attribute attribute: (identifier) @decorator.callee)
     ] @decorator.target
     arguments: (argument_list) @decorator.args)) @decorator.call
-(class_definition name: (identifier) @class.name) @class.definition.extended
+(class_definition name: (identifier) @class.name @definition.class.name) @class.definition.extended @definition.class
 (argument_list) @class.base_arguments
 
 ; --- definition_identity_hints ---
 
-(class_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- definitions ---
 
 (function_definition name: (identifier) @definition.function.name) @definition.function
-(class_definition name: (identifier) @definition.class.name) @definition.class
 (type_alias_statement left: (type) @definition.type_alias.name) @definition.type_alias
-(assignment left: (identifier) @definition.variable.name) @definition.variable
 
 ; --- enclosing_owner_hints ---
 
 (class_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- exceptions_context ---
 
@@ -171,7 +164,6 @@
 (except_clause) @exception.except
 (finally_clause) @exception.finally
 (else_clause) @control.else_clause
-(with_statement) @context.with
 (with_item) @context.with_item
 
 ; --- expressions_extended ---
@@ -425,46 +417,33 @@
 (import_from_statement) @import.from.extended
 (aliased_import) @import.alias.extended
 (relative_import) @import.relative
-(global_statement) @scope.global.extended
-(nonlocal_statement) @scope.nonlocal.extended
 
 ; --- import_targets ---
 
 (aliased_import
-  name: (_) @import.target) @import.statement
+  name: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 (future_import_statement
-  name: (_) @import.target) @import.statement
+  name: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 (import_from_statement
   name: (_) @import.target) @import.statement
 
 (import_statement
-  name: (_) @import.target) @import.statement
+  name: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 ; --- imports ---
 
-(import_statement name: (dotted_name) @import.module.name) @import.module
+(import_statement name: (dotted_name) @import.module.name @module.import.name) @import.module @module.import
 (import_statement name: (aliased_import name: (dotted_name) @import.module.name alias: (identifier) @import.alias.name)) @import.module
-(import_from_statement module_name: [(dotted_name) (relative_import)] @import.from.module) @import.from
-(future_import_statement) @import.future
+(import_from_statement module_name: [(dotted_name) (relative_import)] @import.from.module @module.from.name) @import.from @module.from
 
 ; --- literals_extended ---
 
-(string) @literal.string
 (concatenated_string) @literal.concatenated_string
 (interpolation) @literal.interpolation
 (string_content) @literal.string_content
-(integer) @literal.integer
-(float) @literal.float
-(true) @literal.true
-(false) @literal.false
-(none) @literal.none
 (ellipsis) @literal.ellipsis
-(list) @literal.list
-(set) @literal.set
-(dictionary) @literal.dictionary
-(tuple) @literal.tuple
 (comment) @literal.comment
 
 ; --- mapping_context ---
@@ -488,33 +467,19 @@
 
 ; --- module_path_hints ---
 
-(aliased_import 
-  name: (_) @import.module_path.target
-) @import.module_path.statement
 
-(future_import_statement 
-  name: (_) @import.module_path.target
-) @import.module_path.statement
 
 (import_from_statement 
   module_name: (_) @import.module_path.target
 ) @import.module_path.statement
 
-(import_statement 
-  name: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- modules ---
 
-(import_statement name: (dotted_name) @module.import.name) @module.import
-(import_from_statement module_name: [(dotted_name) (relative_import)] @module.from.name) @module.from
 (if_statement condition: (comparison_operator (identifier) @module.guard.identifier (string) @module.guard.literal)) @module.main_guard
 
 ; --- named_scope_owners ---
 
-(class_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_definition
   name: (_) @scope.owner.name

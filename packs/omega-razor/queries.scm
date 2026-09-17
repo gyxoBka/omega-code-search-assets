@@ -16,18 +16,17 @@
 
 ; --- completeness_definitions_high_confidence ---
 
-(class_declaration) @definition.expression
-(enum_declaration) @definition.expression
-(interface_declaration) @definition.expression
+(class_declaration) @definition.expression @scope.lexical @type.expression
+(enum_declaration) @definition.expression @type.expression
+(interface_declaration) @definition.expression @type.expression
 (method_declaration) @definition.expression
-(namespace_declaration) @definition.expression
+(namespace_declaration) @definition.expression @module.expression
 (record_declaration) @definition.expression
-(struct_declaration) @definition.expression
-(type_declaration) @definition.expression
+(struct_declaration) @definition.expression @type.expression
+(type_declaration) @definition.expression @type.expression
 
 ; --- completeness_modules_4 ---
 
-(namespace_declaration) @module.expression
 (file_scoped_namespace_declaration) @module.expression
 
 ; --- completeness_references ---
@@ -38,51 +37,45 @@
 ; --- completeness_scopes ---
 
 (block) @scope.lexical
-(class_declaration) @scope.lexical
 (lambda_expression) @scope.lexical
 (razor_block) @scope.lexical
 
 ; --- completeness_types_high_confidence ---
 
-(class_declaration) @type.expression
-(enum_declaration) @type.expression
-(interface_declaration) @type.expression
-(struct_declaration) @type.expression
-(type_declaration) @type.expression
 
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_constructor ---
 
 (constructor_declaration
-  name: (_) @definition.category.constructor.name
-) @definition.category.owner
+  name: (_) @definition.category.constructor.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_destructor ---
 
 (destructor_declaration
-  name: (_) @definition.category.destructor.name
-) @definition.category.owner
+  name: (_) @definition.category.destructor.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
 (enum_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_member_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_event ---
 
 (event_declaration
-  name: (_) @definition.category.event.name
-) @definition.category.owner
+  name: (_) @definition.category.event.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
@@ -93,48 +86,48 @@
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.interface.name
-) @definition.category.owner
+  name: (_) @definition.category.interface.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_model ---
 
 (razor_model_directive
-  name: (_) @definition.category.model.name
-) @definition.category.owner
+  name: (_) @definition.category.model.name @razor.directive.model_type
+) @definition.category.owner @razor.directive.model
 
 ; --- declaration_category_namespace ---
 
 (file_scoped_namespace_declaration
-  name: (_) @definition.category.namespace.name
-) @definition.category.owner
+  name: (_) @definition.category.namespace.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 (namespace_declaration
-  name: (_) @definition.category.namespace.name
-) @definition.category.owner
+  name: (_) @definition.category.namespace.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 ; --- declaration_category_property ---
 
 (property_declaration
-  name: (_) @definition.category.property.name
-) @definition.category.owner
+  name: (_) @definition.category.property.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_record ---
 
 (record_declaration
-  name: (_) @definition.category.record.name
-) @definition.category.owner
+  name: (_) @definition.category.record.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_struct ---
 
 (struct_declaration
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
+  name: (_) @definition.category.struct.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_modifiers ---
 
@@ -200,44 +193,18 @@
 
 ; --- definition_identity_hints ---
 
-(class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(constructor_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(destructor_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_member_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(event_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(file_scoped_namespace_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(interface_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(namespace_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(property_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(record_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(struct_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
@@ -245,34 +212,34 @@
 ; --- enclosing_owner_hints ---
 
 (class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (constructor_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (destructor_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (interface_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (namespace_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (struct_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- literal_href_context ---
 
@@ -303,13 +270,7 @@
 
 ; --- module_declaration_path_hints ---
 
-(file_scoped_namespace_declaration
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
-(namespace_declaration
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
 ; --- named_attribute_identifier_context ---
 
@@ -346,21 +307,9 @@
 
 ; --- named_scope_owners ---
 
-(class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(constructor_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(destructor_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(interface_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (local_function_statement
   name: (_) @scope.owner.name
@@ -370,21 +319,10 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(namespace_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(struct_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- ownership_members ---
 
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_member_declaration_list
-    (enum_member_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- ownership_parameters ---
 
@@ -413,15 +351,12 @@
 ; --- qualified_chain_hints ---
 
 (qualified_name
-  qualifier: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
+  qualifier: (_) @reference.qualified_chain.base @reference.qualifier
+  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
+) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
 
-(qualified_name
-  qualifier: (_) @reference.qualifier
-  name: (_) @reference.qualified_name) @reference.qualified_expression
 
 ; --- signature_parameters ---
 
@@ -499,8 +434,6 @@
 
 ; --- semantic_closure_v3_146_batch3 ---
 
-(razor_model_directive
-  name: (_) @razor.directive.model_type) @razor.directive.model
 
 (razor_attribute_directive
   (attribute_list) @razor.directive.attribute_list) @razor.directive.attribute

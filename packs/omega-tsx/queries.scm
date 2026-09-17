@@ -1,6 +1,6 @@
 ; --- bindings ---
 
-(variable_declarator name: (identifier) @binding.name) @binding.variable
+(variable_declarator name: (identifier) @binding.name @definition.variable.name) @binding.variable @definition.variable
 (required_parameter pattern: (identifier) @binding.name) @binding.parameter
 (optional_parameter pattern: (identifier) @binding.name) @binding.parameter
 
@@ -220,14 +220,14 @@
 
 ; --- calls ---
 
-(call_expression function: (identifier) @call.target
-  arguments: (arguments) @call.direct.args) @call.direct
+(call_expression function: (identifier) @call.target @ecma.direct_context.call_name
+  arguments: (arguments) @call.direct.args @ecma.direct_context.arguments) @call.direct @ecma.direct_context.context
 (call_expression
   function: (member_expression
     object: (_) @call.member.receiver
     property: (property_identifier) @call.target)
   arguments: (arguments) @call.member.args) @call.member
-(new_expression constructor: (identifier) @call.target) @call.constructor
+(new_expression constructor: (identifier) @call.target @ts.ctor_identifier.constructor_name) @call.constructor @ts.ctor_identifier.context
 
 ; --- class_decorator_object_array_identifier_context ---
 
@@ -261,8 +261,6 @@
 
 ; --- constructor_identifier_context ---
 
-(new_expression
-  constructor: (identifier) @ts.ctor_identifier.constructor_name) @ts.ctor_identifier.context
 
 ; --- data ---
 
@@ -277,16 +275,16 @@
 ; --- declaration_category_class ---
 
 (abstract_class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (class
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
@@ -295,60 +293,60 @@
 ) @definition.category.owner
 
 (enum_body
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_field ---
 
 (public_field_definition
-  name: (_) @definition.category.field.name
-) @definition.category.owner
+  name: (_) @definition.category.field.name @definition.identity.name @member.field.name
+) @definition.category.owner @definition.identity.owner @member.field
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_expression
   name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (function_signature
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (generator_function
   name: (_) @definition.category.function.name
 ) @definition.category.owner
 
 (generator_function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.interface.name
-) @definition.category.owner
+  name: (_) @definition.category.interface.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (abstract_method_signature
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @member.abstract_method.name
+) @definition.category.owner @member.abstract_method
 
 (method_definition
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (method_signature
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name @member.method_signature.name
+) @definition.category.owner @definition.identity.owner @member.method_signature
 
 ; --- declaration_category_module ---
 
@@ -357,20 +355,20 @@
 ) @definition.category.owner
 
 (module
-  name: (_) @definition.category.module.name
-) @definition.category.owner
+  name: (_) @definition.category.module.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_property ---
 
 (property_signature
-  name: (_) @definition.category.property.name
-) @definition.category.owner
+  name: (_) @definition.category.property.name @member.property_signature.name
+) @definition.category.owner @member.property_signature
 
 ; --- declaration_category_type ---
 
 (type_alias_declaration
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_modifiers ---
 
@@ -430,55 +428,27 @@
 
 (abstract_class_declaration name: (type_identifier) @definition.abstract_class.name) @definition.abstract_class
 (function_signature name: (identifier) @definition.function_signature.name) @definition.function_signature
-(import_alias) @definition.import_alias
-(internal_module) @definition.namespace
-(module) @definition.module
-(ambient_declaration) @definition.ambient
-(enum_declaration name: (identifier) @definition.enum.extended.name) @definition.enum.extended
+(import_alias) @definition.import_alias @module.import_alias
+(internal_module) @definition.namespace @module.namespace
+(module) @definition.module @module.module
+(ambient_declaration) @definition.ambient @module.ambient.extended @module.ambient
+(enum_declaration name: (identifier) @definition.enum.extended.name @definition.enum.name) @definition.enum.extended @definition.enum
 
 ; --- definition_identity_hints ---
 
-(abstract_class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(class
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_body
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_signature
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(generator_function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(interface_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_signature
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(module
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(public_field_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(type_alias_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
@@ -487,43 +457,41 @@
 
 (function_declaration name: (identifier) @definition.function.name) @definition.function
 (class_declaration name: (type_identifier) @definition.class.name) @definition.class
-(interface_declaration name: (type_identifier) @definition.interface.name) @definition.interface
+(interface_declaration name: (type_identifier) @definition.interface.name @interface.name @type.interface.name) @definition.interface @interface.declaration @type.interface
 (type_alias_declaration name: (type_identifier) @definition.type_alias.name) @definition.type_alias
-(enum_declaration name: (identifier) @definition.enum.name) @definition.enum
 (method_definition name: (property_identifier) @definition.method.name) @definition.method
-(variable_declarator name: (identifier) @definition.variable.name) @definition.variable
 
 ; --- enclosing_owner_hints ---
 
 (abstract_class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (class 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (interface_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (internal_module 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (module 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- export_alias_hints ---
 
@@ -545,10 +513,10 @@
 
 ; --- expressions_extended ---
 
-(as_expression) @expression.as
-(satisfies_expression) @expression.satisfies
-(type_assertion) @expression.type_assertion
-(non_null_expression) @expression.non_null
+(as_expression) @expression.as @type.as_expression
+(satisfies_expression) @expression.satisfies @type.satisfies
+(type_assertion) @expression.type_assertion @type.assertion
+(non_null_expression) @expression.non_null @type.non_null
 (instantiation_expression function: (_) @expression.instantiation.function type_arguments: (type_arguments) @expression.instantiation.type_arguments) @expression.instantiation
 (assignment_expression left: (_) @expression.assignment.left right: (_) @expression.assignment.right) @expression.assignment
 (augmented_assignment_expression left: (_) @expression.augmented.left operator: (_) @expression.augmented.operator right: (_) @expression.augmented.right) @expression.augmented
@@ -560,12 +528,7 @@
 (class_heritage) @class.heritage
 (extends_clause (_) @relation.extends.target) @relation.extends
 (implements_clause (_) @relation.implements.target) @relation.implements
-(interface_declaration name: (type_identifier) @interface.name) @interface.declaration
-(method_signature name: (_) @member.method_signature.name) @member.method_signature
-(abstract_method_signature name: (_) @member.abstract_method.name) @member.abstract_method
-(public_field_definition name: (_) @member.field.name) @member.field
 (index_signature) @member.index_signature
-(property_signature name: (_) @member.property_signature.name) @member.property_signature
 (call_signature) @member.call_signature
 (construct_signature) @member.construct_signature
 
@@ -594,13 +557,13 @@
 ; --- import_targets ---
 
 (import_require_clause
-  source: (_) @import.target) @import.statement
+  source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 (import_specifier
   name: (_) @import.target) @import.statement
 
 (import_statement
-  source: (_) @import.target) @import.statement
+  source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 ; --- imported_constructor_binding_context ---
 
@@ -638,7 +601,7 @@
 ; --- imports ---
 
 (import_statement source: (string) @import.source) @import.statement
-(import_require_clause source: (string) @import.source) @import.require
+(import_require_clause source: (string) @import.source @module.import_require.source) @import.require @module.import_require
 
 ; --- member_access_hints ---
 
@@ -652,7 +615,7 @@
   name: (_) @owner.name
   body: (enum_body
     (enum_assignment
-      name: (_) @owned.member_category.enum_member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum_member.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_field ---
 
@@ -660,19 +623,19 @@
   name: (_) @owner.name
   body: (class_body
     (public_field_definition
-      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (public_field_definition
-      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (public_field_definition
-      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_method ---
 
@@ -680,61 +643,61 @@
   name: (_) @owner.name
   body: (class_body
     (abstract_method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (abstract_class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_definition
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (abstract_class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (abstract_method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (method_definition
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (class
   name: (_) @owner.name
   body: (class_body
     (method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (abstract_method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_definition
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (method_signature
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_property ---
 
@@ -742,7 +705,7 @@
   name: (_) @owner.name
   body: (interface_body
     (property_signature
-      name: (_) @owned.member_category.property.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.property.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_string_identifier_call_context ---
 
@@ -756,28 +719,14 @@
 
 ; --- module_path_hints ---
 
-(import_require_clause 
-  source: (_) @import.module_path.target
-) @import.module_path.statement
 
-(import_statement 
-  source: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- modules_extended ---
 
-(import_alias) @module.import_alias
-(import_require_clause source: (string) @module.import_require.source) @module.import_require
-(internal_module) @module.namespace
-(module) @module.module
-(ambient_declaration) @module.ambient.extended
-(export_statement) @module.export.extended
+(export_statement) @module.export.extended @module.export
 
 ; --- modules ---
 
-(export_statement) @module.export
-(ambient_declaration) @module.ambient
-(internal_module) @module.namespace
 
 ; --- named_import_source_context ---
 
@@ -798,17 +747,8 @@
 
 ; --- named_scope_owners ---
 
-(abstract_class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(class
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_declaration
   name: (_) @scope.owner.name
@@ -826,21 +766,12 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(interface_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(internal_module
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (method_definition
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(module
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- object_fluent_procedure_context ---
 
@@ -898,95 +829,20 @@
 
 ; --- ownership_members ---
 
-(abstract_class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (abstract_method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(abstract_class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (method_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(abstract_class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(abstract_class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (public_field_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class
-  name: (_) @owner.name
-  body: (class_body
-    (abstract_method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class
-  name: (_) @owner.name
-  body: (class_body
-    (method_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class
-  name: (_) @owner.name
-  body: (class_body
-    (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class
-  name: (_) @owner.name
-  body: (class_body
-    (public_field_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (abstract_method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (method_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (public_field_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_body
-    (enum_assignment
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (method_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (property_signature
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- ownership_parameters ---
 
@@ -1292,7 +1148,7 @@
 (object_type) @type.object
 (function_type) @type.function
 (constructor_type) @type.constructor
-(conditional_type) @type.conditional.extended
+(conditional_type) @type.conditional.extended @type.conditional
 (infer_type) @type.infer
 (mapped_type_clause name: (type_identifier) @type.mapped.name type: (_) @type.mapped.constraint alias: (_)? @type.mapped.alias) @type.mapped
 (index_type_query) @type.keyof
@@ -1305,20 +1161,14 @@
 (this_type) @type.this
 (type_predicate name: (_) @type.predicate.name type: (_) @type.predicate.type) @type.predicate
 (asserts) @type.asserts
-(satisfies_expression) @type.satisfies
-(as_expression) @type.as_expression
-(type_assertion) @type.assertion
-(non_null_expression) @type.non_null
 (instantiation_expression) @type.instantiation
 
 ; --- types ---
 
 (type_annotation) @type.annotation
 (type_alias_declaration name: (type_identifier) @type.alias.name value: (_) @type.alias.value) @type.alias
-(interface_declaration name: (type_identifier) @type.interface.name) @type.interface
 (type_parameters) @type.parameters
 (type_arguments) @type.arguments
-(conditional_type) @type.conditional
 
 ; --- generic_decorator_reference ---
 
@@ -1498,9 +1348,6 @@
       (identifier) @ecma.direct_array_identifier.item))) @ecma.direct_array_identifier.context
 
 ; --- semantic_closure_v3_146_ecma_direct_context ---
-(call_expression
-  function: (identifier) @ecma.direct_context.call_name
-  arguments: (arguments) @ecma.direct_context.arguments) @ecma.direct_context.context
 
 ; --- semantic_closure_v3_146_ecma_exports_members_directives ---
 (export_statement
@@ -1693,7 +1540,7 @@
     (variable_declarator
       name: (identifier) @ts.b3_const_string.binding
       value: (string (string_fragment) @ts.b3_const_string.value)) @ts.b3_const_string.declarator))
-  @ts.b3_const_string.program
+  @ts.b3_const_string.program @ts.b3_const_number.program @ts.b3_const_true.program @ts.b3_const_false.program @ts.b3_const_null.program @ts.b3_const_alias.program
 
 (program
   (lexical_declaration
@@ -1701,7 +1548,6 @@
     (variable_declarator
       name: (identifier) @ts.b3_const_number.binding
       value: (number) @ts.b3_const_number.value) @ts.b3_const_number.declarator))
-  @ts.b3_const_number.program
 
 (program
   (lexical_declaration
@@ -1709,7 +1555,6 @@
     (variable_declarator
       name: (identifier) @ts.b3_const_true.binding
       value: (true) @ts.b3_const_true.value) @ts.b3_const_true.declarator))
-  @ts.b3_const_true.program
 
 (program
   (lexical_declaration
@@ -1717,7 +1562,6 @@
     (variable_declarator
       name: (identifier) @ts.b3_const_false.binding
       value: (false) @ts.b3_const_false.value) @ts.b3_const_false.declarator))
-  @ts.b3_const_false.program
 
 (program
   (lexical_declaration
@@ -1725,7 +1569,6 @@
     (variable_declarator
       name: (identifier) @ts.b3_const_null.binding
       value: (null) @ts.b3_const_null.value) @ts.b3_const_null.declarator))
-  @ts.b3_const_null.program
 
 (program
   (lexical_declaration
@@ -1733,7 +1576,6 @@
     (variable_declarator
       name: (identifier) @ts.b3_const_alias.binding
       value: (identifier) @ts.b3_const_alias.target) @ts.b3_const_alias.declarator))
-  @ts.b3_const_alias.program
 
 ; --- staged_tsx_jsx_surface ---
 ; These node names are expected from the upstream TSX grammar at the pinned tree-sitter-typescript revision.
@@ -1763,6 +1605,5 @@
       (jsx_element
         open_tag: (jsx_opening_element
           name: (identifier) @js.jsx_owner.child_component)) @js.jsx_owner.jsx)))
-) @js.jsx_owner.function
 
 (jsx_expression (_) @ref.role.jsx_expression)

@@ -17,38 +17,30 @@
 ; --- declaration_category_function ---
 
 (function
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_clause
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_macro ---
 
 (macro
-  name: (_) @definition.category.macro.name
-) @definition.category.owner
+  name: (_) @definition.category.macro.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_record ---
 
 (record
-  name: (_) @definition.category.record.name
-) @definition.category.owner
+  name: (_) @definition.category.record.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(function
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_clause
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(macro
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(record
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- function_list_context ---
 
@@ -78,7 +70,7 @@
 ; Exact pinned Erlang grammar roles.
 (function_clause name: (atom) @definition.function.name pattern: (arguments)? @definition.function.parameters body: (_) @definition.function.body) @definition.function
 (call module: (atom)? @call.module function: (atom) @call.function) @call
-(function_capture module: (atom)? @capture.module function: (atom) @capture.function) @reference.function_capture
+(function_capture module: (atom)? @capture.module @erlang.capture.module function: (atom) @capture.function @erlang.capture.function) @reference.function_capture @erlang.capture
 ((attribute name: (atom) @attribute.kind (arguments . (atom) @definition.module.name)) @definition.module (#any-of? @attribute.kind "module" "behaviour" "behavior"))
 ((attribute name: (atom) @attribute.kind (arguments . (atom) @import.module)) @import (#eq? @attribute.kind "import"))
 ((attribute name: (atom) @attribute.kind (arguments . (atom) @definition.type.name)) @definition.type (#any-of? @attribute.kind "type" "opaque" "nominal"))
@@ -115,7 +107,6 @@
 ((attribute name: (atom) @_n (arguments) @erlang.export.arguments) @erlang.export (#eq? @_n "export"))
 
 ; --- semantic_closure_v3_146_batch3 ---
-(function_capture module: (atom)? @erlang.capture.module function: (atom) @erlang.capture.function) @erlang.capture
 (binary_operator left: (_) @erlang.send.sender operator: "!" right: (_) @erlang.send.message) @erlang.send
 ((attribute name: (atom) @_n (arguments) @erlang.include.arguments) @erlang.include (#any-of? @_n "include" "include_lib"))
 ((attribute name: (atom) @_n (arguments) @erlang.on_load.arguments) @erlang.on_load (#eq? @_n "on_load"))

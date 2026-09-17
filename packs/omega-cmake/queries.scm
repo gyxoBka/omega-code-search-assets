@@ -27,7 +27,7 @@
 
 ; --- completeness_references_semantic2 ---
 
-(variable_ref) @reference.expression
+(variable_ref) @reference.expression @none @cmake.variable.reference
 
 ; --- completeness_scopes ---
 
@@ -60,7 +60,6 @@
   (bracket_argument)
 ] @string
 
-(variable_ref) @none
 
 (variable) @variable
 
@@ -288,7 +287,6 @@
 ; --- semantic_closure_v3_146 ---
 
 (normal_command (identifier) @cmake.call.name (argument_list) @cmake.call.args) @cmake.call
-(variable_ref) @cmake.variable.reference
 ((normal_command (identifier) @_cmd (argument_list (argument) @cmake.include.path)) @cmake.include (#eq? @_cmd "include"))
 ((normal_command (identifier) @_cmd (argument_list (argument) @cmake.subdir.path)) @cmake.subdir (#eq? @_cmd "add_subdirectory"))
 ((normal_command (identifier) @_cmd (argument_list (argument) @cmake.target.name)) @cmake.target (#any-of? @_cmd "add_executable" "add_library" "add_custom_target"))

@@ -147,6 +147,3 @@
 ((add_instruction (param) @docker.add.param) @docker.add.from (#match? @docker.add.param "^--from="))
 (expansion) @docker.expansion
 (mount_param name: (_) @docker.mount.name value: (_) @docker.mount.value) @docker.mount
-(healthcheck_instruction) @docker.healthcheck
-(onbuild_instruction) @docker.onbuild
-(shell_instruction) @docker.shell

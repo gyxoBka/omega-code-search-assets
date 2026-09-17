@@ -111,7 +111,6 @@
 
 ; --- semantic_closure_v3_146_batch2 ---
 
-(directive_attribute (directive_name) @vue.directive.name) @vue.directive
 (directive_attribute (directive_argument) @vue.directive.argument) @vue.directive.argument.owner
 (directive_dynamic_argument (directive_dynamic_argument_value) @vue.directive.dynamic.value) @vue.directive.dynamic
 (directive_modifier) @vue.directive.modifier

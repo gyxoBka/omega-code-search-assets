@@ -2,7 +2,7 @@
 
 ; OMEGA-INDEPENDENTLY-AUTHORED. Helix MPL query text is not copied.
 ; Exact grammar evidence: https://raw.githubusercontent.com/helix-editor/helix/master/runtime/queries/json/highlights.scm
-(object) @structural.candidate
+(object) @structural.candidate @data.object
 
 ; --- literals ---
 
@@ -19,7 +19,6 @@
 
 (document) @data.document
 (document (_) @data.root.value) @data.root
-(object) @data.object
 (object (pair) @data.object.pair) @data.object.container
 (array) @data.array
 (array (_) @data.array.element) @data.array.container

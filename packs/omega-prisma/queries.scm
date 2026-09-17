@@ -4,9 +4,9 @@
 
 ; --- completeness_definitions_high_confidence ---
 
-(enum_declaration) @definition.expression
+(enum_declaration) @definition.expression @type.expression
 (model_declaration) @definition.expression
-(type_declaration) @definition.expression
+(type_declaration) @definition.expression @type.expression
 
 ; --- completeness_references ---
 
@@ -19,34 +19,29 @@
 
 ; --- completeness_types_high_confidence ---
 
-(enum_declaration) @type.expression
-(type_declaration) @type.expression
 
 ; --- declaration_category_enum ---
 
 (enum_declaration
-  (identifier) @definition.category.enum.name
-) @definition.category.owner
+  (identifier) @definition.category.enum.name @definition.identity.name @prisma.enum.name
+) @definition.category.owner @definition.identity.owner @prisma.enum
 
 ; --- declaration_category_model ---
 
 (model_declaration
-  (identifier) @definition.category.model.name
-) @definition.category.owner
+  (identifier) @definition.category.model.name @definition.identity.name @prisma.model.name
+) @definition.category.owner @definition.identity.owner @prisma.model
 
 ; --- declaration_category_type ---
 
 (type_declaration
-  (identifier) @definition.category.type.name
-) @definition.category.owner
+  (identifier) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(model_declaration (identifier) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration (identifier) @definition.identity.name) @definition.identity.owner
 
-(type_declaration (identifier) @definition.identity.name) @definition.identity.owner
 
 ; --- semantic_datasource ---
 
@@ -56,9 +51,6 @@
 
 ; --- semantic_enum ---
 
-(enum_declaration
-  (identifier) @prisma.enum.name
-) @prisma.enum
 
 ; --- semantic_field ---
 
@@ -80,9 +72,6 @@
 
 ; --- semantic_model ---
 
-(model_declaration
-  (identifier) @prisma.model.name
-) @prisma.model
 
 ; --- semantic_relation ---
 
@@ -111,11 +100,8 @@
 (_) @structural.node
 
 ; --- terminal_prisma_view_v1 ---
-(view_declaration) @definition.expression
-(view_declaration) @type.expression
-(view_declaration (identifier) @definition.category.name) @definition.category.owner
-(view_declaration (identifier) @definition.identity.name) @definition.identity.owner
-(view_declaration (identifier) @prisma.view.name) @prisma.view
+(view_declaration) @definition.expression @type.expression
+(view_declaration (identifier) @definition.category.name @definition.identity.name @prisma.view.name) @definition.category.owner @definition.identity.owner @prisma.view
 (view_declaration
   (identifier) @prisma.view.field.owner
   (statement_block

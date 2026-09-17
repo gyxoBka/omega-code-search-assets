@@ -9,8 +9,8 @@
 ; --- declaration_category_macro ---
 
 (macro_definition
-  name: (_) @definition.category.name
-) @definition.category.owner
+  name: (_) @definition.category.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (macro_variable_assignment
   name: (_) @definition.category.name
@@ -18,19 +18,14 @@
 
 ; --- definition_identity_hints ---
 
-(macro_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- import_targets ---
 
 (include_statement
-  source: (_) @import.target) @import.statement
+  source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 ; --- module_path_hints ---
 
-(include_statement 
-  source: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- practical-p1-calls ---
 

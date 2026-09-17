@@ -139,10 +139,10 @@
 
 
 ; --- terminal_css_source_semantics_v1 ---
-(call_expression (function_name) @css.call.name) @css.call
+(call_expression (function_name) @css.call.name @css.function.name) @css.call @css.function.call
 (class_selector (class_name) @css.class.name) @css.class.selector
 (id_selector (id_name) @css.id.name) @css.id.selector
-(keyframes_statement (keyframes_name) @css.keyframes.name) @css.keyframes
+(keyframes_statement (keyframes_name) @css.keyframes.name @css.keyframes.strong.name) @css.keyframes @css.keyframes.strong
 (declaration (property_name) @css.declaration.property) @css.declaration
 (import_statement (string_value) @css.import.path) @css.import.path_owner
 
@@ -151,8 +151,6 @@
 ((declaration (property_name) @css.custom_property.name) @css.custom_property (#match? @css.custom_property.name "^--"))
 ((call_expression (function_name) @_var (arguments) @css.var.arguments) @css.var.reference (#eq? @_var "var"))
 [(child_selector) (descendant_selector) (adjacent_sibling_selector) (sibling_selector)] @css.selector.combinator
-(keyframes_statement (keyframes_name) @css.keyframes.strong.name) @css.keyframes.strong
-(call_expression (function_name) @css.function.name) @css.function.call
 
 ; --- semantic_closure_v3_147_css_surface ---
 ((declaration (property_name) @_animation_name (plain_value) @css.animation.name) @css.animation.reference (#eq? @_animation_name "animation-name"))

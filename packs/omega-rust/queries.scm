@@ -26,16 +26,16 @@
 ; --- assignments ---
 
 (assignment_expression
-  left: (_) @assignment.target
-  right: (_) @assignment.value) @assignment.simple
+  left: (_) @assignment.target @relation.data.assignment.target
+  right: (_) @assignment.value @relation.data.assignment.value) @assignment.simple @relation.data.assignment
 
 (compound_assignment_expr
-  left: (_) @assignment.target
-  right: (_) @assignment.value) @assignment.compound
+  left: (_) @assignment.target @relation.data.assignment.target
+  right: (_) @assignment.value @relation.data.assignment.value) @assignment.compound @relation.data.compound_assignment
 
 (let_declaration
-  pattern: (_) @assignment.binding_pattern
-  value: (_) @assignment.initializer) @assignment.let
+  pattern: (_) @assignment.binding_pattern @relation.data.initializer.target
+  value: (_) @assignment.initializer @relation.data.initializer.value) @assignment.let @relation.data.initializer
 
 (const_item
   name: (identifier) @assignment.const.name
@@ -110,13 +110,13 @@
 (reference_pattern) @binding.pattern_shape.reference
 (or_pattern) @binding.pattern_shape.or
 (remaining_field_pattern) @binding.pattern_shape.remaining
-(const_block) @binding.pattern_shape.const_block
-(macro_invocation) @binding.pattern_shape.macro
+(const_block) @binding.pattern_shape.const_block @expression.const_block
+(macro_invocation) @binding.pattern_shape.macro @guard.macro_invocation
 
 ; --- call_targets ---
 
 (call_expression
-  function: (_) @call.target) @call.expression
+  function: (_) @call.target @guard.dynamic_call.target) @call.expression @guard.dynamic_call
 
 ; --- calls ---
 
@@ -273,17 +273,8 @@
   arguments: (arguments
     (_) @relation.data.argument.value)) @relation.data.argument
 
-(assignment_expression
-  left: (_) @relation.data.assignment.target
-  right: (_) @relation.data.assignment.value) @relation.data.assignment
 
-(compound_assignment_expr
-  left: (_) @relation.data.assignment.target
-  right: (_) @relation.data.assignment.value) @relation.data.compound_assignment
 
-(let_declaration
-  pattern: (_) @relation.data.initializer.target
-  value: (_) @relation.data.initializer.value) @relation.data.initializer
 
 (return_expression
   (_) @relation.data.return.value) @relation.data.return
@@ -319,40 +310,40 @@
 ; --- declaration_category_constant ---
 
 (const_item
-  name: (_) @definition.category.constant.name
-) @definition.category.owner
+  name: (_) @definition.category.constant.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
 (enum_item
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_variant
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_field ---
 
 (field_declaration
-  name: (_) @definition.category.field.name
-) @definition.category.owner
+  name: (_) @definition.category.field.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_item
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_signature_item
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_macro ---
 
 (macro_definition
-  name: (_) @definition.category.macro.name
-) @definition.category.owner
+  name: (_) @definition.category.macro.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_module ---
 
@@ -363,26 +354,26 @@
 ; --- declaration_category_struct ---
 
 (struct_item
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
+  name: (_) @definition.category.struct.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_trait ---
 
 (trait_item
-  name: (_) @definition.category.trait.name
-) @definition.category.owner
+  name: (_) @definition.category.trait.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
 (type_item
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_union ---
 
 (union_item
-  name: (_) @definition.category.union.name
-) @definition.category.owner
+  name: (_) @definition.category.union.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_variable ---
 
@@ -467,38 +458,16 @@
 
 ; --- definition_identity_hints ---
 
-(const_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_variant
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(field_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_signature_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(macro_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(struct_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(trait_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(type_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(union_item
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- definitions_functions ---
 
@@ -592,7 +561,7 @@
   type: (_) @definition.field.type) @definition.field
 
 (ordered_field_declaration_list
-  type: (_) @definition.tuple_field.type) @definition.tuple_field.container
+  type: (_) @definition.tuple_field.type @type.annotation.tuple_field) @definition.tuple_field.container @type.owner.tuple_field
 
 (type_parameter
   name: (type_identifier) @definition.type_parameter.name) @definition.type_parameter
@@ -639,11 +608,9 @@
 (call_expression
   function: (field_expression) @guard.dynamic_dispatch.target) @guard.dynamic_dispatch.call
 
-(call_expression
-  function: (_) @guard.dynamic_call.target) @guard.dynamic_call
 
-(dynamic_type) @guard.dynamic_type
-(abstract_type) @guard.impl_trait
+(dynamic_type) @guard.dynamic_type @type.dynamic
+(abstract_type) @guard.impl_trait @type.impl_trait
 
 ; --- embedded_regions ---
 
@@ -744,19 +711,19 @@
 ; --- enclosing_owner_hints ---
 
 (struct_expression 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (struct_item 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (trait_item 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- expressions ---
 
@@ -771,11 +738,10 @@
 (parenthesized_expression) @expression.parenthesized
 (index_expression) @expression.index
 (field_expression) @expression.field
-(closure_expression) @expression.closure
+(closure_expression) @expression.closure @scope.closure
 (async_block) @expression.async_block
 (gen_block) @expression.gen_block
 (try_block) @expression.try_block
-(const_block) @expression.const_block
 (unsafe_block) @expression.unsafe_block
 
 ; --- ffi_guards ---
@@ -941,16 +907,16 @@
 (use_declaration
   argument: (use_wildcard) @guard.glob.import) @guard.glob.declaration
 
-(use_wildcard) @guard.glob.any
+(use_wildcard) @guard.glob.any @import.glob
 
 ; --- implementations ---
 
 (impl_item
-  type: (_) @implementation.target) @implementation.inherent
+  type: (_) @implementation.target @type.impl.target) @implementation.inherent @type.impl
 
 (impl_item
-  trait: (_) @implementation.trait
-  type: (_) @implementation.target) @implementation.trait_for
+  trait: (_) @implementation.trait @relation.implements.trait @type.impl.trait
+  type: (_) @implementation.target @relation.implements.type @type.impl.target) @implementation.trait_for @relation.implements @type.impl.trait_for
 
 ; --- import_alias_hints ---
 
@@ -1006,7 +972,6 @@
   path: (_) @import.group.path
   list: (use_list) @import.group.list) @import.group
 
-(use_wildcard) @import.glob
 
 (extern_crate_declaration
   name: (identifier) @import.extern_crate.name) @import.extern_crate
@@ -1062,8 +1027,7 @@
 
 ; --- macros_guards ---
 
-(macro_invocation) @guard.macro_invocation
-(macro_definition) @guard.macro_definition
+(macro_definition) @guard.macro_definition @scope.macro
 (attribute_item) @guard.attribute
 (inner_attribute_item) @guard.inner_attribute
 
@@ -1076,24 +1040,24 @@
 ; --- member_category_enum_member ---
 
 (enum_item
-  name: (_) @owner.member_category.enum.name
+  name: (_) @owner.member_category.enum.name @owner.name
   body: (enum_variant_list
     (enum_variant
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_field ---
 
 (enum_variant
-  name: (_) @owner.member_category.field.name
+  name: (_) @owner.member_category.field.name @owner.name
   body: (field_declaration_list
     (field_declaration
-      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
 
 (struct_item
-  name: (_) @owner.member_category.field.name
+  name: (_) @owner.member_category.field.name @owner.name
   body: (field_declaration_list
     (field_declaration
-      name: (_) @owned.member_category.field.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- module_path_guards ---
 
@@ -1122,8 +1086,8 @@
   name: (identifier) @module.inline.name
   body: (declaration_list) @module.inline.body) @module.inline
 
-(scoped_identifier) @module.path.value
-(scoped_type_identifier) @module.path.type
+(scoped_identifier) @module.path.value @reference.path.candidate
+(scoped_type_identifier) @module.path.type @reference.type_path.candidate @type.path
 
 ; --- named_scope_owners ---
 
@@ -1131,17 +1095,8 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(struct_expression
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(struct_item
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(trait_item
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- operator_calls ---
 
@@ -1172,23 +1127,8 @@
 
 ; --- ownership_members ---
 
-(enum_item
-  name: (_) @owner.name
-  body: (enum_variant_list
-    (enum_variant
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_variant
-  name: (_) @owner.name
-  body: (field_declaration_list
-    (field_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(struct_item
-  name: (_) @owner.name
-  body: (field_declaration_list
-    (field_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- ownership_parameters ---
 
@@ -1258,9 +1198,9 @@
 
 ; --- receiver_hints ---
 
-(self) @reference.receiver
+(self) @reference.receiver @reference.self
 
-(super) @reference.receiver
+(super) @reference.receiver @reference.super
 
 ; --- reexport_hints ---
 
@@ -1473,11 +1413,7 @@
 (type_identifier) @reference.type.candidate
 (field_identifier) @reference.field.candidate
 (shorthand_field_identifier) @reference.field_shorthand.candidate
-(scoped_identifier) @reference.path.candidate
-(scoped_type_identifier) @reference.type_path.candidate
 (lifetime) @reference.lifetime.candidate
-(self) @reference.self
-(super) @reference.super
 (crate) @reference.crate
 
 ; --- scope_control_fields ---
@@ -1518,16 +1454,11 @@
 
 (source_file) @scope.file
 (block) @scope.block
-(closure_expression) @scope.closure
 (match_arm) @scope.match_arm
-(macro_definition) @scope.macro
 
 ; --- semantic_relations ---
 
 ; Explicit semantic relations preserved from the original Rust baseline and widened.
-(impl_item
-  trait: (_) @relation.implements.trait
-  type: (_) @relation.implements.type) @relation.implements
 
 ; Candidate calls inside functions. Rule normalization joins the enclosing function
 ; with the test classification emitted by tests.json before emitting relation.tests.
@@ -1830,7 +1761,6 @@
 (parameter type: (_) @type.annotation.parameter) @type.owner.parameter
 (let_declaration type: (_) @type.annotation.let) @type.owner.let
 (field_declaration type: (_) @type.annotation.field) @type.owner.field
-(ordered_field_declaration_list type: (_) @type.annotation.tuple_field) @type.owner.tuple_field
 (const_item type: (_) @type.annotation.const) @type.owner.const
 (static_item type: (_) @type.annotation.static) @type.owner.static
 (function_item return_type: (_) @type.return.function) @type.owner.function
@@ -1841,8 +1771,6 @@
 (type_parameter) @type.parameter
 (lifetime_parameter) @type.lifetime_parameter
 (where_predicate left: (_) @type.where.subject bounds: (trait_bounds) @type.where.bounds) @type.where.predicate
-(impl_item type: (_) @type.impl.target) @type.impl
-(impl_item trait: (_) @type.impl.trait type: (_) @type.impl.target) @type.impl.trait_for
 (trait_item bounds: (trait_bounds) @type.trait.bounds) @type.owner.trait
 (type_cast_expression type: (_) @type.cast.target) @type.cast
 (reference_type) @type.reference
@@ -1851,9 +1779,6 @@
 (tuple_type) @type.tuple
 (function_type) @type.function
 (generic_type) @type.generic
-(scoped_type_identifier) @type.path
-(dynamic_type) @type.dynamic
-(abstract_type) @type.impl_trait
 (qualified_type) @type.qualified
 (type_binding) @type.associated_binding
 (bracketed_type) @type.bracketed

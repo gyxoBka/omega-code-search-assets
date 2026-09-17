@@ -10,7 +10,7 @@
 
 ; --- completeness_imports_3 ---
 
-(import_statement) @import.expression
+(import_statement) @import.expression @julia.import
 
 ; --- completeness_modules_3 ---
 
@@ -18,18 +18,16 @@
 
 ; --- completeness_types_high_confidence ---
 
-(struct_definition) @type.expression
+(struct_definition) @type.expression @julia.struct
 
 ; --- declaration_category_module ---
 
 (module_definition
-  name: (_) @definition.category.name
-) @definition.category.owner
+  name: (_) @definition.category.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(module_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- external_highlights ---
 
@@ -37,7 +35,7 @@
 ; sha256=7bb322f3c048a7e951b64e4c8a0bc97e782034f95dff15385b946eded569d94d
 
 ; Identifiers
-(identifier) @variable
+(identifier) @variable @local.reference
 
 (field_expression
   (identifier) @variable.member .)
@@ -467,7 +465,6 @@
 ; sha256=ed83a7a3e780e3238f23c6eeae211db5cb05b8f330d6795c221d2a137e5f2d71
 
 ; References
-(identifier) @local.reference
 
 ; Definitions
 (assignment
@@ -587,7 +584,7 @@
 ; --- import_targets ---
 
 (import_statement
-  (import_path) @import.target) @import.statement
+  (import_path) @import.target @import.module_path.target @julia.import.path) @import.statement @import.module_path.statement @julia.import.path_owner
 
 ; --- module_declaration_path_hints ---
 
@@ -595,8 +592,6 @@
 
 ; --- module_path_hints ---
 
-(import_statement
-  (import_path) @import.module_path.target) @import.module_path.statement
 
 (import_statement
   (identifier) @import.module_path.target) @import.module_path.statement
@@ -617,33 +612,14 @@
 
 ; ----- resolved nvim highlights source: julia sha256=7bb322f3c048a7e951b64e4c8a0bc97e782034f95dff15385b946eded569d94d -----
 ; Identifiers
-(identifier) @variable
 
-(field_expression
-  (identifier) @variable.member .)
 
 ; Symbols
-(quote_expression
-  ":" @string.special.symbol
-  [
-    (identifier)
-    (operator)
-  ] @string.special.symbol)
 
 ; Function calls
-(call_expression
-  (identifier) @function.call)
 
-(call_expression
-  (field_expression
-    (identifier) @function.call .))
 
-(broadcast_call_expression
-  (identifier) @function.call)
 
-(broadcast_call_expression
-  (field_expression
-    (identifier) @function.call .))
 
 (binary_expression
   (_)
@@ -652,15 +628,7 @@
   (#any-of? @_pipe "|>" ".|>"))
 
 ; Macros
-(macro_identifier
-  "@" @function.macro
-  (identifier) @function.macro)
 
-(macro_definition
-  (signature
-    (call_expression
-      .
-      (identifier) @function.macro)))
 
 ; Built-in functions
 ; print.("\"", filter(name -> getglobal(Core, name) isa Core.Builtin, names(Core)), "\" ")
@@ -672,31 +640,11 @@
     "typeassert" "typeof"))
 
 ; Type definitions
-(type_head
-  (_) @type.definition)
 
 ; Type annotations
-(parametrized_type_expression
-  [
-    (identifier) @type
-    (field_expression
-      (identifier) @type .)
-  ]
-  (curly_expression
-    (_) @type))
 
-(typed_expression
-  (identifier) @type .)
 
-(unary_typed_expression
-  (identifier) @type .)
 
-(where_expression
-  [
-    (curly_expression
-      (_) @type)
-    (_) @type
-  ] .)
 
 (unary_expression
   (operator) @operator
@@ -727,213 +675,58 @@
     "WeakRef"))
 
 ; Keywords
-[
-  "global"
-  "local"
-] @keyword
 
-(compound_statement
-  [
-    "begin"
-    "end"
-  ] @keyword)
 
-(quote_statement
-  [
-    "quote"
-    "end"
-  ] @keyword)
 
-(let_statement
-  [
-    "let"
-    "end"
-  ] @keyword)
 
-(if_statement
-  [
-    "if"
-    "end"
-  ] @keyword.conditional)
 
-(elseif_clause
-  "elseif" @keyword.conditional)
 
-(else_clause
-  "else" @keyword.conditional)
 
-(ternary_expression
-  [
-    "?"
-    ":"
-  ] @keyword.conditional.ternary)
 
-(try_statement
-  [
-    "try"
-    "end"
-  ] @keyword.exception)
 
-(catch_clause
-  "catch" @keyword.exception)
 
-(finally_clause
-  "finally" @keyword.exception)
 
-(for_statement
-  [
-    "for"
-    "end"
-  ] @keyword.repeat)
 
-(for_binding
-  "outer" @keyword.repeat)
 
 ; comprehensions
-(for_clause
-  "for" @keyword.repeat)
 
-(if_clause
-  "if" @keyword.conditional)
 
-(while_statement
-  [
-    "while"
-    "end"
-  ] @keyword.repeat)
 
-[
-  (break_statement)
-  (continue_statement)
-] @keyword.repeat
 
-[
-  "const"
-  "mutable"
-] @keyword.modifier
 
-(function_definition
-  [
-    "function"
-    "end"
-  ] @keyword.function)
 
-(do_clause
-  [
-    "do"
-    "end"
-  ] @keyword.function)
 
-(macro_definition
-  [
-    "macro"
-    "end"
-  ] @keyword)
 
-(return_statement
-  "return" @keyword.return)
 
-(module_definition
-  [
-    "module"
-    "baremodule"
-    "end"
-  ] @keyword.import)
 
-(export_statement
-  "export" @keyword.import)
 
-(public_statement
-  "public" @keyword.import)
 
-(import_statement
-  "import" @keyword.import)
 
-(using_statement
-  "using" @keyword.import)
 
-(import_alias
-  "as" @keyword.import)
 
-(selected_import
-  ":" @punctuation.delimiter)
 
-(struct_definition
-  [
-    "mutable"
-    "struct"
-    "end"
-  ] @keyword.type)
 
-(abstract_definition
-  [
-    "abstract"
-    "type"
-    "end"
-  ] @keyword.type)
 
-(primitive_definition
-  [
-    "primitive"
-    "type"
-    "end"
-  ] @keyword.type)
 
 ; Operators & Punctuation
-(operator) @operator
 
-(adjoint_expression
-  "'" @operator)
 
-(range_expression
-  ":" @operator)
 
-(arrow_function_expression
-  "->" @operator)
 
-[
-  "."
-  "..."
-] @punctuation.special
 
-[
-  ","
-  ";"
-  "::"
-] @punctuation.delimiter
 
 ; Treat `::` as operator in type contexts, see
 ; https://github.com/nvim-treesitter/nvim-treesitter/pull/7392
-(typed_expression
-  "::" @operator)
 
-(unary_typed_expression
-  "::" @operator)
 
-[
-  "("
-  ")"
-  "["
-  "]"
-  "{"
-  "}"
-] @punctuation.bracket
 
 ; Interpolation
-(string_interpolation
-  .
-  "$" @punctuation.special)
 
-(interpolation_expression
-  .
-  "$" @punctuation.special)
 
 ; Keyword operators
 ((operator) @keyword.operator
   (#any-of? @keyword.operator "in" "isa"))
 
-(where_expression
-  "where" @keyword.operator)
 
 ; Built-in constants
 ((identifier) @constant.builtin
@@ -944,53 +737,20 @@
   (#has-ancestor? @variable.builtin index_expression))
 
 ; Literals
-(boolean_literal) @boolean
 
-(integer_literal) @number
 
-(float_literal) @number.float
 
 ((identifier) @number.float
   (#any-of? @number.float "NaN" "NaN16" "NaN32" "Inf" "Inf16" "Inf32"))
 
-(character_literal) @character
 
-(escape_sequence) @string.escape
 
-(string_literal) @string
 
-(prefixed_string_literal
-  prefix: (identifier) @function.macro) @string
 
-(command_literal) @string.special
 
-(prefixed_command_literal
-  prefix: (identifier) @function.macro) @string.special
 
-((string_literal) @string.documentation
-  .
-  [
-    (abstract_definition)
-    (assignment)
-    (const_statement)
-    (function_definition)
-    (macro_definition)
-    (module_definition)
-    (struct_definition)
-  ])
 
-(source_file
-  (string_literal) @string.documentation
-  .
-  [
-    (identifier)
-    (call_expression)
-  ])
 
-[
-  (line_comment)
-  (block_comment)
-] @comment @spell
 
 ; --- nvim_pinned_injections ---
 
@@ -1058,85 +818,29 @@
 
 ; ----- resolved nvim locals source: julia sha256=ed83a7a3e780e3238f23c6eeae211db5cb05b8f330d6795c221d2a137e5f2d71 -----
 ; References
-(identifier) @local.reference
 
 ; Definitions
-(assignment
-  .
-  (identifier) @local.definition.var)
 
-(assignment
-  .
-  (tuple_expression
-    (identifier) @local.definition.var))
 
-(assignment
-  .
-  (open_tuple
-    (identifier) @local.definition.var))
 
-(for_binding
-  .
-  (identifier) @local.definition.var)
 
-(for_binding
-  .
-  (tuple_expression
-    (identifier) @local.definition.var))
 
-(import_statement
-  (identifier) @local.definition.import)
 
-(using_statement
-  (identifier) @local.definition.import)
 
-(selected_import
-  (identifier) @local.definition.import)
 
-(module_definition
-  .
-  (identifier) @local.definition.type)
 
-(type_head
-  (identifier) @local.definition.type)
 
-(type_head
-  (binary_expression
-    .
-    (identifier) @local.definition.type))
 
-(function_definition
-  (signature
-    (call_expression
-      .
-      (identifier) @local.definition.function))) @local.scope
 
-(macro_definition
-  (signature
-    (call_expression
-      .
-      (identifier) @local.definition.function))) @local.scope
 
 ; Scopes
-[
-  (quote_statement)
-  (let_statement)
-  (for_statement)
-  (while_statement)
-  (try_statement)
-  (catch_clause)
-  (finally_clause)
-  (do_clause)
-] @local.scope
 
 ; --- semantic_closure_v3_146_batch2 ---
 
 (macro_definition) @julia.macro.definition
 (macrocall_expression (macro_identifier) @julia.macro.call.name) @julia.macro.call
-(struct_definition) @julia.struct
 (using_statement) @julia.using
-(import_statement) @julia.import
-(selected_import) @julia.selected_import
+(selected_import) @julia.selected_import @julia.selected_import.entry
 (broadcast_call_expression) @julia.broadcast.call
 
 ; --- semantic_closure_v3_146_batch4 ---
@@ -1146,10 +850,7 @@
 (using_statement
   (import_path) @julia.using.path) @julia.using.path_owner
 
-(import_statement
-  (import_path) @julia.import.path) @julia.import.path_owner
 
-(selected_import) @julia.selected_import.entry
 
 (broadcast_call_expression
   (identifier) @julia.broadcast.callee) @julia.broadcast.direct_call

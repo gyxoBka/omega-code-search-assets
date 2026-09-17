@@ -25,8 +25,8 @@
 ) @definition.category.owner
 
 (enumerator
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
@@ -47,18 +47,18 @@
 ; --- declaration_category_module ---
 
 (module_declaration
-  name: (_) @definition.category.module.name
-) @definition.category.owner
+  name: (_) @definition.category.module.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 ; --- declaration_category_namespace ---
 
 (namespace_alias_definition
-  name: (_) @definition.category.namespace.name
-) @definition.category.owner
+  name: (_) @definition.category.namespace.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (namespace_definition
-  name: (_) @definition.category.namespace.name
-) @definition.category.owner
+  name: (_) @definition.category.namespace.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 ; --- declaration_category_struct ---
 
@@ -80,17 +80,9 @@
 
 ; --- definition_identity_hints ---
 
-(enumerator
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(module_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(namespace_alias_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(namespace_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- direct_and_member_call_site_context ---
 
@@ -106,19 +98,19 @@
 ; --- enclosing_owner_hints ---
 
 (class_specifier 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (namespace_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (struct_specifier 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- external-helix-tags ---
 
@@ -132,13 +124,13 @@
 
 (preproc_function_def name: (identifier) @definition.function)
 
-(preproc_def name: (identifier) @definition.constant)
+(preproc_def name: (identifier) @definition.constant @local.definition.macro)
 
 (type_definition
-  declarator: (type_identifier) @definition.type)
+  declarator: (type_identifier) @definition.type @local.definition.type)
 
 (struct_specifier
-  name: (type_identifier) @definition.struct)
+  name: (type_identifier) @definition.struct @local.definition.type)
 
 (enum_specifier
   name: (type_identifier) @definition.enum)
@@ -156,10 +148,10 @@
   name: (namespace_identifier) @definition.module)
 
 (concept_definition
-  name: (identifier) @definition.interface)
+  name: (identifier) @definition.interface @local.definition.type)
 
 (alias_declaration
-  name: (type_identifier) @definition.type)
+  name: (type_identifier) @definition.type @local.definition.type)
 
 ; --- external-nvim-treesitter-locals ---
 
@@ -175,8 +167,6 @@
 (preproc_function_def
   name: (identifier) @local.definition.macro) @local.scope
 
-(preproc_def
-  name: (identifier) @local.definition.macro)
 
 (pointer_declarator
   declarator: (identifier) @local.definition.var)
@@ -203,11 +193,7 @@
 (field_declaration
   declarator: (field_identifier) @local.definition.field)
 
-(type_definition
-  declarator: (type_identifier) @local.definition.type)
 
-(struct_specifier
-  name: (type_identifier) @local.definition.type)
 
 ; goto
 (labeled_statement
@@ -238,10 +224,10 @@
 ; Parameters
 (variadic_parameter_declaration
   declarator: (variadic_declarator
-    (identifier) @local.definition.parameter))
+    (identifier) @local.definition.parameter @local.definition.variable.parameter))
 
 (optional_parameter_declaration
-  declarator: (identifier) @local.definition.parameter)
+  declarator: (identifier) @local.definition.parameter @local.definition.variable.parameter)
 
 ; Class / struct definitions
 (class_specifier) @local.scope
@@ -259,15 +245,11 @@
 (class_specifier
   name: (type_identifier) @local.definition.type)
 
-(concept_definition
-  name: (identifier) @local.definition.type)
 
 (class_specifier
   name: (qualified_identifier
     name: (type_identifier) @local.definition.type))
 
-(alias_declaration
-  name: (type_identifier) @local.definition.type)
 
 ;template <typename T>
 (type_parameter_declaration
@@ -329,10 +311,10 @@
 ; --- import_targets ---
 
 (import_declaration
-  name: (_) @import.target) @import.statement
+  name: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 (preproc_include
-  path: (_) @import.target) @import.statement
+  path: (_) @import.target @import.module_path.target @import.path) @import.statement @import.module_path.statement @import.include
 
 ; --- locals ---
 
@@ -345,52 +327,22 @@
 ; path=audit-baselines/external/nvim-treesitter/c/locals.scm
 ; sha256=b3ecf04dadb49555af03644686fb68c3ce3ccfd98af33f003371beb5a37652b0
 ; Functions definitions
-(function_declarator
-  declarator: (identifier) @local.definition.function)
 
-(preproc_function_def
-  name: (identifier) @local.definition.macro) @local.scope
 
-(preproc_def
-  name: (identifier) @local.definition.macro)
 
-(pointer_declarator
-  declarator: (identifier) @local.definition.var)
 
-(parameter_declaration
-  declarator: (identifier) @local.definition.parameter)
 
-(init_declarator
-  declarator: (identifier) @local.definition.var)
 
-(array_declarator
-  declarator: (identifier) @local.definition.var)
 
-(declaration
-  declarator: (identifier) @local.definition.var)
 
-(enum_specifier
-  name: (_) @local.definition.type
-  (enumerator_list
-    (enumerator
-      name: (identifier) @local.definition.var)))
 
 ; Type / Struct / Enum
-(field_declaration
-  declarator: (field_identifier) @local.definition.field)
 
-(type_definition
-  declarator: (type_identifier) @local.definition.type)
 
-(struct_specifier
-  name: (type_identifier) @local.definition.type)
 
 ; goto
-(labeled_statement
-  (statement_identifier) @local.definition)
 
 ; References
-(identifier) @local.reference
 
 ((field_identifier) @local.reference
   (#set! reference.kind "field"))
@@ -398,19 +350,8 @@
 ((type_identifier) @local.reference
   (#set! reference.kind "type"))
 
-(goto_statement
-  (statement_identifier) @local.reference)
 
 ; Scope
-[
-  (for_statement)
-  (if_statement)
-  (while_statement)
-  (translation_unit)
-  (function_definition)
-  (compound_statement) ; a block in curly braces
-  (struct_specifier)
-] @local.scope
 
 ; Omega adaptation source: direct
 ; path=audit-baselines/external/nvim-treesitter/cpp/locals.scm
@@ -418,81 +359,35 @@
 ; inherits: c
 
 ; Parameters
-(variadic_parameter_declaration
-  declarator: (variadic_declarator
-    (identifier) @local.definition.parameter))
 
-(optional_parameter_declaration
-  declarator: (identifier) @local.definition.parameter)
 
 ; Class / struct definitions
-(class_specifier) @local.scope
 
-(reference_declarator
-  (identifier) @local.definition.var)
 
-(variadic_declarator
-  (identifier) @local.definition.var)
 
-(struct_specifier
-  name: (qualified_identifier
-    name: (type_identifier) @local.definition.type))
 
-(class_specifier
-  name: (type_identifier) @local.definition.type)
 
-(concept_definition
-  name: (identifier) @local.definition.type)
 
-(class_specifier
-  name: (qualified_identifier
-    name: (type_identifier) @local.definition.type))
 
-(alias_declaration
-  name: (type_identifier) @local.definition.type)
 
 ;template <typename T>
-(type_parameter_declaration
-  (type_identifier) @local.definition.type)
 
-(template_declaration) @local.scope
 
 ; Namespaces
-(namespace_definition
-  name: (namespace_identifier) @local.definition.namespace
-  body: (_) @local.scope)
 
-(namespace_definition
-  name: (nested_namespace_specifier) @local.definition.namespace
-  body: (_) @local.scope)
 
 ((namespace_identifier) @local.reference
   (#set! reference.kind "namespace"))
 
 ; Function definitions
-(template_function
-  name: (identifier) @local.definition.function) @local.scope
 
-(template_method
-  name: (field_identifier) @local.definition.method) @local.scope
 
-(function_declarator
-  declarator: (qualified_identifier
-    name: (identifier) @local.definition.function)) @local.scope
 
-(field_declaration
-  declarator: (function_declarator
-    (field_identifier) @local.definition.method))
 
-(lambda_expression) @local.scope
 
 ; Control structures
-(try_statement
-  body: (_) @local.scope)
 
-(catch_clause) @local.scope
 
-(requires_expression) @local.scope
 
 ; --- member_access_hints ---
 
@@ -506,7 +401,7 @@
   name: (_) @owner.name
   body: (enumerator_list
     (enumerator
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -514,53 +409,32 @@
   name: (_) @owner.name
   body: (field_declaration_list
     (preproc_function_def
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 (namespace_definition
   name: (_) @owner.name
   body: (declaration_list
     (preproc_function_def
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 (struct_specifier
   name: (_) @owner.name
   body: (field_declaration_list
     (preproc_function_def
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- module_declaration_path_hints ---
 
-(module_declaration
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
-(namespace_definition
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
 ; --- module_path_hints ---
 
-(import_declaration 
-  name: (_) @import.module_path.target
-) @import.module_path.statement
 
-(preproc_include 
-  path: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- named_scope_owners ---
 
-(class_specifier
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(namespace_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(struct_specifier
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- ownership_members ---
 
@@ -570,17 +444,7 @@
     (alias_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_specifier
-  name: (_) @owner.name
-  body: (field_declaration_list
-    (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_specifier
-  name: (_) @owner.name
-  body: (enumerator_list
-    (enumerator
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (namespace_definition
   name: (_) @owner.name
@@ -606,11 +470,6 @@
     (namespace_definition
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(namespace_definition
-  name: (_) @owner.name
-  body: (declaration_list
-    (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (struct_specifier
   name: (_) @owner.name
@@ -618,11 +477,6 @@
     (alias_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(struct_specifier
-  name: (_) @owner.name
-  body: (field_declaration_list
-    (preproc_function_def
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- p0-exact-helix-locals ---
 
@@ -669,7 +523,6 @@
 
 ;; References
 
-(identifier) @local.reference
 
 ; A call's function name is not a variable reference; keep its class
 ; even when a same-named local is in scope.
@@ -684,14 +537,8 @@
 ] @local.scope
 
 ; C++-only parameter forms (c only has parameter_declaration).
-(optional_parameter_declaration
-  declarator: (identifier) @local.definition.variable.parameter)
-(variadic_parameter_declaration
-  declarator: (variadic_declarator (identifier) @local.definition.variable.parameter))
 
 ; Template type parameters.
-(type_parameter_declaration
-  (type_identifier) @local.definition.type)
 
 ; --- p0-exact-helix-tags ---
 
@@ -700,39 +547,16 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/cpp/tags.scm
 
-(function_declarator
-  declarator: [(identifier) (field_identifier)] @definition.function)
 
-(preproc_function_def name: (identifier) @definition.function)
 
-(preproc_def name: (identifier) @definition.constant)
 
-(type_definition
-  declarator: (type_identifier) @definition.type)
 
-(struct_specifier
-  name: (type_identifier) @definition.struct)
 
-(enum_specifier
-  name: (type_identifier) @definition.enum)
 
-(union_specifier
-  name: (type_identifier) @definition.struct)
-(function_declarator
-  declarator: (qualified_identifier name: (identifier) @definition.function))
 
-(class_specifier
-  name: (type_identifier) @definition.class
-  body: (field_declaration_list))
 
-(namespace_definition
-  name: (namespace_identifier) @definition.module)
 
-(concept_definition
-  name: (identifier) @definition.interface)
 
-(alias_declaration
-  name: (type_identifier) @definition.type)
 
 ; --- qualified_chain_hints ---
 
@@ -742,15 +566,12 @@
 ) @reference.qualified_chain.span
 
 (qualified_identifier
-  scope: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
+  scope: (_) @reference.qualified_chain.base @reference.qualifier
+  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
+) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
 
-(qualified_identifier
-  scope: (_) @reference.qualifier
-  name: (_) @reference.qualified_name) @reference.qualified_expression
 
 ; --- receiver_hints ---
 
@@ -777,8 +598,6 @@
 
 (call_expression) @call.expression
 
-(preproc_include
-  path: (_) @import.path) @import.include
 
 (import_declaration) @import.module
 

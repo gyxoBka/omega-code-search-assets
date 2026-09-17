@@ -101,14 +101,14 @@
 ; --- declaration_category_class ---
 
 (class
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (method
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (singleton_method
   name: (_) @definition.category.method.name
@@ -117,19 +117,13 @@
 ; --- declaration_category_module ---
 
 (module
-  name: (_) @definition.category.module.name
-) @definition.category.owner
+  name: (_) @definition.category.module.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(class
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(module
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- direct_string_call_context ---
 
@@ -144,14 +138,14 @@
 ; --- enclosing_owner_hints ---
 
 (class 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (module 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- external-helix-tags ---
 
@@ -179,7 +173,7 @@
   name: (_) @name) @definition.method
 
 (setter
-  (identifier) @_ignore)
+  (identifier) @_ignore @ignore)
 
 ; Class definitions
 
@@ -288,31 +282,31 @@
   ] @local.definition.function)
 
 (method_parameters
-  (identifier) @local.definition.var)
+  (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (lambda_parameters
-  (identifier) @local.definition.var)
+  (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (block_parameters
-  (identifier) @local.definition.var)
+  (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (splat_parameter
-  (identifier) @local.definition.var)
+  (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (hash_splat_parameter
-  (identifier) @local.definition.var)
+  (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (optional_parameter
-  name: (identifier) @local.definition.var)
+  name: (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (destructured_parameter
-  (identifier) @local.definition.var)
+  (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (block_parameter
   name: (identifier) @local.definition.var)
 
 (keyword_parameter
-  name: (identifier) @local.definition.var)
+  name: (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (assignment
   left: (_) @local.definition.var)
@@ -364,91 +358,36 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 ; DECLARATIONS AND SCOPES
-(method) @local.scope
 
-(class) @local.scope
 
-[
-  (block)
-  (do_block)
-] @local.scope
 
-(identifier) @local.reference
 
-(constant) @local.reference
 
-(instance_variable) @local.reference
 
-(module
-  name: (constant) @local.definition.namespace)
 
-(class
-  name: (constant) @local.definition.type)
 
-(method
-  name: [
-    (identifier)
-    (constant)
-  ] @local.definition.function)
 
-(singleton_method
-  name: [
-    (identifier)
-    (constant)
-  ] @local.definition.function)
 
-(method_parameters
-  (identifier) @local.definition.var)
 
-(lambda_parameters
-  (identifier) @local.definition.var)
 
-(block_parameters
-  (identifier) @local.definition.var)
 
-(splat_parameter
-  (identifier) @local.definition.var)
 
-(hash_splat_parameter
-  (identifier) @local.definition.var)
 
-(optional_parameter
-  name: (identifier) @local.definition.var)
 
-(destructured_parameter
-  (identifier) @local.definition.var)
 
-(block_parameter
-  name: (identifier) @local.definition.var)
 
-(keyword_parameter
-  name: (identifier) @local.definition.var)
 
-(assignment
-  left: (_) @local.definition.var)
 
-(left_assignment_list
-  (identifier) @local.definition.var)
 
-(rest_assignment
-  (identifier) @local.definition.var)
 
-(destructured_left_assignment
-  (identifier) @local.definition.var)
 
 ; --- named_scope_owners ---
 
-(class
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (method
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(module
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (singleton_method
   name: (_) @scope.owner.name
@@ -561,16 +500,7 @@
 ] @local.scope
 
 (block_parameter (identifier) @local.definition.variable.parameter)
-(block_parameters (identifier) @local.definition.variable.parameter)
-(destructured_parameter (identifier) @local.definition.variable.parameter)
-(hash_splat_parameter (identifier) @local.definition.variable.parameter)
-(lambda_parameters (identifier) @local.definition.variable.parameter)
-(method_parameters (identifier) @local.definition.variable.parameter)
-(splat_parameter (identifier) @local.definition.variable.parameter)
-(keyword_parameter name: (identifier) @local.definition.variable.parameter)
-(optional_parameter name: (identifier) @local.definition.variable.parameter)
 
-(identifier) @local.reference
 
 ; A method-call name is not a variable reference (the grammar only forms `call`
 ; when it's syntactically a call), so a same-named local must not capture it.
@@ -599,11 +529,7 @@
   (#select-adjacent! @doc @definition.method)
 )
 
-(alias
-  name: (_) @name) @definition.method
 
-(setter
-  (identifier) @_ignore)
 
 ; Class definitions
 
@@ -630,18 +556,9 @@
 
 ; Module definitions
 
-(
-  (module
-    name: [
-      (constant) @name
-      (scope_resolution
-        name: (_) @name)
-    ]) @definition.module
-)
 
 ; Calls
 
-(call method: (identifier) @name) @reference.call
 
 (
   [(identifier) (constant)] @name @reference.call
@@ -693,11 +610,7 @@
   (#select-adjacent! @doc @definition.method)
 )
 
-(alias
-  name: (_) @name) @definition.method
 
-(setter
-  (identifier) @ignore)
 
 ; Class definitions
 
@@ -724,18 +637,9 @@
 
 ; Module definitions
 
-(
-  (module
-    name: [
-      (constant) @name
-      (scope_resolution
-        name: (_) @name)
-    ]) @definition.module
-)
 
 ; Calls
 
-(call method: (identifier) @name) @reference.call
 
 (
   [(identifier) (constant)] @name @reference.call

@@ -4,11 +4,10 @@
 
 ; --- await_scope ---
 
-(await_block) @svelte.scope
+(await_block) @svelte.scope @svelte.await_block
 
 ; --- data_await_block ---
 
-(await_block) @svelte.await_block
 
 ; --- data_declaration_tag ---
 
@@ -16,11 +15,11 @@
 
 ; --- data_each_block ---
 
-(each_block) @svelte.each_block
+(each_block) @svelte.each_block @svelte.scope
 
 ; --- data_if_block ---
 
-(if_block) @svelte.if_block
+(if_block) @svelte.if_block @svelte.scope
 
 ; --- data_render_tag ---
 
@@ -32,7 +31,6 @@
 
 ; --- each_scope ---
 
-(each_block) @svelte.scope
 
 ; --- element_tag ---
 
@@ -51,7 +49,6 @@
 
 ; --- if_scope ---
 
-(if_block) @svelte.scope
 
 ; --- nvim_pinned_locals ---
 
@@ -134,7 +131,6 @@
 
 ; --- semantic_closure_v3_146_batch2 ---
 
-(snippet_block name: (snippet_name) @svelte.snippet.name) @svelte.snippet
 (attribute_directive) @svelte.directive
 (shorthand_attribute) @svelte.shorthand.attribute
 (expression) @svelte.expression

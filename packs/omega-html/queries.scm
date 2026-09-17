@@ -64,7 +64,6 @@
 ; source=audit-baselines/external/nvim-treesitter/html/locals.scm
 ; sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74
 
-(element) @local.scope
 
 ; --- nvim_pinned_injections ---
 
@@ -225,7 +224,6 @@
 ; resolved_sources=html
 
 ; ----- resolved nvim locals source: html sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74 -----
-(element) @local.scope
 
 ; --- static_delta ---
 

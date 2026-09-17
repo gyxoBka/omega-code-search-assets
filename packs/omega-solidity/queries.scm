@@ -19,20 +19,20 @@
 ; --- declaration_category_constant ---
 
 (constant_variable_declaration
-  name: (_) @definition.category.constant.name
-) @definition.category.owner
+  name: (_) @definition.category.constant.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
 (enum_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_event ---
 
 (event_definition
-  name: (_) @definition.category.event.name
-) @definition.category.owner
+  name: (_) @definition.category.event.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (event_parameter
   name: (_) @definition.category.event.name
@@ -41,44 +41,44 @@
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.interface.name
-) @definition.category.owner
+  name: (_) @definition.category.interface.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_struct ---
 
 (struct_declaration
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
+  name: (_) @definition.category.struct.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (struct_field_assignment
   name: (_) @definition.category.struct.name
 ) @definition.category.owner
 
 (struct_member
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
+  name: (_) @definition.category.struct.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
 (user_defined_type_definition
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_variable ---
 
 (state_variable_declaration
-  name: (_) @definition.category.variable.name
-) @definition.category.owner
+  name: (_) @definition.category.variable.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (variable_declaration
-  name: (_) @definition.category.variable.name
-) @definition.category.owner
+  name: (_) @definition.category.variable.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_visibility ---
 
@@ -89,35 +89,15 @@
 
 ; --- definition_identity_hints ---
 
-(constant_variable_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(event_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(interface_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(state_variable_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(struct_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(struct_member
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(user_defined_type_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(variable_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- distributed_web_structural ---
 
@@ -129,14 +109,14 @@
 ; --- enclosing_owner_hints ---
 
 (interface_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (struct_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- import_alias_hints ---
 
@@ -147,7 +127,7 @@
 ; --- import_targets ---
 
 (import_directive
-  source: (_) @import.target) @import.statement
+  source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 (using_directive
   source: (_) @import.target) @import.statement
@@ -164,13 +144,13 @@
   name: (_) @owner.name
   body: (contract_body
     (enum_declaration
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (enum_declaration
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_event ---
 
@@ -178,13 +158,13 @@
   name: (_) @owner.name
   body: (contract_body
     (event_definition
-      name: (_) @owned.member_category.event.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.event.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (event_definition
-      name: (_) @owned.member_category.event.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.event.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_function ---
 
@@ -192,13 +172,13 @@
   name: (_) @owner.name
   body: (contract_body
     (function_definition
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (function_definition
-      name: (_) @owned.member_category.function.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_struct ---
 
@@ -206,19 +186,19 @@
   name: (_) @owner.name
   body: (contract_body
     (struct_declaration
-      name: (_) @owned.member_category.struct.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.struct.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (struct_declaration
-      name: (_) @owned.member_category.struct.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.struct.name @owned.member.name) @owned.member)) @owner.span
 
 (struct_declaration
   name: (_) @owner.name
   body: (struct_body
     (struct_member
-      name: (_) @owned.member_category.struct.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.struct.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_type ---
 
@@ -226,19 +206,16 @@
   name: (_) @owner.name
   body: (contract_body
     (user_defined_type_definition
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (contract_body
     (user_defined_type_definition
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- module_path_hints ---
 
-(import_directive 
-  source: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- named_scope_owners ---
 
@@ -250,21 +227,10 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(interface_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(struct_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- ownership_members ---
 
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (contract_declaration
   name: (_) @owner.name
@@ -272,17 +238,7 @@
     (error_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (event_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (function_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (contract_declaration
   name: (_) @owner.name
@@ -296,23 +252,8 @@
     (state_variable_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (struct_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (user_defined_type_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
@@ -320,17 +261,7 @@
     (error_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (event_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (function_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
@@ -344,23 +275,8 @@
     (state_variable_declaration
       name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (struct_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (user_defined_type_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(struct_declaration
-  name: (_) @owner.name
-  body: (struct_body
-    (struct_member
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- signature_return_type ---
 

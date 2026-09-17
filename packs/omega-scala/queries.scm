@@ -17,8 +17,8 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (class_parameter
   name: (_) @definition.category.class.name
@@ -27,8 +27,8 @@
 ; --- declaration_category_enum ---
 
 (enum_definition
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (full_enum_case
   name: (_) @definition.category.enum.name
@@ -41,34 +41,34 @@
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_definition
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_package ---
 
 (package_clause
-  name: (_) @definition.category.package.name
-) @definition.category.owner
+  name: (_) @definition.category.package.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 (package_object
-  name: (_) @definition.category.package.name
-) @definition.category.owner
+  name: (_) @definition.category.package.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_trait ---
 
 (trait_definition
-  name: (_) @definition.category.trait.name
-) @definition.category.owner
+  name: (_) @definition.category.trait.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
 (type_definition
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_modifiers ---
 
@@ -146,41 +146,25 @@
 
 ; --- definition_identity_hints ---
 
-(class_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(package_clause
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(package_object
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(trait_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(type_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- enclosing_owner_hints ---
 
 (class_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (trait_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- external-helix-tags ---
 
@@ -190,14 +174,14 @@
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
 (class_definition name: (identifier) @name) @definition.class
-(object_definition name: (identifier) @name) @definition.module
+(object_definition name: (identifier) @name) @definition.module @definition.object
 (trait_definition name: (identifier) @name) @definition.interface
 (enum_definition name: (identifier) @name) @definition.enum
 (function_definition name: (identifier) @name) @definition.function
-(val_definition pattern: (identifier) @name) @definition.constant
-(var_definition pattern: (identifier) @name) @definition.constant
+(val_definition pattern: (identifier) @name) @definition.constant @definition.variable
+(var_definition pattern: (identifier) @name) @definition.constant @definition.variable
 (type_definition name: (type_identifier) @name) @definition.type
-(given_definition name: (identifier) @name) @definition.constant
+(given_definition name: (identifier) @name) @definition.constant @definition.variable
 
 ; --- external-nvim-treesitter-locals ---
 
@@ -227,22 +211,22 @@
   (#set! definition.var.scope parent))
 
 (parameter
-  name: (identifier) @local.definition.parameter)
+  name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
 
 (class_parameter
-  name: (identifier) @local.definition.parameter)
+  name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
 
 (lambda_expression
-  parameters: (identifier) @local.definition.var)
+  parameters: (identifier) @local.definition.var @local.definition.variable.parameter)
 
 (binding
   name: (identifier) @local.definition.var)
 
 (val_definition
-  pattern: (identifier) @local.definition.var)
+  pattern: (identifier) @local.definition.var @local.definition.variable)
 
 (var_definition
-  pattern: (identifier) @local.definition.var)
+  pattern: (identifier) @local.definition.var @local.definition.variable)
 
 (val_declaration
   name: (identifier) @local.definition.var)
@@ -259,7 +243,7 @@
 ; --- import_targets ---
 
 (import_declaration
-  path: (_) @import.target) @import.statement
+  path: (_) @import.target @import.module_path.target @import.path) @import.statement @import.module_path.statement
 
 ; --- locals ---
 
@@ -272,54 +256,23 @@
 ; path=audit-baselines/external/nvim-treesitter/scala/locals.scm
 ; sha256=06d053fab0a77e337bbf753f519b7645d74cf61cb596c9f8fb9bc817ad2abfe4
 ; Scopes
-[
-  (template_body)
-  (lambda_expression)
-  (function_definition)
-  (block)
-  (for_expression)
-] @local.scope
 
 ; References
-(identifier) @local.reference
 
 ; Definitions
-(function_declaration
-  name: (identifier) @local.definition.function)
 
 (function_definition
   name: (identifier) @local.definition.function
   (#set! definition.var.scope parent))
 
-(parameter
-  name: (identifier) @local.definition.parameter)
 
-(class_parameter
-  name: (identifier) @local.definition.parameter)
 
-(lambda_expression
-  parameters: (identifier) @local.definition.var)
 
-(binding
-  name: (identifier) @local.definition.var)
 
-(val_definition
-  pattern: (identifier) @local.definition.var)
 
-(var_definition
-  pattern: (identifier) @local.definition.var)
 
-(val_declaration
-  name: (identifier) @local.definition.var)
 
-(var_declaration
-  name: (identifier) @local.definition.var)
 
-(for_expression
-  enumerators: (enumerators
-    (enumerator
-      (tuple_pattern
-        (identifier) @local.definition.var))))
 
 ; --- member_access_hints ---
 
@@ -329,21 +282,12 @@
 
 ; --- module_declaration_path_hints ---
 
-(package_clause
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
 ; --- module_path_hints ---
 
-(import_declaration 
-  path: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- named_scope_owners ---
 
-(class_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_definition
   name: (_) @scope.owner.name
@@ -357,9 +301,6 @@
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(trait_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- ownership_parameters ---
 
@@ -438,30 +379,19 @@
 
 ; `def`/method and `class`/constructor parameters; baseline highlight is plain
 ; `variable`, so the parameter class is what makes these distinct.
-(parameter
-  name: (identifier) @local.definition.variable.parameter)
-(class_parameter
-  name: (identifier) @local.definition.variable.parameter)
 
 ; Lambda parameters: `(x: Int) => …` (bindings) and bare `x => …`.
 (bindings
   (binding
     name: (identifier) @local.definition.variable.parameter))
-(lambda_expression
-  parameters: (identifier) @local.definition.variable.parameter)
 
 (type_parameters
   name: (identifier) @local.definition.type.parameter)
 
 ; Local `val`/`var` bindings; defined so inner references resolve and shadow.
-(val_definition
-  pattern: (identifier) @local.definition.variable)
-(var_definition
-  pattern: (identifier) @local.definition.variable)
 
 ; References
 
-(identifier) @local.reference
 
 ; Member access after `.` is a field/method name, not a local reference.
 (field_expression
@@ -474,15 +404,6 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/scala/tags.scm
 
-(class_definition name: (identifier) @name) @definition.class
-(object_definition name: (identifier) @name) @definition.module
-(trait_definition name: (identifier) @name) @definition.interface
-(enum_definition name: (identifier) @name) @definition.enum
-(function_definition name: (identifier) @name) @definition.function
-(val_definition pattern: (identifier) @name) @definition.constant
-(var_definition pattern: (identifier) @name) @definition.constant
-(type_definition name: (type_identifier) @name) @definition.type
-(given_definition name: (identifier) @name) @definition.constant
 
 ; --- reexport_hints ---
 
@@ -568,8 +489,6 @@
 
 ; --- static_delta ---
 
-(import_declaration
-  path: (_) @import.path) @import.statement
 
 (extends_clause) @relation.extends
 
@@ -580,11 +499,7 @@
 (package_clause
   name: (package_identifier) @name) @definition.module
 
-(trait_definition
-  name: (identifier) @name) @definition.interface
 
-(enum_definition
-  name: (identifier) @name) @definition.enum
 
 (simple_enum_case
   name: (identifier) @name) @definition.class
@@ -592,23 +507,11 @@
 (full_enum_case
   name: (identifier) @name) @definition.class
 
-(class_definition
-  name: (identifier) @name) @definition.class
 
-(object_definition
-  name: (identifier) @name) @definition.object
 
-(function_definition
-  name: (identifier) @name) @definition.function
 
-(val_definition
-  pattern: (identifier) @name) @definition.variable
 
-(given_definition
-  name: (identifier) @name) @definition.variable
 
-(var_definition
-  pattern: (identifier) @name) @definition.variable
 
 (val_declaration
   name: (identifier) @name) @definition.variable
@@ -616,8 +519,6 @@
 (var_declaration
   name: (identifier) @name) @definition.variable
 
-(type_definition
-  name: (type_identifier) @name) @definition.type
 
 (class_parameter
   name: (identifier) @name) @definition.property

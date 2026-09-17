@@ -21,8 +21,8 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.name
-) @definition.category.owner
+  name: (_) @definition.category.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_modifiers ---
 
@@ -50,15 +50,13 @@
 
 ; --- definition_identity_hints ---
 
-(class_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- enclosing_owner_hints ---
 
 (class_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- external-neovim-distributed-locals ---
 
@@ -121,9 +119,6 @@
 
 ; --- named_scope_owners ---
 
-(class_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- nextflow_dsl_context ---
 
@@ -149,11 +144,6 @@
 
 ; --- ownership_members ---
 
-(class_definition
-  name: (_) @owner.name
-  body: (closure
-    (class_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 (class_definition
   name: (_) @owner.name
@@ -181,8 +171,8 @@
 ; --- spock_class_method_context ---
 
 (class_definition
-  name: (identifier) @spock.class.name
-  superclass: (_) @spock.class.superclass) @spock.class
+  name: (identifier) @spock.class.name @groovy.class.name
+  superclass: (_) @spock.class.superclass @groovy.class.superclass) @spock.class @groovy.class.inheritance
 
 (class_definition
   name: (identifier) @spock.method.owner
@@ -195,7 +185,6 @@
 
 (annotation (identifier) @groovy.annotation.name) @groovy.annotation
 (closure) @groovy.closure
-(class_definition name: (identifier) @groovy.class.name superclass: (_) @groovy.class.superclass) @groovy.class.inheritance
 
 ; --- semantic_closure_v3_146_batch3 ---
 (groovy_import import: (_) @groovy.import.path import_alias: (identifier)? @groovy.import.alias) @groovy.import

@@ -28,8 +28,8 @@
 (formal_parameters (identifier) @binding.parameter)
 (variable_declarator name: (identifier) @binding.variable)
 (catch_clause parameter: (identifier) @binding.catch)
-(import_specifier alias: (identifier) @binding.import_alias)
-(namespace_import (identifier) @binding.namespace_import)
+(import_specifier alias: (identifier) @binding.import_alias @import.alias)
+(namespace_import (identifier) @binding.namespace_import @import.namespace)
 
 ; --- block_call_context ---
 
@@ -262,7 +262,7 @@
 (method_definition name: (_) @class.method.name parameters: (formal_parameters) @class.method.parameters body: (statement_block) @class.method.body) @class.method
 (field_definition property: (_) @class.field.name value: (_)? @class.field.value) @class.field
 (class_static_block body: (statement_block) @class.static.body) @class.static
-(private_property_identifier) @class.private.identifier
+(private_property_identifier) @class.private.identifier @reference.private_property.candidate
 (decorator (_) @class.decorator.value) @class.decorator
 
 ; --- completeness_types_high_confidence ---
@@ -276,32 +276,32 @@
 
 ; --- data ---
 
-(object) @data.object
-(array) @data.array
-(pair key: (_) @data.key value: (_) @data.value) @data.pair
-(string) @data.string
-(number) @data.number
-(true) @data.boolean
-(false) @data.boolean
-(null) @data.null
-(template_string) @data.template
-(regex) @data.regex
+(object) @data.object @object.literal
+(array) @data.array @array.literal
+(pair key: (_) @data.key @object.property.key value: (_) @data.value @object.property.value) @data.pair @object.property
+(string) @data.string @literal.string
+(number) @data.number @literal.number
+(true) @data.boolean @literal.boolean
+(false) @data.boolean @literal.boolean
+(null) @data.null @literal.null
+(template_string) @data.template @literal.template
+(regex) @data.regex @literal.regex
 
 ; --- declaration_category_class ---
 
 (class
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_expression
   name: (_) @definition.category.function.name
@@ -312,31 +312,21 @@
 ) @definition.category.owner
 
 (generator_function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (method_definition
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name @object.method.name
+) @definition.category.owner @definition.identity.owner @object.method
 
 ; --- definition_identity_hints ---
 
-(class
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(generator_function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
@@ -361,14 +351,14 @@
 ; --- enclosing_owner_hints ---
 
 (class 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- export_alias_hints ---
 
@@ -447,17 +437,15 @@
   name: (_) @import.target) @import.statement
 
 (import_statement
-  source: (_) @import.target) @import.statement
+  source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 (jsx_opening_element
-  name: (_) @import.target) @import.statement
+  name: (_) @import.target @jsx.open.name) @import.statement @jsx.opening
 
 ; --- imports ---
 
-(import_statement source: (string) @import.source) @import.statement
+(import_statement source: (string) @import.source @module.import_source) @import.statement @module.import
 (import_specifier name: [(identifier) (string)] @import.name) @import.specifier
-(import_specifier alias: (identifier) @import.alias)
-(namespace_import (identifier) @import.namespace)
 (call_expression function: (import) @import.dynamic.operator arguments: (arguments (string) @import.dynamic.source)) @import.dynamic
 (call_expression function: (identifier) @import.require.operator arguments: (arguments (string) @import.require.source) (#eq? @import.require.operator "require")) @import.require
 
@@ -465,7 +453,6 @@
 
 (jsx_element open_tag: (jsx_opening_element) @jsx.open close_tag: (jsx_closing_element) @jsx.close) @jsx.element
 (jsx_self_closing_element name: (_) @jsx.self.name) @jsx.self
-(jsx_opening_element name: (_) @jsx.open.name) @jsx.opening
 (jsx_closing_element name: (_) @jsx.close.name) @jsx.closing
 (jsx_attribute) @jsx.attribute
 (jsx_expression) @jsx.expression
@@ -491,14 +478,10 @@
 
 ; --- module_path_hints ---
 
-(import_statement 
-  source: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- modules ---
 
 (export_statement) @module.export
-(import_statement source: (string) @module.import_source) @module.import
 
 ; --- named_import_source_context ---
 
@@ -519,13 +502,7 @@
 
 ; --- named_scope_owners ---
 
-(class
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (function_declaration
   name: (_) @scope.owner.name
@@ -549,19 +526,8 @@
 
 ; --- objects_properties ---
 
-(object) @object.literal
-(pair key: (_) @object.property.key value: (_) @object.property.value) @object.property
-(shorthand_property_identifier) @object.shorthand
+(shorthand_property_identifier) @object.shorthand @reference.shorthand.candidate
 (computed_property_name (_) @object.computed.value) @object.computed
-(method_definition name: (_) @object.method.name) @object.method
-(array) @array.literal
-(template_string) @literal.template
-(regex) @literal.regex
-(string) @literal.string
-(number) @literal.number
-(true) @literal.boolean
-(false) @literal.boolean
-(null) @literal.null
 
 ; --- ownership_parameters ---
 
@@ -675,8 +641,6 @@
 
 (identifier) @reference.identifier.candidate
 (property_identifier) @reference.property.candidate
-(private_property_identifier) @reference.private_property.candidate
-(shorthand_property_identifier) @reference.shorthand.candidate
 
 ; --- root_member_call_context ---
 
@@ -1107,7 +1071,7 @@
     (variable_declarator
       name: (identifier) @js.b3_const_string.binding
       value: (string (string_fragment) @js.b3_const_string.value)) @js.b3_const_string.declarator))
-  @js.b3_const_string.program
+  @js.b3_const_string.program @js.b3_const_number.program @js.b3_const_true.program @js.b3_const_false.program @js.b3_const_null.program @js.b3_const_alias.program
 
 (program
   (lexical_declaration
@@ -1115,7 +1079,6 @@
     (variable_declarator
       name: (identifier) @js.b3_const_number.binding
       value: (number) @js.b3_const_number.value) @js.b3_const_number.declarator))
-  @js.b3_const_number.program
 
 (program
   (lexical_declaration
@@ -1123,7 +1086,6 @@
     (variable_declarator
       name: (identifier) @js.b3_const_true.binding
       value: (true) @js.b3_const_true.value) @js.b3_const_true.declarator))
-  @js.b3_const_true.program
 
 (program
   (lexical_declaration
@@ -1131,7 +1093,6 @@
     (variable_declarator
       name: (identifier) @js.b3_const_false.binding
       value: (false) @js.b3_const_false.value) @js.b3_const_false.declarator))
-  @js.b3_const_false.program
 
 (program
   (lexical_declaration
@@ -1139,7 +1100,6 @@
     (variable_declarator
       name: (identifier) @js.b3_const_null.binding
       value: (null) @js.b3_const_null.value) @js.b3_const_null.declarator))
-  @js.b3_const_null.program
 
 (program
   (lexical_declaration
@@ -1147,7 +1107,6 @@
     (variable_declarator
       name: (identifier) @js.b3_const_alias.binding
       value: (identifier) @js.b3_const_alias.target) @js.b3_const_alias.declarator))
-  @js.b3_const_alias.program
 
 ; --- final_completion_ecma_generalized_config_source_v1 ---
 

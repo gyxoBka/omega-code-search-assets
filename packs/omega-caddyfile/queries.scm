@@ -1,6 +1,6 @@
 ; --- block_scope ---
 
-(block) @caddy.scope
+(block) @caddy.scope @local.scope @structural.candidate
 
 ; --- directive_call ---
 
@@ -23,7 +23,6 @@
 ; original baseline: audit-baselines/external/helix/caddyfile/locals.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-(block) @local.scope
 
 (named_matcher (matcher_identifier (matcher_name)) @local.definition.function.macro)
 
@@ -33,7 +32,6 @@
 
 ; OMEGA-INDEPENDENTLY-AUTHORED from normalized exact-grammar AST evidence only.
 ; Helix MPL query body is NOT copied. language=caddyfile
-(block) @structural.candidate
 
 ; --- matcher_reference ---
 

@@ -4,7 +4,7 @@
 
 ; --- frontmatter ---
 
-(frontmatter) @astro.frontmatter
+(frontmatter) @astro.frontmatter @astro.frontmatter.scope
 
 ; --- interpolation ---
 
@@ -23,7 +23,7 @@
 ; resolved_sources=html,astro
 
 ; ----- resolved nvim locals source: html sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74 -----
-(element) @local.scope
+(element) @local.scope @astro.element.scope
 
 ; ----- resolved nvim locals source: astro sha256=6928e1e9b85792862f41c8a0f92e872ff2d7a0c94b8f7c77fbac70bb3a01c1a2 -----
 ; inherits: html
@@ -41,7 +41,6 @@
 (attribute
   (attribute_name) @astro.attribute.name) @astro.attribute
 
-(element) @astro.element.scope
 
 ; --- authored_attribute_value ---
 
@@ -55,7 +54,6 @@
 
 ; --- frontmatter_scope ---
 
-(frontmatter) @astro.frontmatter.scope
 
 ; --- omega_injection_runtime_v1:astro ---
 

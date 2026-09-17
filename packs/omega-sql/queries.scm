@@ -1,6 +1,6 @@
 ; --- completeness_bindings ---
 
-(parameter) @binding.symbol
+(parameter) @binding.symbol @variable.parameter
 
 ; --- completeness_scopes ---
 
@@ -97,7 +97,6 @@
 ((literal) @number.float
   (#lua-match? @number.float "^[-]?%d*%.%d*$"))
 
-(parameter) @variable.parameter
 
 [
   (keyword_true)

@@ -156,9 +156,7 @@
 ; parser_revision=13e9195370172c86a8b88184cc358b23b677cc46
 ; source_sha256=cc01b3f32d5365626882269eaf3ac30f006f093fb9bd5dc8f2da39d695073714
 
-(comment) @comment @spell
 
-(tag_name) @tag
 
 ((tag_name) @constant.builtin
   ; https://www.script-example.com/html-tag-liste
@@ -173,19 +171,10 @@
     "optgroup" "option" "textarea" "output" "progress" "meter" "fieldset" "legend" "details"
     "summary" "dialog" "script" "noscript" "template" "slot" "canvas"))
 
-(id) @constant
 
-(class) @type
 
-(doctype) @keyword.directive
 
-(content) @none
 
-(tag
-  (attributes
-    (attribute
-      (attribute_name) @tag.attribute
-      "=" @operator)))
 
 ((tag
   (attributes
@@ -193,60 +182,22 @@
       (attribute_name) @keyword)))
   (#match? @keyword "^(:|v-bind|v-|\\@)"))
 
-(quoted_attribute_value) @string
 
-(include
-  (keyword) @keyword.import)
 
-(extends
-  (keyword) @keyword.import)
 
-(filename) @string.special.path
 
-(block_definition
-  (keyword) @keyword)
 
-(block_append
-  (keyword)+ @keyword)
 
-(block_prepend
-  (keyword)+ @keyword)
 
-(block_name) @module
 
-(conditional
-  (keyword) @keyword.conditional)
 
-(case
-  (keyword) @keyword.conditional
-  (when
-    (keyword) @keyword.conditional)+)
 
-(each
-  (keyword) @keyword.repeat)
 
-(while
-  (keyword) @keyword.repeat)
 
-(mixin_use
-  "+" @punctuation.delimiter
-  (mixin_name) @function.call)
 
-(mixin_definition
-  (keyword) @keyword.function
-  (mixin_name) @function)
 
-(mixin_attributes
-  (attribute_name) @variable.parameter)
 
-(filter
-  ":" @punctuation.delimiter
-  (filter_name) @function.method.call)
 
-(filter
-  (attributes
-    (attribute
-      (attribute_name) @variable.parameter)))
 
 [
   "("
@@ -258,20 +209,9 @@
   ; "#[" "]"
 ] @punctuation.bracket
 
-[
-  ","
-  "."
-  "|"
-] @punctuation.delimiter
 
-(buffered_code
-  "=" @punctuation.delimiter)
 
-(unbuffered_code
-  "-" @punctuation.delimiter)
 
-(unescaped_buffered_code
-  "!=" @punctuation.delimiter)
 
 ; --- injections ---
 

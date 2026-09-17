@@ -121,9 +121,9 @@
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
 ; References
-(identifier) @local.reference
+(identifier) @local.reference @variable
 
-(alias) @local.reference
+(alias) @local.reference @module @name @reference.module
 
 ; Module Definitions
 (call
@@ -329,9 +329,7 @@
 ; sha256=e5cf2d79b4872bec580e66be8ec4b5ab559efdbe2d0bcb633786ce8ffeb0e95b
 
 ; References
-(identifier) @local.reference
 
-(alias) @local.reference
 
 ; Module Definitions
 (call
@@ -341,93 +339,9 @@
     (alias) @local.definition.type))
 
 ; Pattern Match Definitions
-(binary_operator
-  ; format-ignore
-  left: 
-    [
-      (identifier) @local.definition.var
-      (_ (identifier) @local.definition.var)
-      (_ (_ (identifier) @local.definition.var))
-      (_ (_ (_ (identifier) @local.definition.var)))
-      (_ (_ (_ (_ (identifier) @local.definition.var))))
-      (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))
-      (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))
-      (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))))
-    ]
-  operator: "=")
 
 ; Stab Clause Definitions
 ; format-ignore
-(stab_clause
-  left:
-    [
-     (arguments
-      [
-        (identifier) @local.definition.var
-        (_ (identifier) @local.definition.var)
-        (_ (_ (identifier) @local.definition.var))
-        (_ (_ (_ (identifier) @local.definition.var)))
-        (_ (_ (_ (_ (identifier) @local.definition.var))))
-        (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))
-        (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))
-        (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))))
-      ])
-
-    (binary_operator
-      left:
-        (arguments
-          ; format-ignore
-          [
-            (identifier) @local.definition.var
-            (_ (identifier) @local.definition.var)
-            (_ (_ (identifier) @local.definition.var))
-            (_ (_ (_ (identifier) @local.definition.var)))
-            (_ (_ (_ (_ (identifier) @local.definition.var))))
-            (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))
-            (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))
-            (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))))
-          ])
-      operator: "when")
-    ])
 
 ; Aliases
 ; format-ignore
@@ -527,7 +441,6 @@
   (do_block)?) @local.scope
 
 ; Stab Clause Scopes
-(stab_clause) @local.scope
 
 ; --- nvim_pinned_highlights ---
 
@@ -558,7 +471,6 @@
 "%" @punctuation.special
 
 ; Identifiers
-(identifier) @variable
 
 ; Unused Identifiers
 ((identifier) @comment
@@ -571,7 +483,6 @@
 (string) @string
 
 ; Modules
-(alias) @module
 
 ; Atoms & Keywords
 [
@@ -839,9 +750,7 @@
 
 ; ----- resolved nvim locals source: elixir sha256=e5cf2d79b4872bec580e66be8ec4b5ab559efdbe2d0bcb633786ce8ffeb0e95b -----
 ; References
-(identifier) @local.reference
 
-(alias) @local.reference
 
 ; Module Definitions
 (call
@@ -851,93 +760,9 @@
     (alias) @local.definition.type))
 
 ; Pattern Match Definitions
-(binary_operator
-  ; format-ignore
-  left: 
-    [
-      (identifier) @local.definition.var
-      (_ (identifier) @local.definition.var)
-      (_ (_ (identifier) @local.definition.var))
-      (_ (_ (_ (identifier) @local.definition.var)))
-      (_ (_ (_ (_ (identifier) @local.definition.var))))
-      (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))
-      (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))
-      (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))))
-      (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))))
-    ]
-  operator: "=")
 
 ; Stab Clause Definitions
 ; format-ignore
-(stab_clause
-  left:
-    [
-     (arguments
-      [
-        (identifier) @local.definition.var
-        (_ (identifier) @local.definition.var)
-        (_ (_ (identifier) @local.definition.var))
-        (_ (_ (_ (identifier) @local.definition.var)))
-        (_ (_ (_ (_ (identifier) @local.definition.var))))
-        (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))
-        (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))
-        (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))))
-        (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))))
-      ])
-
-    (binary_operator
-      left:
-        (arguments
-          ; format-ignore
-          [
-            (identifier) @local.definition.var
-            (_ (identifier) @local.definition.var)
-            (_ (_ (identifier) @local.definition.var))
-            (_ (_ (_ (identifier) @local.definition.var)))
-            (_ (_ (_ (_ (identifier) @local.definition.var))))
-            (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))
-            (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))
-            (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var)))))))))))))))))))
-            (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (_ (identifier) @local.definition.var))))))))))))))))))))
-          ])
-      operator: "when")
-    ])
 
 ; Aliases
 ; format-ignore
@@ -1037,7 +862,6 @@
   (do_block)?) @local.scope
 
 ; Stab Clause Scopes
-(stab_clause) @local.scope
 
 ; --- static_delta ---
 
@@ -1109,7 +933,6 @@
   right: (identifier) @name) @reference.call
 
 ; * modules
-(alias) @name @reference.module
 
 ; --- semantic_closure_v3_146_batch2 ---
 

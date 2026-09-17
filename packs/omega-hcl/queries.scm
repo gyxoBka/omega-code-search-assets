@@ -143,7 +143,7 @@
   (identifier) @definition.attribute.name) @definition.attribute
 
 (function_call
-  (identifier) @reference.call.target) @call.function
+  (identifier) @reference.call.target @hcl.function.name) @call.function @hcl.function.context
 
 (variable_expr
   (identifier) @reference.variable)
@@ -321,8 +321,6 @@
                   (get_attr (identifier) @hcl.list_ref3.target_type)
                   (get_attr (identifier) @hcl.list_ref3.target_name)) @hcl.list_ref3.target_expression))) @hcl.list_ref3.attribute_value) @hcl.list_ref3.attribute)) @hcl.list_ref3.owner_one_label
 ; --- generic_hcl_function_context_v3_146 ---
-(function_call
-  (identifier) @hcl.function.name) @hcl.function.context
 
 
 

@@ -37,26 +37,26 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  (type_identifier) @definition.category.class.name
-) @definition.category.owner
+  (type_identifier) @definition.category.class.name @definition.identity.name @name
+) @definition.category.owner @definition.identity.owner @definition.class
 
 ; --- declaration_category_component ---
 
 (object_declaration
-  (type_identifier) @definition.category.component.name
-) @definition.category.owner
+  (type_identifier) @definition.category.component.name @definition.identity.name @name
+) @definition.category.owner @definition.identity.owner @definition.class
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  (simple_identifier) @definition.category.function.name
-) @definition.category.owner
+  (simple_identifier) @definition.category.function.name @definition.identity.name @name
+) @definition.category.owner @definition.identity.owner @definition.function
 
 ; --- declaration_category_type ---
 
 (type_alias
-  (type_identifier) @definition.category.type.name
-) @definition.category.owner
+  (type_identifier) @definition.category.type.name @definition.identity.name @name
+) @definition.category.owner @definition.identity.owner @definition.type
 
 ; --- declaration_modifiers ---
 
@@ -72,17 +72,9 @@
 
 ; --- definition_identity_hints ---
 
-(class_declaration
-  (type_identifier) @definition.identity.name) @definition.identity.owner
 
-(object_declaration
-  (type_identifier) @definition.identity.name) @definition.identity.owner
 
-(function_declaration
-  (simple_identifier) @definition.identity.name) @definition.identity.owner
 
-(type_alias
-  (type_identifier) @definition.identity.name) @definition.identity.owner
 
 ; --- external-helix-tags ---
 
@@ -143,7 +135,7 @@
 (lambda_literal
   (lambda_parameters
     (variable_declaration
-      (simple_identifier) @local.definition.parameter)))
+      (simple_identifier) @local.definition.parameter @local.definition.variable.parameter)))
 
 ; NOTE: temporary fix for treesitter bug that causes delay in file opening
 ;(class_body
@@ -160,7 +152,7 @@
     (simple_identifier) @local.definition.field))
 
 (variable_declaration
-  (simple_identifier) @local.definition.var)
+  (simple_identifier) @local.definition.var @local.definition.variable)
 
 ; Types
 (class_declaration
@@ -193,7 +185,7 @@
 ; --- import_targets ---
 
 (import_header
-  (identifier) @import.target) @import.statement
+  (identifier) @import.target @import.module_path.target) @import.statement @import.module_path.statement
 
 ; --- literal_call_context ---
 
@@ -244,15 +236,7 @@
 ; path=audit-baselines/external/nvim-treesitter/kotlin/locals.scm
 ; sha256=c97567b90fc0d306f594d9820bf3e89bd5db19fab4efcae32f31831602c4786e
 ; Imports
-(package_header
-  .
-  (identifier) @local.definition.namespace)
 
-(import_header
-  (identifier
-    (simple_identifier) @local.definition.import .)
-  (import_alias
-    (type_identifier) @local.definition.import)?)
 
 ; Functions
 (function_declaration
@@ -267,32 +251,15 @@
   (#set! definition.method.scope "parent"))
 
 ; Variables
-(function_declaration
-  (function_value_parameters
-    (parameter
-      (simple_identifier) @local.definition.parameter)))
 
-(lambda_literal
-  (lambda_parameters
-    (variable_declaration
-      (simple_identifier) @local.definition.parameter)))
 
 ; NOTE: temporary fix for treesitter bug that causes delay in file opening
 ;(class_body
 ;  (property_declaration
 ;    (variable_declaration
 ;      (simple_identifier) @local.definition.field)))
-(class_declaration
-  (primary_constructor
-    (class_parameter
-      (simple_identifier) @local.definition.field)))
 
-(enum_class_body
-  (enum_entry
-    (simple_identifier) @local.definition.field))
 
-(variable_declaration
-  (simple_identifier) @local.definition.var)
 
 ; Types
 (class_declaration
@@ -304,23 +271,6 @@
   (#set! definition.type.scope "parent"))
 
 ; Scopes
-[
-  (if_expression)
-  (when_expression)
-  (when_entry)
-  (for_statement)
-  (while_statement)
-  (do_while_statement)
-  (lambda_literal)
-  (function_declaration)
-  (primary_constructor)
-  (secondary_constructor)
-  (anonymous_initializer)
-  (class_declaration)
-  (enum_class_body)
-  (enum_entry)
-  (interpolated_expression)
-] @local.scope
 
 ; --- module_declaration_path_hints ---
 
@@ -328,8 +278,6 @@
 
 ; --- module_path_hints ---
 
-(import_header
-  (identifier) @import.module_path.target) @import.module_path.statement
 
 ; --- named_scope_owners ---
 
@@ -384,15 +332,9 @@
 (parameter
   (simple_identifier) @local.definition.variable.parameter)
 
-(lambda_literal
-  (lambda_parameters
-    (variable_declaration
-      (simple_identifier) @local.definition.variable.parameter)))
 
 ; Loop and local `val`/`var` bindings; defined so inner references resolve and
 ; shadow correctly.
-(variable_declaration
-  (simple_identifier) @local.definition.variable)
 
 ; References
 (simple_identifier) @local.reference
@@ -410,18 +352,9 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/kotlin/tags.scm
 
-(class_declaration
-  (type_identifier) @definition.class)
 
-(object_declaration
-  "object" (type_identifier) @definition.class)
 
-(function_declaration
-  (simple_identifier) @definition.function)
 
-(property_declaration
-  (variable_declaration
-    (simple_identifier) @definition.constant))
 
 ; --- receiver_hints ---
 
@@ -444,16 +377,10 @@
 ; --- upstream_tags ---
 
 ; Classes
-(class_declaration
-  (type_identifier) @name) @definition.class
 
 ; Objects
-(object_declaration
-  (type_identifier) @name) @definition.class
 
 ; Functions (top-level and member)
-(function_declaration
-  (simple_identifier) @name) @definition.function
 
 ; Properties
 (property_declaration
@@ -465,8 +392,6 @@
   (simple_identifier) @name) @definition.constant
 
 ; Type aliases
-(type_alias
-  (type_identifier) @name) @definition.type
 
 ; Companion objects (only named ones)
 (companion_object

@@ -24,15 +24,15 @@
   (quoted_key)
 ] @string
 
-(boolean) @boolean
+(boolean) @boolean @omega.literal.boolean
 
 (comment) @comment @spell
 
 (escape_sequence) @string.escape
 
-(integer) @number
+(integer) @number @omega.literal.integer
 
-(float) @number.float
+(float) @number.float @omega.literal.float
 
 [
   (local_date)
@@ -85,45 +85,16 @@
 ; source_name=toml
 
 ; ----- resolved nvim highlights source: toml sha256=059618709a4c7e6b287643a68282257e197c5a05cfb9d82b6ac517d32230cb12 -----
-(bare_key) @property
 
-[
-  (string)
-  (quoted_key)
-] @string
 
-(boolean) @boolean
 
-(comment) @comment @spell
 
-(escape_sequence) @string.escape
 
-(integer) @number
 
-(float) @number.float
 
-[
-  (local_date)
-  (local_date_time)
-  (local_time)
-  (offset_date_time)
-] @string.special
 
-"=" @operator
 
-[
-  "."
-  ","
-] @punctuation.delimiter
 
-[
-  "["
-  "]"
-  "[["
-  "]]"
-  "{"
-  "}"
-] @punctuation.bracket
 
 ; --- nvim_pinned_injections ---
 
@@ -150,10 +121,6 @@
 ; resolved_sources=toml
 
 ; ----- resolved nvim locals source: toml sha256=c96389d2ab7a653ae9b33637e18cf40dcce428d879547b66d9b5a520e1926213 -----
-[
-  (table)
-  (table_array_element)
-] @local.scope
 
 ; --- root_string_pairs ---
 
@@ -190,6 +157,3 @@
 
 ; --- final_completion_generic_direct_literals_v1 ---
 (string) @omega.literal.string
-(integer) @omega.literal.integer
-(float) @omega.literal.float
-(boolean) @omega.literal.boolean

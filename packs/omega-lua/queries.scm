@@ -12,13 +12,11 @@
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- dsl_string_declarations ---
 
@@ -95,10 +93,10 @@
   name: (identifier) @local.definition.var)
 
 (parameters
-  (identifier) @local.definition.parameter)
+  (identifier) @local.definition.parameter @variable.parameter)
 
 ; References
-(identifier) @local.reference
+(identifier) @local.reference @variable
 
 ; --- locals ---
 
@@ -108,28 +106,9 @@
 ; sha256=826bec7f13e70d25dc78ac06bd4bd67e89a2011ebd1dc6b8442cf67c2bd2290b
 
 ; Scopes
-[
-  (chunk)
-  (do_statement)
-  (while_statement)
-  (repeat_statement)
-  (if_statement)
-  (for_statement)
-  (function_declaration)
-  (function_definition)
-] @local.scope
 
 ; Definitions
-(assignment_statement
-  (variable_list
-    (identifier) @local.definition.var))
 
-(assignment_statement
-  (variable_list
-    (dot_index_expression
-      .
-      (_) @local.definition.associated
-      (identifier) @local.definition.var)))
 
 ((function_declaration
   name: (identifier) @local.definition.function)
@@ -149,18 +128,10 @@
     (identifier) @local.definition.method))
   (#set! definition.method.scope "parent"))
 
-(for_generic_clause
-  (variable_list
-    (identifier) @local.definition.var))
 
-(for_numeric_clause
-  name: (identifier) @local.definition.var)
 
-(parameters
-  (identifier) @local.definition.parameter)
 
 ; References
-(identifier) @local.reference
 
 ; --- named_scope_owners ---
 
@@ -283,7 +254,6 @@
 ] @punctuation.bracket
 
 ; Variables
-(identifier) @variable
 
 ((identifier) @constant.builtin
   (#eq? @constant.builtin "_VERSION"))
@@ -335,8 +305,6 @@
   ] @constructor)
 
 ; Functions
-(parameters
-  (identifier) @variable.parameter)
 
 (vararg_expression) @variable.parameter.builtin
 

@@ -7,12 +7,10 @@
 
 ; Omega static call facts for Zig.
 
-(call_expression
-  function: (_) @call.target) @call.expression
 
 ; --- completeness_imports_5 ---
 
-(using_namespace_declaration) @import.expression
+(using_namespace_declaration) @import.expression @zig.usingnamespace
 
 ; --- completeness_types_high_confidence ---
 
@@ -29,20 +27,16 @@
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (function_signature
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_signature
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- external_highlights ---
 
@@ -50,14 +44,14 @@
 ; sha256=cbff0fe14e8aeffd64b146ac68fd797c1e38cd66f43a1e3273db8f4b4d753876
 
 ; Variables
-(identifier) @variable
+(identifier) @variable @local.reference
 
 ; Parameters
 (parameter
-  name: (identifier) @variable.parameter)
+  name: (identifier) @variable.parameter @local.definition.parameter)
 
 (payload
-  (identifier) @variable.parameter)
+  (identifier) @variable.parameter @local.definition.var)
 
 ; Types
 (parameter
@@ -101,10 +95,10 @@
 
 ; Labels
 (block_label
-  (identifier) @label)
+  (identifier) @label @local.definition)
 
 (break_label
-  (identifier) @label)
+  (identifier) @label @local.reference)
 
 ; Fields
 (field_initializer
@@ -116,7 +110,7 @@
   member: (identifier) @variable.member)
 
 (container_field
-  name: (identifier) @variable.member)
+  name: (identifier) @variable.member @local.definition.field)
 
 (initializer_list
   (assignment_expression
@@ -135,7 +129,7 @@
     member: (identifier) @function.call))
 
 (function_declaration
-  name: (identifier) @function)
+  name: (identifier) @function @local.definition.function)
 
 ; Modules
 (variable_declaration
@@ -353,11 +347,7 @@
 ; sha256=a2d345afc59d9a9b514984f9101030bfb774631f2e4ae2ee4ace83dbb3171be5
 
 ; Definitions
-(function_declaration
-  name: (identifier) @local.definition.function)
 
-(parameter
-  name: (identifier) @local.definition.parameter)
 
 (variable_declaration
   (identifier) @local.definition.var)
@@ -381,8 +371,6 @@
   (function_declaration
     name: (identifier) @local.definition.method))
 
-(container_field
-  name: (identifier) @local.definition.field)
 
 (variable_declaration
   (identifier) @local.definition.type
@@ -392,14 +380,9 @@
   (function_declaration
     name: (identifier) @local.definition.method))
 
-(payload
-  (identifier) @local.definition.var)
 
-(block_label
-  (identifier) @local.definition)
 
 ; References
-(identifier) @local.reference
 
 (parameter
   type: (identifier) @local.reference
@@ -435,8 +418,6 @@
     member: (identifier) @local.reference
     (#set! reference.kind "function")))
 
-(break_label
-  (identifier) @local.reference)
 
 [
   (for_statement)
@@ -452,8 +433,8 @@
 ; --- member_access_hints ---
 
 (field_expression
-  object: (_) @reference.receiver
-  member: (_) @reference.member) @reference.member_expression
+  object: (_) @reference.receiver @reference.qualified_chain.base
+  member: (_) @reference.member @reference.qualified_chain.leaf) @reference.member_expression @reference.qualified_chain.span
 
 ; --- named_scope_owners ---
 
@@ -471,92 +452,36 @@
 
 ; ----- resolved nvim highlights source: zig sha256=cbff0fe14e8aeffd64b146ac68fd797c1e38cd66f43a1e3273db8f4b4d753876 -----
 ; Variables
-(identifier) @variable
 
 ; Parameters
-(parameter
-  name: (identifier) @variable.parameter)
 
-(payload
-  (identifier) @variable.parameter)
 
 ; Types
-(parameter
-  type: (identifier) @type)
 
 ((identifier) @type
   (#lua-match? @type "^[A-Z_][a-zA-Z0-9_]*"))
 
-(variable_declaration
-  (identifier) @type
-  "="
-  [
-    (struct_declaration)
-    (enum_declaration)
-    (union_declaration)
-    (opaque_declaration)
-  ])
 
-[
-  (builtin_type)
-  "anyframe"
-] @type.builtin
 
 ; Constants
 ((identifier) @constant
   (#lua-match? @constant "^[A-Z][A-Z_0-9]+$"))
 
-[
-  "null"
-  "unreachable"
-  "undefined"
-] @constant.builtin
 
-(field_expression
-  .
-  member: (identifier) @constant)
 
-(enum_declaration
-  (container_field
-    type: (identifier) @constant))
 
 ; Labels
-(block_label
-  (identifier) @label)
 
-(break_label
-  (identifier) @label)
 
 ; Fields
-(field_initializer
-  .
-  (identifier) @variable.member)
 
-(field_expression
-  (_)
-  member: (identifier) @variable.member)
 
-(container_field
-  name: (identifier) @variable.member)
 
-(initializer_list
-  (assignment_expression
-    left: (field_expression
-      .
-      member: (identifier) @variable.member)))
 
 ; Functions
-(builtin_identifier) @function.builtin
 
-(call_expression
-  function: (identifier) @function.call)
 
-(call_expression
-  function: (field_expression
-    member: (identifier) @function.call))
 
-(function_declaration
-  name: (identifier) @function)
 
 ; Modules
 (variable_declaration
@@ -566,149 +491,26 @@
     (#any-of? @keyword.import "@import" "@cImport")))
 
 ; Builtins
-[
-  "c"
-  "..."
-] @variable.builtin
 
 ((identifier) @variable.builtin
   (#eq? @variable.builtin "_"))
 
-(calling_convention
-  (identifier) @variable.builtin)
 
 ; Keywords
-[
-  "asm"
-  "defer"
-  "errdefer"
-  "test"
-  "error"
-  "const"
-  "var"
-] @keyword
 
-[
-  "struct"
-  "union"
-  "enum"
-  "opaque"
-] @keyword.type
 
-[
-  "async"
-  "await"
-  "suspend"
-  "nosuspend"
-  "resume"
-] @keyword.coroutine
 
-"fn" @keyword.function
 
-[
-  "and"
-  "or"
-  "orelse"
-] @keyword.operator
 
-"return" @keyword.return
 
-[
-  "if"
-  "else"
-  "switch"
-] @keyword.conditional
 
-[
-  "for"
-  "while"
-  "break"
-  "continue"
-] @keyword.repeat
 
-[
-  "usingnamespace"
-  "export"
-] @keyword.import
 
-[
-  "try"
-  "catch"
-] @keyword.exception
 
-[
-  "volatile"
-  "allowzero"
-  "noalias"
-  "addrspace"
-  "align"
-  "callconv"
-  "linksection"
-  "pub"
-  "inline"
-  "noinline"
-  "extern"
-  "comptime"
-  "packed"
-  "threadlocal"
-] @keyword.modifier
 
 ; Operator
-[
-  "="
-  "*="
-  "*%="
-  "*|="
-  "/="
-  "%="
-  "+="
-  "+%="
-  "+|="
-  "-="
-  "-%="
-  "-|="
-  "<<="
-  "<<|="
-  ">>="
-  "&="
-  "^="
-  "|="
-  "!"
-  "~"
-  "-"
-  "-%"
-  "&"
-  "=="
-  "!="
-  ">"
-  ">="
-  "<="
-  "<"
-  "^"
-  "|"
-  "<<"
-  ">>"
-  "<<|"
-  "+"
-  "++"
-  "+%"
-  "+|"
-  "-|"
-  "*"
-  "/"
-  "%"
-  "**"
-  "*%"
-  "*|"
-  "||"
-  ".*"
-  ".?"
-  "?"
-  ".."
-] @operator
 
 ; Literals
-(character) @character
 
 ([
   (string)
@@ -716,38 +518,15 @@
 ] @string
   (#set! "priority" 95))
 
-(integer) @number
 
-(float) @number.float
 
-(boolean) @boolean
 
-(escape_sequence) @string.escape
 
 ; Punctuation
-[
-  "["
-  "]"
-  "("
-  ")"
-  "{"
-  "}"
-] @punctuation.bracket
 
-[
-  ";"
-  "."
-  ","
-  ":"
-  "=>"
-  "->"
-] @punctuation.delimiter
 
-(payload
-  "|" @punctuation.bracket)
 
 ; Comments
-(comment) @comment @spell
 
 ((comment) @comment.documentation
   (#lua-match? @comment.documentation "^//!"))
@@ -785,53 +564,20 @@
 
 ; ----- resolved nvim locals source: zig sha256=a2d345afc59d9a9b514984f9101030bfb774631f2e4ae2ee4ace83dbb3171be5 -----
 ; Definitions
-(function_declaration
-  name: (identifier) @local.definition.function)
 
-(parameter
-  name: (identifier) @local.definition.parameter)
 
-(variable_declaration
-  (identifier) @local.definition.var)
 
-(variable_declaration
-  (identifier) @local.definition.type
-  (enum_declaration))
 
-(container_field
-  type: (identifier) @local.definition.field)
 
-(enum_declaration
-  (function_declaration
-    name: (identifier) @local.definition.method))
 
-(variable_declaration
-  (identifier) @local.definition.type
-  (struct_declaration))
 
-(struct_declaration
-  (function_declaration
-    name: (identifier) @local.definition.method))
 
-(container_field
-  name: (identifier) @local.definition.field)
 
-(variable_declaration
-  (identifier) @local.definition.type
-  (union_declaration))
 
-(union_declaration
-  (function_declaration
-    name: (identifier) @local.definition.method))
 
-(payload
-  (identifier) @local.definition.var)
 
-(block_label
-  (identifier) @local.definition)
 
 ; References
-(identifier) @local.reference
 
 (parameter
   type: (identifier) @local.reference
@@ -867,26 +613,10 @@
     member: (identifier) @local.reference
     (#set! reference.kind "function")))
 
-(break_label
-  (identifier) @local.reference)
 
-[
-  (for_statement)
-  (if_statement)
-  (while_statement)
-  (function_declaration)
-  (block)
-  (source_file)
-  (enum_declaration)
-  (struct_declaration)
-] @local.scope
 
 ; --- qualified_chain_hints ---
 
-(field_expression
-  object: (_) @reference.qualified_chain.base
-  member: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
 
 ; --- signature_return_type ---
 
@@ -903,8 +633,7 @@
 ; --- semantic_closure_v3_146_batch2 ---
 
 (test_declaration) @zig.test
-(using_namespace_declaration) @zig.usingnamespace
-(error_set_declaration (identifier) @zig.error_set.name) @zig.error_set
+(error_set_declaration (identifier) @zig.error_set.name @zig.error.member) @zig.error_set @zig.error.member.owner
 (comptime_declaration) @zig.comptime.declaration
 (comptime_statement) @zig.comptime.statement
 
@@ -917,8 +646,6 @@
 (using_namespace_declaration
   (expression) @zig.usingnamespace.target) @zig.usingnamespace.typed
 
-(error_set_declaration
-  (identifier) @zig.error.member) @zig.error.member.owner
 
 (comptime_expression) @zig.comptime.expression
 (comptime_type_expression) @zig.comptime.type_expression

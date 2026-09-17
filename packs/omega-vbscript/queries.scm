@@ -9,12 +9,12 @@
 
 ; --- completeness_definitions_high_confidence ---
 
-(type_definition) @definition.expression
+(type_definition) @definition.expression @type.expression
 
 ; --- completeness_references ---
 
-(member_expression) @reference.symbol
-(type_member_expression) @reference.symbol
+(member_expression) @reference.symbol @vbscript.member
+(type_member_expression) @reference.symbol @vbscript.type_member
 
 ; --- completeness_scopes ---
 
@@ -22,7 +22,6 @@
 
 ; --- completeness_types_high_confidence ---
 
-(type_definition) @type.expression
 
 ; --- structural-fallback ---
 
@@ -46,8 +45,6 @@
 
 ; --- semantic_closure_v3_146_batch2 ---
 
-(member_expression) @vbscript.member
-(type_member_expression) @vbscript.type_member
 (array_identifier) @vbscript.array
 
 ; --- semantic_closure_v3_146_batch3 ---

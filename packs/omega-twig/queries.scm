@@ -1,6 +1,6 @@
 ; --- completeness_bindings ---
 
-(parameter) @binding.symbol
+(parameter) @binding.symbol @variable.parameter
 
 ; --- completeness_calls_3 ---
 
@@ -8,7 +8,7 @@
 
 ; --- completeness_imports_3 ---
 
-(import_statement) @import.expression
+(import_statement) @import.expression @twig.import.statement
 
 ; --- external-neovim-distributed-highlights ---
 
@@ -23,9 +23,9 @@
 
 (function_identifier) @function.call
 
-(test) @function.builtin
+(test) @function.builtin @twig.test.name
 
-(variable) @variable
+(variable) @variable @twig.variable.ref
 
 (string) @string
 
@@ -41,7 +41,7 @@
 
 (keyword) @keyword
 
-(attribute) @attribute
+(attribute) @attribute @twig.attribute.ref
 
 (tag) @tag
 
@@ -51,7 +51,6 @@
 
 (method) @function.method
 
-(parameter) @variable.parameter
 
 [
   "{{"
@@ -126,16 +125,12 @@
 (filter
   (filter_identifier) @twig.filter.name) @twig.filter.owner
 
-(test) @twig.test.name
-(variable) @twig.variable.ref
-(attribute) @twig.attribute.ref
 (template) @twig.template.owner
 
 ; --- semantic_closure_v3_146_batch2 ---
 
 (macro_statement (method) @twig.macro.name (parameters) @twig.macro.parameters) @twig.macro.definition
 (macro_statement) @twig.macro.scope
-(import_statement) @twig.import.statement
 (from_statement) @twig.from.statement
 
 ; --- semantic_closure_v3_146_batch3 ---

@@ -34,7 +34,7 @@
 
 ; --- annotations ---
 
-(marker_annotation) @annotation.marker
+(marker_annotation) @annotation.marker @test.marker_annotation
 (annotation
   name: (_) @annotation.normal.name
   arguments: (annotation_argument_list) @annotation.normal.args) @annotation.normal
@@ -46,13 +46,13 @@
 ; --- call_targets ---
 
 (method_invocation
-  name: (_) @call.target) @call.expression
+  name: (_) @call.target @definition.identity.name) @call.expression @definition.identity.owner
 
 ; --- calls ---
 
-(method_invocation) @call.method
-(object_creation_expression) @call.constructor
-(method_reference) @call.method_reference
+(method_invocation) @call.method @reference.method_invocation
+(object_creation_expression) @call.constructor @object.creation
+(method_reference) @call.method_reference @lambda.method_reference @reference.method_reference
 (argument_list) @call.arguments
 
 ; --- classes_inheritance ---
@@ -92,58 +92,58 @@
 ; --- declaration_category_class ---
 
 (class_declaration
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_constructor ---
 
 (compact_constructor_declaration
-  name: (_) @definition.category.constructor.name
-) @definition.category.owner
+  name: (_) @definition.category.constructor.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (constructor_declaration
-  name: (_) @definition.category.constructor.name
-) @definition.category.owner
+  name: (_) @definition.category.constructor.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_enum ---
 
 (enum_constant
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_interface ---
 
 (interface_declaration
-  name: (_) @definition.category.interface.name
-) @definition.category.owner
+  name: (_) @definition.category.interface.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_module ---
 
 (module_declaration
-  name: (_) @definition.category.module.name
-) @definition.category.owner
+  name: (_) @definition.category.module.name @definition.identity.name @module.declaration_path.name
+) @definition.category.owner @definition.identity.owner @module.declaration_path.span
 
 ; --- declaration_category_record ---
 
 (record_declaration
-  name: (_) @definition.category.record.name
-) @definition.category.owner
+  name: (_) @definition.category.record.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_resource ---
 
 (resource
-  name: (_) @definition.category.resource.name
-) @definition.category.owner
+  name: (_) @definition.category.resource.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
@@ -214,38 +214,16 @@
 
 ; --- definition_identity_hints ---
 
-(class_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(compact_constructor_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(constructor_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_constant
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(interface_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_invocation
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(module_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(record_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(resource
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 (variable_declarator
   name: (_) @definition.identity.name) @definition.identity.owner
@@ -257,10 +235,10 @@
 (enum_declaration name: (identifier) @definition.enum.name) @definition.enum
 (record_declaration name: (identifier) @definition.record.name) @definition.record
 (annotation_type_declaration name: (identifier) @definition.annotation_type.name) @definition.annotation_type
-(method_declaration name: (identifier) @definition.method.name) @definition.method
+(method_declaration name: (identifier) @definition.method.name @test.method.name) @definition.method @test.method
 (constructor_declaration name: (identifier) @definition.constructor.name) @definition.constructor
 (compact_constructor_declaration name: (identifier) @definition.compact_constructor.name) @definition.compact_constructor
-(field_declaration) @definition.field
+(field_declaration) @definition.field @data.field
 (constant_declaration) @definition.constant
 
 ; --- enclosing_owner_hints ---
@@ -271,29 +249,29 @@
 ) @scope.enclosing_owner.span
 
 (class_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (compact_constructor_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (constructor_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (interface_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (module_declaration 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 ; --- exceptions ---
 
@@ -319,10 +297,9 @@
 
 ; --- field_data ---
 
-(field_declaration) @data.field
-(local_variable_declaration) @data.local
-(variable_declarator) @data.variable
-(array_initializer) @data.array
+(local_variable_declaration) @data.local @binding.local
+(variable_declarator) @data.variable @binding.variable
+(array_initializer) @data.array @array.initializer
 
 ; --- generics ---
 
@@ -331,7 +308,7 @@
 (type_bound) @generic.bound
 (type_arguments) @generic.arguments
 (wildcard) @generic.wildcard
-(generic_type) @generic.type
+(generic_type) @generic.type @type.generic
 
 ; --- import_targets ---
 
@@ -370,9 +347,8 @@
 
 ; --- lambdas ---
 
-(lambda_expression) @lambda.expression
+(lambda_expression) @lambda.expression @scope.lambda
 (inferred_parameters) @lambda.inferred_parameters
-(method_reference) @lambda.method_reference
 
 ; --- literals ---
 
@@ -383,7 +359,7 @@
 (decimal_floating_point_literal) @literal.decimal_float
 (hex_floating_point_literal) @literal.hex_float
 (character_literal) @literal.char
-(string_literal) @literal.string
+(string_literal) @literal.string @string.literal
 (null_literal) @literal.null
 (true) @literal.true
 (false) @literal.false
@@ -391,8 +367,8 @@
 ; --- member_access_hints ---
 
 (field_access
-  object: (_) @reference.receiver
-  field: (_) @reference.member) @reference.member_expression
+  object: (_) @reference.receiver @reference.qualified_chain.base
+  field: (_) @reference.member @reference.qualified_chain.leaf) @reference.member_expression @reference.qualified_chain.span
 
 ; --- member_category_class ---
 
@@ -400,19 +376,19 @@
   name: (_) @owner.name
   body: (class_body
     (class_declaration
-      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (class_declaration
-      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (class_declaration
-      name: (_) @owned.member_category.class.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.class.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_constructor ---
 
@@ -420,25 +396,25 @@
   name: (_) @owner.name
   body: (class_body
     (compact_constructor_declaration
-      name: (_) @owned.member_category.constructor.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.constructor.name @owned.member.name) @owned.member)) @owner.span
 
 (class_declaration
   name: (_) @owner.name
   body: (class_body
     (constructor_declaration
-      name: (_) @owned.member_category.constructor.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.constructor.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (compact_constructor_declaration
-      name: (_) @owned.member_category.constructor.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.constructor.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (constructor_declaration
-      name: (_) @owned.member_category.constructor.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.constructor.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_enum_member ---
 
@@ -446,7 +422,7 @@
   name: (_) @owner.name
   body: (enum_body
     (enum_constant
-      name: (_) @owned.member_category.enum_member.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum_member.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_enum ---
 
@@ -454,19 +430,19 @@
   name: (_) @owner.name
   body: (class_body
     (enum_declaration
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (enum_declaration
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (enum_declaration
-      name: (_) @owned.member_category.enum.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_interface ---
 
@@ -474,19 +450,19 @@
   name: (_) @owner.name
   body: (class_body
     (interface_declaration
-      name: (_) @owned.member_category.interface.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.interface.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (interface_declaration
-      name: (_) @owned.member_category.interface.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.interface.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (interface_declaration
-      name: (_) @owned.member_category.interface.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.interface.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_method ---
 
@@ -494,19 +470,19 @@
   name: (_) @owner.name
   body: (class_body
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (method_declaration
-      name: (_) @owned.member_category.method.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_record ---
 
@@ -514,19 +490,19 @@
   name: (_) @owner.name
   body: (class_body
     (record_declaration
-      name: (_) @owned.member_category.record.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.record.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (record_declaration
-      name: (_) @owned.member_category.record.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.record.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (record_declaration
-      name: (_) @owned.member_category.record.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.record.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- member_category_type ---
 
@@ -534,19 +510,19 @@
   name: (_) @owner.name
   body: (class_body
     (annotation_type_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 (enum_constant
   name: (_) @owner.name
   body: (class_body
     (annotation_type_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 (interface_declaration
   name: (_) @owner.name
   body: (interface_body
     (annotation_type_declaration
-      name: (_) @owned.member_category.type.name) @owned.member)) @owner.span
+      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
 
 ; --- modifiers ---
 
@@ -554,9 +530,6 @@
 
 ; --- module_declaration_path_hints ---
 
-(module_declaration
-  name: (_) @module.declaration_path.name
-) @module.declaration_path.span
 
 ; --- module_scope ---
 
@@ -573,177 +546,45 @@
 
 ; --- named_scope_owners ---
 
-(class_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(compact_constructor_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(constructor_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
-(interface_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 (method_declaration
   name: (_) @scope.owner.name
   body: (_) @scope.owner.body) @scope.owner
 
-(module_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- objects_arrays ---
 
-(object_creation_expression) @object.creation
 (array_creation_expression) @array.creation
-(array_initializer) @array.initializer
-(array_access) @array.access
+(array_access) @array.access @reference.array_access
 (class_literal) @class.literal
 
 ; --- ownership_members ---
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (annotation_type_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (compact_constructor_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (constructor_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (interface_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(class_declaration
-  name: (_) @owner.name
-  body: (class_body
-    (record_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (annotation_type_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (compact_constructor_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (constructor_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (interface_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_constant
-  name: (_) @owner.name
-  body: (class_body
-    (record_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_body
-    (enum_constant
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (annotation_type_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (class_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (enum_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (interface_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (method_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
-(interface_declaration
-  name: (_) @owner.name
-  body: (interface_body
-    (record_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- ownership_parameters ---
 
@@ -912,7 +753,7 @@
 
 (package_declaration) @package.declaration
 (import_declaration) @import.declaration
-(scoped_identifier) @name.scoped
+(scoped_identifier) @name.scoped @reference.scoped_identifier
 
 ; --- parameters_bindings ---
 
@@ -920,45 +761,35 @@
 (formal_parameter) @binding.parameter
 (receiver_parameter) @binding.receiver
 (spread_parameter) @binding.spread
-(local_variable_declaration) @binding.local
-(variable_declarator) @binding.variable
 (catch_formal_parameter) @binding.catch
 
 ; --- preview_boundaries ---
 
-(record_pattern) @preview.record_pattern
-(guard) @preview.guard
-(template_expression) @preview.template_expression
+(record_pattern) @preview.record_pattern @record.pattern @pattern.record
+(guard) @preview.guard @pattern.guard
+(template_expression) @preview.template_expression @string.template_expression
 (underscore_pattern) @preview.underscore_pattern
 
 ; --- qualified_chain_hints ---
 
-(field_access
-  object: (_) @reference.qualified_chain.base
-  field: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
 
 (scoped_identifier
-  scope: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
+  scope: (_) @reference.qualified_chain.base @reference.qualifier
+  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
+) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
 
-(scoped_identifier
-  scope: (_) @reference.qualifier
-  name: (_) @reference.qualified_name) @reference.qualified_expression
 
 ; --- receiver_hints ---
 
-(super) @reference.receiver
+(super) @reference.receiver @reference.super
 
-(this) @reference.receiver
+(this) @reference.receiver @reference.this
 
 ; --- records_enums ---
 
 (record_declaration) @record.declaration
-(record_pattern) @record.pattern
 (record_pattern_component) @record.pattern.component
 (enum_declaration) @enum.declaration
 (enum_constant) @enum.constant
@@ -966,14 +797,8 @@
 ; --- references ---
 
 (identifier) @reference.identifier
-(scoped_identifier) @reference.scoped_identifier
-(scoped_type_identifier) @reference.scoped_type
+(scoped_type_identifier) @reference.scoped_type @type.scoped
 (field_access) @reference.field_access
-(array_access) @reference.array_access
-(method_invocation) @reference.method_invocation
-(method_reference) @reference.method_reference
-(this) @reference.this
-(super) @reference.super
 
 ; --- scopes ---
 
@@ -984,7 +809,6 @@
 (annotation_type_body) @scope.annotation_type
 (constructor_body) @scope.constructor
 (block) @scope.block
-(lambda_expression) @scope.lambda
 
 ; --- signature_parameters ---
 
@@ -1034,9 +858,7 @@
 
 ; --- string_templates ---
 
-(string_literal) @string.literal
 (string_interpolation) @string.interpolation
-(template_expression) @string.template_expression
 (escape_sequence) @string.escape
 
 ; --- switch_patterns ---
@@ -1047,8 +869,6 @@
 (switch_label) @switch.label
 (pattern) @pattern.generic
 (type_pattern) @pattern.type
-(record_pattern) @pattern.record
-(guard) @pattern.guard
 (yield_statement) @switch.yield
 
 ; --- synchronization ---
@@ -1057,15 +877,11 @@
 
 ; --- tests ---
 
-(method_declaration name: (identifier) @test.method.name) @test.method
 (annotation) @test.annotation
-(marker_annotation) @test.marker_annotation
 
 ; --- types ---
 
 (annotated_type) @type.annotated
-(scoped_type_identifier) @type.scoped
-(generic_type) @type.generic
 (array_type) @type.array
 (integral_type) @type.integral
 (floating_point_type) @type.floating

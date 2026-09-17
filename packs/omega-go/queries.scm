@@ -7,13 +7,13 @@
 
 ; --- bindings ---
 
-(var_spec) @binding.var
-(const_spec) @binding.const
+(var_spec) @binding.var @decl.var_spec @package.var
+(const_spec) @binding.const @decl.const_spec @package.const
 (short_var_declaration left: (expression_list) @binding.short.left) @binding.short
-(parameter_declaration) @binding.parameter
-(variadic_parameter_declaration) @binding.variadic_parameter
+(parameter_declaration) @binding.parameter @signature.parameter
+(variadic_parameter_declaration) @binding.variadic_parameter @signature.variadic_parameter
 (range_clause left: (expression_list)? @binding.range.left) @binding.range
-(receive_statement) @binding.receive
+(receive_statement) @binding.receive @channel.receive @concurrency.receive
 
 ; --- call_targets ---
 
@@ -23,15 +23,14 @@
 ; --- calls ---
 
 (call_expression function: (_) @call.target arguments: (argument_list) @call.arguments) @call
-(selector_expression operand: (_) @call.selector.operand field: (field_identifier) @call.selector.field) @call.selector
+(selector_expression operand: (_) @call.selector.operand @selector.operand field: (field_identifier) @call.selector.field @selector.field) @call.selector @selector
 
 ; --- channels ---
 
-(channel_type) @channel.type
-(send_statement) @channel.send
-(receive_statement) @channel.receive
-(select_statement) @channel.select
-(communication_case) @channel.case
+(channel_type) @channel.type @type.channel
+(send_statement) @channel.send @concurrency.send
+(select_statement) @channel.select @control.select @scope.select
+(communication_case) @channel.case @switch.communication_case
 
 ; --- cobra_bound_command_context ---
 
@@ -72,32 +71,29 @@
 
 ; --- collections ---
 
-(array_type) @collection.array_type
-(implicit_length_array_type) @collection.implicit_array_type
-(slice_type) @collection.slice_type
-(map_type) @collection.map_type
-(composite_literal) @collection.composite
-(keyed_element) @collection.keyed_element
-(index_expression) @collection.index
-(slice_expression) @collection.slice_expression
+(array_type) @collection.array_type @type.array
+(implicit_length_array_type) @collection.implicit_array_type @type.implicit_array
+(slice_type) @collection.slice_type @type.slice
+(map_type) @collection.map_type @type.map
+(composite_literal) @collection.composite @data.composite @expression.composite_literal
+(keyed_element) @collection.keyed_element @data.keyed_element
+(index_expression) @collection.index @expression.index @reference.index
+(slice_expression) @collection.slice_expression @expression.slice @reference.slice
 
 ; --- control_concurrency ---
 
-(send_statement) @concurrency.send
-(receive_statement) @concurrency.receive
 (go_statement) @concurrency.go
 (defer_statement) @control.defer
-(if_statement) @control.if
-(for_statement) @control.for
+(if_statement) @control.if @scope.if
+(for_statement) @control.for @scope.for
 (range_clause) @control.range
-(expression_switch_statement) @control.switch
-(type_switch_statement) @control.type_switch
-(select_statement) @control.select
+(expression_switch_statement) @control.switch @scope.switch
+(type_switch_statement) @control.type_switch @scope.type_switch
 (return_statement) @control.return
-(break_statement) @control.break
-(continue_statement) @control.continue
-(goto_statement) @control.goto
-(labeled_statement) @control.label
+(break_statement) @control.break @label.break
+(continue_statement) @control.continue @label.continue
+(goto_statement) @control.goto @label.goto
+(labeled_statement) @control.label @label.definition
 (fallthrough_statement) @control.fallthrough
 
 ; --- controller_builder_qualified_resource_context ---
@@ -155,42 +151,40 @@
 
 ; --- data ---
 
-(interpreted_string_literal) @data.string
-(raw_string_literal) @data.raw_string
-(rune_literal) @data.rune
-(int_literal) @data.int
-(float_literal) @data.float
-(imaginary_literal) @data.imaginary
-(nil) @data.nil
-(true) @data.true
-(false) @data.false
-(iota) @data.iota
-(composite_literal) @data.composite
+(interpreted_string_literal) @data.string @lex.string
+(raw_string_literal) @data.raw_string @lex.raw_string
+(rune_literal) @data.rune @lex.rune
+(int_literal) @data.int @lex.int
+(float_literal) @data.float @lex.float
+(imaginary_literal) @data.imaginary @lex.imaginary
+(nil) @data.nil @lex.nil
+(true) @data.true @lex.true
+(false) @data.false @lex.false
+(iota) @data.iota @lex.iota
 (literal_value) @data.literal_value
-(keyed_element) @data.keyed_element
-(comment) @data.comment
+(comment) @data.comment @lex.comment
 
 ; --- declaration_category_field ---
 
 (field_declaration
-  name: (_) @definition.category.field.name
-) @definition.category.owner
+  name: (_) @definition.category.field.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_declaration
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_method ---
 
 (method_declaration
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (method_elem
-  name: (_) @definition.category.method.name
-) @definition.category.owner
+  name: (_) @definition.category.method.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
@@ -206,33 +200,23 @@
 
 (const_declaration) @decl.const_group
 (var_declaration) @decl.var_group
-(const_spec) @decl.const_spec
-(var_spec) @decl.var_spec
 (type_declaration) @decl.type_group
 (type_alias) @decl.type_alias
 (type_spec) @decl.type_spec
 
 ; --- definition_identity_hints ---
 
-(field_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(method_elem
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- definitions ---
 
-(function_declaration name: (identifier) @definition.function.name) @definition.function
+(function_declaration name: (identifier) @definition.function.name @package.function.name @test.function.name) @definition.function @package.function @test.function
 (method_declaration name: (field_identifier) @definition.method.name) @definition.method
 (type_spec name: (type_identifier) @definition.type.name) @definition.type
 (type_alias name: (type_identifier) @definition.alias.name) @definition.alias
-(field_declaration) @definition.field
+(field_declaration) @definition.field @field.declaration
 
 ; --- documented_calls ---
 
@@ -257,29 +241,24 @@
 
 (binary_expression) @expression.binary
 (unary_expression) @expression.unary
-(type_conversion_expression) @expression.type_conversion
-(type_instantiation_expression) @expression.type_instantiation
-(composite_literal) @expression.composite_literal
-(func_literal) @expression.func_literal
-(index_expression) @expression.index
-(slice_expression) @expression.slice
+(type_conversion_expression) @expression.type_conversion @typeop.conversion
+(type_instantiation_expression) @expression.type_instantiation @typeop.instantiation
+(func_literal) @expression.func_literal @scope.function_literal
 
 ; --- fields_methods ---
 
 (method_declaration receiver: (parameter_list) @method.receiver name: (field_identifier) @method.name) @method
-(field_declaration) @field.declaration
-(selector_expression operand: (_) @selector.operand field: (field_identifier) @selector.field) @selector
 
 ; --- generics_interfaces ---
 
-(type_parameter_list) @generic.parameters
+(type_parameter_list) @generic.parameters @type.parameters
 (type_parameter_declaration name: (identifier) @generic.parameter.name type: (_) @generic.parameter.constraint) @generic.parameter
-(interface_type) @interface.type
+(interface_type) @interface.type @type.interface
 (method_elem) @interface.method
-(type_elem) @interface.type_element
-(negated_type) @interface.negated_term
-(generic_type) @generic.type
-(type_arguments) @generic.arguments
+(type_elem) @interface.type_element @type.constraint_elem
+(negated_type) @interface.negated_term @type.negated_constraint
+(generic_type) @generic.type @type.generic
+(type_arguments) @generic.arguments @type.arguments
 
 ; --- go_test_owner_context ---
 
@@ -363,7 +342,7 @@
 ; --- import_targets ---
 
 (import_spec
-  path: (_) @import.target) @import.statement
+  path: (_) @import.target @import.path @import.module_path.target @module.import.path) @import.statement @import.spec @import.module_path.statement @module.import
 
 ; --- imported_constructor_qualified_resource_context ---
 
@@ -388,29 +367,13 @@
 ; --- imports ---
 
 (import_declaration) @import.declaration
-(import_spec path: (_) @import.path) @import.spec
 (import_spec name: (_) @import.alias) @import.named
 
 ; --- labels ---
 
-(labeled_statement) @label.definition
-(break_statement) @label.break
-(continue_statement) @label.continue
-(goto_statement) @label.goto
 
 ; --- lexical_surface ---
 
-(interpreted_string_literal) @lex.string
-(raw_string_literal) @lex.raw_string
-(rune_literal) @lex.rune
-(int_literal) @lex.int
-(float_literal) @lex.float
-(imaginary_literal) @lex.imaginary
-(nil) @lex.nil
-(true) @lex.true
-(false) @lex.false
-(iota) @lex.iota
-(comment) @lex.comment
 
 ; --- method_builder_qualified_resource_context ---
 
@@ -482,14 +445,10 @@
 
 ; --- module_path_hints ---
 
-(import_spec 
-  path: (_) @import.module_path.target
-) @import.module_path.statement
 
 ; --- modules ---
 
-(package_clause (package_identifier) @module.package.name) @module.package
-(import_spec path: (_) @module.import.path) @module.import
+(package_clause (package_identifier) @module.package.name @package.name) @module.package @package.clause
 
 ; --- named_scope_owners ---
 
@@ -535,10 +494,6 @@
 
 ; --- package_init ---
 
-(package_clause (package_identifier) @package.name) @package.clause
-(function_declaration name: (identifier) @package.function.name) @package.function
-(var_spec) @package.var
-(const_spec) @package.const
 
 ; --- qualified_composite_identifier_field_context ---
 
@@ -621,22 +576,14 @@
 (type_identifier) @reference.type
 (field_identifier) @reference.field
 (selector_expression) @reference.selector
-(index_expression) @reference.index
-(slice_expression) @reference.slice
-(type_assertion_expression) @reference.type_assertion
+(type_assertion_expression) @reference.type_assertion @typeop.assertion
 
 ; --- scopes ---
 
 (source_file) @scope.file
 (function_declaration) @scope.function
 (method_declaration) @scope.method
-(func_literal) @scope.function_literal
 (block) @scope.block
-(for_statement) @scope.for
-(if_statement) @scope.if
-(expression_switch_statement) @scope.switch
-(type_switch_statement) @scope.type_switch
-(select_statement) @scope.select
 
 ; --- signature_parameters ---
 
@@ -670,44 +617,25 @@
 ; --- signatures ---
 
 (parameter_list) @signature.parameters
-(parameter_declaration) @signature.parameter
-(variadic_parameter_declaration) @signature.variadic_parameter
-(function_type) @signature.function_type
+(function_type) @signature.function_type @type.function
 
 ; --- switch_cases ---
 
 (expression_case) @switch.expression_case
 (default_case) @switch.default_case
 (type_case) @switch.type_case
-(communication_case) @switch.communication_case
 
 ; --- tests ---
 
-(function_declaration name: (identifier) @test.function.name) @test.function
 
 ; --- type_operations ---
 
-(type_assertion_expression) @typeop.assertion
-(type_conversion_expression) @typeop.conversion
-(type_instantiation_expression) @typeop.instantiation
 
 ; --- types ---
 
-(generic_type) @type.generic
-(type_arguments) @type.arguments
-(type_parameter_list) @type.parameters
 (type_parameter_declaration) @type.parameter
 (pointer_type) @type.pointer
-(array_type) @type.array
-(implicit_length_array_type) @type.implicit_array
-(slice_type) @type.slice
 (struct_type) @type.struct
-(interface_type) @type.interface
-(map_type) @type.map
-(channel_type) @type.channel
-(function_type) @type.function
-(negated_type) @type.negated_constraint
-(type_elem) @type.constraint_elem
 (qualified_type) @type.qualified
 
 ; --- unaliased_import_constructor_binding_context_v3_146 ---

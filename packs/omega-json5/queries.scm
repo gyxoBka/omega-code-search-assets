@@ -10,26 +10,22 @@
   (false)
 ] @boolean
 
-(null) @constant
+(null) @constant @data.null
 
-(string) @string
+(string) @string @data.string
 
-(number) @number
+(number) @number @data.number
 
-(comment) @comment @spell
+(comment) @comment @spell @data.comment
 
 (member
   name: (_) @keyword)
 
 ; --- literals ---
 
-(string) @data.string
 (identifier) @data.identifier
-(number) @data.number
 (true) @data.true
 (false) @data.false
-(null) @data.null
-(comment) @data.comment
 
 ; --- structure ---
 

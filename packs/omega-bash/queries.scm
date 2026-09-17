@@ -6,13 +6,11 @@
 ; --- declaration_category_function ---
 
 (function_definition
-  name: (_) @definition.category.name
-) @definition.category.owner
+  name: (_) @definition.category.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(function_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- external-nvim-treesitter-locals ---
 
@@ -44,19 +42,12 @@
 ; sha256=cc82e0fccf88c4e47f8e7b968ea19babb799fda492d834d90959bfd213c49e97
 
 ; Scopes
-(function_definition) @local.scope
 
 ; Definitions
-(variable_assignment
-  name: (variable_name) @local.definition.var)
 
-(function_definition
-  name: (word) @local.definition.function)
 
 ; References
-(variable_name) @local.reference
 
-(word) @local.reference
 
 ; --- named_scope_owners ---
 

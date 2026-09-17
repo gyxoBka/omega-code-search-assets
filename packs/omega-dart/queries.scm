@@ -11,8 +11,8 @@
 ; --- declaration_category_class ---
 
 (class_definition
-  name: (_) @definition.category.class.name
-) @definition.category.owner
+  name: (_) @definition.category.class.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_constructor ---
 
@@ -23,60 +23,48 @@
 ; --- declaration_category_enum ---
 
 (enum_constant
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 (enum_declaration
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
+  name: (_) @definition.category.enum.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_function ---
 
 (function_signature
-  name: (_) @definition.category.function.name
-) @definition.category.owner
+  name: (_) @definition.category.function.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_type ---
 
 (extension_type_declaration
-  name: (_) @definition.category.type.name
-) @definition.category.owner
+  name: (_) @definition.category.type.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- declaration_category_variable ---
 
 (initialized_variable_definition
-  name: (_) @definition.category.variable.name
-) @definition.category.owner
+  name: (_) @definition.category.variable.name @definition.identity.name
+) @definition.category.owner @definition.identity.owner
 
 ; --- definition_identity_hints ---
 
-(class_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_constant
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(enum_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 (extension_declaration
   name: (_) @definition.identity.name) @definition.identity.owner
 
-(extension_type_declaration
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(function_signature
-  name: (_) @definition.identity.name) @definition.identity.owner
 
-(initialized_variable_definition
-  name: (_) @definition.identity.name) @definition.identity.owner
 
 ; --- enclosing_owner_hints ---
 
 (class_definition 
-  name: (_) @scope.enclosing_owner.name
-  body: (_) @scope.enclosing_owner.body
-) @scope.enclosing_owner.span
+  name: (_) @scope.enclosing_owner.name @scope.owner.name
+  body: (_) @scope.enclosing_owner.body @scope.owner.body
+) @scope.enclosing_owner.span @scope.owner
 
 (extension_declaration 
   name: (_) @scope.enclosing_owner.name
@@ -102,7 +90,7 @@
 (mixin_declaration
   (identifier) @name) @definition.interface
 (extension_declaration
-  name: (identifier) @name) @definition.class
+  name: (identifier) @name) @definition.class @definition.extension
 (function_signature
   name: (identifier) @name) @definition.function
 (constructor_signature
@@ -122,10 +110,10 @@
   name: (identifier) @local.definition.function)
 
 (formal_parameter
-  name: (identifier) @local.definition.parameter)
+  name: (identifier) @local.definition.parameter @local.definition.variable.parameter)
 
 (initialized_variable_definition
-  name: (identifier) @local.definition.var)
+  name: (identifier) @local.definition.var @local.definition.variable)
 
 (initialized_identifier
   (identifier) @local.definition.var)
@@ -161,37 +149,15 @@
 ; path=audit-baselines/external/nvim-treesitter/dart/locals.scm
 ; sha256=e353c0e1c4838ad2b14810c7358007c825e740313922032917e2dcfc43cd46ae
 ; Definitions
-(function_signature
-  name: (identifier) @local.definition.function)
 
-(formal_parameter
-  name: (identifier) @local.definition.parameter)
 
-(initialized_variable_definition
-  name: (identifier) @local.definition.var)
 
-(initialized_identifier
-  (identifier) @local.definition.var)
 
-(static_final_declaration
-  (identifier) @local.definition.var)
 
 ; References
-(identifier) @local.reference
 
 ; Scopes
-(class_definition
-  body: (_) @local.scope)
 
-[
-  (block)
-  (if_statement)
-  (for_statement)
-  (while_statement)
-  (try_statement)
-  (catch_clause)
-  (finally_clause)
-] @local.scope
 
 ; --- member_category_enum_member ---
 
@@ -203,17 +169,9 @@
 
 ; --- named_scope_owners ---
 
-(class_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
 
 ; --- ownership_members ---
 
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_body
-    (enum_constant
-      name: (_) @owned.member.name) @owned.member)) @owner.span
 
 ; --- ownership_parameters ---
 
@@ -250,20 +208,15 @@
 ; Definitions
 ;------------
 
-(formal_parameter
- name: (identifier) @local.definition.variable.parameter)
 
 ; for-in / C-style loop variable.
 (for_loop_parts
  name: (identifier) @local.definition.variable)
 
-(initialized_variable_definition
- name: (identifier) @local.definition.variable)
 
 ; References
 ;------------
 
-(identifier) @local.reference
 
 ; Member access selectors carry plain identifiers that are not local references.
 (unconditional_assignable_selector
@@ -278,20 +231,6 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/dart/tags.scm
 
-(class_definition
-  name: (identifier) @name) @definition.class
-(enum_declaration
-  name: (identifier) @name) @definition.enum
-(mixin_declaration
-  (identifier) @name) @definition.interface
-(extension_declaration
-  name: (identifier) @name) @definition.class
-(function_signature
-  name: (identifier) @name) @definition.function
-(constructor_signature
-  name: (identifier) @name) @definition.function
-(type_alias
-  "typedef" . (type_identifier) @name) @definition.type
 
 ; --- prefixed_import_context ---
 
@@ -313,15 +252,12 @@
 ; --- qualified_chain_hints ---
 
 (scoped_identifier
-  scope: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
+  scope: (_) @reference.qualified_chain.base @reference.qualifier
+  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
+) @reference.qualified_chain.span @reference.qualified_expression
 
 ; --- qualified_name_hints ---
 
-(scoped_identifier
-  scope: (_) @reference.qualifier
-  name: (_) @reference.qualified_name) @reference.qualified_expression
 
 ; --- receiver_hints ---
 
@@ -362,8 +298,6 @@
 ; --- upstream_tags ---
 
 
-(class_definition
-  name: (identifier) @name) @definition.class
 
 (method_signature
   (function_signature)) @definition.method
@@ -400,18 +334,12 @@
   (mixin)
   (identifier) @name) @definition.mixin
 
-(extension_declaration
-  name: (identifier) @name) @definition.extension
 
 
 (new_expression
   (type_identifier) @name) @reference.class
 
-(enum_declaration
-  name: (identifier) @name) @definition.enum
 
-(function_signature
-  name: (identifier) @name) @definition.function 
 
 (initialized_variable_definition
   name: (identifier)

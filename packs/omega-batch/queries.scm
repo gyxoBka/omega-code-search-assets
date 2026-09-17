@@ -4,7 +4,7 @@
 (call_stmt (command_name) @call.target) @call.statement
 (call_stmt (variable_reference) @reference.dynamic_call_target)
 (cmd (command_name) @call.command) @call.command_statement
-(variable_reference) @reference.variable
+(variable_reference) @reference.variable @batch.variable.reference
 
 ; --- external-helix-tags ---
 
@@ -13,7 +13,7 @@
 ; original baseline: audit-baselines/external/helix/batch/tags.scm
 ; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
 
-(label) @definition.function
+(label) @definition.function @structural.candidate
 
 (variable_assignment
   (set_keyword)
@@ -23,7 +23,6 @@
 
 ; OMEGA-INDEPENDENTLY-AUTHORED from normalized exact-grammar AST evidence only.
 ; Helix MPL query body is NOT copied. language=batch
-(label) @structural.candidate
 
 ; --- p1-exact-helix-tags ---
 
@@ -32,11 +31,7 @@
 ; parser compatibility: exact_parser_revision_match
 ; original baseline: audit-baselines/external/helix/batch/tags.scm
 
-(label) @definition.function
 
-(variable_assignment
-  (set_keyword)
-  (variable_name) @definition.constant)
 
 ; --- terminal_batch_for_semantics_v1 ---
 
@@ -48,7 +43,6 @@
 (variable_assignment (variable_name) @batch.assignment.name) @batch.assignment
 (arithmetic_assignment) @batch.arithmetic.assignment
 (for_stmt (for_variable) @batch.for.binding) @batch.for
-(variable_reference) @batch.variable.reference
 (call_stmt) @batch.call.statement
 
 ; --- semantic_closure_v3_146_batch4 ---
