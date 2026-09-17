@@ -525,18 +525,13 @@
 
 (column_definition name: (_) @sql.column.name) @sql.column.definition
 (constraint name: (identifier) @sql.constraint.name) @sql.constraint.named
-(constraint) @sql.constraint.any
-(create_index) @sql.index.create
-(create_trigger) @sql.trigger.create
+
 (join (relation (object_reference) @sql.join.target)) @sql.join
 (cross_join (relation (object_reference) @sql.cross_join.target)) @sql.cross_join
-(lateral_join) @sql.lateral_join
-(subquery) @sql.subquery
+
 (field column: (_) @sql.field.column) @sql.field.reference
 (field (object_reference) @sql.field.object (identifier) @sql.qualified_field.column) @sql.qualified_field.reference
-(insert) @sql.insert.statement
-(update) @sql.update.statement
-(delete) @sql.delete.statement
+
 (alter_table (object_reference) @sql.alter.table) @sql.alter.statement
 (drop_table (object_reference) @sql.drop.table) @sql.drop.statement
 (add_column (column_definition name: (_) @sql.add_column.name)) @sql.add_column

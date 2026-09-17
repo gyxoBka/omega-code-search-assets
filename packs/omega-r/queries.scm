@@ -1,156 +1,183 @@
-; --- call_targets ---
+; omega-r
+;
+; R is the language of analysis scripts and of the packages those scripts load.
+; The questions asked of an R file are: what function is defined here, what is
+; it called with, what name holds this result, which package does this file
+; need, and where does this name come from. Every pattern below answers one of
+; them.
+;
+; Containment is not stated. A function's extent is one `scope.function_body`
+; region; nesting is already in the tree and reaches a query through the host's
+; `within:` segment.
+;
+; R has no declaration syntax: a name exists because something was assigned to
+; it. So the four assignment patterns are the whole declaration surface of the
+; language, and they are written as four patterns rather than one because a
+; function and a value are different answers.
 
-(call
-  function: (_) @call.target) @call.expression
-
-; --- definition_identity_hints ---
+; --- a function ---
+;
+; `f <- function(x) ...`, `f = function(x) ...`, `f <<- function(x) ...` and
+; the lambda spelling `f <- \(x) ...`, which is the same node.
+;
+; Three templates over this one match: the declaration, the parameter list
+; carried onto it so the card's signature line reads, and the body as a region.
 
 (binary_operator
-  lhs: (identifier) @definition.identity.name
-  operator: "<-"
-  rhs: (function_definition)) @definition.identity.owner
-
-; --- named_scope_owners ---
-
-(binary_operator
-  lhs: (identifier) @scope.owner.name
-  operator: "<-"
+  lhs: (identifier) @function.name
+  operator: ["<-" "<<-" "="]
   rhs: (function_definition
-    body: (_) @scope.owner.body)) @scope.owner
+    parameters: (parameters) @function.parameters
+    body: (_) @function.body)) @function
 
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=f492d0f06b7716a5e6ecd606ef5b09bf7362481ad46e01dfedb4637a5b232e3c
-; resolved_query_sha256=9f981a11cc7be6d96a4851824c5320391a00aeb0d178e1cc8f5cede580952fdd
-; parser_revision=0e6ef7741712c09dc3ee6e81c42e919820cc65ef
-; source_name=r
-; direct_inherits=
-; resolved_sources=r
-
-; ----- resolved nvim locals source: r sha256=f492d0f06b7716a5e6ecd606ef5b09bf7362481ad46e01dfedb4637a5b232e3c -----
-; locals.scm
-(function_definition) @local.scope
-
-(argument
-  name: (identifier) @local.definition)
-(parameter name: (identifier) @local.definition @binding.parameter.name) @binding.parameter
+; --- a function bound by right assignment ---
+;
+; `function(x) x -> f`. The same three facts, mirrored.
 
 (binary_operator
-  lhs: (identifier) @local.definition
-  operator: "<-")
+  lhs: (function_definition
+    parameters: (parameters) @rfunction.parameters
+    body: (_) @rfunction.body)
+  operator: ["->" "->>"]
+  rhs: (identifier) @rfunction.name) @rfunction
+
+; --- a value bound to a name ---
+;
+; Every right-hand side except `function_definition`, which the pattern above
+; already declares as a Callable. Listing the alternatives rather than writing
+; `(_)` is what keeps one construct from being declared twice under two
+; families.
 
 (binary_operator
-  lhs: (identifier) @local.definition
-  operator: "=")
+  lhs: (identifier) @variable.name
+  operator: ["<-" "<<-" "="]
+  rhs: [
+    (binary_operator) (braced_expression) (break) (complex)
+    (dot_dot_i) (dots) (extract_operator) (false) (float) (for_statement)
+    (identifier) (if_statement) (inf) (integer) (na) (namespace_operator)
+    (nan) (next) (null) (parenthesized_expression) (repeat_statement)
+    (return) (string) (subset) (subset2) (true) (unary_operator)
+    (while_statement)
+  ]) @variable
+
+; A call-valued assignment is a variable too, except when the call is one of the
+; factories declared below. `Gen <- setClass("Gen", ...)` is the form in
+; ?setClass's own examples, and without this it was declared twice: once here as
+; a Value named Gen and once by the class pattern as a Type named Gen, on two
+; different spans, so nothing deduplicated them.
+
+((binary_operator
+   lhs: (identifier) @variable.name
+   operator: ["<-" "<<-" "="]
+   rhs: (call function: (identifier) @_rhs.callee)) @variable
+ (#not-any-of? @_rhs.callee
+   "setClass" "setRefClass" "setGeneric" "setMethod"
+   "library" "require" "requireNamespace" "loadNamespace" "attachNamespace"
+   "source" "sys.source"))
+
+; --- a value bound by right assignment ---
+;
+; `x |> summarise(...) -> totals` is the idiomatic end of a pipeline.
 
 (binary_operator
-  operator: "->"
-  rhs: (identifier) @local.definition)
+  lhs: [
+    (binary_operator) (braced_expression) (break) (call) (complex)
+    (dot_dot_i) (dots) (extract_operator) (false) (float) (for_statement)
+    (identifier) (if_statement) (inf) (integer) (na) (namespace_operator)
+    (nan) (next) (null) (parenthesized_expression) (repeat_statement)
+    (return) (string) (subset) (subset2) (true) (unary_operator)
+    (while_statement)
+  ]
+  operator: ["->" "->>"]
+  rhs: (identifier) @rvariable.name) @rvariable
 
-; --- ownership_parameters ---
+; --- a parameter ---
+;
+; Rooted at `parameter`, so it holds for a named function and for an anonymous
+; one passed to `lapply` alike.
 
-(binary_operator
-  lhs: (identifier) @owner.name
-  operator: "<-"
-  rhs: (function_definition
-    parameters: (parameters) @owned.parameters)) @owner.span
+(parameter
+  name: (identifier) @parameter.name) @parameter
 
-; --- priority_semantics ---
+; --- a call ---
+;
+; The named constructs below are stated once, as what they are, rather than
+; twice -- once as themselves and once as a call to `library` or `setClass`.
 
-; Omega-owned R semantic enrichment from exact grammar node/field facts.
-(binary_operator lhs: (identifier) @definition.function.name operator: ["<-" "="] rhs: (function_definition)) @definition.function
-(call function: (identifier) @call.function.name) @call.function
-(call function: (namespace_operator rhs: (identifier) @call.function.name)) @call.function
-(namespace_operator lhs: (identifier) @module.name) @module.reference
+((call
+  function: (identifier) @call.name) @call
+ (#not-any-of? @call.name
+   "library" "require" "requireNamespace" "loadNamespace" "attachNamespace"
+   "source" "sys.source"
+   "setClass" "setRefClass" "setGeneric" "setMethod"))
 
-; --- qualified_call_assignment_identifier_context ---
+; --- a package this file needs ---
+;
+; `library(dplyr)` and `require("dplyr")`: the package is the first argument,
+; spelled bare or quoted.
 
-; Framework-neutral authored R fact:
-; direct local identifier assignment from a fully-qualified package::function call
-; whose first argument is itself a direct identifier. No pipe expansion, NSE,
-; runtime evaluation, member lookup or implicit package resolution is performed.
-(binary_operator
-  lhs: (identifier) @r.qualified_transform.output_name
-  operator: ["<-" "="]
-  rhs: (call
-    function: (namespace_operator
-      lhs: (identifier) @r.qualified_transform.package_name
-      operator: "::"
-      rhs: (identifier) @r.qualified_transform.function_name)
-    arguments: (arguments
-      . (argument
-          value: (identifier) @r.qualified_transform.input_name)))) @r.qualified_transform.context
+((call
+  function: (identifier) @import.function
+  arguments: (arguments
+    . (argument
+        value: [(identifier) (string)] @import.name))) @import
+ (#any-of? @import.function
+   "library" "require" "requireNamespace" "loadNamespace" "attachNamespace"))
 
-; --- qualified_call_assignment_literal_context ---
+; --- a file this file needs ---
 
-; Framework-neutral authored R source binding from a fully-qualified call
-; whose first argument is a direct string literal. No file access/runtime evaluation occurs.
-(binary_operator
-  lhs: (identifier) @r.qualified_literal.output_name
-  operator: ["<-" "="]
-  rhs: (call
-    function: (namespace_operator
-      lhs: (identifier) @r.qualified_literal.package_name
-      operator: "::"
-      rhs: (identifier) @r.qualified_literal.function_name)
-    arguments: (arguments
-      . (argument
-          value: (string) @r.qualified_literal.literal_value)))) @r.qualified_literal.context
+((call
+  function: (identifier) @source.function
+  arguments: (arguments
+    . (argument
+        value: (string) @source.path))) @source
+ (#any-of? @source.function "source" "sys.source"))
 
-; --- qualified_call_context ---
+; --- a class ---
+;
+; S4 and Reference classes are declared by a call whose first argument is the
+; class name. This is `methods`, which ships with R, not a third-party object
+; system; R6 and S3 are not stated here (see the guards).
 
-; Framework-neutral authored R fact: direct fully-qualified package::function(...) call source site.
-; No package loading, NSE evaluation, runtime execution, pipe expansion or alias resolution.
-(call
-  function: (namespace_operator
-    lhs: (identifier) @r.qualified_call.package_name
-    operator: "::"
-    rhs: (identifier) @r.qualified_call.function_name)
-  arguments: (arguments)) @r.qualified_call.context
+((call
+  function: (identifier) @class.factory
+  arguments: (arguments
+    . (argument
+        value: (string) @class.name))) @class
+ (#any-of? @class.factory "setClass" "setRefClass"))
 
-; --- semantic_closure_v3_146_batch2 ---
+; --- a generic and its methods ---
+;
+; `setGeneric("area", ...)` and `setMethod("area", "Circle", ...)` both name the
+; generic, and both are callable under that name.
 
-(namespace_operator lhs: (_) @r.namespace.package rhs: (_) @r.namespace.member) @r.namespace
-(for_statement variable: (identifier) @r.for.binding sequence: (_) @r.for.sequence) @r.for
-(binary_operator operator: ["|>" "special"] @r.pipe.operator) @r.pipe
-((call function: (identifier) @r.package.call.name) @r.package.call (#any-of? @r.package.call.name "library" "require" "requireNamespace"))
+((call
+  function: (identifier) @generic.factory
+  arguments: (arguments
+    . (argument
+        value: (string) @generic.name))) @generic
+ (#any-of? @generic.factory "setGeneric" "setMethod"))
 
-; --- semantic_closure_v3_146_batch3 ---
+; --- a name taken from a package ---
+;
+; `dplyr::filter` states two things: this file depends on `dplyr`, and it
+; refers to `filter`. Two templates, one match.
 
-(binary_operator
-  lhs: (_) @r.formula.lhs
-  operator: "~"
-  rhs: (_) @r.formula.rhs) @r.formula
+(namespace_operator
+  lhs: (identifier) @namespace.package
+  rhs: (identifier) @namespace.member) @namespace
+
+; --- a member of an object ---
+;
+; `x$field` and `obj@slot`. The member name only; the receiver is the span.
 
 (extract_operator
-  lhs: (_) @r.extract.owner
-  operator: ["$" "@"] @r.extract.operator
-  rhs: (_) @r.extract.member) @r.extract
+  rhs: (identifier) @member.name) @member
 
-(subset
-  function: (_) @r.subset.target
-  arguments: (arguments) @r.subset.arguments) @r.subset
+; --- a loop variable ---
+;
+; `for (region in regions)` binds `region` in the enclosing environment, which
+; is a declaration in R even though it has no assignment operator.
 
-(subset2
-  function: (_) @r.subset2.target
-  arguments: (arguments) @r.subset2.arguments) @r.subset2
-
-((binary_operator
-  lhs: (identifier) @r.class.binding
-  operator: ["<-" "="]
-  rhs: (call
-    function: (identifier) @r.class.factory)) @r.class.assignment
- (#any-of? @r.class.factory "setClass" "setRefClass" "R6Class"))
-
-((binary_operator
-  lhs: (identifier) @r.class.binding
-  operator: ["<-" "="]
-  rhs: (call
-    function: (namespace_operator
-      lhs: (identifier) @r.class.package
-      rhs: (identifier) @r.class.factory))) @r.class.qualified_assignment
- (#any-of? @r.class.factory "setClass" "setRefClass" "R6Class"))
-
+(for_statement
+  variable: (identifier) @loop.variable)

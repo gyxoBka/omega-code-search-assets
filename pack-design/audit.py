@@ -22,10 +22,45 @@ NOT_TREE_SITTER = re.compile(
     r'has-parent\?|is\?|gsub!|strip!|select-adjacent!|trim!)')
 
 
+def strip_comments(s):
+    """Drop `; comment` to end of line, without touching a `;` inside a string.
+
+    This used to be one `re.sub(r';[^\\n]*', '', s)` over the whole file, run
+    before anything tracked string literals. A query that captures the
+    language's statement separator -- `[ "." ";" ":" ] @punctuation.delimiter`,
+    which every nvim-treesitter highlights baseline carries -- had its `";"`
+    rewritten to a bare `"`, which opened a string that never closed, so the
+    bracket depth never returned to zero and **no pattern after that point was
+    parsed at all**. On the pre-rewrite omega-nix that meant 11 patterns seen
+    out of about 75, and every check that iterates patterns was measuring only
+    the prefix."""
+    out, in_string, i = [], False, 0
+    while i < len(s):
+        ch = s[i]
+        if in_string:
+            out.append(ch)
+            if ch == '"' and s[i - 1] != chr(92):
+                in_string = False
+            i += 1
+            continue
+        if ch == '"':
+            in_string = True
+            out.append(ch)
+            i += 1
+            continue
+        if ch == ';':
+            while i < len(s) and s[i] != '\n':
+                i += 1
+            continue
+        out.append(ch)
+        i += 1
+    return ''.join(out)
+
+
 def top_patterns(path):
     """Top-level query patterns, each carrying the captures that trail its
     closing bracket: `[ (a) (b) ] @owner` is one pattern binding @owner."""
-    s = re.sub(r';[^\n]*', '', open(path, encoding='utf-8').read())
+    s = strip_comments(open(path, encoding='utf-8').read())
     out, depth, buf, in_string, i = [], 0, '', False, 0
     while i < len(s):
         ch = s[i]

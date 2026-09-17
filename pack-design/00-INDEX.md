@@ -778,3 +778,63 @@ with them.
 
 Totals: **1 614 templates, 332 guards** (from 3 673 and 1 348 at the start).
 Thirty-one Packs rewritten, 30 to go.
+
+---
+
+# Wave 8 (nix, yaml, r, html, prisma)
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-yaml | 65 -> 7 | 67 -> 7 | 7 -> 6 | 21 -> 18 |
+| omega-r | 23 -> 18 | 27 -> 13 | 12 -> 5 | 14 -> 34 |
+| omega-nix | 19 -> 17 | 11 -> 13 | 11 -> 5 | 31 -> 31 |
+| omega-prisma | 17 -> 16 | 21 -> 15 | 16 -> 5 | 16 -> 24 |
+| omega-html | 15 -> 9 | 32 -> 13 | 3 -> 5 | 14 -> 13 |
+
+omega-yaml lost nine tenths of itself -- 65 templates to 7 -- and omega-r more
+than doubled the node types it reaches, from 14 to 34, while cutting its
+patterns in half.
+
+One blocking defect: **omega-r** declared a class factory twice. `Gen <-
+setClass("Gen", ...)` -- the form in `?setClass`'s own examples, and the only
+usable form for `setRefClass`, since you need the generator to call `$new()` --
+matched both the value-assignment pattern, as a Value named `Gen`, and the class
+pattern, as a Type named `Gen`, on two different spans so nothing deduplicated
+them. The Pack excluded `function_definition` from the value alternation for
+exactly this reason and did not carry the reasoning to the nine factory names it
+already listed. A call-valued assignment is now its own pattern with those names
+excluded.
+
+## The audit was reading a prefix of every query file with a `";"` in it
+
+`top_patterns()` stripped comments with one `re.sub(r';[^\n]*', '', src)` over
+the whole file, **before** anything tracked string literals. A query that
+captures the language's statement separator -- `[ "." ";" ":" ] @punctuation.delimiter`,
+which every nvim-treesitter highlights baseline carries -- had its `";"`
+rewritten to a bare `"`. That opened a string which never closed, the bracket
+depth never returned to zero, and **no pattern after that point was parsed at
+all**. On the pre-rewrite omega-nix the audit reported 11 patterns where the
+file held about 75, and D, D2, the capture-owner map, `unread`, I, I2, M and
+`carrier_owner` were all evaluated against that prefix.
+
+Comments are now stripped in the same pass that tracks strings. Two Packs were
+still affected at the time of the fix -- omega-sql (30 patterns seen, 66 real)
+and omega-css (25 seen, 39 real), both still to be rewritten -- and the first
+sweep with the fix found 13 orphaned patterns in them that had been invisible.
+
+## Framework overlays inside injections: the largest instance yet
+
+omega-nix carried 22 injection patterns keyed on nixpkgs and home-manager
+library names -- `writeShellApplication`, `runCommand*`, `writeBash*`,
+`writeFish*`, `writeHaskell*`, `writePy*`, `nixosTest`, `testScript`,
+`^[A-Za-z]+Phase$`, `^pre[A-Za-z]+$`, `^post[A-Za-z]+$`, and a home-manager
+Neovim `type = "lua"` pair. That is four times the size of omega-c's libc-keyed
+injections. All removed. Parsing the bash inside `buildPhase` is worth having
+and belongs in a `frameworks/omega-framework-nixpkgs-stdenv` overlay, which does
+not exist: a gap this sweep creates and does not fill.
+
+The nvim locals inheritance is closed for omega-nix and omega-html; omega-r's
+went with its rewrite too.
+
+Totals: **1 542 templates, 309 guards** (from 3 673 and 1 348 at the start).
+Thirty-six Packs rewritten, 25 to go.

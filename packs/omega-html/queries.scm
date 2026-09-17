@@ -1,240 +1,215 @@
-; --- asset-exact-helix-highlights ---
+; omega-html
+;
+; HTML is the page and template layer of a project. The questions asked of an
+; HTML file are: what does this page load, which element is `#main`, where is
+; the form field the server reads, which component is used here, and what does
+; the page say about itself. Every pattern below answers one of them.
+;
+; Two things are deliberately not stated.
+;
+; Containment. The tree already holds it, and an `id` in HTML is global to the
+; document, so an element's ancestry is not a namespace for it. There is no
+; scope region and no parent/child pattern.
+;
+; The bare attribute. An attribute whose name the Pack does not recognise
+; answers no question, and one emission per attribute of every page -- named by
+; the tag it sat on -- was the largest thing the previous Pack produced.
+;
+; Tag and attribute names are matched case-insensitively, because HTML is:
+; `<INPUT NAME=x>` is the same declaration as `<input name=x>`. An attribute
+; value is taken from inside the quotes when there are quotes, and from the
+; bare token when there are not.
 
-(tag_name) @tag
+; --- an element that declares an id ---
+;
+; `id` is the one name HTML itself declares. `href="#main"`, `for="email"`, a
+; CSS `#main` selector and `getElementById("main")` all resolve onto it.
 
-(doctype) @constant
-(attribute_name) @attribute
-(entity) @string.special.symbol
+([(start_tag
+    (tag_name) @element.tag
+    (attribute
+      (attribute_name) @_id
+      [(attribute_value) @element.id
+       (quoted_attribute_value (attribute_value) @element.id)]))
+  (self_closing_tag
+    (tag_name) @element.tag
+    (attribute
+      (attribute_name) @_id
+      [(attribute_value) @element.id
+       (quoted_attribute_value (attribute_value) @element.id)]))] @element
+ (#match? @_id "^(?i)id$"))
 
-((attribute
-  (attribute_name) @attribute
-  (quoted_attribute_value (attribute_value) @markup.link.url))
- (#any-of? @attribute "href" "src"))
+; --- a form control's name ---
+;
+; `name` on a control is the key the server reads out of the request. It is the
+; one HTML name that code in another language looks up by string.
+
+([(start_tag
+    (tag_name) @field.tag
+    (attribute
+      (attribute_name) @_name
+      [(attribute_value) @field.name
+       (quoted_attribute_value (attribute_value) @field.name)]))
+  (self_closing_tag
+    (tag_name) @field.tag
+    (attribute
+      (attribute_name) @_name
+      [(attribute_value) @field.name
+       (quoted_attribute_value (attribute_value) @field.name)]))] @field
+ (#match? @_name "^(?i)name$")
+ (#match? @field.tag "^(?i)(input|select|textarea|button|output|fieldset|form)$"))
+
+; --- what the page says about itself ---
+;
+; `<meta name=... content=...>`, and the `property=` and `http-equiv=`
+; spellings of the same pair. The key attribute must come first and `content`
+; must follow it directly: anchored, this is one match per start tag instead of
+; one per pair of attributes on every start tag in the file.
+
+([(start_tag
+    (tag_name) @_meta .
+    (attribute
+      (attribute_name) @_key
+      [(attribute_value) @meta.key
+       (quoted_attribute_value (attribute_value) @meta.key)]) .
+    (attribute
+      (attribute_name) @_content
+      [(attribute_value) @meta.content
+       (quoted_attribute_value (attribute_value) @meta.content)]))
+  (self_closing_tag
+    (tag_name) @_meta .
+    (attribute
+      (attribute_name) @_key
+      [(attribute_value) @meta.key
+       (quoted_attribute_value (attribute_value) @meta.key)]) .
+    (attribute
+      (attribute_name) @_content
+      [(attribute_value) @meta.content
+       (quoted_attribute_value (attribute_value) @meta.content)]))] @meta
+ (#match? @_meta "^(?i)meta$")
+ (#match? @_key "^(?i)(name|property|http-equiv)$")
+ (#match? @_content "^(?i)content$"))
+
+; --- the page's own name, and its sections ---
+;
+; Anchored on both sides: the text is stated only when the element's whole
+; content is that one text node. `<h1>Hello <em>you</em></h1>` has three
+; children and no single name to give.
 
 ((element
-  (start_tag
-    (tag_name) @tag)
-  (text) @markup.link.label)
-  (#eq? @tag "a"))
+   (start_tag (tag_name) @_title) .
+   (text) @title.text .
+   (end_tag)) @title
+ (#match? @_title "^(?i)title$"))
 
 ((element
-  (start_tag
-    (tag_name) @tag)
-  (text) @markup.bold)
-  (#any-of? @tag "strong" "b"))
+   (start_tag (tag_name) @heading.tag) .
+   (text) @heading.text .
+   (end_tag)) @heading
+ (#match? @heading.tag "^(?i)h[1-6]$"))
 
-((element
-  (start_tag
-    (tag_name) @tag)
-  (text) @markup.italic)
-  (#any-of? @tag "em" "i"))
+; --- what the page loads ---
+;
+; A script, a stylesheet, an image, an iframe, a form target, a link to another
+; page. Fragments and the non-fetching schemes are excluded here; a fragment is
+; a reference to an id and is stated as one below.
 
-((element
-  (start_tag
-    (tag_name) @tag)
-  (text) @markup.strikethrough)
-  (#any-of? @tag "s" "del"))
+([(start_tag
+    (tag_name) @resource.tag
+    (attribute
+      (attribute_name) @resource.attribute
+      [(attribute_value) @resource.url
+       (quoted_attribute_value (attribute_value) @resource.url)]))
+  (self_closing_tag
+    (tag_name) @resource.tag
+    (attribute
+      (attribute_name) @resource.attribute
+      [(attribute_value) @resource.url
+       (quoted_attribute_value (attribute_value) @resource.url)]))] @resource
+ (#match? @resource.attribute "^(?i)(src|href|action|formaction|poster)$")
+ (#not-match? @resource.url "^(?i)(#|javascript:|data:|mailto:|tel:|about:|blob:)"))
 
-"=" @punctuation.delimiter
+; --- a reference to an id in this document ---
+;
+; `href="#main"` is a link to the element declared `id="main"`; the `#` is
+; stripped so the two names are the same string.
 
-; --- external-nvim-treesitter-locals ---
+([(start_tag
+    (attribute
+      (attribute_name) @_href
+      [(attribute_value) @fragment.target
+       (quoted_attribute_value (attribute_value) @fragment.target)]))
+  (self_closing_tag
+    (attribute
+      (attribute_name) @_href
+      [(attribute_value) @fragment.target
+       (quoted_attribute_value (attribute_value) @fragment.target)]))] @fragment
+ (#match? @_href "^(?i)href$")
+ (#match? @fragment.target "^#[^#]"))
 
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=html kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/html/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
+; `for`, `form` and `list` hold an id and nothing else: `<label for="email">`
+; is the label of the control declared `id="email"`.
 
-(element) @local.scope
+([(start_tag
+    (attribute
+      (attribute_name) @idref.attribute
+      [(attribute_value) @idref.target
+       (quoted_attribute_value (attribute_value) @idref.target)]))
+  (self_closing_tag
+    (attribute
+      (attribute_name) @idref.attribute
+      [(attribute_value) @idref.target
+       (quoted_attribute_value (attribute_value) @idref.target)]))] @idref
+ (#match? @idref.attribute "^(?i)(for|form|list)$"))
 
-; --- locals ---
+; --- a custom element ---
+;
+; A tag name with a hyphen is not HTML's; it is a component defined elsewhere,
+; by `customElements.define("my-widget", ...)` or by a framework's registry.
+; The use is stated so the definition can be found from it.
 
-; OMEGA IMPORTED LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; SPDX-License-Identifier: Apache-2.0
-; source=audit-baselines/external/nvim-treesitter/html/locals.scm
-; sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74
+([(start_tag (tag_name) @custom.element)
+  (self_closing_tag (tag_name) @custom.element)]
+ (#match? @custom.element "^[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+$"))
 
-; --- nvim_pinned_injections ---
+; --- embedded languages ---
+;
+; These feed the injection layer, not a template: the JavaScript in a
+; `<script>` is parsed by omega-javascript and states its own facts.
 
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=376d8a7cb5819a9577c10a49b4ffb02a512744eca10ef9e82adf306e7f44089e
-; source_name=html
-
-; ----- resolved nvim injections source: html_tags sha256=1abf3c61023ba40944533f38712580c0fb14bade1479915fc8743fe5381f6d57 -----
-
-; <style>...</style>
-; <style blocking> ...</style>
-; Add "lang" to predicate check so that vue/svelte can inherit this
-; without having this element being captured twice
 ((style_element
-  (start_tag) @_no_type_lang
-  (raw_text) @injection.content)
-  (#not-match? @_no_type_lang "\\slang\\s*=")
-  (#not-match? @_no_type_lang "\\stype\\s*=")
-  (#set! injection.language "css"))
-((style_element
-  (start_tag
-    (attribute
-      (attribute_name) @_type
-      (quoted_attribute_value
-        (attribute_value) @_css)))
-  (raw_text) @injection.content)
-  (#eq? @_type "type")
-  (#eq? @_css "text/css")
-  (#set! injection.language "css"))
-; <script>...</script>
-; <script defer>...</script>
-((script_element
-  (start_tag) @_no_type_lang
-  (raw_text) @injection.content)
-  (#not-match? @_no_type_lang "\\slang\\s*=")
-  (#not-match? @_no_type_lang "\\stype\\s*=")
-  (#set! injection.language "javascript"))
-; <script type="foo/bar">
-(script_element
-  (start_tag
-    (attribute
-      (attribute_name) @_attr
-      (#eq? @_attr "type")
-      (quoted_attribute_value
-        (attribute_value) @injection.language)))
-  (raw_text) @injection.content)
-; <script type="importmap">
-((script_element
-  (start_tag
-    (attribute
-      (attribute_name) @_attr
-      (#eq? @_attr "type")
-      (quoted_attribute_value
-        (attribute_value) @_type)))
-  (raw_text) @injection.content)
-  (#eq? @_type "importmap")
-  (#set! injection.language "json"))
-; <script type="module">
-((script_element
-  (start_tag
-    (attribute
-      (attribute_name) @_attr
-      (#eq? @_attr "type")
-      (quoted_attribute_value
-        (attribute_value) @_type)))
-  (raw_text) @injection.content)
-  (#eq? @_type "module")
-  (#set! injection.language "javascript"))
+   (start_tag) @_style_tag
+   (raw_text) @injection.content)
+ (#not-match? @_style_tag "\\s(lang|type)\\s*=")
+ (#set! injection.language "css"))
 
-; <a style="/* css */">
-((attribute
-  (attribute_name) @_attr
-  (quoted_attribute_value
-    (attribute_value) @injection.content))
-  (#eq? @_attr "style")
-  (#set! injection.language "css"))
-; lit-html style template interpolation
-; <a @click=${e => console.log(e)}>
-; <a @click="${e => console.log(e)}">
-((attribute
-  (quoted_attribute_value
-    (attribute_value) @injection.content))
-  (#match? @injection.content "\\$\\{")
-  (#offset! @injection.content 0 2 0 -1)
-  (#set! injection.language "javascript"))
+((script_element
+   (start_tag) @_script_tag
+   (raw_text) @injection.content)
+ (#not-match? @_script_tag "\\s(lang|type)\\s*=")
+ (#set! injection.language "javascript"))
+
+; `type="module"`, `type="text/css"`, `type="importmap"`: the value names the
+; language, and the Pack's alias table maps the media types onto a grammar.
+
+([(script_element
+    (start_tag
+      (attribute
+        (attribute_name) @_type
+        (quoted_attribute_value (attribute_value) @injection.language)))
+    (raw_text) @injection.content)
+  (style_element
+    (start_tag
+      (attribute
+        (attribute_name) @_type
+        (quoted_attribute_value (attribute_value) @injection.language)))
+    (raw_text) @injection.content)]
+ (#match? @_type "^(?i)(type|lang)$"))
+
+; An `onclick="..."` handler is a JavaScript program of its own.
 
 ((attribute
-  (attribute_value) @injection.content)
-  (#match? @injection.content "\\$\\{")
-  (#offset! @injection.content 0 2 0 -2)
-  (#set! injection.language "javascript"))
-; <input pattern="[0-9]"> or <input pattern=[0-9]>
-
-; <input type="checkbox" onchange="this.closest('form').elements.output.value = this.checked">
-(attribute
-  (attribute_name) @_name
-  (#match? @_name "^on[a-z]+$")
-  (quoted_attribute_value
-    (attribute_value) @injection.content)
-  (#set! injection.language "javascript"))
-
-; ----- resolved nvim injections source: html sha256=8fc292c0ba2d60e3808b7a58815d5cb8e7aee94c4d1310b9d1e0eec6b4462ee3 -----
-; inherits: html_tags
-
-(element
-  (start_tag
-    (tag_name) @_py_script)
-  (text) @injection.content
-  (#any-of? @_py_script "py-script" "py-repl")
-  (#set! injection.language "python"))
-
-(script_element
-  (start_tag
-    (attribute
-      (attribute_name) @_attr
-      (quoted_attribute_value
-        (attribute_value) @_type)))
-  (raw_text) @injection.content
-  (#eq? @_attr "type")
-  ; not adding type="py" here as it's handled by html_tags
-  (#any-of? @_type "pyscript" "py-script")
-  (#set! injection.language "python"))
-
-(element
-  (start_tag
-    (tag_name) @_py_config)
-  (text) @injection.content
-  (#eq? @_py_config "py-config")
-  (#set! injection.language "toml"))
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74
-; resolved_query_sha256=9d563a2864c4e41531ec66260a024656f638f3afed520e755837ec53be269e50
-; parser_revision=73a3947324f6efddf9e17c0ea58d454843590cc0
-; source_name=html
-; direct_inherits=
-; resolved_sources=html
-
-; ----- resolved nvim locals source: html sha256=ac78830a6a7eab92a71ba4e5448f104e059ae1e88e355e68a3035191a260be74 -----
-
-; --- static_delta ---
-
-[(start_tag) (self_closing_tag)] @data.element
-(attribute) @data.attribute
-
-(script_element) @embedded.script
-(style_element) @embedded.style
-
-; --- semantic_closure_v3_146_html_element_attribute_context ---
-
-(start_tag
-  (tag_name) @html.ctx.tag
-  (attribute
-    (attribute_name) @html.ctx.attribute_name
-    [(attribute_value) (quoted_attribute_value)] @html.ctx.attribute_value) @html.ctx.attribute) @html.ctx.start_tag
-
-(self_closing_tag
-  (tag_name) @html.selfctx.tag
-  (attribute
-    (attribute_name) @html.selfctx.attribute_name
-    [(attribute_value) (quoted_attribute_value)] @html.selfctx.attribute_value) @html.selfctx.attribute) @html.selfctx.tag_node
-
-(element
-  (start_tag (tag_name) @html.textctx.tag)
-  (text) @html.textctx.text) @html.textctx.element
-
-; --- final_completion_html_owner_aware_resource_urls ---
-(start_tag
-  (tag_name) @html.resource.tag
-  (attribute
-    (attribute_name) @html.resource.attribute
-    [(attribute_value) (quoted_attribute_value)] @html.resource.url) @html.resource.attribute_node
-  (#any-of? @html.resource.attribute "href" "src")) @html.resource.owner
-
-(self_closing_tag
-  (tag_name) @html.resource.tag
-  (attribute
-    (attribute_name) @html.resource.attribute
-    [(attribute_value) (quoted_attribute_value)] @html.resource.url) @html.resource.attribute_node
-  (#any-of? @html.resource.attribute "href" "src")) @html.resource.owner
+   (attribute_name) @_handler
+   (quoted_attribute_value (attribute_value) @injection.content))
+ (#match? @_handler "^(?i)on[a-z]+$")
+ (#set! injection.language "javascript"))

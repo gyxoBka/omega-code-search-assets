@@ -1,128 +1,138 @@
-; --- completeness_calls_5 ---
+; omega-prisma
+;
+; A Prisma schema is the one file in a project that says what the data is:
+; which entities exist, what each one holds, what type each field has, which
+; entities point at which, and which database and client the project is
+; generated against. Everything an agent asks of `schema.prisma` is one of
+; those: *where is the User model declared*, *what fields does it have and of
+; what type*, *what does Post relate to*, *which table is this stored in*,
+; *which provider and which environment variables does this project need*.
+;
+; So every construct the language names is stated as a declaration under the
+; name a question would spell, and the two things that point elsewhere -- a
+; field's type and a field named inside a key, index or relation -- are stated
+; as references so they resolve onto those declarations.
+;
+; Containment is not stated anywhere. A field lies inside its model's span and
+; a setting inside its block's, so the host derives `User.email` from the
+; nesting and no pattern has to say it. There is no scope pattern either: a
+; model's declaration already spans the block, which is what a region would
+; have been for.
 
-(call_expression) @call.expression
+; --- the four things a schema declares by name ---
+;
+; A model, a view and a composite `type` are all types: the generated client
+; exposes each as a named type, and code elsewhere in the repository spells it
+; exactly this way. An enum is one too. Each is anchored to its first named
+; child, which is the name.
 
-; --- completeness_definitions_high_confidence ---
+(model_declaration . (identifier) @model.name) @model
 
-(enum_declaration) @definition.expression @type.expression
-(model_declaration) @definition.expression
-(type_declaration) @definition.expression @type.expression
+(view_declaration . (identifier) @view.name) @view
 
-; --- completeness_references ---
+(enum_declaration . (identifier) @enum.name) @enum
 
-(member_expression) @reference.symbol
+(type_declaration . (identifier) @composite.name) @composite
 
-; --- completeness_scopes ---
+; --- an enum member ---
+;
+; `enumeral` is a leaf and occurs only inside an enum block, so it is named
+; from its own text and already lies inside its enum's declaration.
 
-(enum_block) @scope.lexical
-(statement_block) @scope.lexical
+(enumeral) @enumeral
 
-; --- completeness_types_high_confidence ---
+; --- a field ---
+;
+; `id Int @id @default(autoincrement())`. One pattern, two templates: the
+; field is declared under its own name, and the whole of its declared type --
+; `String`, `String?`, `Post[]`, `Unsupported("circle")` -- is carried onto it
+; so the card reads `email -> String`. Every `column_declaration` has exactly
+; one `column_type`, so nothing here is optional.
 
-; --- declaration_category_enum ---
+(column_declaration
+  . (identifier) @field.name
+  . (column_type) @field.type) @field
 
-(enum_declaration
-  (identifier) @definition.category.enum.name @definition.identity.name @prisma.enum.name
-) @definition.category.owner @definition.identity.owner @prisma.enum
+; --- what a field is annotated with ---
+;
+; `@id`, `@unique`, `@default(now())`, `@db.VarChar(255)`, `@relation(...)`.
+; These are the language's own vocabulary, not names a question resolves to,
+; so each is carried onto the field it annotates as a modifier rather than
+; emitted as a mention of nothing. Several fold into one set, which is what a
+; field's annotations are.
 
-; --- declaration_category_model ---
+(column_declaration (attribute) @field.modifier) @field.modifier.owner
 
-(model_declaration
-  (identifier) @definition.category.model.name @definition.identity.name @prisma.model.name
-) @definition.category.owner @definition.identity.owner @prisma.model
+; --- the type a field points at ---
+;
+; A field's type is either one of Prisma's nine built-in scalars, which are
+; declared nowhere and so can be referenced nowhere, or the name of a model,
+; a view, an enum or a composite type declared above. Only the second is a
+; reference, and it is what makes `Post.author: User` resolve onto `model
+; User`.
 
-; --- declaration_category_type ---
+((column_type . (identifier) @field_type.ref)
+ (#not-any-of? @field_type.ref
+   "String" "Boolean" "Int" "BigInt" "Float" "Decimal" "DateTime" "Json" "Bytes"))
 
-(type_declaration
-  (identifier) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+; --- a field named inside a key, an index or a relation ---
+;
+; `@@id([a, b])`, `@@unique([email])`, `@@index([email, name])` and
+; `@relation(fields: [authorId], references: [id])` all spell their operands
+; as an array of bare field names. An array of identifiers occurs nowhere else
+; in this grammar -- a scalar list default and `previewFeatures` hold strings,
+; and the `[]` of a list type is empty -- so this one pattern covers all of
+; them.
 
-; --- definition_identity_hints ---
+(array (identifier) @constraint.field)
 
-; --- semantic_datasource ---
+; --- the database name something is mapped to ---
+;
+; `@@map("users")` on a model and `@map("created_at")` on a field are the
+; bridge between the schema and the SQL a migration or a raw query spells, so
+; the physical name is declared under itself. The same `map(...)` shape serves
+; both levels.
 
-(datasource_declaration
-  (identifier) @prisma.datasource.name
-) @prisma.datasource
+((call_expression . (identifier) @map.fn . (arguments . (string) @map.name))
+ (#eq? @map.fn "map"))
 
-; --- semantic_enum ---
+; --- an environment variable the schema needs ---
+;
+; `url = env("DATABASE_URL")`. The value is not read here; what is stated is
+; that this schema depends on that name.
 
-; --- semantic_field ---
+((call_expression . (identifier) @env.fn . (arguments . (string) @env.name))
+ (#eq? @env.fn "env"))
 
-(model_declaration
-  (identifier) @prisma.field.model
-  (statement_block
-    (column_declaration
-      (identifier) @prisma.field.name
-      (column_type) @prisma.field.type
-    ) @prisma.field
-  )
-)
+; --- the two configuration blocks ---
 
-; --- semantic_generator ---
+(datasource_declaration . (identifier) @datasource.name) @datasource
 
-(generator_declaration
-  (identifier) @prisma.generator.name
-) @prisma.generator
+(generator_declaration . (identifier) @generator.name) @generator
 
-; --- semantic_model ---
+; --- a setting inside one ---
+;
+; `provider = "postgresql"` is where a setting is declared and the one place
+; the value is short and authored enough to be worth carrying with it,
+; unquoted. A setting whose value is a call, an array or a number is the same
+; declaration stated without one: what `env(...)` and `["views"]` hold is
+; emitted by the patterns above, and repeating the compound's text here would
+; store the same bytes twice.
 
-; --- semantic_relation ---
+(assignment_expression
+  . (variable) @setting.name
+  . (string) @setting.value) @setting
 
-((model_declaration
-  (identifier) @prisma.relation.model
-  (statement_block
-    (column_declaration
-      (identifier) @prisma.relation.name
-      (column_type
-        (identifier) @prisma.relation.target
-      )
-      (attribute
-        (call_expression
-          (identifier) @prisma.relation.attribute
-        )
-      )
-    ) @prisma.relation.field
-  )
-)
-(#eq? @prisma.relation.attribute "relation"))
-
-; --- structural-fallback ---
-
-; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
-; This is structural indexing only, not semantic completeness.
-
-; --- terminal_prisma_view_v1 ---
-(view_declaration) @definition.expression @type.expression
-(view_declaration (identifier) @definition.category.name @definition.identity.name @prisma.view.name) @definition.category.owner @definition.identity.owner @prisma.view
-(view_declaration
-  (identifier) @prisma.view.field.owner
-  (statement_block
-    (column_declaration
-      (identifier) @prisma.view.field.name
-      (column_type) @prisma.view.field.type) @prisma.view.field))
-
-; --- terminal_prisma_enum_block_attrs_v2 ---
-(enum_declaration
-  (identifier) @prisma.enum.value.owner
-  (enum_block (enumeral) @prisma.enum.value)) @prisma.enum.value.context
-
-(model_declaration
-  (identifier) @prisma.block_attribute.owner
-  (statement_block (block_attribute_declaration) @prisma.block_attribute)) @prisma.block_attribute.context
-
-(view_declaration
-  (identifier) @prisma.block_attribute.owner
-  (statement_block (block_attribute_declaration) @prisma.block_attribute)) @prisma.block_attribute.context
-
-; --- implicit_model_typed_field_v3_146 ---
-; Framework-neutral authored field type target. Joining to an actual data.model
-; distinguishes model relations from scalar/enum names without guessing.
-(model_declaration
-  (identifier) @prisma.typed_field.owner
-  (statement_block
-    (column_declaration
-      (identifier) @prisma.typed_field.name
-      (column_type
-        (identifier) @prisma.typed_field.target)) @prisma.typed_field.context))
-
+(assignment_expression
+  . (variable) @setting_other.name
+  . [(array)
+     (assignment_expression)
+     (binary_expression)
+     (call_expression)
+     (false)
+     (identifier)
+     (member_expression)
+     (null)
+     (number)
+     (true)
+     (type_expression)]) @setting_other

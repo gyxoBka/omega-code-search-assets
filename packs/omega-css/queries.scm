@@ -102,24 +102,6 @@
 
 (float_value) @number.float
 
-[
-  "#"
-  ","
-  "."
-  ":"
-  "::"
-  ";"
-] @punctuation.delimiter
-
-[
-  "{"
-  ")"
-  "("
-  "}"
-  "["
-  "]"
-] @punctuation.bracket
-
 ; --- nvim_pinned_injections ---
 
 ; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
@@ -144,9 +126,7 @@
 
 ((declaration (property_name) @css.custom_property.name) @css.custom_property (#match? @css.custom_property.name "^--"))
 ((call_expression (function_name) @_var (arguments) @css.var.arguments) @css.var.reference (#eq? @_var "var"))
-[(child_selector) (descendant_selector) (adjacent_sibling_selector) (sibling_selector)] @css.selector.combinator
 
 ; --- semantic_closure_v3_147_css_surface ---
 ((declaration (property_name) @_animation_name (plain_value) @css.animation.name) @css.animation.reference (#eq? @_animation_name "animation-name"))
-(media_statement) @css.media.rule
-(supports_statement) @css.supports.rule
+
