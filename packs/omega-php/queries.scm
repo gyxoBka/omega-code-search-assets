@@ -1,585 +1,256 @@
-; --- call_targets ---
+; omega-php
+;
+; PHP is the language of web applications: a repository of it is namespaces of
+; classes, interfaces, traits and enums, their methods and properties, a few
+; free functions, and the `use` lines that wire them together. The questions
+; asked of it are: where is this class declared, what does it extend or
+; implement, what are its members and their visibility, who calls this method,
+; who reads this property, and what does this file import.
+;
+; Containment is never stated as a pattern: the tree holds it, a declaration
+; nested in a class carries its owner through the `within:` segment, and the
+; extent of a class or a function body is emitted once as a region.
+;
+; Names are stored the way a reference to them is spelled. A qualified name is
+; reduced to its last segment, because that is what `use` puts in scope and
+; what every mention in the file then writes. A property is stored without its
+; `$`, because `$this->name` spells it that way; a parameter, a captured
+; variable and a global keep their `$`, because every mention of them does.
 
-(function_call_expression
-  function: (_) @call.target) @call.expression
-
-(member_call_expression
-  name: (_) @call.target) @call.expression
-
-(nullsafe_member_call_expression
-  name: (_) @call.target) @call.expression
-
-(scoped_call_expression
-  name: (_) @call.target) @call.expression
-
-; --- class_relation_explicit_target_context ---
-
-; Framework-neutral PHP class-owned method returning an explicit $this relation call
-; whose first argument is a literal ClassName::class expression.
-; Example:
-;   class Post extends Model {
-;     public function author() { return $this->belongsTo(User::class); }
-;   }
-; Syntax only: ORM/framework meaning and declaration resolution remain downstream.
-
-((class_declaration
-  name: (name) @php.class_relation.owner_class
-  body: (declaration_list
-    (method_declaration
-      name: (name) @php.class_relation.owner_method
-      body: (compound_statement
-        (return_statement
-          (member_call_expression
-            object: (variable_name) @php.class_relation.receiver
-            name: (name) @php.class_relation.relation_method
-            arguments: (arguments
-              (argument
-                (class_constant_access_expression
-                  [(name) (qualified_name) (relative_name)] @php.class_relation.target_class
-                  (name) @php.class_relation.target_constant))))))) @php.class_relation.context))
-  (#eq? @php.class_relation.receiver "$this")
-  (#eq? @php.class_relation.target_constant "class"))
-
-; --- completeness_imports ---
-
-(namespace_use_declaration) @import.expression
-(include_expression) @import.expression
-(require_expression) @import.expression
-
-; --- completeness_modules ---
-
-(namespace_definition) @module.expression
-
-; --- completeness_types_high_confidence ---
-
-(class_declaration) @type.expression
-(enum_declaration) @type.expression
-(interface_declaration) @type.expression
-(trait_declaration) @type.expression
-
-; --- declaration_category_class ---
+; --- a class, an interface, a trait, an enum ---
+;
+; One pattern per declaration. The declaration and the region of its body are
+; two templates over the one match.
 
 (class_declaration
-  name: (_) @definition.category.class.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (name) @class.name
+  body: (declaration_list) @class.body) @class
 
-; --- declaration_category_enum ---
+(interface_declaration
+  name: (name) @interface.name
+  body: (declaration_list) @interface.body) @interface
+
+(trait_declaration
+  name: (name) @trait.name
+  body: (declaration_list) @trait.body) @trait
+
+(enum_declaration
+  name: (name) @enum.name
+  body: (enum_declaration_list) @enum.body) @enum
 
 (enum_case
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (name) @case.name) @case
 
-(enum_declaration
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+; --- what a type declaration inherits ---
+;
+; `extends`, `implements` and a trait `use` inside a class body are the three
+; ways PHP says one type is built out of another. All three are stated as the
+; one relation the host knows.
 
-; --- declaration_category_function ---
+(base_clause
+  [(name) (qualified_name) (relative_name)] @extends.name)
 
-(function_definition
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+(class_interface_clause
+  [(name) (qualified_name) (relative_name)] @implements.name)
 
-; --- declaration_category_interface ---
+(use_declaration
+  [(name) (qualified_name) (relative_name)] @trait.use.name)
 
-(interface_declaration
-  name: (_) @definition.category.interface.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_method ---
-
-(method_declaration
-  name: (_) @definition.category.method.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_namespace ---
-
-(namespace_definition
-  name: (_) @definition.category.namespace.name @definition.identity.name @module.declaration_path.name
-) @definition.category.owner @definition.identity.owner @module.declaration_path.span
-
-; --- declaration_category_property ---
-
-; --- declaration_category_trait ---
-
-(trait_declaration
-  name: (_) @definition.category.trait.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_variable ---
-
-(static_variable_declaration
-  name: (_) @definition.category.variable.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_modifiers ---
-
-(class_declaration
-  (abstract_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(class_declaration
-  (final_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(class_declaration
-  (readonly_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(class_declaration
-  (static_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
+; --- a method ---
+;
+; The name and the parameter list are required, so they are one pattern with
+; the declaration itself. The body, the return type and the visibility are
+; optional -- an interface method has no body, a method may have no declared
+; return type -- and an optional capture in the pattern above would change
+; which nodes match, so each is its own pattern over the same node.
 
 (method_declaration
-  (abstract_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
+  name: (name) @method.name
+  parameters: (formal_parameters) @method.parameters) @method
 
 (method_declaration
-  (final_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
+  name: (name) @method.body.name
+  body: (compound_statement) @method.body)
 
 (method_declaration
-  (readonly_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
+  return_type: (_) @method.return_type) @method.return.owner
 
-(method_declaration
-  (static_modifier) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-; --- declaration_visibility ---
-
-(class_declaration
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(method_declaration
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-; --- definition_identity_hints ---
-
-; --- enclosing_owner_hints ---
-
-(class_declaration 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(interface_declaration 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(namespace_definition 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(trait_declaration 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- external-helix-tags ---
-
-; Omega coverage-first adapted external query
-; source=helix language=php kind=tags
-; original baseline: audit-baselines/external/helix/php/tags.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-(class_declaration
-  name: (name) @name) @definition.class
-
-(function_definition
-  name: (name) @name) @definition.function
-
-(method_declaration
-  name: (name) @name) @definition.function
-
-(object_creation_expression
-  [
-    (qualified_name (name) @name)
-    (variable_name (name) @name)
-  ]) @reference.class
-
-(function_call_expression
-  function: [
-    (qualified_name (name) @name)
-    (variable_name (name)) @name
-  ]) @reference.call
-
-(scoped_call_expression
-  name: (name) @name @call.target) @reference.call @call.member
-
-(member_call_expression
-  name: (name) @name @call.target) @reference.call @call.member
-
-; --- locals ---
-
-; OMEGA IMPORTED LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; SPDX-License-Identifier: Apache-2.0
-; Derived by composition only from content-addressed nvim-treesitter locals baselines.
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Omega adaptation source: inherited php_only
-; path=audit-baselines/external/nvim-treesitter/_shared/php_only/locals.scm
-; sha256=6f1e6b67d0f850ebfc4c19063e280670449a8b6bdfac4a3a8dad0364103785b9
-; Scopes
-;-------
-((class_declaration
-  name: (name) @local.definition.type) @local.scope
-  (#set! definition.type.scope "parent"))
+; PHP 8.4 asymmetric visibility puts two visibility modifiers on one member
+; (`public private(set) string $x`). The second one governs writing and is
+; spelled with parentheses; the read visibility is the one a card wants, so the
+; parenthesised form is excluded rather than left to overwrite it.
 
 ((method_declaration
-  name: (name) @local.definition.method) @local.scope
-  (#set! definition.method.scope "parent"))
+   (visibility_modifier) @method.visibility) @method.visibility.owner
+ (#not-match? @method.visibility "[(]"))
 
-((function_definition
-  name: (name) @local.definition.function) @local.scope
-  (#set! definition.function.scope "parent"))
+; --- a function ---
 
-(anonymous_function
-  (anonymous_function_use_clause
-    (variable_name
-      (name) @local.definition.var))) @local.scope
+(function_definition
+  name: (name) @function.name
+  parameters: (formal_parameters) @function.parameters
+  body: (compound_statement) @function.body) @function
 
-; Definitions
-;------------
+(function_definition
+  return_type: (_) @function.return_type) @function.return.owner
+
+; --- a property and a class constant ---
+;
+; `public ?Foo $a, $b;` declares two properties that share one type and one
+; visibility, so each of the three facts is stated against the individual
+; `property_element`, which is where the declaration sits.
+
+(property_declaration
+  (property_element
+    name: (variable_name (name) @property.name)) @property)
+
+(property_declaration
+  type: (_) @property.type
+  (property_element) @property.type.target)
+
+((property_declaration
+   (visibility_modifier) @property.visibility
+   (property_element) @property.visibility.target)
+ (#not-match? @property.visibility "[(]"))
+
+(const_declaration
+  (const_element . (name) @constant.name) @constant)
+
+; --- parameters ---
+;
+; A promoted constructor parameter declares a property, not a parameter, and is
+; stated as one so that `$this->x` resolves to it.
+
 (simple_parameter
-  (variable_name
-    (name) @local.definition.var))
+  name: (variable_name) @parameter.name) @parameter
 
-(foreach_statement
-  (pair
-    (variable_name
-      (name) @local.definition.var)))
-
-(foreach_statement
-  (variable_name
-    (name) @local.reference
-    (#set! reference.kind "var"))
-  (variable_name
-    (name) @local.definition.var))
-(property_declaration (property_element (variable_name (name) @local.definition.field @name))) @definition.field
-
-(namespace_use_clause
-  (qualified_name
-    (name) @local.definition.import))
-
-; References
-;------------
-(named_type
-  (name) @local.reference
-  (#set! reference.kind "type"))
-
-(named_type
-  (qualified_name) @local.reference
-  (#set! reference.kind "type"))
-
-(variable_name
-  (name) @local.reference
-  (#set! reference.kind "var"))
-
-(member_access_expression
-  name: (name) @local.reference
-  (#set! reference.kind "field"))
-
-(member_call_expression
-  name: (name) @local.reference
-  (#set! reference.kind "method"))
-
-(function_call_expression
-  function: (qualified_name
-    (name) @local.reference
-    (#set! reference.kind "function")))
-
-(object_creation_expression
-  (qualified_name
-    (name) @local.reference
-    (#set! reference.kind "type")))
-
-(scoped_call_expression
-  scope: (qualified_name
-    (name) @local.reference
-    (#set! reference.kind "type"))
-  name: (name) @local.reference
-  (#set! reference.kind "method"))
-
-; Omega adaptation source: direct
-; path=audit-baselines/external/nvim-treesitter/php/locals.scm
-; sha256=28a611e72b425f496800fd568aeb8ce3211112b44fbb7fb5c2b4b757b3148339
-; inherits: php_only
-
-; --- member_category_enum ---
-
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_declaration_list
-    (enum_case
-      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_method ---
-
-(class_declaration
-  name: (_) @owner.name
-  body: (declaration_list
-    (method_declaration
-      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
-
-(enum_declaration
-  name: (_) @owner.name
-  body: (enum_declaration_list
-    (method_declaration
-      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (declaration_list
-    (method_declaration
-      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
-
-(trait_declaration
-  name: (_) @owner.name
-  body: (declaration_list
-    (method_declaration
-      name: (_) @owned.member_category.method.name @owned.member.name) @owned.member)) @owner.span
-
-; --- module_declaration_path_hints ---
-
-; --- named_scope_owners ---
-
-(function_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-(method_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- ownership_members ---
-
-; --- ownership_parameters ---
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (formal_parameters
-    (property_promotion_parameter) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (formal_parameters
-    (simple_parameter) @owned.parameter)) @owner.span
-
-(function_definition
-  name: (_) @owner.name
-  parameters: (formal_parameters
-    (variadic_parameter) @owned.parameter)) @owner.span
-
-(method_declaration
-  name: (_) @owner.name
-  parameters: (formal_parameters
-    (property_promotion_parameter) @owned.parameter)) @owner.span
-
-(method_declaration
-  name: (_) @owner.name
-  parameters: (formal_parameters
-    (simple_parameter) @owned.parameter)) @owner.span
-
-(method_declaration
-  name: (_) @owner.name
-  parameters: (formal_parameters
-    (variadic_parameter) @owned.parameter)) @owner.span
-
-; --- p0-exact-helix-locals ---
-
-; Omega P0 exact-revision enrichment
-; source=helix language=php file=locals.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/php/locals.scm
-
-; Scopes
-
-[
-  (function_definition)
-  (method_declaration)
-  (anonymous_function)
-  (arrow_function)
-  (compound_statement)
-] @local.scope
-
-; Definitions
-
-; PHP variables are `variable_name` ($foo); parameters share that node type so
-; references match by text including the leading `$`.
-(simple_parameter
-  name: (variable_name) @local.definition.variable.parameter)
 (variadic_parameter
-  name: (variable_name) @local.definition.variable.parameter)
+  name: (variable_name) @parameter.variadic.name) @parameter.variadic
+
 (property_promotion_parameter
-  name: (variable_name) @local.definition.variable.parameter)
+  name: (variable_name (name) @promoted.name)) @promoted
 
-; References
+((property_promotion_parameter
+   visibility: (visibility_modifier) @promoted.visibility) @promoted.visibility.owner
+ (#not-match? @promoted.visibility "[(]"))
 
-; --- p0-exact-helix-tags ---
+(property_promotion_parameter
+  type: (_) @promoted.type) @promoted.type.owner
 
-; Omega P0 exact-revision enrichment
-; source=helix language=php file=tags.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/php/tags.scm
-
-; --- php_class_method_context ---
-
-(class_declaration
-  name: (name) @php.class_method.owner_class
-  (base_clause
-    [(name) (qualified_name) (relative_name)] @php.class_method.superclass)
-  body: (declaration_list
-    (method_declaration
-      name: (name) @php.class_method.method_name) @php.class_method.method)) @php.class_method.class
-
-; --- qualified_chain_hints ---
-
-(member_access_expression
-  object: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
-
-(member_call_expression
-  object: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
-
-(nullsafe_member_access_expression
-  object: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
-
-(nullsafe_member_call_expression
-  object: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
-
-(scoped_call_expression
-  scope: (_) @reference.qualified_chain.base @reference.qualifier
-  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
-) @reference.qualified_chain.span @reference.qualified_expression
-
-(scoped_property_access_expression
-  scope: (_) @reference.qualified_chain.base @reference.qualifier
-  name: (_) @reference.qualified_chain.leaf @reference.qualified_name
-) @reference.qualified_chain.span @reference.qualified_expression
-
-; --- qualified_name_hints ---
-
-; --- signature_parameters ---
-
-(function_definition
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-(method_declaration
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-; --- signature_return_type ---
-
-(function_definition
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(method_declaration
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; --- static_delta ---
-
-; No additional static delta: exact upstream/adapted sources already cover local semantic dimensions.
-
-; --- upstream_tags ---
+; --- the namespace ---
 
 (namespace_definition
-  name: (namespace_name) @name) @definition.module
+  name: (namespace_name) @namespace.name) @namespace
 
-(interface_declaration
-  name: (name) @name) @definition.interface
+(namespace_definition
+  name: (namespace_name) @namespace.body.name
+  body: (compound_statement) @namespace.body)
 
-(trait_declaration
-  name: (name) @name) @definition.interface
+; --- what the file imports ---
+;
+; `use App\Models\User;` is stored under `User`: that is the name the rest of
+; the file writes and the name the declaration carries. An alias is stored
+; separately under the alias, for the same reason.
 
-(class_interface_clause [(name) (qualified_name)] @name) @reference.implementation
+; The target is anchored as the clause's first named child: an alias is a
+; `name` child of the same clause, and without the anchor `use A\B as C` is
+; imported twice, once under `B` and once under `C`.
 
-; --- generic_direct_and_member_calls ---
-
-(function_call_expression
-  function: (name) @call.target) @call.direct
-
-; --- php_framework_string_call_and_attribute_context ---
-
-(function_call_expression
-  function: (name) @php.string_call.name
-  arguments: (arguments
-    . (argument
-        (string (string_content) @php.string_call.arg0)))) @php.string_call.call
-
-(function_call_expression
-  function: (name) @php.string_two_call.name
-  arguments: (arguments
-    . (argument (string (string_content) @php.string_two_call.arg0))
-    . (argument (string (string_content) @php.string_two_call.arg1)))) @php.string_two_call.call
-
-(class_declaration
-  name: (name) @php.attr_route.owner_class
-  body: (declaration_list
-    (method_declaration
-      attributes: (attribute_list
-        (attribute_group
-          (attribute
-            (name) @php.attr_route.attribute_name
-            parameters: (arguments
-              . (argument
-                  (string (string_content) @php.attr_route.route))))))
-      name: (name) @php.attr_route.method_name) @php.attr_route.method)) @php.attr_route.class
-
-; --- framework_neutral_php_constructor_and_hooks_v1 ---
-
-(class_declaration
-  name: (name) @php.ctor_param.owner_class
-  body: (declaration_list
-    (method_declaration
-      name: (name) @php.ctor_param.method_name
-      parameters: (formal_parameters
-        [
-          (simple_parameter type: (named_type) @php.ctor_param.parameter_type name: (variable_name) @php.ctor_param.parameter_name)
-          (property_promotion_parameter type: (named_type) @php.ctor_param.parameter_type name: (_) @php.ctor_param.parameter_name)
-        ] @php.ctor_param.parameter))) @php.ctor_param.class_context
- (#eq? @php.ctor_param.method_name "__construct"))
-
-(function_call_expression
-  function: (name) @php.hook.call_name
-  arguments: (arguments
-    (argument (string) @php.hook.hook_name)
-    (argument (name) @php.hook.callback_name))) @php.hook.context
-
-; --- final_completion_generic_direct_literals_v1 ---
-
-; --- final_completion_a4_import_provenance ---
 (namespace_use_clause
-  (qualified_name) @php.a4_import.target) @php.a4_import.context
+  . [(name) (qualified_name)] @use.target) @use.clause
+
 (namespace_use_clause
-  (name) @php.a4_import_simple.target) @php.a4_import_simple.context
-(namespace_use_clause
-  [(qualified_name) (name)] @php.a4_alias.target
-  alias: (name) @php.a4_alias.local) @php.a4_alias.context
+  alias: (name) @use.alias)
+
+; `include`/`require` name a file rather than a symbol. Only the literal-string
+; form is stated; a computed path is not a name anything can resolve.
+
+[(include_expression (string (string_content) @include.path))
+ (include_once_expression (string (string_content) @include.path))
+ (require_expression (string (string_content) @include.path))
+ (require_once_expression (string (string_content) @include.path))] @include
+
+; --- calls ---
+;
+; PHP spells the four call forms as four node types, so a method call can never
+; be confused with a property read here.
+
+(function_call_expression
+  function: [(name) (qualified_name) (relative_name)] @call.function.name) @call.function
+
+(member_call_expression
+  name: (name) @call.method.name) @call.method
+
+(nullsafe_member_call_expression
+  name: (name) @call.nullsafe.name) @call.nullsafe
+
+(scoped_call_expression
+  name: (name) @call.static.name) @call.static
+
+(object_creation_expression
+  . [(name) (qualified_name) (relative_name)] @new.class) @new
+
+; --- where a class is named ---
+;
+; The left-hand side of `::` in a static call, a static property access and a
+; class-constant access, including `Foo::class`.
+
+(scoped_call_expression
+  scope: [(name) (qualified_name) (relative_name)] @scoped.class)
+
+(scoped_property_access_expression
+  scope: [(name) (qualified_name) (relative_name)] @scoped.property.class)
+
+(class_constant_access_expression
+  . [(name) (qualified_name) (relative_name)] @const_access.class)
+
+; The constant on the right of `::`. `Foo::class` is the class, not a constant,
+; and is already stated by the pattern above.
+
+((class_constant_access_expression
+   . (_) . (name) @const_access.name) @const_access
+ (#not-eq? @const_access.name "class"))
+
+; --- where a property is read ---
+
+(member_access_expression
+  name: (name) @property.access.name) @property.access
+
+(nullsafe_member_access_expression
+  name: (name) @property.nullsafe.name) @property.nullsafe
+
+(scoped_property_access_expression
+  name: (variable_name (name) @scoped.property.name)) @scoped.property
+
+; --- a declared type ---
+;
+; Every authored type hint: a parameter type, a return type, a property type
+; and a `catch` type all reach the tree as `named_type`.
+
+; `static`, `self` and `parent` in a type position name whichever class is
+; running, not a declaration, so they are not stated as type mentions.
+
+((named_type
+   [(name) (qualified_name) (relative_name)] @type.reference) @type.use
+ (#not-any-of? @type.reference "static" "self" "parent"))
+
+; --- an attribute ---
+;
+; `#[Foo(...)]` names a class. What any particular attribute means belongs to a
+; framework overlay; that it is used here does not.
+
+(attribute
+  . [(name) (qualified_name) (relative_name)] @attribute.name) @attribute
+
+; --- the two places a variable crosses a scope boundary ---
+;
+; Ordinary variable reads are not stated: `(variable_name)` is every `$x` in
+; every file, and a Pack that emits it stores the file instead of answering a
+; question. `global` and a closure's `use` clause are different: each names a
+; variable that is declared somewhere else.
+
+(global_declaration
+  (variable_name) @global.name) @global
+
+(anonymous_function_use_clause
+  (variable_name) @closure.capture) @closure.use

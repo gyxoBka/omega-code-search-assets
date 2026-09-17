@@ -545,3 +545,53 @@ stated reason for keeping four `Regex`-keyed injections and an `#offset!`
 directive tree-sitter does not have. Both Packs are clean now.
 
 Totals: **2 183 templates, 717 guards** (from 3 673 and 1 348 at the start).
+
+---
+
+# Wave 4 (typescript, javascript, kotlin, php, zig)
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-typescript | 198 -> 58 | 273 -> 35 | 80 -> 8 | 114 -> 59 |
+| omega-javascript | 187 -> 45 | 213 -> 31 | 72 -> 7 | 84 -> 49 |
+| omega-kotlin | 56 -> 28 | 59 -> 23 | 25 -> 7 | 56 -> 42 |
+| omega-php | 49 -> 51 | 101 -> 44 | 37 -> 6 | 57 -> 48 |
+| omega-zig | 54 -> 40 | 48 -> 34 | 20 -> 4 | 51 -> 50 |
+
+omega-php is the first Pack to come out with *more* templates than it went in
+with: 49 to 51 over half the patterns. It was not carrying noise so much as
+missing answers.
+
+Three blocking defects, fixed here:
+
+- **omega-kotlin** wrote `(user_type (type_identifier) @implements.type)`
+  unanchored. This grammar spells a dotted type flat, as a repeated run of
+  `type_identifier` inside one `user_type`, so `class Foo : com.example.Base()`
+  emitted three `relation.implements` occurrences -- `com`, `example` and
+  `Base` -- and the first two resolved by name onto anything called `com` or
+  `example`. Anchored to the last segment, with and without type arguments.
+- **omega-zig** carried a field's type as `type: (_)`. In Zig a field's type may
+  *be* an inline declaration (`mode: enum { fast, small },`), so the whole body
+  was stored as the carried type -- the same defect fixed in omega-c and
+  omega-cpp one wave earlier, in a grammar where it is idiomatic rather than
+  occasional. Restricted to the forms that name a type.
+- **omega-zig** also declared its test coverage family `complete_eligible` with
+  `held_out_eligible = true`, which is the flag that lets the host report Zig
+  test coverage as *complete*, while its pattern required a test to be named.
+  `test { _ = @import("foo"); }` is idiomatic and appears throughout std. The
+  name is optional now and the family is `partial_only`.
+
+## The corrected carrier check still over-fires, and now says so
+
+The typescript agent found that `repeats_in()` unions every `multiple` child
+group, and a grammar groups unrelated modifiers together: in
+tree-sitter-typescript `accessibility_modifier` shares one repeat group with
+`override_modifier`, so a correct `visibility_candidate` carrier reads as a
+self-overwriting one. Of the 16 it now reports, the `modifier`/`visibility`
+ones are that false positive; the `member`, `param` and `text` ones are real.
+The label says so rather than pretending otherwise, and one of the real ones was
+mine: omega-xml carried a leaf element's text without anchoring it, so
+`<a>x<b/>y</a>` wrote the carrier twice and kept `y`. Anchored on both sides.
+
+Totals: **1 861 templates, 515 guards** (from 3 673 and 1 348 at the start).
+Sixteen Packs rewritten, 45 to go.

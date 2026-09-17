@@ -1,412 +1,242 @@
-; --- completeness_imports_6 ---
+; omega-kotlin
+;
+; Kotlin is used for Android apps, JVM services, multiplatform libraries and
+; Gradle build logic. The questions asked of a Kotlin file are: what does this
+; file declare, what package is it in, what does it import, what does this
+; class extend or implement, what type does this name have, and who calls this
+; function. Every pattern below answers one of them.
+;
+; Containment is never stated as a pattern. The tree already holds it, a
+; declaration nested in another carries its container through the `within:`
+; namespace segment, and a body's extent is emitted once as a region.
+;
+; Two capture namespaces are used deliberately.
+;   @decl.*        the parts any declaration may have -- its span, its
+;                  modifiers, its visibility, its type parameters, its
+;                  parameter list, its declared or returned type, its extension
+;                  receiver, its body. These names are shared across every
+;                  declaration pattern, so one carrier template serves all of
+;                  them instead of one per node type.
+;   @<kind>.name   the capture that decides which declaration kind is emitted.
+;                  Exactly one of these binds in any match, so the skip rule
+;                  picks exactly one declaration template per match.
 
-(import_header) @import.expression
+; ---------------------------------------------------------------------------
+; Types
+; ---------------------------------------------------------------------------
+;
+; `class`, `enum class`, `data class`, `sealed class` and `annotation class`
+; are one node distinguished by a `class_modifier`, which is carried as the
+; declaration's modifier rather than split into a kind per spelling. An
+; `interface` is the other arm of the same node and is told apart by its
+; keyword, because the two answer different questions.
 
-; --- completeness_modules_3 ---
-
-(package_header) @module.expression
-
-; --- completeness_types_high_confidence ---
-
-(class_declaration) @type.expression
-
-; --- composable_owner_calls ---
-
-; Framework-neutral Kotlin annotated-function and direct top-level call context.
-; No Compose semantics here: annotation/function/callee names are emitted as authored syntax only.
-(function_declaration
+(class_declaration
   (modifiers
-    (annotation
-      (user_type
-        (type_identifier) @kotlin.annotated.annotation)))
-  (simple_identifier) @kotlin.annotated.function_name
-  (function_body) @kotlin.annotated.body) @kotlin.annotated.function
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  "class"
+  (type_identifier) @class.name @decl.name
+  (type_parameters)? @decl.type_parameters
+  (primary_constructor)? @decl.parameters
+  [(class_body) (enum_class_body)]? @decl.type_body) @decl.span
 
-(function_declaration
+(class_declaration
   (modifiers
-    (annotation
-      (user_type
-        (type_identifier) @kotlin.annotated_call.annotation)))
-  (simple_identifier) @kotlin.annotated_call.owner_name
-  (function_body
-    (statements
-      (call_expression
-        (simple_identifier) @kotlin.annotated_call.callee_name) @kotlin.annotated_call.call))
-  @kotlin.annotated_call.body) @kotlin.annotated_call.owner
-(class_declaration (type_identifier) @definition.category.class.name @definition.identity.name @name @definition.class) @definition.category.owner @definition.identity.owner @definition.class
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  "interface"
+  (type_identifier) @interface.name @decl.name
+  (type_parameters)? @decl.type_parameters
+  (class_body)? @decl.type_body) @decl.span
 
-; --- declaration_category_component ---
+; `object Foo { }` and `companion object Bar { }` declare a singleton: one
+; name that is both a type and the only value of it.
 
 (object_declaration
-  (type_identifier) @definition.category.component.name @definition.identity.name @name
-) @definition.category.owner @definition.identity.owner @definition.class
-(function_declaration (simple_identifier) @definition.category.function.name @definition.identity.name @name @definition.function) @definition.category.owner @definition.identity.owner @definition.function
+  (modifiers
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  (type_identifier) @object.name @decl.name
+  (class_body)? @decl.type_body) @decl.span
 
-; --- declaration_category_type ---
-
-(type_alias
-  (type_identifier) @definition.category.type.name @definition.identity.name @name
-) @definition.category.owner @definition.identity.owner @definition.type
-
-; --- declaration_modifiers ---
-
-(function_declaration
-  (modifiers) @definition.modifiers.modifier
-  (simple_identifier) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(class_declaration
-  (modifiers) @definition.modifiers.modifier
-  (type_identifier) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(object_declaration
-  "object" (type_identifier) @definition.class)
-(property_declaration (variable_declaration (simple_identifier) @definition.constant @name)) @definition.constant
-
-; --- external-nvim-treesitter-locals ---
-
-; Omega coverage-first adapted external query
-; source=nvim-treesitter language=kotlin kind=locals
-; original baseline: audit-baselines/external/nvim-treesitter/kotlin/locals.scm
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Imports
-(package_header
-  .
-  (identifier) @local.definition.namespace)
-
-(import_header
-  (identifier
-    (simple_identifier) @local.definition.import .)
-  (import_alias
-    (type_identifier) @local.definition.import)?)
-
-; Functions
-
-; Variables
-(function_declaration
-  (function_value_parameters
-    (parameter
-      (simple_identifier) @local.definition.parameter)))
-
-(lambda_literal
-  (lambda_parameters
-    (variable_declaration
-      (simple_identifier) @local.definition.parameter @local.definition.variable.parameter)))
-
-; NOTE: temporary fix for treesitter bug that causes delay in file opening
-;(class_body
-;  (property_declaration
-;    (variable_declaration
-;      (simple_identifier) @local.definition.field)))
-(class_declaration
-  (primary_constructor
-    (class_parameter
-      (simple_identifier) @local.definition.field)))
-
-(enum_class_body
-  (enum_entry
-    (simple_identifier) @local.definition.field))
-
-(variable_declaration
-  (simple_identifier) @local.definition.var @local.definition.variable)
-
-; Types
-
-; Scopes
-[
-  (if_expression)
-  (when_expression)
-  (when_entry)
-  (for_statement)
-  (while_statement)
-  (do_while_statement)
-  (lambda_literal)
-  (function_declaration)
-  (primary_constructor)
-  (secondary_constructor)
-  (anonymous_initializer)
-  (class_declaration)
-  (enum_class_body)
-  (enum_entry)
-  (interpolated_expression)
-] @local.scope
-
-; --- import_targets ---
-
-(import_header
-  (identifier) @import.target @import.module_path.target) @import.statement @import.module_path.statement
-
-; --- literal_call_context ---
-
-; Framework-neutral Kotlin direct simple call with first non-interpolated string literal.
-(call_expression
-  (simple_identifier) @kotlin.string_call.name
-  (call_suffix
-    (value_arguments
-      . (value_argument
-          (string_literal
-            (string_content) @kotlin.string_call.arg0))))) @kotlin.string_call.call
-
-; Framework-neutral Kotlin member call receiver.member("literal").
-(call_expression
-  (navigation_expression
-    (simple_identifier) @kotlin.member_string_call.receiver
-    (navigation_suffix
-      (simple_identifier) @kotlin.member_string_call.member))
-  (call_suffix
-    (value_arguments
-      . (value_argument
-          (string_literal
-            (string_content) @kotlin.member_string_call.arg0))))) @kotlin.member_string_call.call
-
-; Bounded one-level trailing-lambda ownership: owner { nested("literal") }.
-(call_expression
-  (simple_identifier) @kotlin.nested_string_call.owner
-  (call_suffix
-    (annotated_lambda
-      (lambda_literal
-        (statements
-          (call_expression
-            (simple_identifier) @kotlin.nested_string_call.name
-            (call_suffix
-              (value_arguments
-                . (value_argument
-                    (string_literal
-                      (string_content) @kotlin.nested_string_call.arg0))))) @kotlin.nested_string_call.call)))) @kotlin.nested_string_call.owner_suffix) @kotlin.nested_string_call.owner_call
-
-; --- locals ---
-
-; OMEGA IMPORTED LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; SPDX-License-Identifier: Apache-2.0
-; Derived by composition only from content-addressed nvim-treesitter locals baselines.
-; Runtime grammar/query compatibility is enforced by tools/compile-pack-queries.mjs.
-
-; Omega adaptation source: direct
-; path=audit-baselines/external/nvim-treesitter/kotlin/locals.scm
-; sha256=c97567b90fc0d306f594d9820bf3e89bd5db19fab4efcae32f31831602c4786e
-; Imports
-
-; Functions
-(function_declaration
-  .
-  (simple_identifier) @local.definition.function
-  (#set! definition.function.scope "parent"))
-
-(class_body
-  (function_declaration
-    .
-    (simple_identifier) @local.definition.method)
-  (#set! definition.method.scope "parent"))
-
-; Variables
-
-; NOTE: temporary fix for treesitter bug that causes delay in file opening
-;(class_body
-;  (property_declaration
-;    (variable_declaration
-;      (simple_identifier) @local.definition.field)))
-
-; Types
-(class_declaration
-  (type_identifier) @local.definition.type
-  (#set! definition.type.scope "parent"))
+(companion_object
+  (modifiers
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  (type_identifier) @object.name @decl.name
+  (class_body)? @decl.type_body) @decl.span
 
 (type_alias
-  (type_identifier) @local.definition.type
-  (#set! definition.type.scope "parent"))
+  (modifiers
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  (type_identifier) @type_alias.name @decl.name
+  (type_parameters)? @decl.type_parameters
+  [(user_type)
+   (nullable_type)
+   (function_type)
+   (not_nullable_type)
+   (parenthesized_type)]? @decl.declared_type) @decl.span
 
-; Scopes
+; A type parameter is declared so that the type references in the body of the
+; declaration that introduces it have something of their own to resolve to.
 
-; --- module_declaration_path_hints ---
+(type_parameter (type_identifier) @type_parameter.name)
 
-(package_header (identifier) @module.declaration_path.name) @module.declaration_path.span
-
-; --- module_path_hints ---
-
-; --- named_scope_owners ---
-
-(function_declaration
-  (simple_identifier) @scope.owner.name
-  (function_body) @scope.owner.body) @scope.owner
-
-(class_declaration
-  (type_identifier) @scope.owner.name
-  (class_body) @scope.owner.body) @scope.owner
-
-; --- ownership_members ---
-
-(class_declaration
-  (type_identifier) @owner.name
-  (class_body
-    (function_declaration
-      (simple_identifier) @owned.member.name) @owned.member)) @owner.span
-
-; --- ownership_parameters ---
+; ---------------------------------------------------------------------------
+; Callables
+; ---------------------------------------------------------------------------
+;
+; One node covers a top-level function, a member function and an extension
+; function. The extension receiver is a field of its own, so the return type is
+; the only bare type child and needs no anchor to be told from it.
 
 (function_declaration
-  (simple_identifier) @owner.name
-  (function_value_parameters
-    (parameter) @owned.parameter)
-  (function_body) @owner.body) @owner.span
+  (modifiers
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  receiver: (receiver_type)? @decl.container
+  (type_parameters)? @decl.type_parameters
+  (simple_identifier) @function.name @decl.name
+  (function_value_parameters)? @decl.parameters
+  [(user_type)
+   (nullable_type)
+   (function_type)
+   (not_nullable_type)
+   (parenthesized_type)]? @decl.return_type
+  (function_body)? @decl.function_body) @decl.span
 
-; --- p0-exact-helix-locals ---
+; ---------------------------------------------------------------------------
+; Properties, parameters and local bindings
+; ---------------------------------------------------------------------------
 
-; Omega P0 exact-revision enrichment
-; source=helix language=kotlin file=locals.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/kotlin/locals.scm
+(property_declaration
+  (modifiers
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  receiver: (receiver_type)? @decl.container
+  (variable_declaration
+    (simple_identifier) @property.name
+    [(user_type)
+     (nullable_type)
+     (function_type)
+     (not_nullable_type)
+     (parenthesized_type)]? @decl.declared_type)) @decl.span
 
-; Scopes
-[
-  (class_declaration)
-  (function_declaration)
-  (lambda_literal)
-  ; `fun(x) { … }` expression form: has its own parameters and body.
-  (anonymous_function)
-  (control_structure_body)
-  (when_entry)
-  ; for/while loop variables are declared on the statement, not in its body.
-  (for_statement)
-] @local.scope
+; `class Foo(val bar: Int)` -- a primary-constructor parameter is how Kotlin
+; declares most of its properties, and is referenced by that name from the body
+; whether or not it carries `val`.
 
-; Definitions
-(type_parameter
-  (type_identifier) @local.definition.type.parameter)
+(class_parameter
+  (modifiers
+    (visibility_modifier)? @decl.visibility)? @decl.modifiers
+  (simple_identifier) @property.name
+  [(user_type)
+   (nullable_type)
+   (function_type)
+   (not_nullable_type)
+   (parenthesized_type)]? @decl.declared_type) @decl.span
 
 (parameter
-  (simple_identifier) @local.definition.variable.parameter)
+  (simple_identifier) @parameter.name
+  [(user_type)
+   (nullable_type)
+   (function_type)
+   (not_nullable_type)
+   (parenthesized_type)]? @decl.declared_type) @decl.span
 
-; Loop and local `val`/`var` bindings; defined so inner references resolve and
-; shadow correctly.
+(lambda_parameters
+  (variable_declaration
+    (simple_identifier) @parameter.name
+    [(user_type)
+     (nullable_type)
+     (function_type)
+     (not_nullable_type)
+     (parenthesized_type)]? @decl.declared_type) @decl.span)
 
+(for_statement
+  (variable_declaration
+    (simple_identifier) @variable.name
+    [(user_type)
+     (nullable_type)
+     (function_type)
+     (not_nullable_type)
+     (parenthesized_type)]? @decl.declared_type) @decl.span)
+
+; `val (a, b) = pair` -- each component is a binding of its own.
+
+(multi_variable_declaration
+  (variable_declaration
+    (simple_identifier) @variable.name) @decl.span)
+
+; An enum entry is a named constant value of its enum, not a type.
+
+(enum_entry (simple_identifier) @constant.name) @decl.span
+
+; ---------------------------------------------------------------------------
+; The file's place, and what it pulls in
+; ---------------------------------------------------------------------------
+
+(package_header (identifier) @package.name) @decl.span
+
+; `import a.b.C` and `import a.b.C as D` bind the last segment of the path,
+; which is the spelling the declaration it refers to is declared under. The
+; predicate excludes `import a.b.*`, whose last segment names no symbol; that
+; form is its own pattern below.
+
+((import_header
+   (identifier
+     (simple_identifier) @import.name .)) @import.header
+ (#not-match? @import.header "\\*"))
+
+(import_header
+  (import_alias (type_identifier) @import.alias)) @import.alias.header
+
+(import_header
+  (identifier) @import.package
+  (wildcard_import)) @import.wildcard
+
+; ---------------------------------------------------------------------------
+; What a type is built out of
+; ---------------------------------------------------------------------------
+;
+; `: Base()`, `: Iface`, `: Iface by delegate` -- a superclass call, a plain
+; supertype and an explicit delegation all state that this declaration supplies
+; the interface of another type, which is the one relation the host knows for
+; that. All three spellings are one pattern, named by the supertype so the
+; mention resolves against the class or interface that declares it.
+
+; `class Foo : com.example.Base()` -- this grammar spells a dotted type flat, as
+; a repeated run of `type_identifier` inside one `user_type`, so an unanchored
+; child capture named every segment and `com` and `example` became implements
+; edges of their own. The anchor takes the last segment, with and without type
+; arguments after it.
+
+(delegation_specifier
+  [(user_type (type_identifier) @implements.type .)
+   (user_type (type_identifier) @implements.type . (type_arguments))
+   (constructor_invocation (user_type (type_identifier) @implements.type .))
+   (constructor_invocation (user_type (type_identifier) @implements.type . (type_arguments)))
+   (explicit_delegation (user_type (type_identifier) @implements.type .))
+   (explicit_delegation (user_type (type_identifier) @implements.type . (type_arguments)))])
+
+; ---------------------------------------------------------------------------
 ; References
+; ---------------------------------------------------------------------------
+;
+; Every type identifier, wherever it stands -- a parameter type, a return type,
+; a type argument, a supertype, an annotation, a `is`/`as` operand -- is a
+; reference to the class, interface, object or alias of that name. One pattern,
+; one leaf node, and it is what makes the declarations above reachable.
 
-; Member access after `.` is not a local reference.
+(type_identifier) @type.reference
 
-; --- p0-exact-helix-tags ---
+; `foo(...)` and `x.foo(...)`: the applied name is the callee. The receiver is
+; not stated as a type, because in Kotlin it is usually a value.
 
-; Omega P0 exact-revision enrichment
-; source=helix language=kotlin file=tags.scm
-; parser compatibility: exact_parser_revision_match
-; original baseline: audit-baselines/external/helix/kotlin/tags.scm
-
-; --- receiver_hints ---
-
-(super_expression) @reference.receiver
-
-(this_expression) @reference.receiver
-
-; --- signature_parameters ---
-
-(function_declaration
-  (simple_identifier) @definition.signature.name
-  (function_value_parameters) @definition.signature.parameters
-) @definition.signature.owner
-
-; --- static_delta ---
-
-(class_declaration
-  (delegation_specifier) @relation.supertype) @relation.owner
-
-; Enum entries
-(enum_entry
-  (simple_identifier) @name) @definition.constant
-
-; Type aliases
-
-; Companion objects (only named ones)
-(companion_object
-  (type_identifier) @name) @definition.class
-
-; Function calls
 (call_expression
-  (simple_identifier) @name) @reference.call
+  .
+  (simple_identifier) @call.function.name)
 
-; Method calls via navigation
 (call_expression
+  .
   (navigation_expression
-    (navigation_suffix
-      (simple_identifier) @name))) @reference.call
+    (navigation_suffix (simple_identifier) @call.method.name)))
 
-; Constructor invocations (class references)
-(constructor_invocation
-  (user_type
-    (type_identifier) @name)) @reference.class
+; `::foo` and `Foo::bar` name a callable without applying it.
 
-; --- kotlin_direct_call_context ---
-
-(call_expression
-  (simple_identifier) @kotlin.direct_call.name
-  (call_suffix) @kotlin.direct_call.suffix) @kotlin.direct_call.call
-
-; --- framework_neutral_kotlin_platform_declarations_v1 ---
-
-(class_declaration
-  (modifiers (platform_modifier) @kotlin.platform.modifier)
-  (type_identifier) @kotlin.platform.name) @kotlin.platform.class
-(function_declaration
-  (modifiers (platform_modifier) @kotlin.platform.modifier)
-  (simple_identifier) @kotlin.platform.name) @kotlin.platform.function
-(property_declaration
-  (modifiers (platform_modifier) @kotlin.platform.modifier)
-  (variable_declaration (simple_identifier) @kotlin.platform.name)) @kotlin.platform.property
-
-; --- framework_neutral_kotlin_class_di_v3_146 ---
-(class_declaration
-  (modifiers
-    (annotation
-      (user_type
-        (type_identifier) @kotlin.class_annotation.annotation)))
-  (type_identifier) @kotlin.class_annotation.owner_class) @kotlin.class_annotation.context
-
-(class_declaration
-  (type_identifier) @kotlin.ctor_param.owner_class
-  (primary_constructor
-    (class_parameter
-      (simple_identifier) @kotlin.ctor_param.parameter_name
-      (user_type) @kotlin.ctor_param.parameter_type) @kotlin.ctor_param.parameter)) @kotlin.ctor_param.context
-
-(class_declaration
-  (type_identifier) @kotlin.ctor_param.owner_class
-  (primary_constructor
-    (class_parameter
-      (simple_identifier) @kotlin.ctor_param.parameter_name
-      (nullable_type
-        (user_type) @kotlin.ctor_param.parameter_type) @kotlin.ctor_param.nullable_type) @kotlin.ctor_param.parameter)) @kotlin.ctor_param.context
-
-; --- final_completion_generic_direct_literals_v1 ---
-
-; --- final_completion_a4_import_provenance ---
-(import_header
-  (identifier
-    (simple_identifier) @kotlin.a4_import.local .) @kotlin.a4_import.target) @kotlin.a4_import.context
-
-(import_header
-  (identifier) @kotlin.a4_alias.target
-  (import_alias (type_identifier) @kotlin.a4_alias.local)) @kotlin.a4_alias.context
-
-; --- final_completion_kotlin_typed_delegation_specifiers ---
-; Syntax-level classification only. Target identity remains a resolver concern.
-(class_declaration
-  (type_identifier) @kotlin.delegation.owner
-  (delegation_specifier
-    (constructor_invocation
-      (user_type) @kotlin.delegation.superclass_type) @kotlin.delegation.superclass_spec)) @kotlin.delegation.class
-
-(class_declaration
-  (type_identifier) @kotlin.delegation.owner
-  (delegation_specifier
-    (explicit_delegation
-      (user_type) @kotlin.delegation.delegated_type) @kotlin.delegation.explicit_spec)) @kotlin.delegation.class
-
-(class_declaration
-  (type_identifier) @kotlin.delegation.owner
-  (delegation_specifier
-    (user_type) @kotlin.delegation.superinterface_type)) @kotlin.delegation.class
-
-(class_declaration
-  (type_identifier) @kotlin.delegation.owner
-  (delegation_specifier
-    (function_type) @kotlin.delegation.function_supertype)) @kotlin.delegation.class
+(callable_reference (simple_identifier) @member.reference)

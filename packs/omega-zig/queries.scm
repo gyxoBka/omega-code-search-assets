@@ -1,586 +1,267 @@
-; --- call_targets ---
+; omega-zig -- what a Zig file declares, what it pulls in, what it calls and
+; what it names. One pattern per construct; the templates over a pattern say
+; the several things one match can answer.
+;
+; Zig has one node, `variable_declaration`, for a type declaration, a module
+; alias, a container constant and a local. The patterns below separate them by
+; the shape of the value and by the container they sit in, which is the only
+; place the grammar records the difference.
 
-(call_expression
-  function: (_) @call.target) @call.expression
-
-; --- calls ---
-
-; Omega static call facts for Zig.
-
-; --- completeness_imports_5 ---
-
-(using_namespace_declaration) @import.expression @zig.usingnamespace
-
-; --- completeness_types_high_confidence ---
-
-(enum_declaration) @type.expression
-(struct_declaration) @type.expression
-(union_declaration) @type.expression
-
-; --- declaration_category_field ---
-
-; --- declaration_category_function ---
+; --- a function ---------------------------------------------------------
+;
+; The declaration, its visibility, its linkage, its signature and its body are
+; one match. A prototype without a body (`extern fn`) is the same node with
+; `body` absent, so the body capture is optional and the region template is
+; skipped for it.
 
 (function_declaration
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  "pub"? @function.visibility
+  ["extern" "export" "inline" "noinline"]? @function.modifier
+  name: (identifier) @function.name
+  (parameters) @function.parameters
+  type: (_) @function.return_type
+  body: (block)? @function.body) @function
 
-(function_signature
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- definition_identity_hints ---
-
-; --- external_highlights ---
-
-; OMEGA PINNED EXTERNAL HIGHLIGHTS — SYNTAX-ROLE EVIDENCE ONLY
-; sha256=cbff0fe14e8aeffd64b146ac68fd797c1e38cd66f43a1e3273db8f4b4d753876
-
-; Variables
-(identifier) @variable @local.reference
-
-; Parameters
-(parameter
-  name: (identifier) @variable.parameter @local.definition.parameter)
-
-(payload
-  (identifier) @variable.parameter @local.definition.var)
-
-; Types
-(parameter
-  type: (identifier) @type)
-
-((identifier) @type
-  (#match? @type "^[A-Z_][a-zA-Z0-9_]*"))
+; --- a container type ---------------------------------------------------
+;
+; `pub const Point = struct { ... };` is how Zig names a type. The value node
+; is the only thing that says which sort of type it is. The trailing anchor
+; makes the container the declaration's last named child, so one declaration is
+; one match.
 
 (variable_declaration
-  (identifier) @type
-  "="
-  [
-    (struct_declaration)
-    (enum_declaration)
-    (union_declaration)
-    (opaque_declaration)
-  ])
-
-[
-  (builtin_type)
-  "anyframe"
-] @type.builtin
-
-; Constants
-((identifier) @constant
-  (#match? @constant "^[A-Z][A-Z_0-9]+$"))
-
-[
-  "null"
-  "unreachable"
-  "undefined"
-] @constant.builtin
-
-(field_expression
+  "pub"? @struct.visibility
   .
-  member: (identifier) @constant)
+  (identifier) @struct.name @container.name
+  (struct_declaration) @container.body .) @struct
 
-(enum_declaration
-  (container_field
-    type: (identifier) @constant))
-
-; Labels
-(block_label
-  (identifier) @label @local.definition)
-
-(break_label
-  (identifier) @label @local.reference)
-
-; Fields
-(field_initializer
+(variable_declaration
+  "pub"? @enum.visibility
   .
-  (identifier) @variable.member)
+  (identifier) @enum.name @container.name
+  (enum_declaration) @container.body .) @enum
 
-(field_expression
-  (_)
-  member: (identifier) @variable.member)
+(variable_declaration
+  "pub"? @union.visibility
+  .
+  (identifier) @union.name @container.name
+  (union_declaration) @container.body .) @union
+
+(variable_declaration
+  "pub"? @opaque.visibility
+  .
+  (identifier) @opaque.name @container.name
+  (opaque_declaration) @container.body .) @opaque
+
+(variable_declaration
+  "pub"? @error_set.visibility
+  .
+  (identifier) @error_set.name
+  (error_set_declaration) .) @error_set
+
+; Each member of an error set is the value an `error.X` mention resolves to.
+
+(error_set_declaration
+  (identifier) @error_value)
+
+; --- a member of a container -------------------------------------------
+;
+; A struct or union field carries a type; a plain enum member does not. `!type`
+; is what tells them apart, so neither pattern sees the other's nodes.
+
+; `mode: enum { fast, small },` -- a field's type may be an inline declaration,
+; and `type: (_)` stored that whole body as the carried type. Only the forms
+; that name a type are carried.
 
 (container_field
-  name: (identifier) @variable.member @local.definition.field)
+  name: (identifier) @field.name
+  type: [(identifier)
+         (builtin_type)
+         (field_expression)
+         (call_expression)
+         (pointer_type)
+         (nullable_type)
+         (slice_type)
+         (array_type)
+         (error_union_type)
+         (error_type)
+         (anyframe_type)]? @field.type) @field
+
+(container_field
+  name: (identifier) @enum_member.name
+  !type) @enum_member
+
+; --- a named value declared by a container ------------------------------
+;
+; Anchored to the five containers a Zig declaration may sit in, so that the
+; same node inside a function body is a local and is not declared: a repository
+; of Zig otherwise declares `self`, `allocator` and `buf` thousands of times.
+; tree-sitter cannot alternate the parent of a pattern that has children, so
+; the five are written out.
+;
+; The value alternation excludes the container declarations and `@import`
+; above, which have their own patterns and would otherwise be declared twice.
+
+(source_file
+  (variable_declaration
+    "pub"? @value.visibility
+    ["const" "var"] @value.mutability
+    .
+    (identifier) @value.name
+    [(integer) (float) (boolean) (character) (string) (multiline_string)
+     (identifier) (field_expression) (call_expression) (unary_expression)
+     (binary_expression) (struct_initializer) (anonymous_struct_initializer)
+     (error_type) (try_expression) (if_expression) (switch_expression)
+     (labeled_type_expression) (comptime_expression) (index_expression)
+     (parenthesized_expression) (block) (builtin_type) (pointer_type)
+     (slice_type) (array_type) (nullable_type) (error_union_type)
+     (function_signature) (anyframe_type)] .) @value)
+
+(struct_declaration
+  (variable_declaration
+    "pub"? @value.visibility
+    ["const" "var"] @value.mutability
+    .
+    (identifier) @value.name
+    [(integer) (float) (boolean) (character) (string) (multiline_string)
+     (identifier) (field_expression) (call_expression) (unary_expression)
+     (binary_expression) (struct_initializer) (anonymous_struct_initializer)
+     (error_type) (try_expression) (if_expression) (switch_expression)
+     (labeled_type_expression) (comptime_expression) (index_expression)
+     (parenthesized_expression) (block) (builtin_type) (pointer_type)
+     (slice_type) (array_type) (nullable_type) (error_union_type)
+     (function_signature) (anyframe_type)] .) @value)
+
+(enum_declaration
+  (variable_declaration
+    "pub"? @value.visibility
+    ["const" "var"] @value.mutability
+    .
+    (identifier) @value.name
+    [(integer) (float) (boolean) (character) (string) (multiline_string)
+     (identifier) (field_expression) (call_expression) (unary_expression)
+     (binary_expression) (struct_initializer) (anonymous_struct_initializer)
+     (error_type) (try_expression) (if_expression) (switch_expression)
+     (labeled_type_expression) (comptime_expression) (index_expression)
+     (parenthesized_expression) (block) (builtin_type) (pointer_type)
+     (slice_type) (array_type) (nullable_type) (error_union_type)
+     (function_signature) (anyframe_type)] .) @value)
+
+(union_declaration
+  (variable_declaration
+    "pub"? @value.visibility
+    ["const" "var"] @value.mutability
+    .
+    (identifier) @value.name
+    [(integer) (float) (boolean) (character) (string) (multiline_string)
+     (identifier) (field_expression) (call_expression) (unary_expression)
+     (binary_expression) (struct_initializer) (anonymous_struct_initializer)
+     (error_type) (try_expression) (if_expression) (switch_expression)
+     (labeled_type_expression) (comptime_expression) (index_expression)
+     (parenthesized_expression) (block) (builtin_type) (pointer_type)
+     (slice_type) (array_type) (nullable_type) (error_union_type)
+     (function_signature) (anyframe_type)] .) @value)
+
+(opaque_declaration
+  (variable_declaration
+    "pub"? @value.visibility
+    ["const" "var"] @value.mutability
+    .
+    (identifier) @value.name
+    [(integer) (float) (boolean) (character) (string) (multiline_string)
+     (identifier) (field_expression) (call_expression) (unary_expression)
+     (binary_expression) (struct_initializer) (anonymous_struct_initializer)
+     (error_type) (try_expression) (if_expression) (switch_expression)
+     (labeled_type_expression) (comptime_expression) (index_expression)
+     (parenthesized_expression) (block) (builtin_type) (pointer_type)
+     (slice_type) (array_type) (nullable_type) (error_union_type)
+     (function_signature) (anyframe_type)] .) @value)
+
+; --- what the file pulls in --------------------------------------------
+
+((builtin_function
+  (builtin_identifier) @import.builtin
+  (arguments (string) @import.path)) @import
+ (#eq? @import.builtin "@import"))
+
+; The name an import is bound to is the namespace every `std.mem.x` in the file
+; resolves against, so it is declared, not only recorded as a binding.
+
+((variable_declaration
+  "pub"? @import.alias.visibility
+  .
+  (identifier) @import.alias.name
+  (builtin_function (builtin_identifier) @import.alias.builtin) .) @import.alias
+ (#eq? @import.alias.builtin "@import"))
+
+((builtin_function
+  (builtin_identifier) @c_include.builtin
+  (arguments (string) @c_include.path)) @c_include
+ (#eq? @c_include.builtin "@cInclude"))
+
+((builtin_function
+  (builtin_identifier) @embed.builtin
+  (arguments (string) @embed.path)) @embed
+ (#eq? @embed.builtin "@embedFile"))
+
+(using_namespace_declaration
+  (identifier) @using.name) @using
+
+(using_namespace_declaration
+  (field_expression member: (identifier) @using.qualified.name)) @using.qualified
+
+; --- a test -------------------------------------------------------------
+
+; A test's name is optional: `test { _ = @import("foo"); }` is idiomatic and
+; appears throughout std. It is matched so the block is still a region, but it
+; declares no test, which is why the coverage family below is partial.
+
+(test_declaration
+  [(string) (identifier)]? @test.name
+  (block) @test.body) @test
+
+; --- calls --------------------------------------------------------------
+
+(call_expression
+  function: (identifier) @call.name) @call
+
+(call_expression
+  function: (field_expression
+    member: (identifier) @call.method.name)) @call.method
+
+; --- mentions -----------------------------------------------------------
+;
+; The leaf of `a.b` is not stated on its own: tree-sitter-zig spells a method
+; callee as a `field_expression` too and a pattern cannot see its parent, so
+; every member mention would be a call reported as a field. The base of the
+; chain is unambiguous and is what resolves to an import alias or a container.
+
+(field_expression
+  object: (identifier) @reference.qualifier)
+
+(error_type
+  (identifier) @reference.error_value)
+
+; `.x = v` inside an initializer: a field_expression with no object, so it is
+; never a method callee.
 
 (initializer_list
   (assignment_expression
     left: (field_expression
       .
-      member: (identifier) @variable.member)))
+      member: (identifier) @reference.field)))
 
-; Functions
-(builtin_identifier) @function.builtin
+; A type is named by an identifier wherever the grammar says a type goes.
 
-(call_expression
-  function: (identifier) @function.call)
+(parameter type: (identifier) @type.reference)
+(pointer_type (identifier) @type.reference)
+(slice_type (identifier) @type.reference)
+(nullable_type (identifier) @type.reference)
+(array_type (_) (identifier) @type.reference)
+(struct_initializer (identifier) @type.reference)
 
-(call_expression
-  function: (field_expression
-    member: (identifier) @function.call))
+; --- labels -------------------------------------------------------------
 
-(function_declaration
-  name: (identifier) @function @local.definition.function)
+(block_label (identifier) @label.name) @label
 
-; Modules
-(variable_declaration
-  (identifier) @module
-  (builtin_function
-    (builtin_identifier) @keyword.import
-    (#any-of? @keyword.import "@import" "@cImport")))
-
-; Builtins
-[
-  "c"
-  "..."
-] @variable.builtin
-
-((identifier) @variable.builtin
-  (#eq? @variable.builtin "_"))
-
-(calling_convention
-  (identifier) @variable.builtin)
-
-; Keywords
-[
-  "asm"
-  "defer"
-  "errdefer"
-  "test"
-  "error"
-  "const"
-  "var"
-] @keyword
-
-[
-  "struct"
-  "union"
-  "enum"
-  "opaque"
-] @keyword.type
-
-[
-  "async"
-  "await"
-  "suspend"
-  "nosuspend"
-  "resume"
-] @keyword.coroutine
-
-"fn" @keyword.function
-
-[
-  "and"
-  "or"
-  "orelse"
-] @keyword.operator
-
-"return" @keyword.return
-
-[
-  "if"
-  "else"
-  "switch"
-] @keyword.conditional
-
-[
-  "for"
-  "while"
-  "break"
-  "continue"
-] @keyword.repeat
-
-[
-  "usingnamespace"
-  "export"
-] @keyword.import
-
-[
-  "try"
-  "catch"
-] @keyword.exception
-
-[
-  "volatile"
-  "allowzero"
-  "noalias"
-  "addrspace"
-  "align"
-  "callconv"
-  "linksection"
-  "pub"
-  "inline"
-  "noinline"
-  "extern"
-  "comptime"
-  "packed"
-  "threadlocal"
-] @keyword.modifier
-
-; Operator
-[
-  "="
-  "*="
-  "*%="
-  "*|="
-  "/="
-  "%="
-  "+="
-  "+%="
-  "+|="
-  "-="
-  "-%="
-  "-|="
-  "<<="
-  "<<|="
-  ">>="
-  "&="
-  "^="
-  "|="
-  "!"
-  "~"
-  "-"
-  "-%"
-  "&"
-  "=="
-  "!="
-  ">"
-  ">="
-  "<="
-  "<"
-  "^"
-  "|"
-  "<<"
-  ">>"
-  "<<|"
-  "+"
-  "++"
-  "+%"
-  "+|"
-  "-|"
-  "*"
-  "/"
-  "%"
-  "**"
-  "*%"
-  "*|"
-  "||"
-  ".*"
-  ".?"
-  "?"
-  ".."
-] @operator
-
-; Literals
-(character) @character
-
-([
-  (string)
-  (multiline_string)
-] @string
-  (#set! "priority" 95))
-
-(integer) @number
-
-(float) @number.float
-
-(boolean) @boolean
-
-(escape_sequence) @string.escape
-
-; Punctuation
-
-[
-  ";"
-  "."
-  ","
-  ":"
-  "=>"
-  "->"
-] @punctuation.delimiter
-
-(payload
-  "|" @punctuation.bracket)
-
-; Comments
-(comment) @comment @spell
-
-((comment) @comment.documentation
-  (#match? @comment.documentation "^//!"))
-
-; --- external_injections ---
-
-; OMEGA PINNED EXTERNAL INJECTIONS — BOUNDED CANDIDATE EVIDENCE ONLY
-; sha256=6c68bd360ae39e7e04e64ca647d925a0eae1dc9ce98de6088b8af34956f5c6a0
-
-((comment) @injection.content
-  (#set! injection.language "comment"))
-
-((asm_output_item [(string) (multiline_string)] @injection.content)
-  (#set! injection.language "asm"))
-((asm_input_item [(string) (multiline_string)] @injection.content)
-  (#set! injection.language "asm"))
-((asm_clobbers [(string) (multiline_string)] @injection.content)
-  (#set! injection.language "asm"))
-
-; --- external_locals ---
-
-; OMEGA EXTERNAL LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim legacy immutable snapshot
-; sha256=a2d345afc59d9a9b514984f9101030bfb774631f2e4ae2ee4ace83dbb3171be5
-
-; Definitions
-
-(variable_declaration
-  (identifier) @local.definition.var)
-
-(variable_declaration
-  (identifier) @local.definition.type
-  (enum_declaration))
-
-(container_field
-  type: (identifier) @local.definition.field)
-
-(enum_declaration
-  (function_declaration
-    name: (identifier) @local.definition.method))
-
-(variable_declaration
-  (identifier) @local.definition.type
-  (struct_declaration))
-
-(struct_declaration
-  (function_declaration
-    name: (identifier) @local.definition.method))
-
-(variable_declaration
-  (identifier) @local.definition.type
-  (union_declaration))
-
-(union_declaration
-  (function_declaration
-    name: (identifier) @local.definition.method))
-
-; References
-
-(parameter
-  type: (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(pointer_type
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(nullable_type
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(struct_initializer
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(array_type
-  (_)
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(slice_type
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(field_expression
-  member: (identifier) @local.reference
-  (#set! reference.kind "field"))
-
-(call_expression
-  function: (field_expression
-    member: (identifier) @local.reference
-    (#set! reference.kind "function")))
-
-[
-  (for_statement)
-  (if_statement)
-  (while_statement)
-  (function_declaration)
-  (block)
-  (source_file)
-  (enum_declaration)
-  (struct_declaration)
-] @local.scope
-
-; --- member_access_hints ---
-
-(field_expression
-  object: (_) @reference.receiver @reference.qualified_chain.base
-  member: (_) @reference.member @reference.qualified_chain.leaf) @reference.member_expression @reference.qualified_chain.span
-
-; --- named_scope_owners ---
-
-(function_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- nvim_pinned_highlights ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=cbff0fe14e8aeffd64b146ac68fd797c1e38cd66f43a1e3273db8f4b4d753876
-; source_name=zig
-
-; ----- resolved nvim highlights source: zig sha256=cbff0fe14e8aeffd64b146ac68fd797c1e38cd66f43a1e3273db8f4b4d753876 -----
-; Variables
-
-; Parameters
-
-; Types
-
-((identifier) @type
-  (#match? @type "^[A-Z_][a-zA-Z0-9_]*"))
-
-; Constants
-((identifier) @constant
-  (#match? @constant "^[A-Z][A-Z_0-9]+$"))
-
-; Labels
-
-; Fields
-
-; Functions
-
-; Modules
-(variable_declaration
-  (identifier) @module
-  (builtin_function
-    (builtin_identifier) @keyword.import
-    (#any-of? @keyword.import "@import" "@cImport")))
-
-; Builtins
-
-((identifier) @variable.builtin
-  (#eq? @variable.builtin "_"))
-
-; Keywords
-
-; Operator
-
-; Literals
-
-([
-  (string)
-  (multiline_string)
-] @string
-  (#set! "priority" 95))
-
-; Punctuation
-
-; Comments
-
-((comment) @comment.documentation
-  (#match? @comment.documentation "^//!"))
-
-; --- nvim_pinned_injections ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=6c68bd360ae39e7e04e64ca647d925a0eae1dc9ce98de6088b8af34956f5c6a0
-; source_name=zig
-
-; ----- resolved nvim injections source: zig sha256=6c68bd360ae39e7e04e64ca647d925a0eae1dc9ce98de6088b8af34956f5c6a0 -----
-((comment) @injection.content
-  (#set! injection.language "comment"))
-
-((asm_output_item [(string) (multiline_string)] @injection.content)
-  (#set! injection.language "asm"))
-((asm_input_item [(string) (multiline_string)] @injection.content)
-  (#set! injection.language "asm"))
-((asm_clobbers [(string) (multiline_string)] @injection.content)
-  (#set! injection.language "asm"))
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=a2d345afc59d9a9b514984f9101030bfb774631f2e4ae2ee4ace83dbb3171be5
-; resolved_query_sha256=a57f0e039dbda098104942282dc352e76f9df86036af51a60b91b135039ab75b
-; parser_revision=6479aa13f32f701c383083d8b28360ebd682fb7d
-; source_name=zig
-; direct_inherits=
-; resolved_sources=zig
-
-; ----- resolved nvim locals source: zig sha256=a2d345afc59d9a9b514984f9101030bfb774631f2e4ae2ee4ace83dbb3171be5 -----
-; Definitions
-
-; References
-
-(parameter
-  type: (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(pointer_type
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(nullable_type
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(struct_initializer
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(array_type
-  (_)
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(slice_type
-  (identifier) @local.reference
-  (#set! reference.kind "type"))
-
-(field_expression
-  member: (identifier) @local.reference
-  (#set! reference.kind "field"))
-
-(call_expression
-  function: (field_expression
-    member: (identifier) @local.reference
-    (#set! reference.kind "function")))
-
-; --- qualified_chain_hints ---
-
-; --- signature_return_type ---
-
-(function_declaration
-  name: (_) @definition.signature.name
-  type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(function_signature
-  name: (_) @definition.signature.name
-  type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(test_declaration) @zig.test
-(error_set_declaration (identifier) @zig.error_set.name @zig.error.member) @zig.error_set @zig.error.member.owner
-(comptime_declaration) @zig.comptime.declaration
-(comptime_statement) @zig.comptime.statement
-
-; --- semantic_closure_v3_146_batch4 ---
-
-(test_declaration
-  [(identifier) (string)] @zig.test.name
-  (block) @zig.test.body) @zig.test.named
-
-(using_namespace_declaration
-  (expression) @zig.usingnamespace.target) @zig.usingnamespace.typed
-
-(comptime_expression) @zig.comptime.expression
-(comptime_type_expression) @zig.comptime.type_expression
-
+(break_label (identifier) @label.reference.name) @label.reference

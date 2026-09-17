@@ -24,9 +24,13 @@
 ; element's own declaration, not emitted as a mention: it is a value, and a
 ; mention of it would resolve against nothing.
 
+; Anchored on both sides: only an element whose entire content is one text node
+; holds a value. `<a>x<b/>y</a>` has two text children and the carrier, folding
+; onto one declaration, would keep whichever came last.
 (element
-  (start_tag (tag_name) @element.text.name)
-  (text) @element.text.value) @element.text
+  (start_tag (tag_name) @element.text.name) .
+  (text) @element.text.value .
+  (end_tag)) @element.text
 
 ; --- an attribute ---
 ;

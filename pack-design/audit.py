@@ -330,7 +330,7 @@ LABEL = {
     'D2': 'D2 the name is the span itself',
     'K2': 'K2 same span and name, two kinds',
     'I2': 'I2 a bare leaf capture, every one in the file',
-    'carrier_owner': '   carrier folded onto its owner, overwriting itself',
+    'carrier_owner': '   carrier that may overwrite itself (check: grammars group modifiers)',
     'dead_marker': '   literal marker with no reference_context to suppress',
     'carrier_unread': '   carrier under a name nothing assembles',
 }
