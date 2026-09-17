@@ -96,22 +96,7 @@
 
 (field_pattern
   name: (shorthand_field_identifier) @binding.field_shorthand.name) @binding.field_shorthand
-
-; Pattern-shape captures make recursive binding extraction auditable instead of
-; hiding every destructuring decision behind one opaque normalization step.
-(generic_pattern) @binding.pattern_shape.generic
-(tuple_pattern) @binding.pattern_shape.tuple
-(slice_pattern) @binding.pattern_shape.slice
-(tuple_struct_pattern) @binding.pattern_shape.tuple_struct
-(struct_pattern) @binding.pattern_shape.struct
-(mut_pattern) @binding.pattern_shape.mut
-(range_pattern) @binding.pattern_shape.range
-(ref_pattern) @binding.pattern_shape.ref
-(reference_pattern) @binding.pattern_shape.reference
-(or_pattern) @binding.pattern_shape.or
-(remaining_field_pattern) @binding.pattern_shape.remaining
 (const_block) @binding.pattern_shape.const_block @expression.const_block
-(macro_invocation) @binding.pattern_shape.macro @guard.macro_invocation
 
 ; --- call_targets ---
 
@@ -202,20 +187,6 @@
 (macro_invocation
   macro: (scoped_identifier) @call.macro.path
   (token_tree) @call.macro.arguments) @call.macro.scoped
-
-; --- cfg_guards ---
-
-((attribute_item
-   (attribute
-     (identifier) @guard.cfg.attribute
-     arguments: (token_tree) @guard.cfg.arguments)) @guard.cfg.item
- (#match? @guard.cfg.attribute "^(cfg|cfg_attr)$"))
-
-((inner_attribute_item
-   (attribute
-     (identifier) @guard.cfg.inner_attribute
-     arguments: (token_tree) @guard.cfg.arguments)) @guard.cfg.inner_item
- (#match? @guard.cfg.inner_attribute "^(cfg|cfg_attr)$"))
 
 ; --- config_consumers ---
 
@@ -603,11 +574,6 @@
 (block_comment) @comment.block
 (shebang) @source.shebang
 
-; --- dynamic_resolution_guards ---
-
-(call_expression
-  function: (field_expression) @guard.dynamic_dispatch.target) @guard.dynamic_dispatch.call
-
 
 (dynamic_type) @guard.dynamic_type @type.dynamic
 (abstract_type) @guard.impl_trait @type.impl_trait
@@ -743,16 +709,6 @@
 (gen_block) @expression.gen_block
 (try_block) @expression.try_block
 (unsafe_block) @expression.unsafe_block
-
-; --- ffi_guards ---
-
-(foreign_mod_item) @guard.ffi.module
-
-(function_signature_item
-  (function_modifiers) @guard.ffi.function_modifiers) @guard.ffi.signature
-
-(function_item
-  (function_modifiers) @guard.ffi.function_modifiers) @guard.ffi.function
 
 ; --- fq_router_nest_binding_context ---
 
@@ -902,11 +858,6 @@
 (associated_type type_parameters: (_) @field.generic_parameters)
 (higher_ranked_trait_bound type_parameters: (_) @field.generic_parameters)
 
-; --- glob_import_guards ---
-
-(use_declaration
-  argument: (use_wildcard) @guard.glob.import) @guard.glob.declaration
-
 (use_wildcard) @guard.glob.any @import.glob
 
 ; --- implementations ---
@@ -1028,8 +979,6 @@
 ; --- macros_guards ---
 
 (macro_definition) @guard.macro_definition @scope.macro
-(attribute_item) @guard.attribute
-(inner_attribute_item) @guard.inner_attribute
 
 ; --- member_access_hints ---
 
@@ -1058,18 +1007,6 @@
   body: (field_declaration_list
     (field_declaration
       name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
-
-; --- module_path_guards ---
-
-((attribute_item
-   (attribute
-     (identifier) @guard.path.attribute
-     arguments: (token_tree) @guard.path.arguments)) @guard.path.item
- (#eq? @guard.path.attribute "path"))
-
-(mod_item
-  name: (identifier) @guard.module.external.name
-  !body) @guard.module.external
 
 ; --- module_path_hints ---
 
@@ -1172,7 +1109,6 @@
 (escape_sequence) @surface.escape_sequence
 (inner_doc_comment_marker) @surface.doc.inner_marker
 (outer_doc_comment_marker) @surface.doc.outer_marker
-(mutable_specifier) @surface.mutable_specifier
 (type_parameters) @surface.type_parameters
 
 ; --- qualified_chain_hints ---
@@ -1415,18 +1351,7 @@
 (shorthand_field_identifier) @reference.field_shorthand.candidate
 (lifetime) @reference.lifetime.candidate
 (crate) @reference.crate
-
-; --- scope_control_fields ---
-
-; Exact body/branch field selectors whose containment changes scopes/control ownership.
-(foreign_mod_item body: (_) @field.body.foreign_module)
 (enum_variant body: (_) @field.body.enum_variant)
-(impl_item body: (_) @field.body.impl)
-(trait_item body: (_) @field.body.trait)
-(closure_expression body: (_) @field.body.closure)
-(let_declaration alternative: (_) @field.control.let_alternative)
-(if_expression consequence: (_) @field.control.if_consequence)
-(if_expression alternative: (_) @field.control.if_alternative)
 
 ; --- scoped_call_context ---
 
@@ -1771,7 +1696,6 @@
 (type_parameter) @type.parameter
 (lifetime_parameter) @type.lifetime_parameter
 (where_predicate left: (_) @type.where.subject bounds: (trait_bounds) @type.where.bounds) @type.where.predicate
-(trait_item bounds: (trait_bounds) @type.trait.bounds) @type.owner.trait
 (type_cast_expression type: (_) @type.cast.target) @type.cast
 (reference_type) @type.reference
 (pointer_type) @type.pointer
