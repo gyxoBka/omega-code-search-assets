@@ -1,286 +1,158 @@
-; --- command_context ---
-
-(normal_command
-  (identifier) @cmake.project.command
-  (#eq? @cmake.project.command "project")
-  (argument_list
-    . (argument (unquoted_argument) @cmake.project.name))) @cmake.project.context
-
-(normal_command
-  (identifier) @cmake.target.command
-  (#any-of? @cmake.target.command "add_library" "add_executable")
-  (argument_list
-    . (argument (unquoted_argument) @cmake.target.name))) @cmake.target.context
-
-(normal_command
-  (identifier) @cmake.link.command
-  (#eq? @cmake.link.command "target_link_libraries")
-  (argument_list
-    . (argument (unquoted_argument) @cmake.link.target)
-    . (argument (unquoted_argument) @cmake.link.visibility)
-    . (argument (unquoted_argument) @cmake.link.dependency))) @cmake.link.context
-
-; --- completeness_definitions_semantic2 ---
-
-(function_def) @definition.expression
-(macro_def) @definition.expression
-
-; --- completeness_references_semantic2 ---
-
-(variable_ref) @reference.expression @none @cmake.variable.reference
-
-; --- completeness_scopes ---
-
-(block) @scope.lexical
-
-; --- definition_identity_hints ---
-
-(function_def (function_command (argument_list (argument) @definition.identity.name))) @definition.identity.owner
-
-(macro_def (macro_command (argument_list (argument) @definition.identity.name))) @definition.identity.owner
-
-; --- nvim_pinned_highlights ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=8dbfb4506f5767d7ee94867976feb741a6c3875db30474f83ce9ddd7169fd2cd
-; source_name=cmake
-
-; ----- resolved nvim highlights source: cmake sha256=8dbfb4506f5767d7ee94867976feb741a6c3875db30474f83ce9ddd7169fd2cd -----
-(normal_command
-  (identifier)
-  (argument_list
-    (argument
-      (unquoted_argument)) @constant)
-  (#match? @constant "^[A-Z@][A-Z0-9_]+$"))
-
-[
-  (quoted_argument)
-  (bracket_argument)
-] @string
-
-(variable) @variable
-
-[
-  (bracket_comment)
-  (line_comment)
-] @comment @spell
-
-(normal_command
-  (identifier) @function)
-
-[
-  "ENV"
-  "CACHE"
-] @module
-
-[
-  (function)
-  (endfunction)
-  (macro)
-  (endmacro)
-] @keyword.function
-
-[
-  (if)
-  (elseif)
-  (else)
-  (endif)
-] @keyword.conditional
-
-[
-  (foreach)
-  (endforeach)
-  (while)
-  (endwhile)
-] @keyword.repeat
-
-(normal_command
-  (identifier) @keyword.repeat
-  (#match? @keyword.repeat "(?i)^(continue|break)$"))
-
-(normal_command
-  (identifier) @keyword.return
-  (#match? @keyword.return "(?i)^return$"))
-
-(function_command
-  (function)
-  (argument_list
-    .
-    (argument) @function
-    (argument)* @variable.parameter))
-
-(macro_command
-  (macro)
-  (argument_list
-    .
-    (argument) @function.macro
-    (argument)* @variable.parameter))
-
-(block_def
-  (block_command
-    (block) @function.builtin
-    (argument_list
-      (argument
-        (unquoted_argument) @constant))
-    (#any-of? @constant "SCOPE_FOR" "POLICIES" "VARIABLES" "PROPAGATE"))
-  (endblock_command
-    (endblock) @function.builtin))
-
+; omega-cmake
 ;
-((argument) @boolean
-  (#match? @boolean "(?i)^(1|on|yes|true|y|0|off|no|false|n|ignore|notfound|.*-notfound)$"))
-
+; CMake is the build description of a C or C++ project. The questions asked of
+; a CMakeLists.txt are: what does this build produce, where is this target or
+; variable defined, what does it link against, what does this file pull in,
+; and where is this function called. Every pattern below answers one of them.
 ;
-(if_command
-  (if)
-  (argument_list
-    (argument) @keyword.operator)
-  (#any-of? @keyword.operator
-    "NOT" "AND" "OR" "COMMAND" "POLICY" "TARGET" "TEST" "DEFINED" "IN_LIST" "EXISTS" "IS_NEWER_THAN"
-    "IS_DIRECTORY" "IS_SYMLINK" "IS_ABSOLUTE" "MATCHES" "LESS" "GREATER" "EQUAL" "LESS_EQUAL"
-    "GREATER_EQUAL" "STRLESS" "STRGREATER" "STREQUAL" "STRLESS_EQUAL" "STRGREATER_EQUAL"
-    "VERSION_LESS" "VERSION_GREATER" "VERSION_EQUAL" "VERSION_LESS_EQUAL" "VERSION_GREATER_EQUAL"))
+; CMake has no syntax for declaring a target, a variable or an option: the
+; grammar spells all of them as `normal_command`, and the command's name is
+; the only thing that says which construct it is. Keying on `set`, `option`,
+; `add_library` and their siblings is therefore the language itself, not a
+; framework overlay -- these commands are built into cmake(1) and cannot be
+; redefined into something else.
+;
+; Containment is deliberately not stated. The tree already holds it; a
+; function body is emitted once as a region, and nothing else nests.
 
-(elseif_command
-  (elseif)
-  (argument_list
-    (argument) @keyword.operator)
-  (#any-of? @keyword.operator
-    "NOT" "AND" "OR" "COMMAND" "POLICY" "TARGET" "TEST" "DEFINED" "IN_LIST" "EXISTS" "IS_NEWER_THAN"
-    "IS_DIRECTORY" "IS_SYMLINK" "IS_ABSOLUTE" "MATCHES" "LESS" "GREATER" "EQUAL" "LESS_EQUAL"
-    "GREATER_EQUAL" "STRLESS" "STRGREATER" "STREQUAL" "STRLESS_EQUAL" "STRGREATER_EQUAL"
-    "VERSION_LESS" "VERSION_GREATER" "VERSION_EQUAL" "VERSION_LESS_EQUAL" "VERSION_GREATER_EQUAL"))
+; --- a command call ---
+;
+; Every statement in CMake is a command invocation, and the control-flow
+; keywords have their own node types, so `normal_command` is exactly the set
+; of calls. This is what resolves a call of a user-defined function or macro
+; onto its `function()`/`macro()` declaration.
 
-(normal_command
-  (identifier) @function.builtin
-  (#match? @function.builtin
-    "(?i)^(cmake_host_system_information|cmake_language|cmake_minimum_required|cmake_parse_arguments|cmake_path|cmake_policy|configure_file|execute_process|file|find_file|find_library|find_package|find_path|find_program|foreach|get_cmake_property|get_directory_property|get_filename_component|get_property|include|include_guard|list|macro|mark_as_advanced|math|message|option|separate_arguments|set|set_directory_properties|set_property|site_name|string|unset|variable_watch|add_compile_definitions|add_compile_options|add_custom_command|add_custom_target|add_definitions|add_dependencies|add_executable|add_library|add_link_options|add_subdirectory|add_test|aux_source_directory|build_command|create_test_sourcelist|define_property|enable_language|enable_testing|export|fltk_wrap_ui|get_source_file_property|get_target_property|get_test_property|include_directories|include_external_msproject|include_regular_expression|install|link_directories|link_libraries|load_cache|project|remove_definitions|set_source_files_properties|set_target_properties|set_tests_properties|source_group|target_compile_definitions|target_compile_features|target_compile_options|target_include_directories|target_link_directories|target_link_libraries|target_link_options|target_precompile_headers|target_sources|try_compile|try_run|ctest_build|ctest_configure|ctest_coverage|ctest_empty_binary_directory|ctest_memcheck|ctest_read_custom_files|ctest_run_script|ctest_sleep|ctest_start|ctest_submit|ctest_test|ctest_update|ctest_upload)$"))
+(normal_command (identifier) @command.name) @command
 
-(normal_command
-  (identifier) @_function
-  (argument_list
-    .
-    (argument) @variable)
-  (#match? @_function "(?i)^set$"))
+; --- function and macro declarations ---
+;
+; The header's argument list is the name followed by the parameters, so the
+; parameter shape is the list with the name stripped off its front. A macro
+; is declared under a Callable kind too: it is called exactly like a function.
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^set$")
-  (argument_list
-    .
-    (argument)
-    ((argument) @_cache @keyword.modifier
-      .
-      (argument) @_type @type
-      (#eq? @_cache "CACHE")
-      (#any-of? @_type "BOOL" "FILEPATH" "PATH" "STRING" "INTERNAL"))))
+(function_def
+  (function_command
+    (argument_list . (argument) @function.name) @function.params)) @function
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^unset$")
-  (argument_list
-    .
-    (argument)
-    (argument) @keyword.modifier
-    (#any-of? @keyword.modifier "CACHE" "PARENT_SCOPE")))
+(macro_def
+  (macro_command
+    (argument_list . (argument) @macro.name) @macro.params)) @macro
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^list$")
-  (argument_list
-    .
-    (argument) @constant
-    (#any-of? @constant "LENGTH" "GET" "JOIN" "SUBLIST" "FIND")
-    .
-    (argument) @variable
-    (argument) @variable .))
+; --- the one region CMake has ---
+;
+; `function()` is the only construct in this grammar that opens a variable
+; scope. A macro runs in its caller's scope, and `if`, `foreach` and `while`
+; bodies do not scope variables at all, so none of them is a region here.
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^list$")
-  (argument_list
-    .
-    (argument) @constant
-    .
-    (argument) @variable
-    (#any-of? @constant
-      "APPEND" "FILTER" "INSERT" "POP_BACK" "POP_FRONT" "PREPEND" "REMOVE_ITEM" "REMOVE_AT"
-      "REMOVE_DUPLICATES" "REVERSE" "SORT")))
+(function_def
+  (function_command (argument_list . (argument) @function.scope.name))
+  (body) @function.body)
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^list$")
-  (argument_list
-    .
-    (argument) @_transform @constant
-    .
-    (argument) @variable
-    .
-    (argument) @_action @constant
-    (#eq? @_transform "TRANSFORM")
-    (#any-of? @_action "APPEND" "PREPEND" "TOUPPER" "TOLOWER" "STRIP" "GENEX_STRIP" "REPLACE")))
+; --- what the build declares ---
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^list$")
-  (argument_list
-    .
-    (argument) @_transform @constant
-    .
-    (argument) @variable
-    .
-    (argument) @_action @constant
-    .
-    (argument)? @_selector @constant
-    (#eq? @_transform "TRANSFORM")
-    (#any-of? @_action "APPEND" "PREPEND" "TOUPPER" "TOLOWER" "STRIP" "GENEX_STRIP" "REPLACE")
-    (#any-of? @_selector "AT" "FOR" "REGEX")))
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @project.name)) @project
+ (#match? @_cmd "(?i)^project$"))
 
-(normal_command
-  (identifier) @_function
-  (#match? @_function "(?i)^list$")
-  (argument_list
-    .
-    (argument) @_transform @constant
-    (argument) @constant
-    .
-    (argument) @variable
-    (#eq? @_transform "TRANSFORM")
-    (#eq? @constant "OUTPUT_VARIABLE")))
+((normal_command
+   (identifier) @target.command
+   (argument_list . (argument) @target.name)) @target
+ (#match? @target.command "(?i)^add_(library|executable|custom_target)$"))
 
-(escape_sequence) @string.escape
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @variable.name)) @variable.set
+ (#match? @_cmd "(?i)^set$"))
 
-((source_file
-  .
-  (line_comment) @keyword.directive @nospell)
-  (#match? @keyword.directive "^#!/"))
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @option.name)) @option
+ (#match? @_cmd "(?i)^option$"))
 
-; --- nvim_pinned_injections ---
+; A foreach loop binds its iteration variable, and `${it}` inside the body is
+; a reference to it like any other.
 
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=e1610c4b058fc5b3b646c4dffcc7327ceaa1a049cdd2058471eb845bd2f08d4d
-; source_name=cmake
+(foreach_command (argument_list . (argument) @foreach.var)) @foreach
 
-; ----- resolved nvim injections source: cmake sha256=e1610c4b058fc5b3b646c4dffcc7327ceaa1a049cdd2058471eb845bd2f08d4d -----
+; --- tests ---
+;
+; `add_test(NAME t COMMAND ...)` and the older positional `add_test(t cmd)`
+; are two spellings of one declaration, so they are two patterns over one
+; template.
 
-; --- semantic_closure_v3_146 ---
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @_kw . (argument) @test.name)) @test
+ (#match? @_cmd "(?i)^add_test$")
+ (#match? @_kw "(?i)^NAME$"))
 
-(normal_command (identifier) @cmake.call.name (argument_list) @cmake.call.args) @cmake.call
-((normal_command (identifier) @_cmd (argument_list (argument) @cmake.include.path)) @cmake.include (#eq? @_cmd "include"))
-((normal_command (identifier) @_cmd (argument_list (argument) @cmake.subdir.path)) @cmake.subdir (#eq? @_cmd "add_subdirectory"))
-((normal_command (identifier) @_cmd (argument_list (argument) @cmake.target.name)) @cmake.target (#any-of? @_cmd "add_executable" "add_library" "add_custom_target"))
-((normal_command (identifier) @_cmd (argument_list (argument) @cmake.link.owner (argument) @cmake.link.target)) @cmake.link (#eq? @_cmd "target_link_libraries"))
-((normal_command (identifier) @_cmd (argument_list (argument) @cmake.property.owner (argument) @cmake.property.value)) @cmake.property (#any-of? @_cmd "set_property" "set_target_properties" "set_source_files_properties"))
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @test.name)) @test
+ (#match? @_cmd "(?i)^add_test$")
+ (#not-match? @test.name "(?i)^NAME$"))
 
-; --- semantic_closure_v3_147_cmake_surface ---
-(function_def (function_command (argument_list . (argument) @cmake.function.name)) @cmake.function.header) @cmake.function.definition
-(macro_def (macro_command (argument_list . (argument) @cmake.macro.name)) @cmake.macro.header) @cmake.macro.definition
-((normal_command (identifier) @_cmd (argument_list . (argument) @cmake.project.name)) @cmake.project (#eq? @_cmd "project"))
-((normal_command (identifier) @_cmd (argument_list . (argument) @cmake.package.name)) @cmake.package (#eq? @_cmd "find_package"))
-((normal_command (identifier) @_cmd (argument_list . (argument) @cmake.variable.name)) @cmake.variable.binding (#eq? @_cmd "set"))
-((normal_command (identifier) @_cmd (argument_list . (argument) @cmake.option.name)) @cmake.option.definition (#eq? @_cmd "option"))
-((normal_command (identifier) @_cmd (argument_list . (argument) @cmake.install.target)) @cmake.install.target_context (#eq? @_cmd "install"))
+; --- what the build depends on ---
+;
+; `target_link_libraries(app PUBLIC zlib fmt)` states one dependency per
+; argument after the target, so the unanchored second `(argument)` gives one
+; match per library. The visibility keywords are not libraries, and a name
+; assembled from a variable or a generator expression resolves to nothing.
+
+((normal_command
+   (identifier) @_cmd
+   (argument_list
+     . (argument) @link.owner
+     (argument) @link.dependency)) @link
+ (#match? @_cmd "(?i)^target_link_libraries$")
+ (#not-match? @link.dependency
+   "(?i)^(PUBLIC|PRIVATE|INTERFACE|LINK_PUBLIC|LINK_PRIVATE|LINK_INTERFACE_LIBRARIES)$|^[$]"))
+
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @package.name)) @package
+ (#match? @_cmd "(?i)^find_package$"))
+
+; --- what the build pulls in ---
+
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @include.path)) @include
+ (#match? @_cmd "(?i)^include$"))
+
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @subdir.path)) @subdir
+ (#match? @_cmd "(?i)^add_subdirectory$"))
+
+; --- mentions of a target ---
+;
+; Every `target_*` command, `set_target_properties` and `add_dependencies`
+; take the target they configure as their first argument. `install(TARGETS t)`
+; names the target it installs; only the first is anchored, because what
+; follows `DESTINATION` is a path and not a target.
+
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @target.ref)) @target.use
+ (#match? @_cmd "(?i)^(target_[a-z_]+|set_target_properties|add_dependencies)$"))
+
+((normal_command
+   (identifier) @_cmd
+   (argument_list . (argument) @_kw . (argument) @install.target)) @install
+ (#match? @_cmd "(?i)^install$")
+ (#match? @_kw "(?i)^TARGETS$"))
+
+; --- variable references ---
+;
+; The grammar exposes the bare name inside `${...}`, so a reference is stored
+; as `FOO` and resolves onto the `set(FOO ...)` that declared it. `$CACHE{FOO}`
+; is the same name space; `$ENV{FOO}` is the process environment and is a
+; different question.
+
+(variable_ref
+  [(normal_var (variable) @variable.ref.name)
+   (cache_var (variable) @variable.ref.name)]) @variable.ref
+
+(variable_ref (env_var (variable) @env.ref.name)) @env.ref

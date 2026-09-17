@@ -1,194 +1,65 @@
-; --- array_object_name_string_pair ---
+; omega-json
+;
+; JSON is where a project states what it is and what it needs: package.json,
+; package-lock.json, tsconfig.json, .eslintrc.json, composer.json, a JSON
+; Schema, an OpenAPI document, a test fixture. The language declares nothing
+; of its own -- no function, no type, no import, no name it defines for its
+; own use. What it has is the key, and the key is what a question reaches:
+; *which package declares this dependency*, *where is this setting defined
+; and to what*, *what does this schema require*, *which files does this list
+; name*.
+;
+; So the Pack states one construct, the object pair, named by its key and
+; carrying its value when the value is a scalar. A whole object is not an
+; answer; it is the place the answers live. The keys inside it already lie
+; inside its span, so the host derives `dependencies.react` from the nesting
+; and no pattern needs to say it.
+;
+; There is no pattern for the document, for the object, for the array, for
+; containment, for comments or for escape sequences: none of them names
+; anything a question could resolve to. There is no pattern keyed on a
+; particular key spelling either -- `$ref`, `paths`, `name`, `type` mean what
+; the consuming tool says they mean, and that knowledge belongs in an
+; overlay, not in the language Pack.
+;
+; Every string is matched with an anchor on both sides, so it is the whole
+; string or nothing: a key spelled "a\nb" is three children, and matching
+; `(string_content)` loosely would emit that pair twice under two half-names.
 
-; Generic JSON array-object owner context:
-; { "items": [ { "name": "owner", "field": "value" } ] }
-; Emits one syntax fact for each string-valued sibling field paired with the
-; object's literal name. Consumer semantics remain outside the Pack.
-
-((pair
-  key: (string (string_content) @json.array_named.array_key)
-  value: (array
-    (object
-      (pair
-        key: (string (string_content) @_json_array_named_name_key)
-        value: (string (string_content) @json.array_named.object_name))
-      (pair
-        key: (string (string_content) @json.array_named.key)
-        value: (string (string_content) @json.array_named.value))) @json.array_named.object)) @json.array_named.container
-  (#eq? @_json_array_named_name_key "name"))
-
-((pair
-  key: (string (string_content) @json.array_named.array_key)
-  value: (array
-    (object
-      (pair
-        key: (string (string_content) @json.array_named.key)
-        value: (string (string_content) @json.array_named.value))
-      (pair
-        key: (string (string_content) @_json_array_named_name_key)
-        value: (string (string_content) @json.array_named.object_name))) @json.array_named.object)) @json.array_named.container
-  (#eq? @_json_array_named_name_key "name"))
-
-; --- array_object_type_name ---
-
-((pair
-  key: (string (string_content) @json.array_object.array_key)
-  value: (array
-    (object
-      (pair
-        key: (string (string_content) @_type_key)
-        value: (string (string_content) @json.array_object.type))
-      (pair
-        key: (string (string_content) @_name_key)
-        value: (string (string_content) @json.array_object.name))) @json.array_object.object)) @json.array_object.container
-  (#eq? @_type_key "type")
-  (#eq? @_name_key "name"))
-
-((pair
-  key: (string (string_content) @json.array_object.array_key)
-  value: (array
-    (object
-      (pair
-        key: (string (string_content) @_name_key)
-        value: (string (string_content) @json.array_object.name))
-      (pair
-        key: (string (string_content) @_type_key)
-        value: (string (string_content) @json.array_object.type))) @json.array_object.object)) @json.array_object.container
-  (#eq? @_type_key "type")
-  (#eq? @_name_key "name"))
-
-; --- comments ---
-
-(comment) @data.comment
-
-; --- depth3_context ---
-
-; Generic depth-3 object leaf: a0 -> a1 -> a2 -> leaf.
-(pair
-  key: (string (string_content) @json.d3.a0)
-  value: (object
-    (pair
-      key: (string (string_content) @json.d3.a1)
-      value: (object
-        (pair
-          key: (string (string_content) @json.d3.a2)
-          value: (object
-            (pair
-              key: (string (string_content) @json.d3.key)
-              value: (_) @json.d3.value) @json.d3.pair)))))) @json.d3.root
-
-; --- literals ---
-
-(string_content) @data.string.content
-(escape_sequence) @data.string.escape
-
-; --- nested_array_object_string_pair_context ---
-
-; Generic JSON fixed-depth context:
-; { "parent": { "items": [ { "field": "value" } ] } }
-; Consumer semantics remain outside the Pack.
-(pair
-  key: (string (string_content) @json.naosp.parent_key)
-  value: (object
-    (pair
-      key: (string (string_content) @json.naosp.array_key)
-      value: (array
-        (object
-          (pair
-            key: (string (string_content) @json.naosp.key)
-            value: (string (string_content) @json.naosp.value)) @json.naosp.pair) @json.naosp.object)) @json.naosp.array_pair)) @json.naosp.parent_pair
-
-; --- openapi_operation_schema_refs ---
+; --- a key set to a string: "name": "my-package" ---
+;
+; The commonest shape in every manifest and lock file. The name and the value
+; are the string's content, so both are already unquoted.
 
 (pair
-  key: (string (string_content) @json.openapi.paths.key)
-  value: (object
-    (pair
-      key: (string (string_content) @json.openapi.path.key)
-      value: (object
-        (pair
-          key: (string (string_content) @json.openapi.method.key)
-          value: (object
-            (pair
-              key: (string (string_content) @json.openapi.responses.key)
-              value: (object
-                (pair
-                  key: (string (string_content) @json.openapi.response.status)
-                  value: (object
-                    (pair
-                      key: (string (string_content) @json.openapi.response.schema.key)
-                      value: (object
-                        (pair
-                          key: (string (string_content) @json.openapi.response.ref.key)
-                          value: (string (string_content) @json.openapi.response.ref.value)) @json.openapi.response.ref.pair)) @json.openapi.response.schema.pair)) @json.openapi.response.pair)) @json.openapi.responses.pair)) @json.openapi.method.pair)) @json.openapi.path.pair)) @json.openapi.paths.pair
+  key: (string . (string_content) @string_pair.name .)
+  value: (string . (string_content) @string_pair.value .)) @string_pair
+
+; --- a key set to a number, a boolean or null: "strict": true ---
+;
+; The same declaration; the value is the token's own text.
 
 (pair
-  key: (string (string_content) @json.openapi.req.paths.key)
-  value: (object
-    (pair
-      key: (string (string_content) @json.openapi.req.path.key)
-      value: (object
-        (pair
-          key: (string (string_content) @json.openapi.req.method.key)
-          value: (object
-            (pair
-              key: (string (string_content) @json.openapi.req.parameters.key)
-              value: (array
-                (object
-                  (pair
-                    key: (string (string_content) @json.openapi.req.schema.key)
-                    value: (object
-                      (pair
-                        key: (string (string_content) @json.openapi.req.ref.key)
-                        value: (string (string_content) @json.openapi.req.ref.value)) @json.openapi.req.ref.pair)) @json.openapi.req.schema.pair))) @json.openapi.req.parameters.pair)) @json.openapi.req.method.pair)) @json.openapi.req.path.pair)) @json.openapi.req.paths.pair
+  key: (string . (string_content) @scalar_pair.name .)
+  value: [(number) (true) (false) (null)] @scalar_pair.value) @scalar_pair
 
-; --- owned_context ---
+; --- a key set to an object or an array: "dependencies": { ... } ---
+;
+; The same declaration, stated without a value. What such a key is set to is
+; the keys and the strings inside it, and each of those is its own emission;
+; storing the compound's text here would store the same bytes again at every
+; level of nesting.
 
 (pair
-  key: (string (string_content) @json.parent.key)
-  value: (object
-    (pair
-      key: (string (string_content) @json.child.key)
-      value: (_) @json.child.value) @json.child.pair)) @json.parent.pair
+  key: (string . (string_content) @compound_pair.name .)
+  value: [(object) (array)]) @compound_pair
 
-(pair
-  key: (string (string_content) @json.grandparent.key)
-  value: (object
-    (pair
-      key: (string (string_content) @json.owner.key)
-      value: (object
-        (pair
-          key: (string (string_content) @json.owned.key)
-          value: (_) @json.owned.value) @json.owned.pair)) @json.owner.pair)) @json.grandparent.pair
+; --- a string listed in an array: "required": ["name", "age"] ---
+;
+; An array of strings is how JSON names things that live elsewhere: a
+; required property, a workspace, a file to include, a plugin, an enum
+; member. Stated under its own text, it resolves by name against a
+; declaration in the repository if there is one.
 
-(pair
-  key: (string (string_content) @json.string.key)
-  value: (string (string_content) @json.string.value)) @json.string.pair
-
-; --- structure ---
-
-(document) @data.document
-(document (_) @data.root.value) @data.root
-(object) @data.object
-(object (pair) @data.object.pair) @data.object.container
-(array) @data.array
-(array (_) @data.array.element) @data.array.container
-(pair
-  key: (string) @data.key
-  value: (_) @data.value) @data.pair
-
-; --- semantic_closure_v3_146_json_deep_context ---
-
-(pair key: (string (string_content) @json.d4.a0) value: (object (pair key: (string (string_content) @json.d4.a1) value: (object (pair key: (string (string_content) @json.d4.a2) value: (object (pair key: (string (string_content) @json.d4.a3) value: (object (pair key: (string (string_content) @json.d4.key) value: (_) @json.d4.value) @json.d4.pair)))))))) @json.d4.root
-
-(pair key: (string (string_content) @json.d5.a0) value: (object (pair key: (string (string_content) @json.d5.a1) value: (object (pair key: (string (string_content) @json.d5.a2) value: (object (pair key: (string (string_content) @json.d5.a3) value: (object (pair key: (string (string_content) @json.d5.a4) value: (object (pair key: (string (string_content) @json.d5.key) value: (_) @json.d5.value) @json.d5.pair)))))))))) @json.d5.root
-
-(pair key: (string (string_content) @json.d6.a0) value: (object (pair key: (string (string_content) @json.d6.a1) value: (object (pair key: (string (string_content) @json.d6.a2) value: (object (pair key: (string (string_content) @json.d6.a3) value: (object (pair key: (string (string_content) @json.d6.a4) value: (object (pair key: (string (string_content) @json.d6.a5) value: (object (pair key: (string (string_content) @json.d6.key) value: (_) @json.d6.value) @json.d6.pair)))))))))))) @json.d6.root
-
-(pair key: (string (string_content) @json.d7.a0) value: (object (pair key: (string (string_content) @json.d7.a1) value: (object (pair key: (string (string_content) @json.d7.a2) value: (object (pair key: (string (string_content) @json.d7.a3) value: (object (pair key: (string (string_content) @json.d7.a4) value: (object (pair key: (string (string_content) @json.d7.a5) value: (object (pair key: (string (string_content) @json.d7.a6) value: (object (pair key: (string (string_content) @json.d7.key) value: (_) @json.d7.value) @json.d7.pair)))))))))))))) @json.d7.root
-
-(pair key: (string (string_content) @json.seq1.a0) value: (object (pair key: (string (string_content) @json.seq1.array_key) value: (array (object (pair key: (string (string_content) @json.seq1.key) value: (_) @json.seq1.value) @json.seq1.pair) @json.seq1.object)))) @json.seq1.root
-
-(pair key: (string (string_content) @json.seq2.a0) value: (object (pair key: (string (string_content) @json.seq2.a1) value: (object (pair key: (string (string_content) @json.seq2.array_key) value: (array (object (pair key: (string (string_content) @json.seq2.key) value: (_) @json.seq2.value) @json.seq2.pair) @json.seq2.object)))))) @json.seq2.root
-
-(pair key: (string (string_content) @json.seq3.a0) value: (object (pair key: (string (string_content) @json.seq3.a1) value: (object (pair key: (string (string_content) @json.seq3.a2) value: (object (pair key: (string (string_content) @json.seq3.array_key) value: (array (object (pair key: (string (string_content) @json.seq3.key) value: (_) @json.seq3.value) @json.seq3.pair) @json.seq3.object)))))))) @json.seq3.root
+(array
+  (string . (string_content) @array.element .))

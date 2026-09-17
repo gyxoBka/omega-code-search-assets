@@ -639,3 +639,89 @@ returns its input unchanged when the affix is absent.
 
 Totals: **1 684 templates, 401 guards** (from 3 673 and 1 348 at the start).
 Twenty-one Packs rewritten, 40 to go.
+
+---
+
+# Wave 6 (vbscript, json, cmake, lua, elixir)
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-cmake | 40 -> 20 | 50 -> 19 | 6 -> 6 | 36 -> 15 |
+| omega-elixir | 31 -> 30 | 16 -> 25 | 12 -> 6 | 33 -> 18 |
+| omega-json | 27 -> 4 | 28 -> 4 | 12 -> 4 | 12 -> 9 |
+| omega-lua | 23 -> 24 | 61 -> 14 | 23 -> 4 | 34 -> 29 |
+| omega-vbscript | 20 -> 16 | 21 -> 14 | 9 -> 5 | 20 -> 22 |
+
+Nine blocking defects, the most of any wave. Eight are fixed here; the ninth is
+a decision, recorded below.
+
+**omega-elixir, five of them, four sharing one root.** tree-sitter-elixir's
+`keyword` token *includes its trailing whitespace*: the text is `"as: "`, not
+`"as:"`. So `(#any-of? @k "as:" "as")` matched nothing and three templates --
+the alias binding, the `defdelegate` target, the `defimpl` target -- fired on no
+file in any repository, while the `bindings` capability went on being declared.
+The same token corrupted a name rather than killing a template: `defstruct name:
+nil` declared a field called `"name: "`, trailing colon and space included,
+because `strip_suffix` returns its input unchanged when the affix is absent. The
+predicates are now `#match?` against `^as:?\s*$` and the name is trimmed on both
+sides of the strip.
+
+Two more in the same Pack were wrong-class emissions. `u.id`, `conn.assigns`
+and `changeset.valid?` are parsed as a `call` with a `dot` target and no
+arguments -- a field read spelled exactly like a remote call -- so requiring
+`(arguments)` separates them. And `@moduledoc "x"`, `@impl true`, `@timeout
+5_000` are `unary_operator("@", call(identifier, arguments))`, the same node the
+local-call pattern matched: measured on a 35-line module, 19 captures of which
+10 were module attributes and 2 were genuine calls. A query cannot see the
+parent and an exclusion list cannot help, because a module attribute may be
+named anything, so the bare local call is no longer stated and a guard says so;
+the piped form is unambiguous and stays. Last, `definition.module_attribute`
+splits to `[definition, module, attribute]` and the last matching word wins, so
+every `@impl` was filed as a **Namespace** beside real `defmodule` declarations.
+It is `definition.attribute` now.
+
+**omega-vbscript, two.** The declared-type carrier paired every name in a `Dim`
+list with every later type and kept the last, so `Dim a As Long, b As String`
+stored `a` as a String; anchored, a name gets a type only when one immediately
+follows it, which is also what VB means. And this grammar parses every keyword
+statement it has no rule for as `invocation_statement (identifier)
+(argument_list)`, so `Set conn = ...`, `Option Explicit`, `Const MAX = 5` and
+`On Error Resume Next` were all calls -- making `Set` and `Option` among the
+most-called names in any VBScript corpus. Filtered, case-insensitively, because
+the language is.
+
+**omega-lua, one.** `local f = function() end` was declared twice: once as a
+Callable by the function-assignment pattern and once as a Value by the
+file-scope variable patterns, which placed no restriction on the assigned value.
+The keyed-table pattern in the same file already had the fix -- an alternation
+listing every expression except `function_definition` -- and it is applied to
+the other three now.
+
+## The ninth: omega-json against three framework overlays
+
+The rewritten omega-json states one construct, the object pair, named by its key
+and carrying a scalar value: 27 templates to 4, and no pattern for the document,
+the object, the array or containment. That is the right shape for the language.
+
+It also breaks three framework Packs. `omega-framework-openapi-specification-v3`
+(36 JSON-reachable rules of 73), `omega-framework-tauri` (5) and part of
+`omega-framework-kubernetes-config` match on `fact_kind = structured.entry` with
+`role = json_depth3_pair`, `json_depth5_pair`, … and read fields `a0` … `a6`.
+Those fields are **the ancestor key path**, and the old Pack supplied them with
+one pattern per nesting depth -- sixteen `structured.entry` templates whose
+whole job was to restate where a key sits.
+
+That is Defect E written into a cross-asset contract. Restoring it would undo
+the reason JSON files were the largest producers of rows in the index, so it is
+not restored here. The overlays have to be rewritten against the new
+declarations instead: a nested key already carries its containers through the
+host's `within:` namespace segment, which is the same information without a
+pattern per depth. **Until that is done, those rules match nothing.** It is
+recorded here rather than papered over, and it is the one piece of this work
+that reaches outside the language Packs.
+
+`omega-jsonc` and `omega-json5` are ports of omega-json and are not rewritten
+yet; `pack-design/omega-json.md` says what they must copy.
+
+Totals: **1 637 templates, 365 guards** (from 3 673 and 1 348 at the start).
+Twenty-six Packs rewritten, 35 to go.
