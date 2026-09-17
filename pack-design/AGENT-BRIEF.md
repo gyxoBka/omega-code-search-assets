@@ -1,9 +1,27 @@
 # Rewriting one Pack: everything you need
 
-You are being sent to rewrite exactly one language Pack. Read this file whole
-before you touch anything, then read `00-CONTRACT.md`, then
-`pack-design/<your-pack>.md`. Those three are your context; you should not need
+You are being sent to rewrite exactly one language Pack.
+
+## Required reading, before you touch anything
+
+Read all four, whole, in this order. They are your context; you should not need
 to reverse-engineer the engine.
+
+1. **This file** — how a Pack works, what the host reads, what goes wrong.
+2. **`pack-design/00-CONTRACT.md`** — the spec a Pack is judged against.
+3. **`pack-design/00-INDEX.md`** — the defects that are not one Pack's problem,
+   measured across all 61, and the order the rewrite goes in.
+4. **`pack-design/<your-pack>.md`** — your own Pack's document. This one is not
+   optional and not a skim. It already holds every template your Pack emits,
+   the family the host gives each kind, the occurrence each mention becomes,
+   what it emits that nothing reads, and every node type in its grammar the
+   Pack never looks at. It is the inventory you are working from; do not
+   rediscover it by hand, and do not start writing until you have read it to
+   the end.
+
+If `pack-design/<your-pack>.md` does not exist, stop and say so rather than
+improvising — the document is generated from the Pack and the grammar, and
+working without it means working blind.
 
 Two repositories:
 
@@ -381,9 +399,10 @@ Do not repeat these. Each one cost a day.
 
 ## 11. The procedure for your Pack
 
-1. **Read** `pack-design/<pack>.md`. It already lists every template, the family
-   the host gives each kind, the occurrence each mention becomes, what is
-   emitted that nothing reads, and every untouched node type.
+1. **Read `pack-design/<pack>.md` to the end** — see the required reading at the
+   top of this file. Every template, the family the host gives each kind, the
+   occurrence each mention becomes, what is emitted that nothing reads, and
+   every untouched node type is already in there. Work from it.
 2. **Read the Pack**: `manifest.toml`, `queries.scm`, `rules.json`. Read
    `grammars/<pack>/node-types.json` for the node shapes — fields, children,
    which nodes are named. A pattern can capture a named node by its type, and
