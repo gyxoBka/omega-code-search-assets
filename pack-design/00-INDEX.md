@@ -595,3 +595,47 @@ mine: omega-xml carried a leaf element's text without anchoring it, so
 
 Totals: **1 861 templates, 515 guards** (from 3 673 and 1 348 at the start).
 Sixteen Packs rewritten, 45 to go.
+
+---
+
+# Wave 5 (tsx, solidity, markdown, toml, julia)
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-tsx | 196 -> 60 | 273 -> 40 | 80 -> 10 | 122 -> 62 |
+| omega-solidity | 29 -> 50 | 64 -> 36 | 28 -> 6 | 36 -> 47 |
+| omega-julia | 54 -> 35 | 60 -> 24 | 23 -> 7 | 73 -> 60 |
+| omega-markdown | 29 -> 6 | 35 -> 7 | 5 -> 3 | 46 -> 16 |
+| omega-toml | 25 -> 5 | 26 -> 5 | 7 -> 3 | 19 -> 16 |
+
+omega-tsx was rewritten as a port rather than a fresh design: omega-typescript's
+kinds, carrier names, capabilities and deliberate silences, plus one JSX
+section. A capitalised tag in `name:` of `jsx_opening_element` or
+`jsx_self_closing_element`, and a dotted member tag reduced to its last segment,
+are `reference.jsx_component`, so `<Counter step={2}/>` resolves onto the
+`Counter` declared in another file; an attribute on such a tag is
+`reference.jsx_attribute`, resolving onto the `definition.property` of that
+component's props type. Lowercase intrinsic tags, closing tags, expression
+containers and text are deliberately not stated, with a reason each.
+
+**omega-solidity and omega-php are the two Packs that grew.** Solidity went from
+29 templates to 50 while halving its patterns, and touches 47 node types where
+it touched 36. Like php, it was not carrying noise so much as failing to answer.
+
+**omega-toml lost four fifths of itself** -- 25 templates to 5, 26 patterns to 5
+-- and omega-markdown the same. A configuration or document format has very few
+things a question can reach: a key, its value, a section, a heading, a link. The
+rest was structure restated.
+
+One blocking defect, fixed here: **omega-markdown** emitted the first cell of a
+table row as `reference.documented_term`, the edge from documented to
+implemented, naming it with the cell's raw text. This is the block grammar, so
+inline markup is never opened -- and measured on this repository's own `.md`
+files, 1 840 of 2 719 first cells (68%) begin with a backtick or a `[`, so two
+thirds of the emissions the template exists for could never match a declaration.
+The Pack already strips `[`/`]` and `<`/`>` elsewhere; the term is now stripped
+of code ticks and link brackets the same way, in one chain, since each op
+returns its input unchanged when the affix is absent.
+
+Totals: **1 684 templates, 401 guards** (from 3 673 and 1 348 at the start).
+Twenty-one Packs rewritten, 40 to go.

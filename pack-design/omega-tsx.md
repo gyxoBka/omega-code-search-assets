@@ -3,295 +3,279 @@
 Language `omega-tsx`. Read `00-CONTRACT.md` first: the kind string is a protocol,
 and most of what is wrong with a Pack is wrong there.
 
+TSX is TypeScript plus JSX. The Pack is therefore
+`packs/omega-typescript/` with one section added, and the rest of this document
+says what that section is and where it departs from the TypeScript Pack.
+
 ## What it states today
 
-208 templates over 282 query patterns, 102 distinct root node types.
+60 templates over 40 query patterns, 62 distinct node types, 10 guards.
 
 | capability | declared | templates |
 |---|---|---|
-| `bindings` | yes | 23 |
-| `calls` | yes | 20 |
-| `data` | yes | 33 |
-| `definitions` | yes | 46 |
-| `imports` | yes | 17 |
-| `modules` | yes | 4 |
-| `references` | yes | 17 |
+| `bindings` | yes | 6 |
+| `calls` | yes | 3 |
+| `definitions` | yes | 36 |
+| `imports` | yes | 3 |
+| `modules` | yes | 1 |
+| `references` | yes | 4 |
 | `scopes` | yes | 6 |
-| `tests` | yes | 1 |
-| `types` | yes | 41 |
+| `types` | yes | 1 |
 
 ### Declarations
 
 | kind | family the host gives it | templates |
 |---|---|---|
-| `definition.ecmascript_imported_constructor_binding_context` | Type | 1 |
-| `definition.abstract_class` | Type | 1 |
-| `definition.abstract_method_signature` | Callable | 1 |
-| `definition.ambient_declaration` | Value | 1 |
-| `definition.call_signature` | Value | 1 |
 | `definition.class` | Type | 1 |
-| `definition.construct_signature` | Type | 1 |
-| `definition.ecmascript_exported_function_context` | Callable | 1 |
-| `definition.ecmascript_exported_variable_context` | Value | 1 |
-| `definition.enum` | Type | 2 |
-| `definition.field` | Value | 1 |
-| `definition.function` | Callable | 1 |
-| `definition.function_signature` | Callable | 1 |
-| `definition.import_alias` | Type | 1 |
-| `definition.index_signature` | Value | 1 |
-| `definition.interface` | Value | 2 |
+| `definition.interface` | Type | 1 |
+| `definition.type_alias` | Type | 1 |
+| `definition.enum` | Type | 1 |
+| `definition.namespace` | Namespace | 1 |
+| `definition.ambient_module` | Namespace | 1 |
+| `definition.function` | Callable | 2 |
 | `definition.method` | Callable | 1 |
 | `definition.method_signature` | Callable | 1 |
-| `definition.module` | Value | 1 |
-| `definition.namespace` | Value | 1 |
-| `definition.property_signature` | Value | 1 |
-| `definition.type_alias` | Type | 1 |
+| `definition.field` | Value | 2 |
+| `definition.property` | Value | 1 |
+| `definition.constant` | Value | 1 |
 | `definition.variable` | Value | 1 |
+
+`interface`, `namespace` and `alias` are Type and Namespace words in the host's
+current vocabulary (whole-word matching, `entity_family`); this is the fix for
+defect A, which the old Pack carried six times.
 
 ### Carriers -- attributes they attach to the declaration on the same span
 
 | kind | attribute | templates |
 |---|---|---|
-| `binding.parameter_owned_candidate` | `omega.pack.parameter_owned` | 1 |
-| `call.target_candidate` | `omega.pack.target` | 1 |
-| `definition.category_candidate` | `omega.pack.category` | 9 |
-| `definition.identity_candidate` | `omega.pack.identity` | 1 |
-| `definition.member_category_candidate` | `omega.pack.member_category` | 4 |
-| `definition.member_owned_candidate` | `omega.pack.member_owned` | 1 |
-| `definition.modifier_candidate` | `omega.pack.modifier` | 1 |
-| `definition.parameter_shape_candidate` | `omega.pack.parameter_shape` | 1 |
-| `definition.return_type_candidate` | `omega.pack.return_type` | 1 |
-| `definition.type_parameter_shape_candidate` | `omega.pack.type_parameter_shape` | 1 |
-| `definition.visibility_candidate` | `omega.pack.visibility` | 1 |
-| `import.alias_candidate` | `omega.pack.alias` | 1 |
-| `import.module_path_candidate` | `omega.pack.module_path` | 1 |
-| `import.target_candidate` | `omega.pack.target` | 1 |
-| `module.reexport_candidate` | `omega.pack.reexport` | 1 |
-| `module.export_alias_candidate` | `omega.pack.export_alias` | 1 |
-| `reference.member_access_candidate` | `omega.pack.member_access` | 1 |
-| `reference.qualified_chain_candidate` | `omega.pack.qualified_chain` | 1 |
-| `reference.receiver_candidate` | `omega.pack.receiver` | 1 |
-| `scope.enclosing_owner_candidate` | `omega.pack.enclosing_owner` | 1 |
-| `scope.named_owner_candidate` | `omega.pack.named_owner` | 1 |
+| `definition.parameter_shape_candidate` | `omega.pack.parameter_shape` | 4 |
+| `definition.return_type_candidate` | `omega.pack.return_type` | 7 |
+| `definition.type_parameter_shape_candidate` | `omega.pack.type_parameter_shape` | 7 |
+| `definition.visibility_candidate` | `omega.pack.visibility` | 3 |
+
+Four names, all four of them read by `declared_signature` in
+`omega-runtime/src/build/production.rs`. Every carrier's span is the
+declaration it describes, never the enclosing class.
 
 ### Regions
 
-- `scope.block` (1)
-- `scope.class` (1)
-- `scope.function` (1)
-- `scope.interface` (1)
+- `scope.class_body` (1)
+- `scope.interface_body` (1)
+- `scope.function_body` (2)
+- `scope.namespace_body` (2)
+
+None of them ends in a word that also reads as a declaration.
 
 ### Mentions
 
 | kind | occurrence the host makes | templates |
 |---|---|---|
-| `binding.destructuring` | reference | 1 |
-| `binding.imported` | binding | 4 |
-| `binding.optional_parameter` | reference | 1 |
-| `binding.optional_parameter_destructuring` | reference | 1 |
-| `binding.parameter` | reference | 1 |
-| `binding.parameter_destructuring` | reference | 1 |
-| `binding.required_parameter` | reference | 1 |
-| `binding.variable` | reference | 1 |
-| `pattern.array` | reference | 1 |
-| `pattern.assignment` | reference | 1 |
-| `pattern.object` | reference | 1 |
-| `pattern.rest` | reference | 1 |
-| `value_origin.top_level_const_alias` | reference | 1 |
-| `value_origin.top_level_const_false` | reference | 1 |
-| `value_origin.top_level_const_null` | reference | 1 |
-| `value_origin.top_level_const_number` | reference | 1 |
-| `value_origin.top_level_const_string` | reference | 1 |
-| `value_origin.top_level_const_true` | reference | 1 |
-| `call.constructor` | call | 1 |
-| `call.direct` | call | 1 |
-| `call.ecmascript_constructor_identifier_context` | call | 1 |
-| `call.ecmascript_constructor_member_context` | call | 1 |
-| `call.ecmascript_direct_context` | call | 1 |
-| `call.ecmascript_direct_dependency_array_identifier_context` | call | 1 |
-| `call.ecmascript_direct_identifier_argument_context` | call | 1 |
-| `call.ecmascript_direct_string_argument_context` | call | 1 |
-| `call.ecmascript_member_identifier_context` | call | 1 |
-| `call.ecmascript_member_owned_member_call_context` | call | 1 |
-| `call.ecmascript_member_owned_string_call_context` | call | 1 |
-| `call.ecmascript_member_string_identifier_context` | call | 1 |
-| `call.ecmascript_nested_member_string_identifier_context` | call | 1 |
-| `call.ecmascript_owned_call_context` | call | 1 |
-| `call.ecmascript_owned_string_call_context` | call | 1 |
-| `call.ecmascript_variable_object_fluent_chain_context` | call | 1 |
-| `call.generic_instantiation` | call | 1 |
-| `call.member` | call | 1 |
-| `reference.ecmascript_root_member_call_context` | call | 1 |
-| `data.array` | reference | 1 |
-| `data.boolean` | reference | 1 |
-| `data.ecmascript_assignment_export_nested_object_array_object_field_context` | binding | 1 |
-| `data.ecmascript_assignment_export_nested_object_string_context` | binding | 1 |
-| `data.ecmascript_assignment_export_object_string_context` | binding | 1 |
-| `data.ecmascript_assignment_export_three_level_object_string_context` | binding | 1 |
-| `data.ecmascript_call_nested_object_identifier_context` | call | 1 |
-| `data.ecmascript_call_nested_object_string_context` | call | 1 |
-| `data.ecmascript_call_object_array_direct_call_context` | call | 1 |
-| `data.ecmascript_call_object_array_object_string_identifier_context` | call | 1 |
-| `data.ecmascript_call_object_string_array_item_context` | call | 1 |
-| `data.ecmascript_call_object_string_field_context` | call | 1 |
-| `data.ecmascript_call_three_level_object_string_context` | call | 1 |
-| `data.ecmascript_direct_array_identifier_item_context` | reference | 1 |
-| `data.ecmascript_direct_array_string_item_context` | reference | 1 |
-| `data.ecmascript_export_object_identifier_field_context` | binding | 1 |
-| `data.ecmascript_exported_object_field_context` | binding | 1 |
-| `data.ecmascript_function_directive_context` | reference | 1 |
-| `data.ecmascript_module_directive_context` | reference | 1 |
-| `data.ecmascript_root_member_object_identifier_context` | reference | 1 |
-| `data.ecmascript_root_member_string_argument_context` | reference | 1 |
-| `data.null` | reference | 1 |
-| `data.number` | reference | 1 |
-| `data.object` | reference | 1 |
-| `data.string` | reference | 1 |
-| `relation.jsx_expression` | reference | 1 |
-| `structure.jsx_closing_element` | reference | 1 |
-| `structure.jsx_opening_element` | reference | 1 |
-| `value.jsx_attribute` | reference | 1 |
-| `value.jsx_element` | reference | 1 |
-| `value.jsx_self_closing_element` | reference | 1 |
-| `relation.extends` | reference | 1 |
 | `relation.implements` | implements | 1 |
-| `import.alias` | binding | 1 |
-| `import.ecmascript_commonjs_binding_context` | binding | 1 |
-| `import.ecmascript_commonjs_named_binding_context` | binding | 1 |
-| `import.ecmascript_default_binding_context` | binding | 1 |
-| `import.ecmascript_named_binding_context` | binding | 1 |
-| `import.ecmascript_namespace_binding_context` | binding | 1 |
-| `import.import_equals_require` | binding | 1 |
-| `import.require` | binding | 1 |
-| `import.statement` | binding | 1 |
-| `module_relation.ambient` | reference | 1 |
-| `module_relation.export` | binding | 1 |
-| `module_relation.external_module` | reference | 1 |
-| `module_relation.namespace` | reference | 1 |
-| `module.ambient` | reference | 1 |
+| `call.function` | call | 1 |
+| `call.method` | call | 1 |
+| `call.constructor` | call | 1 |
+| `import.module` | binding | 2 |
+| `import.symbol` | binding | 1 |
+| `binding.import_default` | binding | 1 |
+| `binding.import_namespace` | binding | 1 |
+| `binding.import_alias` | binding | 3 |
+| `binding.export_alias` | binding | 1 |
 | `module.export` | binding | 1 |
-| `module.namespace` | reference | 1 |
-| `reference.decorator` | reference | 2 |
-| `reference.ecmascript_root_member_context` | reference | 1 |
-| `reference.identifier` | reference | 1 |
-| `reference.javascript_function_return_jsx_component_context` | reference | 1 |
-| `reference.jsx_expression` | reference | 1 |
-| `reference.jsx_namespace` | reference | 1 |
-| `reference.type_identifier` | reference | 1 |
-| `reference.typescript_class_decorator_object_array_identifier_context` | reference | 1 |
-| `reference.typescript_class_decorator_object_array_string_context` | reference | 1 |
-| `reference.typescript_class_decorator_object_string_field_context` | reference | 1 |
-| `reference.typescript_class_member_decorator_context` | reference | 1 |
-| `reference.typescript_class_member_marker_decorator_context` | reference | 1 |
-| `reference.typescript_constructor_parameter_type_context` | reference | 1 |
-| `test.declaration` | reference | 1 |
-| `control.await` | reference | 1 |
-| `control.yield` | reference | 1 |
-| `relation.assignment` | reference | 1 |
-| `relation.augmented_assignment` | reference | 1 |
-| `type.alias` | reference | 1 |
-| `type.annotation` | reference | 1 |
-| `type.arguments` | reference | 1 |
-| `type.conditional` | reference | 1 |
-| `type.interface` | reference | 1 |
-| `type.parameters` | reference | 1 |
-| `type.syntax` | reference | 25 |
-| `type_arguments.list` | reference | 1 |
-| `type_parameter.declaration` | reference | 1 |
-| `type_parameters.list` | reference | 1 |
-| `type_relation.as` | reference | 1 |
-| `type_relation.non_null` | reference | 1 |
-| `type_relation.satisfies` | reference | 1 |
+| `reference.decorator` | reference | 1 |
+| `reference.jsx_component` | reference | 1 |
+| `reference.jsx_attribute` | reference | 1 |
+| `type_use.name` | reference | 1 |
+
+`relation.implements` is the only `relation.*` kind, and it is one of the six
+the host knows. `extends` and `implements` are both stated as it: the host has
+one subtype edge.
 
 ### Emitted, dropped as mentions, but read as span markers
 
-These are not waste: their spans tell the host that a role boundary
-sitting on them is really a literal or a control form.
+None. The Pack emits no `reference_context.*` kind, so a `literal.*` span would
+suppress nothing; the two the old Pack had (`literal.jsx_text`,
+`literal.html_character_reference`) were one match per text run in every file
+for an emission the host then drops, and they are gone.
 
-- `literal.html_character_reference` (1)
-- `literal.jsx_text` (1)
+## What is wrong with it
+
+Measured on the Pack as found: **196 templates over 273 query patterns, 80
+coverage guards**, against 58 over 35 with 8 for the same language without JSX.
+
+- **D / D2 -- the name is the whole node (82 by the audit, and every one of the
+  nine JSX templates).** `value.jsx_element` took its name from `@jsx.element`,
+  which was the whole `jsx_element`: the entire markup subtree, opening tag,
+  children and closing tag, stored as the *name* of an emission, once per
+  element in every `.tsx` file in the repository. `value.jsx_self_closing_element`,
+  `structure.jsx_opening_element`, `structure.jsx_closing_element`,
+  `value.jsx_attribute`, `relation.jsx_expression` and `reference.jsx_expression`
+  did exactly the same thing with their own container. Outside JSX,
+  `data.object`, `data.array`, `data.string`, `call.member`, `binding.parameter`
+  and `definition.import_alias` were the same defect. This is the single largest
+  producer of index bytes in the Pack, and none of those names could ever
+  resolve to anything.
+- **Not one JSX emission resolved by name.** `<Counter />` is a use of the
+  `Counter` declared in another file; the old Pack stated the tag as a slab of
+  text and the component's name appeared nowhere. The one answer JSX adds was
+  the one answer missing.
+- **50 kinds named after the generator, not the language**:
+  `call.ecmascript_nested_member_string_identifier_context`,
+  `data.ecmascript_assignment_export_three_level_object_string_context`,
+  `reference.typescript_class_decorator_object_array_identifier_context`. These
+  are shapes of a particular library's configuration call spelled as a query,
+  three and four levels deep -- defect E and defect L in one kind. 31 of them
+  sat under capability `data` and stated fields of object literals reached
+  through nested `pair` chains.
+- **Defect L, with the denial attached.** 11 comment lines asserting
+  "Framework-neutral" and one capture spelled `framework_neutral`, over
+  patterns that match a decorator's metadata object down to its array items.
+- **Four `relation.*` kinds the host does not know** -- `relation.assignment`,
+  `relation.augmented_assignment`, `relation.extends`, `relation.jsx_expression`
+  -- each stored as a plain reference with a long name.
+- **25 templates under one kind, `type.syntax`**, restating that a piece of type
+  syntax is type syntax, plus `type.alias`, `type.annotation`, `type.arguments`,
+  `type.conditional`, `type.interface`, `type.parameters`, `type_arguments.list`,
+  `type_parameter.declaration`, `type_parameters.list`. A type mention reaches a
+  `type_identifier` at any depth; one capture states them all.
+- **18 carriers under names nothing assembles** (`omega.pack.category`,
+  `identity`, `target`, `enclosing_owner`, `export_alias`, `alias`) and **12
+  carriers the host will not fold at all** (`call.target_candidate`,
+  `import.alias_candidate`, `reference.member_access_candidate` and the rest fail
+  `is_definition_kind`, so they were stored as references to nothing).
+- **25 guards whose reason was a single token**, e.g.
+  `terminal_static_ceiling__typescript_overload_resolution`, out of 80.
+- **K2: `@module.namespace` emitted twice**, as `module.namespace` and
+  `module_relation.namespace`, same span and same name.
+- **Three capabilities declared for noise**: `data` (31 templates of nested
+  object-literal shapes), `implements` (the relation-coverage capability, which
+  needs no template of its own here) and `tests` (one `test.declaration` that
+  matched a call named `test` or `describe` -- a runner's shape, not a
+  TSX construct).
+
+## What it should extract
+
+Everything omega-typescript extracts, in the same words, plus the three rows
+marked **JSX**.
+
+| what | node | emitted as | family / occurrence |
+|---|---|---|---|
+| a class | `class_declaration`, `abstract_class_declaration` | `definition.class` | Type |
+| its type parameters, extent | same match | `definition.type_parameter_shape_candidate`, `scope.class_body` | carrier, region |
+| what it extends or implements | `extends_clause`, `implements_clause`, `extends_type_clause` | `relation.implements` | implements |
+| an interface | `interface_declaration` | `definition.interface` | Type |
+| a type alias | `type_alias_declaration` | `definition.type_alias` | Type |
+| an enum, and its members | `enum_declaration`, `enum_assignment`, `enum_body` | `definition.enum`, `definition.constant` | Type, Value |
+| a function, with or without a body | `function_declaration`, `generator_function_declaration`, `function_signature` | `definition.function` | Callable |
+| its parameters, return type, extent | same match | `definition.parameter_shape_candidate`, `definition.return_type_candidate`, `scope.function_body` | carrier, region |
+| a method, with or without a body | `method_definition`, `method_signature`, `abstract_method_signature` | `definition.method`, `definition.method_signature` | Callable |
+| a field, a property, a parameter property | `public_field_definition`, `property_signature`, `required_parameter`/`optional_parameter` with an accessibility modifier | `definition.field`, `definition.property` | Value |
+| a module-scope name | `variable_declarator` under `program`/`export_statement`/`ambient_declaration`/a module body | `definition.variable` | Value |
+| a namespace, an ambient module | `internal_module`, `module` | `definition.namespace`, `definition.ambient_module` | Namespace |
+| what the file imports | `import_statement`, `import_clause`, `import_specifier`, `import_require_clause`, `import_alias`, `require(...)`, `import(...)` | `import.module`, `import.symbol`, `binding.import_*` | binding |
+| what the file exports | `export_specifier`, `export_statement`, `namespace_export` | `module.export`, `binding.export_alias` | binding |
+| a call | `call_expression`, `new_expression` | `call.function`, `call.method`, `call.constructor` | call |
+| a decorator | `decorator` | `reference.decorator` | reference |
+| a type, at any depth | `type_identifier` | `type_use.name` | reference |
+| **JSX** -- a component used as a tag | `jsx_opening_element`/`jsx_self_closing_element` `name:` a capitalised `identifier` | `reference.jsx_component` | reference |
+| **JSX** -- a dotted component tag | the same `name:` a `member_expression`, reduced to its last segment | `reference.jsx_component` | reference |
+| **JSX** -- a prop passed to a component | `jsx_attribute`'s first `property_identifier`, under a component tag | `reference.jsx_attribute` | reference |
+
+### Where this departs from omega-typescript
+
+1. **Three new patterns' worth of JSX, and nothing else changed.** The kinds,
+   the carrier names, the guards and the capability set are the TypeScript
+   Pack's, deliberately: a `.ts` file and a `.tsx` file in one project declare
+   the same vocabulary, and an answer must not change shape because a component
+   happens to live in the file. 58 templates become 60 and 35 patterns become
+   40.
+2. **A lowercase tag is not stated.** JSX resolves a tag by its case: `<div>` is
+   an intrinsic element, a string the runtime hands to the DOM, and it names no
+   declaration in any TypeScript file in the project. Stating it would be one
+   mention per tag in every file resolving to nothing, and intrinsic tags are
+   the majority of tags. The case test is `#match? "^[A-Z]"`, one of the six
+   predicates the runtime applies. A dotted tag needs no test: an intrinsic
+   element cannot be spelled with a dot.
+3. **The closing tag is not stated.** It names the same component at the same
+   call site as the opening tag and would double every count.
+4. **An attribute is stated only on a component tag.** `step` in
+   `<Counter step={2}/>` resolves to the `step` declared in that component's
+   props type, which this Pack emits as `definition.property`. `className` on a
+   `<div>` resolves to nothing. This is narrower than it looks: it is the same
+   reasoning by which omega-typescript declines to emit a bare
+   `member_expression` property read.
+5. **`jsx_expression` is not stated.** `{...}` is a hole in the markup; what it
+   holds is ordinary TypeScript and is already covered by the call, type and
+   import patterns. The container itself names nothing.
+6. **`jsx_text` and `html_character_reference` are not stated.** See the marker
+   note above: with no `reference_context.*` kind in the Pack, a `literal.*`
+   emission suppresses nothing and is discarded.
+7. **A component is not declared as a component.** It is declared as the
+   `function` or `variable` the grammar gives it, and a tag resolves onto that.
+   See *Still to decide*.
+
+## Still to decide
+
+- **Is a component tag a reference or a call?** `<Counter/>` compiles to a call
+  of `Counter`, and `call.component` would put components into the call graph,
+  which would answer "what does this screen render" through the same machinery
+  as "what does this function call". It is stated as a reference here because
+  JSX defers the invocation and the host's `call` occurrence carries a claim
+  about control flow that the source does not make. Both spellings resolve by
+  the same name, so this is reversible without touching anything else.
+- **Should a component be declared as its own kind?** An agent asking "what
+  components does this package export" is asking a real question, and the
+  answer is not in the index: a component is an ordinary `function` or `const`
+  and the family is Callable or Value. Detecting one means matching a function
+  whose body returns markup, which in practice returns a conditional, a
+  fragment or a call to another component, so the pattern would be both
+  fragile and deep -- and *component* is a Value word in `entity_family`
+  anyway. Left undone rather than done badly.
+- **`definition.constant` for an enum member** is Value. There is no word in the
+  host's vocabulary for an enum member that puts it under the enum's own Type
+  family; inherited from omega-typescript unchanged.
 
 ## The boundary: what the grammar offers and the Pack ignores
 
-The grammar names 191 node types. The Pack looks at 122 of them.
+The grammar names 191 node types. The Pack looks at 62 of them.
 
-Untouched:
+Untouched, and why the classes of them are untouched:
 
-- `adding_type_annotation`
-- `asserts_annotation`
-- `binary_expression`
-- `break_statement`
-- `catch_clause`
-- `class_static_block`
-- `comment`
-- `computed_property_name`
-- `continue_statement`
-- `debugger_statement`
-- `declaration`
-- `do_statement`
-- `else_clause`
-- `empty_statement`
-- `escape_sequence`
-- `existential_type`
-- `export_clause`
-- `expression`
-- `extends_type_clause`
-- `finally_clause`
-- `flow_maybe_type`
-- `for_in_statement`
-- `for_statement`
-- `hash_bang_line`
-- `html_comment`
-- `if_statement`
-- `import`
-- `import_attribute`
-- `labeled_statement`
-- `meta_property`
-- `namespace_export`
-- `nested_identifier`
-- `object_assignment_pattern`
-- `omitting_type_annotation`
-- `opting_type_annotation`
-- `optional_chain`
-- `optional_type`
-- `parenthesized_expression`
-- `parenthesized_type`
-- `pattern`
-- `primary_expression`
-- `primary_type`
-- `regex`
-- `regex_flags`
-- `regex_pattern`
-- `rest_type`
-- `sequence_expression`
-- `shorthand_property_identifier`
-- `spread_element`
-- `statement`
-- `statement_identifier`
-- `subscript_expression`
-- `switch_body`
-- `switch_case`
-- `switch_default`
-- `switch_statement`
-- `template_string`
-- `template_substitution`
-- `template_type`
-- `ternary_expression`
-- `throw_statement`
-- `try_statement`
-- `type`
-- `type_predicate_annotation`
-- `unary_expression`
-- `undefined`
-- `update_expression`
-- `while_statement`
-- `with_statement`
+- **Statements and control flow** (`if_statement`, `for_statement`,
+  `while_statement`, `switch_statement`, `try_statement`, `return_statement`,
+  `throw_statement`, and the rest): the questions are about what a file
+  declares, imports and calls, not about its control flow. A function's extent
+  is already one region.
+- **Expression forms** (`binary_expression`, `ternary_expression`,
+  `arrow_function`, `await_expression`, `yield_expression`,
+  `subscript_expression`, `template_string`, `regex`, `object`, `array`,
+  `number`, `string`, `true`, `false`, `null`): a literal or an operator names
+  no declaration. `arrow_function` and `function_expression` are reached through
+  the `variable_declarator` that names them.
+- **Type syntax** (`union_type`, `intersection_type`, `conditional_type`,
+  `mapped_type_clause`, `infer_type`, `tuple_type`, `array_type`,
+  `literal_type`, `predefined_type`, `type_arguments`, `type_parameter`, …):
+  every name written inside any of them is a `type_identifier`, and one capture
+  states them all. `predefined_type` is deliberately excluded -- `string` and
+  `number` resolve to no declaration.
+- **Binding patterns** (`object_pattern`, `array_pattern`, `rest_pattern`,
+  `pair_pattern`, `assignment_pattern`, `shorthand_property_identifier_pattern`):
+  a destructured name is not declared, by the guard on `definitions`.
+- **Anonymous type members** (`call_signature`, `construct_signature`,
+  `index_signature`): there is no name to declare them under, by the guard on
+  `definitions`.
+- **JSX interior** (`jsx_element`, `jsx_closing_element`, `jsx_expression`,
+  `jsx_text`, `jsx_namespace_name`, `html_character_reference`): see items 3, 5
+  and 6 above.
+- The rest are supertypes the query never needs to name (`expression`,
+  `statement`, `declaration`, `pattern`, `type`, `primary_expression`,
+  `primary_type`), `comment`, `html_comment`, `hash_bang_line`, and flow-typed
+  annotation forms the TypeScript dialect does not produce
+  (`flow_maybe_type`, `existential_type`, `adding_type_annotation`,
+  `omitting_type_annotation`, `opting_type_annotation`).
 
-## To decide when rewriting
+## What the audit says
 
-1. Which untouched node types carry meaning for an agent's question,
-   and under which capability they belong.
-2. Which kinds above route to a family the author did not mean --
-   check the family column against what the construct actually is.
-3. Which patterns ask for the same node separately and should be one.
-4. What is stated that answers no question.
+`python pack-design/audit.py omega-tsx` reports zero in every class: D, D2, F,
+G, H, I, I2, J, K, K2, M, capability mismatch, unfoldable carrier,
+self-overwriting carrier, unassembled carrier, dead marker, unknown relation,
+scope-that-is-also-a-declaration, unread pattern.

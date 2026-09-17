@@ -4,12 +4,18 @@
  "templates": [
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_heading",
-   "span_capture": "markup.heading.1",
+   "capability": "definitions",
+   "output_kind": "definition.section",
+   "span_capture": "heading",
    "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.1"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "capture_ref",
+      "name": "heading.name"
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -17,12 +23,18 @@
   },
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_heading",
-   "span_capture": "markup.heading.2",
+   "capability": "scopes",
+   "output_kind": "scope.section",
+   "span_capture": "section",
    "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.2"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "capture_ref",
+      "name": "heading.name"
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -30,64 +42,44 @@
   },
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_heading",
-   "span_capture": "markup.heading.3",
+   "capability": "definitions",
+   "output_kind": "definition.link_reference",
+   "span_capture": "linkdef",
    "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.3"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_heading",
-   "span_capture": "markup.heading.4",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.4"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_heading",
-   "span_capture": "markup.heading.5",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.5"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_heading",
-   "span_capture": "markup.heading.6",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.6"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_link_label",
-   "span_capture": "markup.link.label",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.link.label"
+    "kind": "call",
+    "op": "lower",
+    "args": [
+     {
+      "kind": "call",
+      "op": "strip_suffix",
+      "args": [
+       {
+        "kind": "call",
+        "op": "strip_prefix",
+        "args": [
+         {
+          "kind": "call",
+          "op": "trim",
+          "args": [
+           {
+            "kind": "capture_ref",
+            "name": "linkdef.label"
+           }
+          ]
+         },
+         {
+          "kind": "literal",
+          "value": "["
+         }
+        ]
+       },
+       {
+        "kind": "literal",
+        "value": "]"
+       }
+      ]
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -96,11 +88,37 @@
   {
    "query": "queries.scm",
    "capability": "references",
-   "output_kind": "reference.markdown_link_target",
-   "span_capture": "markup.link.url",
+   "output_kind": "relation.depends",
+   "span_capture": "linkdef.destination",
    "name": {
-    "kind": "capture_ref",
-    "name": "markup.link.url"
+    "kind": "call",
+    "op": "strip_suffix",
+    "args": [
+     {
+      "kind": "call",
+      "op": "strip_prefix",
+      "args": [
+       {
+        "kind": "call",
+        "op": "trim",
+        "args": [
+         {
+          "kind": "capture_ref",
+          "name": "linkdef.destination"
+         }
+        ]
+       },
+       {
+        "kind": "literal",
+        "value": "<"
+       }
+      ]
+     },
+     {
+      "kind": "literal",
+      "value": ">"
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -108,12 +126,24 @@
   },
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_code_block",
-   "span_capture": "markup.raw.block",
+   "capability": "scopes",
+   "output_kind": "scope.code_block",
+   "span_capture": "code",
    "name": {
-    "kind": "capture_ref",
-    "name": "markup.raw.block"
+    "kind": "call",
+    "op": "lower",
+    "args": [
+     {
+      "kind": "call",
+      "op": "trim",
+      "args": [
+       {
+        "kind": "capture_ref",
+        "name": "code.language"
+       }
+      ]
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -121,297 +151,73 @@
   },
   {
    "query": "queries.scm",
-   "capability": "definitions",
-   "output_kind": "definition.markdown_candidate",
-   "span_capture": "definition.expression",
+   "capability": "references",
+   "output_kind": "reference.documented_term",
+   "span_capture": "table.term",
    "name": {
-    "kind": "capture_ref",
-    "name": "definition.expression"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "call",
+      "op": "strip_suffix",
+      "args": [
+       {
+        "kind": "call",
+        "op": "strip_prefix",
+        "args": [
+         {
+          "kind": "call",
+          "op": "first",
+          "args": [
+           {
+            "kind": "call",
+            "op": "split",
+            "args": [
+             {
+              "kind": "call",
+              "op": "strip_prefix",
+              "args": [
+               {
+                "kind": "call",
+                "op": "trim",
+                "args": [
+                 {
+                  "kind": "capture_ref",
+                  "name": "table.term"
+                 }
+                ]
+               },
+               {
+                "kind": "literal",
+                "value": "["
+               }
+              ]
+             },
+             {
+              "kind": "literal",
+              "value": "]"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "kind": "literal",
+          "value": "`"
+         }
+        ]
+       },
+       {
+        "kind": "literal",
+        "value": "`"
+       }
+      ]
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "keyword.directive",
-   "name": {
-    "kind": "capture_ref",
-    "name": "keyword.directive"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading.1",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.1"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading.2",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.2"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading.3",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.3"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading.4",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.4"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading.5",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.5"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.heading.6",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.heading.6"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.link.label",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.link.label"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.link.url",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.link.url"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.list",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.list"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.list.checked",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.list.checked"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.list.unchecked",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.list.unchecked"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.quote",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.quote"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_lexical_role",
-   "span_capture": "markup.raw.block",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markup.raw.block"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "semantic_hint.markdown_literal",
-   "span_capture": "string.escape",
-   "name": {
-    "kind": "capture_ref",
-    "name": "string.escape"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.entry",
-   "span_capture": "markdown.section_hierarchy.h3_section",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markdown.section_hierarchy.h3"
-   },
-   "attributes": {},
-   "fields": {
-    "h1_heading": {
-     "kind": "capture_ref",
-     "name": "markdown.section_hierarchy.h1"
-    },
-    "h2_heading": {
-     "kind": "capture_ref",
-     "name": "markdown.section_hierarchy.h2"
-    },
-    "h3_heading": {
-     "kind": "capture_ref",
-     "name": "markdown.section_hierarchy.h3"
-    }
-   },
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.entry",
-   "span_capture": "markdown.section_item.h3_section",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markdown.section_item.text"
-   },
-   "attributes": {},
-   "fields": {
-    "h1_heading": {
-     "kind": "capture_ref",
-     "name": "markdown.section_item.h1"
-    },
-    "h2_heading": {
-     "kind": "capture_ref",
-     "name": "markdown.section_item.h2"
-    },
-    "h3_heading": {
-     "kind": "capture_ref",
-     "name": "markdown.section_item.h3"
-    },
-    "item_text": {
-     "kind": "capture_ref",
-     "name": "markdown.section_item.text"
-    }
-   },
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "definitions",
-   "output_kind": "definition.markdown_link_reference",
-   "span_capture": "markdown.reference.definition",
-   "name": {
-    "kind": "capture_ref",
-    "name": "markdown.reference.label"
-   },
-   "attributes": {},
-   "fields": {
-    "destination": {
-     "kind": "capture_ref",
-     "name": "markdown.reference.destination"
-    }
-   },
    "decoder": null
   }
  ],
@@ -428,10 +234,12 @@
    "language_aliases": {
     "js": "javascript",
     "javascript": "javascript",
+    "jsx": "javascript",
     "mjs": "javascript",
     "cjs": "javascript",
     "ts": "typescript",
     "typescript": "typescript",
+    "tsx": "tsx",
     "mts": "typescript",
     "cts": "typescript",
     "css": "css",
@@ -444,8 +252,24 @@
     "bash": "bash",
     "sh": "bash",
     "shell": "bash",
+    "zsh": "bash",
+    "console": "bash",
     "python": "python",
     "py": "python",
+    "rust": "rust",
+    "rs": "rust",
+    "go": "go",
+    "golang": "go",
+    "java": "java",
+    "kotlin": "kotlin",
+    "kt": "kotlin",
+    "c": "c",
+    "cpp": "cpp",
+    "c++": "cpp",
+    "cs": "c-sharp",
+    "csharp": "c-sharp",
+    "ruby": "ruby",
+    "rb": "ruby",
     "markdown": "markdown",
     "md": "markdown",
     "sql": "sql",
@@ -458,38 +282,23 @@
   {
    "query": "queries.scm",
    "capabilities": [
-    "data",
     "references"
    ],
-   "reason": "terminal_static_ceiling__markdown_exact_helix_highlights_roles"
+   "reason": "Only reference-style links are visible. This parser is the block grammar, in which a paragraph's text is one opaque `inline` node, so inline links, autolinks and bare URLs written in prose are not stated and a document's outgoing links are under-reported."
   },
   {
    "query": "queries.scm",
    "capabilities": [
     "definitions"
    ],
-   "reason": "markdown_definitions_candidate_requires_contextual_resolution_and_may_include_declaration_or_reference_overlap"
+   "reason": "A heading's name is its inline source as authored, so a heading written as `## The `Config` loader` keeps its backticks and link syntax; the inline grammar that would strip them is not part of this parser."
   },
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "scopes"
    ],
-   "reason": "markdown_highlight_capture_not_symbol_truth"
-  },
-  {
-   "query": "queries.scm",
-   "capabilities": [
-    "data"
-   ],
-   "reason": "direct ATX H1->H2->H3 section hierarchy only; Setext headings, semantic heading meaning and rendered document interpretation remain outside Pack truth"
-  },
-  {
-   "query": "queries.scm",
-   "capabilities": [
-    "data"
-   ],
-   "reason": "direct top-level list item under an ATX H3 section inside H2/H1 hierarchy only; nested list semantics and document-specific meaning remain outside Pack truth"
+   "reason": "A code block is given a region only when its fence declares a language. An indented code block, and a fence with no info string, carry no language and are left unstated rather than guessed at."
   }
  ],
  "legacy_rules": []

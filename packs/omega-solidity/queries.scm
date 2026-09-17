@@ -1,288 +1,176 @@
-; --- call_targets ---
+; omega-solidity
+;
+; Solidity is the language of deployed smart contracts. The questions asked of
+; a .sol file are: what contracts, interfaces and libraries does it declare;
+; what state does a contract hold and what functions can move it; who may call
+; them; what does it inherit from, import, emit and revert with; and where does
+; it drop into inline assembly.
+;
+; Containment is not stated as a pattern. The tree already holds it, a member
+; declared inside a contract already carries that contract through the `within:`
+; namespace segment, and each container's extent is emitted once as a region.
+; The one place a parent appears below is the constructor, which has no name of
+; its own and is named after the contract it belongs to.
 
-(call_expression
-  function: (_) @call.target) @call.expression
+; --- what the file requires of the compiler ---
 
-(call_struct_argument
-  name: (_) @call.target) @call.expression
+(pragma_directive (solidity_pragma_token) @pragma.solidity.token) @pragma.solidity
 
-(yul_function_call
-  function: (_) @call.target) @call.expression
+(pragma_directive (any_pragma_token . (identifier) @pragma.name)) @pragma.other
 
-; --- completeness_types_high_confidence ---
+; --- what it pulls in ---
+;
+; `source`, `import_name` and `alias` are all repeated fields of one directive,
+; so asking for two of them in one pattern would match their cross product.
+; Three patterns, one match each.
 
-(enum_declaration) @type.expression
-(interface_declaration) @type.expression
-(struct_declaration) @type.expression
-(user_defined_type_definition) @type.expression
+(import_directive source: (string) @import.source) @import.directive
 
-; --- declaration_category_constant ---
+(import_directive import_name: (identifier) @import.symbol)
 
-(constant_variable_declaration
-  name: (_) @definition.category.constant.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+(import_directive alias: (identifier) @import.alias)
 
-; --- declaration_category_enum ---
+; --- the three contract-like declarations ---
+;
+; One pattern each, carrying both the declaration and the extent of its body.
 
-(enum_declaration
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_event ---
-
-(event_definition
-  name: (_) @definition.category.event.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_function ---
-
-(function_definition
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_interface ---
+(contract_declaration
+  name: (identifier) @contract.name
+  body: (contract_body) @contract.body) @contract
 
 (interface_declaration
-  name: (_) @definition.category.interface.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (identifier) @interface.name
+  body: (contract_body) @interface.body) @interface
 
-; --- declaration_category_struct ---
+(library_declaration
+  name: (identifier) @library.name
+  body: (contract_body) @library.body) @library
+
+; A constructor is the one declaration in Solidity with no name node. It is
+; matched through its contract so it can be named after it; there is at most
+; one constructor per contract, so this costs one match, not a tuple.
+
+(contract_declaration
+  name: (identifier) @constructor.owner
+  body: (contract_body
+    (constructor_definition
+      body: (function_body) @constructor.body) @constructor))
+
+; --- what a contract is built out of ---
+
+(inheritance_specifier
+  ancestor: (user_defined_type (identifier) @inheritance.base .)) @inheritance
+
+(using_directive (type_alias (identifier) @using.library .)) @using
+
+; --- functions ---
+;
+; `body` is absent on an interface function and `return_type` on most others,
+; so both are optional: the templates that need them are skipped when they are
+; not there. Visibility and mutability sit in one repeat group whose order the
+; grammar does not fix (`external payable` and `payable external` both parse),
+; so they are asked for separately rather than in a sequence that would only
+; match one of the two spellings.
+
+(function_definition
+  name: (identifier) @function.name
+  return_type: (return_type_definition)? @function.return_type
+  body: (function_body)? @function.body) @function
+
+(function_definition (visibility) @function.visibility) @function.visibility.owner
+
+(function_definition (state_mutability) @function.mutability) @function.mutability.owner
+
+; `fallback()` and `receive()` are declared by keyword, with no name node. The
+; keyword is the first word of the declaration, so the name is taken from its
+; own text up to the opening parenthesis.
+
+(fallback_receive_definition body: (function_body)? @fallback.body) @fallback
+
+(modifier_definition
+  name: (identifier) @modifier.name
+  body: (function_body)? @modifier.body) @modifier
+
+(modifier_invocation . (identifier) @call.modifier)
+
+; --- what a contract declares besides functions ---
+
+(event_definition name: (identifier) @event.name) @event
+
+(error_declaration name: (identifier) @error.name) @error
 
 (struct_declaration
-  name: (_) @definition.category.struct.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
+  name: (identifier) @struct.name
+  body: (struct_body) @struct.body) @struct
 
 (struct_member
-  name: (_) @definition.category.struct.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_type ---
-
-(user_defined_type_definition
-  name: (_) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_variable ---
-
-(state_variable_declaration
-  name: (_) @definition.category.variable.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(variable_declaration
-  name: (_) @definition.category.variable.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_visibility ---
-
-(function_definition
-  name: (_) @definition.visibility.name
-  (visibility) @definition.visibility.modifier
-) @definition.visibility.owner
-
-; --- definition_identity_hints ---
-
-; --- distributed_web_structural ---
-
-; OMEGA-INDEPENDENTLY-AUTHORED structural query.
-; External Neovim query body is NOT copied. Exact parser-target evidence: https://raw.githubusercontent.com/neovim-treesitter/nvim-treesitter-queries-solidity/main/parser.json
-; Structural node fact observed at: https://raw.githubusercontent.com/neovim-treesitter/nvim-treesitter-queries-solidity/main/queries/highlights.scm
-(contract_declaration) @structural.candidate
-
-; --- enclosing_owner_hints ---
-
-(interface_declaration 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(struct_declaration 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- import_alias_hints ---
-
-(import_directive
-  source: (_) @import.target
-  alias: (_) @import.alias) @import.statement
-
-; --- import_targets ---
-
-(import_directive
-  source: (_) @import.target @import.module_path.target) @import.statement @import.module_path.statement
-
-(using_directive
-  source: (_) @import.target) @import.statement
-
-; --- member_access_hints ---
-
-(member_expression
-  object: (_) @reference.receiver
-  property: (_) @reference.member) @reference.member_expression
-
-; --- member_category_enum ---
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (enum_declaration
-      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (enum_declaration
-      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_event ---
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (event_definition
-      name: (_) @owned.member_category.event.name @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (event_definition
-      name: (_) @owned.member_category.event.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_function ---
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (function_definition
-      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (function_definition
-      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_struct ---
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (struct_declaration
-      name: (_) @owned.member_category.struct.name @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (struct_declaration
-      name: (_) @owned.member_category.struct.name @owned.member.name) @owned.member)) @owner.span
-
-(struct_declaration
-  name: (_) @owner.name
-  body: (struct_body
-    (struct_member
-      name: (_) @owned.member_category.struct.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_type ---
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (user_defined_type_definition
-      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (user_defined_type_definition
-      name: (_) @owned.member_category.type.name @owned.member.name) @owned.member)) @owner.span
-
-; --- module_path_hints ---
-
-; --- named_scope_owners ---
-
-(contract_declaration
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-(function_definition
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- ownership_members ---
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (error_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (modifier_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(contract_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (state_variable_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (error_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (modifier_definition
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-(interface_declaration
-  name: (_) @owner.name
-  body: (contract_body
-    (state_variable_declaration
-      name: (_) @owned.member.name) @owned.member)) @owner.span
-
-; --- signature_return_type ---
-
-(function_definition
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; --- upstream_locals_exact ---
-
-; Exact pinned upstream locals query adapted into Omega P0 staging.
-; source: JoranHonig/tree-sitter-solidity@048fe686cb1fde267243739b8bdbec8fc3a55272/queries/locals.scm
-(function_definition) @local.scope
-(block_statement) @local.scope
-(function_definition (parameter name: (_) @local.definition))
-(assignment_expression left: (_) @local.definition)
-
-; --- upstream_tags_exact ---
-
-; Exact pinned upstream tags query adapted into Omega P0 staging.
-; source: JoranHonig/tree-sitter-solidity@048fe686cb1fde267243739b8bdbec8fc3a55272/queries/tags.scm
-(contract_declaration (_ (function_definition name: (identifier) @name) @definition.method))
-(source_file (function_definition name: (identifier) @name) @definition.function)
-(contract_declaration name: (identifier) @name) @definition.class
-(interface_declaration name: (identifier) @name) @definition.interface
-(library_declaration name: (identifier) @name) @definition.interface
-(struct_declaration name: (identifier) @name) @definition.class
-(enum_declaration name: (identifier) @name) @definition.class
-(event_definition name: (identifier) @name) @definition.class
-(call_expression (expression (identifier)) @name) @reference.call
-(call_expression (expression (member_expression property: (_) @name))) @reference.call
-(emit_statement name: (_) @name) @reference.class
-(inheritance_specifier ancestor: (user_defined_type (_) @name .)) @reference.class
-(import_directive import_name: (_) @name) @reference.unknown
-
-; --- terminal_solidity_special_definitions_v2 ---
+  type: (type_name) @field.type
+  name: (identifier) @field.name) @field
 
 (enum_declaration
-  name: (identifier) @solidity.enum.value.owner
-  body: (enum_body (enum_value) @solidity.enum.value)) @solidity.enum.value.context
-(yul_function_definition (yul_identifier) @solidity.yul.function.name) @solidity.yul.function
+  name: (identifier) @enum.name
+  body: (enum_body) @enum.body) @enum
+
+(enum_value) @enumerator
+
+(user_defined_type_definition
+  name: (identifier) @udvt.name
+  (primitive_type) @udvt.underlying) @udvt
+
+; --- the state a contract holds ---
+
+(state_variable_declaration
+  type: (type_name) @state.type
+  visibility: (visibility)? @state.visibility
+  name: (identifier) @state.name) @state
+
+(constant_variable_declaration
+  type: (type_name) @constant.type
+  name: (identifier) @constant.name) @constant
+
+; --- what the code does ---
+;
+; A member call is stated only in the call position. tree-sitter-solidity spells
+; a field read and a method callee with the same `member_expression`, and a
+; query cannot see its parent, so a bare member reference would report every
+; method call a second time as a field of the receiver.
+
+(call_expression function: (expression (identifier) @call.function))
+
+(call_expression
+  function: (expression (member_expression property: (identifier) @call.method)))
+
+(new_expression
+  name: (type_name (user_defined_type (identifier) @call.constructor .)))
+
+(emit_statement
+  name: (expression
+          [(identifier) @emit.event
+           (member_expression property: (identifier) @emit.event)]))
+
+(revert_statement
+  error: (expression
+           [(identifier) @revert.error
+            (member_expression property: (identifier) @revert.error)]))
+
+(struct_field_assignment name: (identifier) @struct.field.reference)
+
+; --- every mention of a declared type ---
+;
+; A qualified name is spelled flat, as a run of identifiers inside one
+; `user_defined_type`, so the last one is the type and the leading ones are the
+; library or contract that qualifies it.
+
+(user_defined_type (identifier) @type.name .)
+
+(struct_expression type: (expression (identifier) @type.name))
+
+; --- inline assembly ---
+;
+; Only what Yul names: a function it declares and a call to one. EVM builtins
+; are captured by neither, since `yul_evm_builtin` is a distinct node. The name
+; is taken from the `identifier` inside `yul_identifier`, which wraps it.
+
+(yul_function_definition . (yul_identifier (identifier) @yul.function.name)) @yul.function
+
+(yul_function_call function: (yul_identifier (identifier) @call.assembly))

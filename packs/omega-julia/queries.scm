@@ -1,750 +1,373 @@
-; --- call_targets ---
+; omega-julia
+;
+; Julia is written as packages: a `src/Package.jl` that declares one module,
+; a tree of files it `include`s, and a `test/` tree. The questions asked of
+; that source are: what does this module define and export, what does this
+; package depend on, what type is this, what is this function's signature,
+; what subtypes what, and who calls what. Every pattern below answers one of
+; those and nothing else.
+;
+; Containment is not stated as a pattern. The tree holds it, a declaration
+; nested in a module already carries the module through `within:`, and the
+; extent of a module, a function, a macro and a struct is emitted once as a
+; region.
 
-(call_expression
-  (_) @call.target
-  (argument_list)) @call.expression
-
-; --- completeness_calls_3 ---
-
-(call_expression) @call.expression
-
-; --- completeness_imports_3 ---
-
-(import_statement) @import.expression @julia.import
-
-; --- completeness_modules_3 ---
-
-(module_definition) @module.expression
-
-; --- completeness_types_high_confidence ---
-
-(struct_definition) @type.expression @julia.struct
-
-; --- declaration_category_module ---
+; --- a module ---
+;
+; `module M ... end` and `baremodule M ... end` are the same node. The block
+; is optional in the grammar, so the region is optional too and the
+; declaration survives without it.
 
 (module_definition
-  name: (_) @definition.category.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- definition_identity_hints ---
-
-; --- external_highlights ---
-
-; OMEGA PINNED EXTERNAL HIGHLIGHTS — SYNTAX-ROLE EVIDENCE ONLY
-; sha256=7bb322f3c048a7e951b64e4c8a0bc97e782034f95dff15385b946eded569d94d
-
-; Identifiers
-(identifier) @variable @local.reference
-
-(field_expression
-  (identifier) @variable.member .)
-
-; Symbols
-(quote_expression
-  ":" @string.special.symbol
-  [
-    (identifier)
-    (operator)
-  ] @string.special.symbol)
-
-; Function calls
-(call_expression
-  (identifier) @function.call)
-
-(call_expression
-  (field_expression
-    (identifier) @function.call .))
-(broadcast_call_expression (identifier) @function.call @julia.broadcast.callee) @julia.broadcast.direct_call
-
-(broadcast_call_expression
-  (field_expression
-    (identifier) @function.call .))
-
-(binary_expression
-  (_)
-  (operator) @_pipe
-  (identifier) @function.call
-  (#any-of? @_pipe "|>" ".|>"))
-
-; Macros
-(macro_identifier
-  "@" @function.macro
-  (identifier) @function.macro)
-(macro_definition (signature (call_expression . (identifier) @function.macro @local.definition.function))) @local.scope
-
-; Built-in functions
-; print.("\"", filter(name -> getglobal(Core, name) isa Core.Builtin, names(Core)), "\" ")
-((identifier) @function.builtin
-  (#any-of? @function.builtin
-    "applicable" "fieldtype" "getfield" "getglobal" "invoke" "isa" "isdefined" "isdefinedglobal"
-    "modifyfield!" "modifyglobal!" "nfields" "replacefield!" "replaceglobal!" "setfield!"
-    "setfieldonce!" "setglobal!" "setglobalonce!" "swapfield!" "swapglobal!" "throw" "tuple"
-    "typeassert" "typeof"))
-
-; Type definitions
-(type_head
-  (_) @type.definition)
-
-; Type annotations
-(parametrized_type_expression
-  [
-    (identifier) @type
-    (field_expression
-      (identifier) @type .)
-  ]
-  (curly_expression
-    (_) @type))
-
-(typed_expression
-  (identifier) @type .)
-
-(unary_typed_expression
-  (identifier) @type .)
-
-(where_expression
-  [
-    (curly_expression
-      (_) @type)
-    (_) @type
-  ] .)
-
-(unary_expression
-  (operator) @operator
-  (_) @type
-  (#any-of? @operator "<:" ">:"))
-
-(binary_expression
-  (_) @type
-  (operator) @operator
-  (_) @type
-  (#any-of? @operator "<:" ">:"))
-
-; Built-in types
-; print.("\"", filter(name -> typeof(Base.eval(Core, name)) in [DataType, UnionAll], names(Core)), "\" ")
-((identifier) @type.builtin
-  (#any-of? @type.builtin
-    "AbstractArray" "AbstractChar" "AbstractFloat" "AbstractString" "Any" "ArgumentError" "Array"
-    "AssertionError" "AtomicMemory" "AtomicMemoryRef" "Bool" "BoundsError" "Char"
-    "ConcurrencyViolationError" "Cvoid" "DataType" "DenseArray" "DivideError" "DomainError"
-    "ErrorException" "Exception" "Expr" "FieldError" "Float16" "Float32" "Float64" "Function"
-    "GenericMemory" "GenericMemoryRef" "GlobalRef" "IO" "InexactError" "InitError" "Int" "Int128"
-    "Int16" "Int32" "Int64" "Int8" "Integer" "InterruptException" "LineNumberNode" "LoadError"
-    "Memory" "MemoryRef" "Method" "MethodError" "Module" "NTuple" "NamedTuple" "Nothing" "Number"
-    "OutOfMemoryError" "OverflowError" "Pair" "Ptr" "QuoteNode" "ReadOnlyMemoryError" "Real" "Ref"
-    "SegmentationFault" "Signed" "StackOverflowError" "String" "Symbol" "Task" "Tuple" "Type"
-    "TypeError" "TypeVar" "UInt" "UInt128" "UInt16" "UInt32" "UInt64" "UInt8" "UndefInitializer"
-    "UndefKeywordError" "UndefRefError" "UndefVarError" "Union" "UnionAll" "Unsigned" "VecElement"
-    "WeakRef"))
-
-; Keywords
-[
-  "global"
-  "local"
-] @keyword
-
-(compound_statement
-  [
-    "begin"
-    "end"
-  ] @keyword)
-
-(quote_statement
-  [
-    "quote"
-    "end"
-  ] @keyword)
-
-(let_statement
-  [
-    "let"
-    "end"
-  ] @keyword)
-
-(if_statement
-  [
-    "if"
-    "end"
-  ] @keyword.conditional)
-
-(elseif_clause
-  "elseif" @keyword.conditional)
-
-(else_clause
-  "else" @keyword.conditional)
-
-(ternary_expression
-  [
-    "?"
-    ":"
-  ] @keyword.conditional.ternary)
-
-(try_statement
-  [
-    "try"
-    "end"
-  ] @keyword.exception)
-
-(catch_clause
-  "catch" @keyword.exception)
-
-(finally_clause
-  "finally" @keyword.exception)
-
-(for_statement
-  [
-    "for"
-    "end"
-  ] @keyword.repeat)
-
-(for_binding
-  "outer" @keyword.repeat)
-
-; comprehensions
-(for_clause
-  "for" @keyword.repeat)
-
-(if_clause
-  "if" @keyword.conditional)
-
-(while_statement
-  [
-    "while"
-    "end"
-  ] @keyword.repeat)
-
-[
-  (break_statement)
-  (continue_statement)
-] @keyword.repeat
-
-[
-  "const"
-  "mutable"
-] @keyword.modifier
-
-(function_definition
-  [
-    "function"
-    "end"
-  ] @keyword.function)
-
-(do_clause
-  [
-    "do"
-    "end"
-  ] @keyword.function)
-
-(macro_definition
-  [
-    "macro"
-    "end"
-  ] @keyword)
-
-(return_statement
-  "return" @keyword.return)
-
-(module_definition
-  [
-    "module"
-    "baremodule"
-    "end"
-  ] @keyword.import)
-
-(export_statement
-  "export" @keyword.import)
-
-(public_statement
-  "public" @keyword.import)
-
-(import_statement
-  "import" @keyword.import)
-
-(using_statement
-  "using" @keyword.import)
-
-(import_alias
-  "as" @keyword.import)
-
-(struct_definition
-  [
-    "mutable"
-    "struct"
-    "end"
-  ] @keyword.type)
-
-(abstract_definition
-  [
-    "abstract"
-    "type"
-    "end"
-  ] @keyword.type)
-
-(primitive_definition
-  [
-    "primitive"
-    "type"
-    "end"
-  ] @keyword.type)
-
-; Operators & Punctuation
-(operator) @operator
-
-(adjoint_expression
-  "'" @operator)
-
-(range_expression
-  ":" @operator)
-
-(arrow_function_expression
-  "->" @operator)
-
-[
-  ","
-  ";"
-  "::"
-] @punctuation.delimiter
-
-; Treat `::` as operator in type contexts, see
-; https://github.com/nvim-treesitter/nvim-treesitter/pull/7392
-(typed_expression
-  "::" @operator)
-
-(unary_typed_expression
-  "::" @operator)
-
-[
-  "("
-  ")"
-  "["
-  "]"
-  "{"
-  "}"
-] @punctuation.bracket
-
-; Interpolation
-(string_interpolation
-  .
-  "$" @punctuation.special)
-
-(interpolation_expression
-  .
-  "$" @punctuation.special)
-
-; Keyword operators
-((operator) @keyword.operator
-  (#any-of? @keyword.operator "in" "isa"))
-
-(where_expression
-  "where" @keyword.operator)
-
-; Built-in constants
-((identifier) @constant.builtin
-  (#any-of? @constant.builtin "nothing" "missing"))
-
-((identifier) @variable.builtin
-  (#any-of? @variable.builtin "begin" "end"))
-
-; Literals
-(boolean_literal) @boolean
-
-(integer_literal) @number
-
-(float_literal) @number.float
-
-((identifier) @number.float
-  (#any-of? @number.float "NaN" "NaN16" "NaN32" "Inf" "Inf16" "Inf32"))
-
-(character_literal) @character
-
-(escape_sequence) @string.escape
-
-(string_literal) @string
-
-(prefixed_string_literal
-  prefix: (identifier) @function.macro) @string
-
-(command_literal) @string.special
-
-(prefixed_command_literal
-  prefix: (identifier) @function.macro) @string.special
-
-((string_literal) @string.documentation
-  .
-  [
-    (abstract_definition)
-    (assignment)
-    (const_statement)
-    (function_definition)
-    (macro_definition)
-    (module_definition)
-    (struct_definition)
-  ])
-
-(source_file
-  (string_literal) @string.documentation
-  .
-  [
-    (identifier)
-    (call_expression)
-  ])
-
-[
-  (line_comment)
-  (block_comment)
-] @comment @spell
-
-; --- external_injections ---
-
-; OMEGA PINNED EXTERNAL INJECTIONS — BOUNDED CANDIDATE EVIDENCE ONLY
-; sha256=8c9533faf169d4734d7f6b0e84dd063055eb63cd4966f2e5416deaf574965db8
-
-; Inject markdown in docstrings
-((string_literal
-  (content) @injection.content)
-  .
-  [
-    (module_definition)
-    (abstract_definition)
-    (struct_definition)
-    (function_definition)
-    (macro_definition)
-    (assignment)
-    (const_statement)
-    (call_expression)
-    (identifier)
-  ]
-  (#set! injection.language "markdown"))
-
-; Inject comments
-([
-  (line_comment)
-  (block_comment)
-] @injection.content
-  (#set! injection.language "comment"))
-
-; Inject regex in r"..." and r"""...""" (e.g. r"hello\bworld")
-(prefixed_string_literal
-  prefix: (identifier) @_prefix
-  (content) @injection.content
-  (#eq? @_prefix "r")
-  (#set! injection.language "regex"))
-
-; Inject markdown in md"..." and md"""...""" (e.g. md"**Bold** and _Italics_")
-(prefixed_string_literal
-  prefix: (identifier) @_prefix
-  (content) @injection.content
-  (#eq? @_prefix "md")
-  (#set! injection.language "markdown"))
-
-; Inject bash in `...` and ```...``` (e.g. `git add --help`)
-(command_literal
-  (content) @injection.content
-  (#set! injection.language "bash"))
-
-; --- external_locals ---
-
-; OMEGA EXTERNAL LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim legacy immutable snapshot
-; sha256=ed83a7a3e780e3238f23c6eeae211db5cb05b8f330d6795c221d2a137e5f2d71
-
-; References
-
-; Definitions
-(assignment
-  .
-  (identifier) @local.definition.var)
-
-(assignment
-  .
-  (tuple_expression
-    (identifier) @local.definition.var))
-
-(assignment
-  .
-  (open_tuple
-    (identifier) @local.definition.var))
-
-(for_binding
-  .
-  (identifier) @local.definition.var)
-
-(for_binding
-  .
-  (tuple_expression
-    (identifier) @local.definition.var))
-(import_statement (identifier) @local.definition.import @import.module_path.target) @import.module_path.statement
-
-(using_statement
-  (identifier) @local.definition.import)
-
-(selected_import
-  (identifier) @local.definition.import)
-
-(module_definition
-  .
-  (identifier) @local.definition.type)
-
-(type_head
-  (identifier) @local.definition.type)
-
-(type_head
-  (binary_expression
-    .
-    (identifier) @local.definition.type))
+  name: (identifier) @module.name
+  (block)? @module.body) @module
+
+; --- a function, long form ---
+;
+; The name is the callee of the call in the signature. The grammar wraps that
+; call in a `typed_expression` when a return type is written and in a
+; `where_expression` when type parameters are, so the four written forms are
+; four branches of one alternation and the parameter list, return type and
+; where clause are carried on the declaration's own span.
+;
+; `function f end` declares a generic function with no method and no argument
+; list; the parameter carrier is simply skipped for it.
 
 (function_definition
   (signature
+    [ (identifier) @function.name
+      (call_expression
+        . [ (identifier) @function.name
+            (field_expression (identifier) @function.name .) ]
+        (argument_list) @function.parameters)
+      (typed_expression
+        . (call_expression
+            . [ (identifier) @function.name
+                (field_expression (identifier) @function.name .) ]
+            (argument_list) @function.parameters)
+        . (_) @function.return_type)
+      (where_expression
+        . (call_expression
+            . [ (identifier) @function.name
+                (field_expression (identifier) @function.name .) ]
+            (argument_list) @function.parameters)
+        (_) @function.type_parameters .)
+      (where_expression
+        . (typed_expression
+            . (call_expression
+                . [ (identifier) @function.name
+                    (field_expression (identifier) @function.name .) ]
+                (argument_list) @function.parameters)
+            . (_) @function.return_type)
+        (_) @function.type_parameters .) ])
+  (block)? @function.body) @function
+
+; --- a function, assignment form ---
+;
+; `f(x) = x + 1` is an assignment whose left side is a call. Same captures as
+; the long form, so the same templates state it; only the region is missing,
+; because there is no block.
+
+(assignment
+  . [ (call_expression
+        . [ (identifier) @function.name
+            (field_expression (identifier) @function.name .) ]
+        (argument_list) @function.parameters)
+      (typed_expression
+        . (call_expression
+            . [ (identifier) @function.name
+                (field_expression (identifier) @function.name .) ]
+            (argument_list) @function.parameters)
+        . (_) @function.return_type)
+      (where_expression
+        . (call_expression
+            . [ (identifier) @function.name
+                (field_expression (identifier) @function.name .) ]
+            (argument_list) @function.parameters)
+        (_) @function.type_parameters .)
+      (where_expression
+        . (typed_expression
+            . (call_expression
+                . [ (identifier) @function.name
+                    (field_expression (identifier) @function.name .) ]
+                (argument_list) @function.parameters)
+            . (_) @function.return_type)
+        (_) @function.type_parameters .) ]) @function
+
+; --- a macro ---
+;
+; A macro is invoked like a callable and is declared under a callable kind so
+; that asking for what a module can call finds it.
+
+(macro_definition
+  (signature
     (call_expression
-      .
-      (identifier) @local.definition.function))) @local.scope
+      . (identifier) @macro.name
+      (argument_list) @macro.parameters))
+  (block)? @macro.body) @macro
 
-; Scopes
-[
-  (quote_statement)
-  (let_statement)
-  (for_statement)
-  (while_statement)
-  (try_statement)
-  (catch_clause)
-  (finally_clause)
-  (do_clause)
-] @local.scope
+; --- a struct ---
+;
+; The head is `Foo`, `Foo{T}`, `Foo <: Bar` or `Foo{T} <: Bar{T}`. The name is
+; always the leading identifier, the curly braces are the type parameter shape,
+; and `<:` is Julia's one written subtype edge.
 
-; --- import_bound_callable_invocation_context ---
+(struct_definition
+  (type_head
+    [ (identifier) @struct.name
+      (parametrized_type_expression
+        . (identifier) @struct.name
+        (curly_expression) @struct.parameters)
+      (binary_expression
+        . [ (identifier) @struct.name
+            (parametrized_type_expression
+              . (identifier) @struct.name
+              (curly_expression) @struct.parameters) ]
+        [ (identifier) @struct.supertype
+          (parametrized_type_expression . (identifier) @struct.supertype)
+          (field_expression (identifier) @struct.supertype .) ] .) ])
+  (block)? @struct.body) @struct
 
-; Framework-neutral Julia source fact. Supported bounded subset:
-;   import Module
-;   binding = Module.member(...)
-;   output = binding(input)
-; All three forms are direct source-file children; module/receiver and binding/callable must match textually.
+; --- a struct's fields ---
+;
+; A bare identifier in a struct body is an untyped field; `x::T` is a typed
+; one. Inner constructors are function definitions and are declared by the
+; function patterns above, not here.
+
+(struct_definition
+  (block
+    [ (identifier) @field.name
+      (typed_expression
+        . (identifier) @field.name
+        . (_) @field.type) ] @field))
+
+; --- an abstract type ---
+
+(abstract_definition
+  (type_head
+    [ (identifier) @abstract.name
+      (parametrized_type_expression
+        . (identifier) @abstract.name
+        (curly_expression) @abstract.parameters)
+      (binary_expression
+        . [ (identifier) @abstract.name
+            (parametrized_type_expression
+              . (identifier) @abstract.name
+              (curly_expression) @abstract.parameters) ]
+        [ (identifier) @abstract.supertype
+          (parametrized_type_expression . (identifier) @abstract.supertype)
+          (field_expression (identifier) @abstract.supertype .) ] .) ])) @abstract
+
+; --- a primitive type ---
+
+(primitive_definition
+  (type_head
+    [ (identifier) @primitive.name
+      (parametrized_type_expression
+        . (identifier) @primitive.name
+        (curly_expression) @primitive.parameters)
+      (binary_expression
+        . [ (identifier) @primitive.name
+            (parametrized_type_expression
+              . (identifier) @primitive.name
+              (curly_expression) @primitive.parameters) ]
+        [ (identifier) @primitive.supertype
+          (parametrized_type_expression . (identifier) @primitive.supertype)
+          (field_expression (identifier) @primitive.supertype .) ] .) ])) @primitive
+
+; --- a constant ---
+
+(const_statement
+  (assignment
+    . [ (identifier) @const.name
+        (typed_expression
+          . (identifier) @const.name
+          . (_) @const.type) ])) @const
+
+; --- a module-level variable ---
+;
+; Julia has no declaration keyword for a variable: an assignment is one. Only
+; the assignments that sit directly in a file or directly in a module body are
+; declared, because those are the names another file can reach; a name
+; assigned inside a function body belongs to that body alone.
+
 (source_file
-  (import_statement
-    (identifier) @julia.callable_invocation.module_name)
   (assignment
-    . (identifier) @julia.callable_invocation.binding_name
-    (call_expression
-      . (field_expression
-          value: (identifier) @julia.callable_invocation.receiver
-          (identifier) @julia.callable_invocation.member_name)
-      (argument_list)) @julia.callable_invocation.constructor_call) @julia.callable_invocation.constructor_assignment
-  (assignment
-    . (identifier) @julia.callable_invocation.output_name
-    (call_expression
-      . (identifier) @julia.callable_invocation.callable_name
-      (argument_list
-        . (identifier) @julia.callable_invocation.input_name)) @julia.callable_invocation.call) @julia.callable_invocation.assignment
-  (#eq? @julia.callable_invocation.module_name @julia.callable_invocation.receiver)
-  (#eq? @julia.callable_invocation.binding_name @julia.callable_invocation.callable_name))
-
-; --- import_bound_member_binding_context ---
-
-; Framework-neutral Julia authored module-member binding fact.
-; Supported source-only subset:
-;   import ModuleName
-;   binding = ModuleName.member(...)
-; Module import name and receiver must be textually identical.
-; `using`, import aliases, nested field chains, rebinding and runtime resolution are out of scope.
-(source_file
-  (import_statement
-    (identifier) @julia.import_bound.module_name)
-  (assignment
-    . (identifier) @julia.import_bound.binding_name
-    (call_expression
-      . (field_expression
-          value: (identifier) @julia.import_bound.receiver
-          (identifier) @julia.import_bound.member_name)
-      (argument_list)) @julia.import_bound.call) @julia.import_bound.assignment
-  (#eq? @julia.import_bound.module_name @julia.import_bound.receiver))
-
-; --- import_targets ---
-
-(import_statement
-  (import_path) @import.target @import.module_path.target @julia.import.path) @import.statement @import.module_path.statement @julia.import.path_owner
-
-; --- module_declaration_path_hints ---
-
-(module_definition name: (identifier) @module.declaration_path.name) @module.declaration_path.span
-
-; --- named_scope_owners ---
+    . [ (identifier) @variable.name
+        (typed_expression
+          . (identifier) @variable.name
+          . (_) @variable.type) ]) @variable)
 
 (module_definition
-  name: (_) @scope.owner.name
-  (block) @scope.owner.body) @scope.owner
+  (block
+    (assignment
+      . [ (identifier) @variable.name
+          (typed_expression
+            . (identifier) @variable.name
+            . (_) @variable.type) ]) @variable))
 
-; --- nvim_pinned_highlights ---
+; --- global and local declarations ---
+;
+; `global x` inside a body names a module-level binding; `local x` states that
+; a name is not one. Both are written precisely because the default is the
+; other way round, so both are worth recording.
 
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=7bb322f3c048a7e951b64e4c8a0bc97e782034f95dff15385b946eded569d94d
-; source_name=julia
+(global_statement
+  [ (identifier) @global.name
+    (assignment . (identifier) @global.name)
+    (open_tuple (identifier) @global.name) ]) @global
 
-; ----- resolved nvim highlights source: julia sha256=7bb322f3c048a7e951b64e4c8a0bc97e782034f95dff15385b946eded569d94d -----
-; Identifiers
+(local_statement
+  [ (identifier) @local.name
+    (assignment . (identifier) @local.name)
+    (open_tuple (identifier) @local.name) ]) @local
 
-; Symbols
+; --- what a file brings in ---
+;
+; `import M`, `using M`, `import M.Sub`, `using M: a, b`. The module a
+; selected import draws from is the first child of the selection, so all four
+; spellings give one `import.module` named the way the dependency is spelled.
 
-; Function calls
+[ (import_statement
+    [ (identifier) @import.module
+      (import_path) @import.module
+      (selected_import . [ (identifier) (import_path) ] @import.module) ])
+  (using_statement
+    [ (identifier) @import.module
+      (import_path) @import.module
+      (selected_import . [ (identifier) (import_path) ] @import.module) ]) ] @import
 
-(binary_expression
-  (_)
-  (operator) @_pipe
-  (identifier) @function.call
-  (#any-of? @_pipe "|>" ".|>"))
+; `import M as N` and `using M as N`: the dependency and the local name it is
+; given are two facts about one statement.
 
-; Macros
+[ (import_statement
+    (import_alias
+      . [ (identifier) (import_path) ] @import.module
+      (identifier) @import.alias .))
+  (using_statement
+    (import_alias
+      . [ (identifier) (import_path) ] @import.module
+      (identifier) @import.alias .)) ] @import
 
-; Built-in functions
-; print.("\"", filter(name -> getglobal(Core, name) isa Core.Builtin, names(Core)), "\" ")
-((identifier) @function.builtin
-  (#any-of? @function.builtin
-    "applicable" "fieldtype" "getfield" "getglobal" "invoke" "isa" "isdefined" "isdefinedglobal"
-    "modifyfield!" "modifyglobal!" "nfields" "replacefield!" "replaceglobal!" "setfield!"
-    "setfieldonce!" "setglobal!" "setglobalonce!" "swapfield!" "swapglobal!" "throw" "tuple"
-    "typeassert" "typeof"))
+; The names a selected import actually binds, each under its own span so it
+; resolves against the declaration it came from.
 
-; Type definitions
+[ (import_statement
+    (selected_import
+      . [ (identifier) (import_path) ]
+      [ (identifier) @import.symbol
+        (macro_identifier (identifier) @import.symbol) ]))
+  (using_statement
+    (selected_import
+      . [ (identifier) (import_path) ]
+      [ (identifier) @import.symbol
+        (macro_identifier (identifier) @import.symbol) ])) ]
 
-; Type annotations
+; --- what a module offers ---
 
-(unary_expression
-  (operator) @operator
-  (_) @type
-  (#any-of? @operator "<:" ">:"))
+[ (export_statement
+    [ (identifier) @export.name
+      (macro_identifier (identifier) @export.name) ])
+  (public_statement
+    [ (identifier) @export.name
+      (macro_identifier (identifier) @export.name) ]) ] @export
 
-(binary_expression
-  (_) @type
-  (operator) @operator
-  (_) @type
-  (#any-of? @operator "<:" ">:"))
+; --- calls ---
+;
+; Julia spells a method definition as a call expression: `function f(x)` and
+; `f(x) = ...` contain the very same node an actual call of `f` does. A query
+; cannot look at a node's parent, so the only way to tell the two apart is to
+; root the pattern at the parent, and the list below is every node type the
+; pinned grammar lets a call expression sit in -- taken from node-types.json --
+; minus the two in which it is a declaration and not a call:
+;
+;   (signature)   `function f(x)` and `macro m(x)`
+;   (type_head)   the head of a `struct`, `abstract type` or `primitive type`
+;
+; and minus the first child of `assignment`, `typed_expression` and
+; `where_expression`, which is where `f(x) = ...`, `f(x)::T = ...` and
+; `f(x) where T = ...` put the definition. Rooting it at `(call_expression)`
+; instead costs one call of its own name at every function in the corpus:
+; measured on the sample in this Pack's document, half of all calls.
+;
+; `M.f(x)` is a call of `f`; the name at the end of the callee is the spelling
+; the declaration carries.
 
-; Built-in types
-; print.("\"", filter(name -> typeof(Base.eval(Core, name)) in [DataType, UnionAll], names(Core)), "\" ")
-((identifier) @type.builtin
-  (#any-of? @type.builtin
-    "AbstractArray" "AbstractChar" "AbstractFloat" "AbstractString" "Any" "ArgumentError" "Array"
-    "AssertionError" "AtomicMemory" "AtomicMemoryRef" "Bool" "BoundsError" "Char"
-    "ConcurrencyViolationError" "Cvoid" "DataType" "DenseArray" "DivideError" "DomainError"
-    "ErrorException" "Exception" "Expr" "FieldError" "Float16" "Float32" "Float64" "Function"
-    "GenericMemory" "GenericMemoryRef" "GlobalRef" "IO" "InexactError" "InitError" "Int" "Int128"
-    "Int16" "Int32" "Int64" "Int8" "Integer" "InterruptException" "LineNumberNode" "LoadError"
-    "Memory" "MemoryRef" "Method" "MethodError" "Module" "NTuple" "NamedTuple" "Nothing" "Number"
-    "OutOfMemoryError" "OverflowError" "Pair" "Ptr" "QuoteNode" "ReadOnlyMemoryError" "Real" "Ref"
-    "SegmentationFault" "Signed" "StackOverflowError" "String" "Symbol" "Task" "Tuple" "Type"
-    "TypeError" "TypeVar" "UInt" "UInt128" "UInt16" "UInt32" "UInt64" "UInt8" "UndefInitializer"
-    "UndefKeywordError" "UndefRefError" "UndefVarError" "Union" "UnionAll" "Unsigned" "VecElement"
-    "WeakRef"))
+[
+  (adjoint_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (argument_list (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (arrow_function_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (binary_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (block (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (broadcast_call_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (call_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (compound_assignment_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (comprehension_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (const_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (curly_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (do_clause (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (elseif_clause (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (field_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (for_binding (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (generator (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (global_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (if_clause (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (if_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (index_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (juxtaposition_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (let_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (local_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (macro_argument_list (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (matrix_row (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (open_tuple (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (parametrized_type_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (parenthesized_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (range_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (return_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (source_file (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (splat_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (string_interpolation (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (ternary_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (tuple_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (unary_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (unary_typed_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (vector_expression (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (while_statement (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (assignment (_) (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (typed_expression (_) (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call)
+  (where_expression (_) (call_expression . [ (identifier) @call.name (field_expression (identifier) @call.name .) ]) @call) ]
 
-; Keywords
+; A broadcast call, `f.(x)` or `M.f.(x)`, is never a definition.
 
-; comprehensions
+(broadcast_call_expression
+  . [ (identifier) @call.name
+      (field_expression (identifier) @call.name .) ]
+  (argument_list)) @call
 
-; Operators & Punctuation
+; `@assert x`, `@Base.kwdef struct ...`: the macro is named without its `@`,
+; so it resolves against the macro definition.
 
-; Treat `::` as operator in type contexts, see
-; https://github.com/nvim-treesitter/nvim-treesitter/pull/7392
+(macrocall_expression
+  (macro_identifier
+    [ (identifier) @macrocall.name
+      (field_expression (identifier) @macrocall.name .) ])) @macrocall
 
-; Interpolation
+; --- where a type is used ---
+;
+; `x::T` and `::T`, and the head of a parametrized type in those same two
+; annotation positions. A parametrized head is not taken from anywhere else,
+; because everywhere else it is the head of the declaration itself.
 
-; Keyword operators
-((operator) @keyword.operator
-  (#any-of? @keyword.operator "in" "isa"))
+(typed_expression (identifier) @type_use.name .)
 
-; Built-in constants
-((identifier) @constant.builtin
-  (#any-of? @constant.builtin "nothing" "missing"))
+(unary_typed_expression (identifier) @type_use.name)
 
-((identifier) @variable.builtin
-  (#any-of? @variable.builtin "begin" "end"))
+(typed_expression
+  (parametrized_type_expression
+    . [ (identifier) @type_use.name
+        (field_expression (identifier) @type_use.name .) ]) .)
 
-; Literals
-
-((identifier) @number.float
-  (#any-of? @number.float "NaN" "NaN16" "NaN32" "Inf" "Inf16" "Inf32"))
-
-; --- nvim_pinned_injections ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=8c9533faf169d4734d7f6b0e84dd063055eb63cd4966f2e5416deaf574965db8
-; source_name=julia
-
-; ----- resolved nvim injections source: julia sha256=8c9533faf169d4734d7f6b0e84dd063055eb63cd4966f2e5416deaf574965db8 -----
-; Inject markdown in docstrings
-((string_literal
-  (content) @injection.content)
-  .
-  [
-    (module_definition)
-    (abstract_definition)
-    (struct_definition)
-    (function_definition)
-    (macro_definition)
-    (assignment)
-    (const_statement)
-    (call_expression)
-    (identifier)
-  ]
-  (#set! injection.language "markdown"))
-
-; Inject comments
-([
-  (line_comment)
-  (block_comment)
-] @injection.content
-  (#set! injection.language "comment"))
-
-; Inject regex in r"..." and r"""...""" (e.g. r"hello\bworld")
-(prefixed_string_literal
-  prefix: (identifier) @_prefix
-  (content) @injection.content
-  (#eq? @_prefix "r")
-  (#set! injection.language "regex"))
-
-; Inject markdown in md"..." and md"""...""" (e.g. md"**Bold** and _Italics_")
-(prefixed_string_literal
-  prefix: (identifier) @_prefix
-  (content) @injection.content
-  (#eq? @_prefix "md")
-  (#set! injection.language "markdown"))
-
-; Inject bash in `...` and ```...``` (e.g. `git add --help`)
-(command_literal
-  (content) @injection.content
-  (#set! injection.language "bash"))
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=ed83a7a3e780e3238f23c6eeae211db5cb05b8f330d6795c221d2a137e5f2d71
-; resolved_query_sha256=c328abdf40a4834eb6b54dfea752a38a00e95b8dcaf895b4e9cda31b25401654
-; parser_revision=e0f9dcd180fdcfcfa8d79a3531e11d99e79321d3
-; source_name=julia
-; direct_inherits=
-; resolved_sources=julia
-
-; ----- resolved nvim locals source: julia sha256=ed83a7a3e780e3238f23c6eeae211db5cb05b8f330d6795c221d2a137e5f2d71 -----
-; References
-
-; Definitions
-
-; Scopes
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(macro_definition) @julia.macro.definition
-(macrocall_expression (macro_identifier) @julia.macro.call.name) @julia.macro.call
-(using_statement) @julia.using
-(selected_import) @julia.selected_import @julia.selected_import.entry
-(broadcast_call_expression) @julia.broadcast.call
-
-; --- semantic_closure_v3_146_batch4 ---
-
-(field_expression) @julia.field.expression
-
-(using_statement
-  (import_path) @julia.using.path) @julia.using.path_owner
-
+(unary_typed_expression
+  (parametrized_type_expression
+    . [ (identifier) @type_use.name
+        (field_expression (identifier) @type_use.name .) ]))

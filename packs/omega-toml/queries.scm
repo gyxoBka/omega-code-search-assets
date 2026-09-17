@@ -1,135 +1,65 @@
-; --- context_entries ---
+; omega-toml
+;
+; TOML is a configuration language. Its files are Cargo.toml, pyproject.toml,
+; netlify.toml, config.toml: the places a project states what it is, what it
+; depends on and how it is set up. The questions asked of such a file are
+; *where is this setting declared*, *what is it set to*, *what sections does
+; this file define* and *which names does it list*.
+;
+; Every pattern below is rooted at one node and answers one of those. There is
+; no pattern for containment: a key declared inside a table is already inside
+; that table's declaration, and the host derives the qualified name from the
+; nesting. There is no pattern for the document, for comments, or for
+; punctuation and syntax roles: none of them names anything a question reaches.
+
+; --- a section header: [server.http] ---
+;
+; The header is the first key of the table. The pairs that follow are declared
+; by the pair patterns below and sit inside this declaration's span.
 
 (table
-  [(bare_key) (dotted_key) (quoted_key)] @toml.container
-  (pair
-    [(bare_key) (dotted_key) (quoted_key)] @toml.key
-    (_) @toml.value) @toml.entry) @toml.table
+  . [(bare_key) (dotted_key) (quoted_key)] @table.name) @table
+
+; --- an element of an array of tables: [[bin]] ---
+;
+; Each occurrence is its own element, so each is its own declaration.
 
 (table_array_element
-  [(bare_key) (dotted_key) (quoted_key)] @toml.array_container
-  (pair
-    [(bare_key) (dotted_key) (quoted_key)] @toml.array_key
-    (_) @toml.array_value) @toml.array_entry) @toml.table_array
+  . [(bare_key) (dotted_key) (quoted_key)] @table_array.name) @table_array
 
-; --- external_highlights ---
+; --- a key set to a scalar: edition = "2021" ---
+;
+; This is where a setting is declared and the one place the value is short
+; enough, and authored enough, to be worth carrying with it. The quotes are
+; stripped so the stored value is the value, not its spelling.
 
-; OMEGA PINNED EXTERNAL HIGHLIGHTS — SYNTAX-ROLE EVIDENCE ONLY
-; sha256=059618709a4c7e6b287643a68282257e197c5a05cfb9d82b6ac517d32230cb12
-
-(bare_key) @property
-
-[
-  (string)
-  (quoted_key)
-] @string
-
-(boolean) @boolean @omega.literal.boolean
-
-(comment) @comment @spell
-
-(escape_sequence) @string.escape
-
-(integer) @number @omega.literal.integer
-
-(float) @number.float @omega.literal.float
-
-[
-  (local_date)
-  (local_date_time)
-  (local_time)
-  (offset_date_time)
-] @string.special
-
-"=" @operator
-
-[
-  "."
-  ","
-] @punctuation.delimiter
-
-; --- external_injections ---
-
-; OMEGA PINNED EXTERNAL INJECTIONS — BOUNDED CANDIDATE EVIDENCE ONLY
-; sha256=e8bc96da2faabe257a32d805d3954e200215d94a85fce4d521530c89e0969244
-
-; --- external_locals ---
-
-; OMEGA EXTERNAL LOCALS BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim legacy immutable snapshot
-; sha256=c96389d2ab7a653ae9b33637e18cf40dcce428d879547b66d9b5a520e1926213
-
-[
-  (table)
-  (table_array_element)
-] @local.scope
-
-; --- nvim_pinned_highlights ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=059618709a4c7e6b287643a68282257e197c5a05cfb9d82b6ac517d32230cb12
-; source_name=toml
-
-; ----- resolved nvim highlights source: toml sha256=059618709a4c7e6b287643a68282257e197c5a05cfb9d82b6ac517d32230cb12 -----
-
-; --- nvim_pinned_injections ---
-
-; OMEGA EXTERNAL QUERY BASELINE — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; resolved_sha256=e8bc96da2faabe257a32d805d3954e200215d94a85fce4d521530c89e0969244
-; source_name=toml
-
-; ----- resolved nvim injections source: toml sha256=e8bc96da2faabe257a32d805d3954e200215d94a85fce4d521530c89e0969244 -----
-
-; --- nvim_pinned_locals ---
-
-; OMEGA EXTERNAL BASELINE ADAPTATION — CONTENT-ADDRESSED PROVENANCE
-; provider=nvim-treesitter
-; snapshot_marker=e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb
-; root_source_sha256=c96389d2ab7a653ae9b33637e18cf40dcce428d879547b66d9b5a520e1926213
-; resolved_query_sha256=6df4ac2e1d3cfc5a6fe04b0feda1bed473b08a31297073a536a357b6e2407da1
-; parser_revision=64b56832c2cffe41758f28e05c756a3a98d16f41
-; source_name=toml
-; direct_inherits=
-; resolved_sources=toml
-
-; ----- resolved nvim locals source: toml sha256=c96389d2ab7a653ae9b33637e18cf40dcce428d879547b66d9b5a520e1926213 -----
-
-; --- root_string_pairs ---
-
-(document
-  (pair
-    [(bare_key) (dotted_key) (quoted_key)] @toml.root.key
-    (string) @toml.root.value) @toml.root.entry)
-
-; --- structure-v2 ---
-
-(document) @data.document
-(table) @data.table
-(table_array_element) @data.table_array
 (pair
-  (_) @data.key
-  (_) @data.value) @data.pair
-(array) @data.array
-(inline_table) @data.object
-(document (pair) @data.document.pair) @data.document.container
-(document (table) @data.document.table) @data.document.container
-(document (table_array_element) @data.document.table_array) @data.document.container
-(table (pair) @data.table.pair) @data.table.container
-(table_array_element (pair) @data.table_array.pair) @data.table_array.container
-(inline_table (pair) @data.object.pair) @data.object.container
+  . [(bare_key) (dotted_key) (quoted_key)] @scalar.name
+  . [(string)
+     (integer)
+     (float)
+     (boolean)
+     (local_date)
+     (local_date_time)
+     (local_time)
+     (offset_date_time)] @scalar.value) @scalar
 
-; --- table_array_string_elements ---
+; --- a key set to an array or an inline table ---
+;
+; The same declaration, without a value: an array is stated by the names it
+; lists and an inline table by the keys it contains, both of which are their
+; own emissions below. Storing the compound's text here would store the same
+; bytes a second and third time.
 
-(table
-  [(bare_key) (dotted_key) (quoted_key)] @toml.array_string.container
-  (pair
-    [(bare_key) (dotted_key) (quoted_key)] @toml.array_string.key
-    (array
-      (string) @toml.array_string.value) @toml.array_string.array) @toml.array_string.entry) @toml.array_string.table
+(pair
+  . [(bare_key) (dotted_key) (quoted_key)] @compound.name
+  . [(array) (inline_table)]) @compound
 
-; --- final_completion_generic_direct_literals_v1 ---
+; --- a name listed in an array ---
+;
+; features = ["derive"], members = ["crates/core"], keywords = [...]. A string
+; element of an array is how TOML names something that lives elsewhere, so it
+; is stated as a data occurrence under the name itself, unquoted, and resolves
+; against a declaration of that name if the repository has one.
 
+(array (string) @array.element)
