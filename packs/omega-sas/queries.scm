@@ -12,10 +12,6 @@
   name: (_) @definition.category.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
 
-(macro_variable_assignment
-  name: (_) @definition.category.name
-) @definition.category.owner
-
 ; --- definition_identity_hints ---
 
 ; --- import_targets ---

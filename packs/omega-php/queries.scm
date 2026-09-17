@@ -99,14 +99,6 @@
 
 ; --- declaration_category_property ---
 
-(property_element
-  name: (_) @definition.category.property.name
-) @definition.category.owner
-
-(property_promotion_parameter
-  name: (_) @definition.category.property.name
-) @definition.category.owner
-
 ; --- declaration_category_trait ---
 
 (trait_declaration

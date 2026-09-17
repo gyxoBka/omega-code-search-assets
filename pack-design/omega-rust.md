@@ -3,409 +3,348 @@
 Language `omega-rust`. Read `00-CONTRACT.md` first: the kind string is a protocol,
 and most of what is wrong with a Pack is wrong there.
 
+Rewritten 2026-09-17: 340 templates over 385 patterns with 132 guards became
+**72 templates over 42 patterns with 6 guards**. The tables below describe the
+Pack that is there now; *What is wrong with it* describes the one that was.
+
 ## What it states today
 
-341 templates over 386 query patterns, 133 distinct root node types.
+72 templates over 42 query patterns, 46 of the grammar's 169 named node types.
 
 | capability | declared | templates |
 |---|---|---|
-| `bindings` | yes | 13 |
-| `calls` | yes | 26 |
-| `config_consumers` | yes | 4 |
-| `data` | yes | 51 |
-| `definitions` | yes | 60 |
-| `implements` | yes | 5 |
-| `imports` | yes | 10 |
-| `modules` | yes | 1 |
-| `references` | yes | 79 |
-| `scopes` | yes | 27 |
-| `tests` | yes | 2 |
-| `types` | yes | 54 |
-| `value_origins` | yes | 9 |
+| `calls` | yes | 5 |
+| `definitions` | yes | 47 |
+| `imports` | yes | 8 |
+| `references` | yes | 10 |
+| `scopes` | yes | 1 |
+| `tests` | yes | 1 |
 
 ### Declarations
 
 | kind | family the host gives it | templates |
 |---|---|---|
-| `definition.rust_scoped_constructor_binding_context` | Type | 1 |
-| `definition.associated_type` | Type | 1 |
-| `definition.const` | Value | 1 |
-| `definition.const_parameter` | Value | 1 |
-| `definition.control_label` | Value | 1 |
+| `definition.struct` | Type | 1 |
+| `definition.union` | Type | 1 |
 | `definition.enum` | Type | 1 |
 | `definition.enum_variant` | Type | 1 |
-| `definition.field` | Value | 1 |
-| `definition.function_like` | Callable | 1 |
-| `definition.lifetime_parameter` | Value | 1 |
-| `definition.macro_rules` | Value | 1 |
-| `definition.module` | Value | 1 |
-| `definition.rust_fq_router_binding_context` | Value | 2 |
-| `definition.signature_like` | Value | 1 |
-| `definition.static` | Value | 1 |
-| `definition.struct` | Type | 1 |
 | `definition.trait` | Type | 1 |
 | `definition.type_alias` | Type | 1 |
+| `definition.associated_type` | Type | 1 |
 | `definition.type_parameter` | Type | 1 |
-| `definition.union` | Value | 1 |
-| `definition_group.tuple_fields` | Value | 1 |
-| `macro_metavariable_candidate.definition_or_use` | Value | 1 |
-| `definition_context.enum_variant_body` | Type | 1 |
+| `definition.function` | Callable | 1 |
+| `definition.required_method` | Callable | 1 |
+| `definition.macro_function` | Callable | 1 |
+| `definition.module` | Namespace | 1 |
+| `definition.const` | Value | 1 |
+| `definition.static` | Value | 1 |
+| `definition.field` | Value | 1 |
+| `definition.impl_block` | Value | 1 |
 | `test.function` | Test | 1 |
-| `type_expression.function` | Type | 1 |
 
-### Carriers -- attributes they attach to the declaration on the same span
+`definition.union` and `definition.module` used to land in Value; the host's
+Type and Namespace vocabularies now hold `union` and `module`, so the same
+constructs are filed where they belong. `definition.impl_block` is deliberately
+a Value: the type it is for is declared by its own `struct_item`, and this
+entity exists so that the members inside it are owned by a name — `Foo::bar`
+rather than a bare `bar` at module level.
+
+### Carriers — attributes they attach to the declaration on the same span
 
 | kind | attribute | templates |
 |---|---|---|
-| `binding.parameter_owned_candidate` | `omega.pack.parameter_owned` | 1 |
-| `call.operator_assignment_candidate` | `omega.pack.operator_assignment` | 1 |
-| `call.operator_binary_candidate` | `omega.pack.operator_binary` | 1 |
-| `call.operator_index_candidate` | `omega.pack.operator_index` | 1 |
-| `call.operator_try_candidate` | `omega.pack.operator_try` | 1 |
-| `call.operator_unary_candidate` | `omega.pack.operator_unary` | 1 |
-| `call.target_candidate` | `omega.pack.target` | 1 |
-| `embedded_region.embedded_language_candidate` | `omega.pack.embedded_language` | 1 |
-| `definition.category_candidate` | `omega.pack.category` | 10 |
-| `definition.container_name_candidate` | `omega.pack.container_name` | 1 |
-| `definition.identity_candidate` | `omega.pack.identity` | 1 |
-| `definition.member_category_candidate` | `omega.pack.member_category` | 2 |
-| `definition.member_owned_candidate` | `omega.pack.member_owned` | 1 |
-| `definition.modifier_candidate` | `omega.pack.modifier` | 1 |
-| `definition.parameter_shape_candidate` | `omega.pack.parameter_shape` | 1 |
-| `definition.return_self_candidate` | `omega.pack.return_self` | 1 |
-| `definition.return_type_candidate` | `omega.pack.return_type` | 1 |
-| `definition.return_type_head_candidate` | `omega.pack.return_type_head` | 1 |
-| `definition.type_parameter_shape_candidate` | `omega.pack.type_parameter_shape` | 1 |
-| `definition.visibility_candidate` | `omega.pack.visibility` | 1 |
-| `import.alias_candidate` | `omega.pack.alias` | 1 |
-| `import.module_path_candidate` | `omega.pack.module_path` | 1 |
-| `import.path_origin_candidate` | `omega.pack.path_origin` | 1 |
-| `module.reexport_candidate` | `omega.pack.reexport` | 1 |
-| `reference.member_access_candidate` | `omega.pack.member_access` | 1 |
-| `reference.qualified_chain_candidate` | `omega.pack.qualified_chain` | 1 |
-| `reference.receiver_candidate` | `omega.pack.receiver` | 1 |
-| `scope.enclosing_owner_candidate` | `omega.pack.enclosing_owner` | 1 |
-| `scope.named_owner_candidate` | `omega.pack.named_owner` | 1 |
+| `definition.visibility_candidate` | `omega.pack.visibility` | 12 |
+| `definition.type_parameter_shape_candidate` | `omega.pack.type_parameter_shape` | 8 |
+| `definition.declared_type_candidate` | `omega.pack.declared_type` | 3 |
+| `definition.parameter_shape_candidate` | `omega.pack.parameter_shape` | 2 |
+| `definition.return_type_candidate` | `omega.pack.return_type` | 2 |
+| `definition.modifier_candidate` | `omega.pack.modifier` | 2 |
+| `definition.aliased_type_candidate` | `omega.pack.aliased_type` | 1 |
+| `definition.cfg_candidate` | `omega.pack.cfg` | 1 |
+
+Four of these are the names `declared_signature` assembles a card's signature
+line from — `visibility`, `type_parameter_shape`, `parameter_shape`,
+`return_type`, `modifier` — so a Rust function reads
+`pub async fn parse<T: Read>(r: T, limit: usize) -> Result<Ast>` and not
+`parse -> Result<Ast>`. Every one of them is emitted with the *declaration's*
+span, never the enclosing item's.
 
 ### Regions
 
-- `scope.block` (1)
-- `scope.closure` (1)
-- `scope.file` (1)
-- `scope.macro_definition` (1)
-- `scope.match_arm` (1)
+- `scope.function_body` (1) — the block of a function, named after the function.
 
 ### Mentions
 
 | kind | occurrence the host makes | templates |
 |---|---|---|
-| `binding.captured_pattern_binding` | reference | 1 |
-| `binding.field_shorthand_binding` | reference | 1 |
-| `binding.macro_metavariable` | reference | 1 |
-| `binding.receiver_parameter` | reference | 1 |
-| `binding_pattern.conditional_binding` | reference | 1 |
-| `binding_pattern.for_binding` | reference | 1 |
-| `binding_pattern.local` | reference | 1 |
-| `binding_pattern.match_binding` | reference | 1 |
-| `binding_pattern.parameter` | reference | 1 |
-| `binding_pattern.variadic_parameter` | reference | 1 |
-| `binding_pattern_group.closure_parameter` | reference | 1 |
-| `call.direct` | call | 1 |
-| `call.dynamic_expression` | call | 1 |
-| `call.generic_direct` | call | 1 |
-| `call.generic_method` | call | 1 |
-| `call.generic_scoped` | call | 1 |
-| `call.macro` | call | 1 |
-| `call.macro_scoped` | call | 1 |
+| `call.function` | call | 1 |
 | `call.method` | call | 1 |
-| `call.rust_fq_router_nest_context` | call | 1 |
-| `call.rust_fq_router_route_context` | call | 1 |
-| `call.rust_receiver_identifier_context` | call | 1 |
-| `call.rust_receiver_noarg_context` | call | 1 |
-| `call.rust_receiver_route_nested_call_context` | call | 1 |
-| `call.rust_receiver_string_identifier_context` | call | 1 |
-| `call.scoped` | call | 1 |
-| `call.self_method` | call | 1 |
-| `call.self_scoped` | call | 1 |
-| `call.type_scoped` | call | 1 |
-| `reference.rust_three_segment_scoped_call_context` | call | 1 |
-| `reference.rust_two_segment_scoped_call_context` | call | 1 |
-| `config_consumer.compile_time_macro` | reference | 1 |
-| `config_consumer.inner_attribute` | reference | 1 |
-| `config_consumer.outer_attribute` | reference | 1 |
-| `config_consumer_candidate.runtime_api` | reference | 1 |
-| `attribute.inner` | reference | 1 |
-| `attribute.outer` | reference | 1 |
-| `attribute_path.scoped_path` | reference | 1 |
-| `attribute_path.simple_path` | reference | 1 |
-| `attribute_payload.arguments` | reference | 1 |
-| `attribute_payload.value` | reference | 1 |
-| `data.escape_sequence` | reference | 1 |
-| `data.inner_doc_marker` | reference | 1 |
-| `data.outer_doc_marker` | reference | 1 |
-| `documentation_context.inner_doc` | reference | 1 |
-| `documentation_context.outer_doc` | reference | 1 |
-| `expression.async_block` | reference | 1 |
-| `expression.binary` | reference | 1 |
-| `expression.cast` | reference | 1 |
-| `expression.closure` | reference | 1 |
-| `expression.const_block` | reference | 1 |
-| `expression.field_access` | reference | 1 |
-| `expression.gen_block` | reference | 1 |
-| `expression.index` | reference | 1 |
-| `expression.parenthesized` | reference | 1 |
-| `expression.range` | reference | 1 |
-| `expression.reference` | reference | 1 |
-| `expression.try_block` | reference | 1 |
-| `expression.unary` | reference | 1 |
-| `expression.unsafe_block` | reference | 1 |
-| `relation.argument` | reference | 1 |
-| `relation.assignment` | reference | 1 |
-| `relation.compound_assignment` | reference | 1 |
-| `relation.initializer` | reference | 1 |
-| `relation.return` | reference | 1 |
-| `relation.yield` | reference | 1 |
-| `value.array` | reference | 1 |
-| `value.field_initializer` | reference | 1 |
-| `value.shorthand_field` | reference | 1 |
-| `value.struct_constructor` | reference | 1 |
-| `value.struct_update_base` | reference | 1 |
-| `value.tuple` | reference | 1 |
-| `value.unit` | reference | 1 |
-| `value_flow.assignment` | reference | 1 |
-| `value_flow.compound_assignment` | reference | 1 |
-| `value_origin.const_initializer` | reference | 1 |
-| `value_origin.let_initializer` | reference | 1 |
-| `value_origin.static_initializer` | reference | 1 |
-| `comment.block` | reference | 1 |
-| `comment.line` | reference | 1 |
-| `documentation.block_doc` | reference | 1 |
-| `documentation.line_doc` | reference | 1 |
-| `macro_rule.macro_rule` | reference | 1 |
-| `macro_syntax.repetition` | reference | 1 |
-| `macro_syntax.repetition_pattern` | reference | 1 |
-| `macro_syntax.token_tree` | reference | 1 |
-| `macro_syntax.token_tree_pattern` | reference | 1 |
-| `reference_context.loop_label_reference` | reference | 1 |
-| `relation.enum_discriminant` | reference | 1 |
-| `relation.enum_variant` | reference | 1 |
-| `relation.struct_field` | reference | 1 |
-| `relation.union_field` | reference | 1 |
-| `source_metadata.shebang` | reference | 1 |
-| `visibility.rust_visibility` | reference | 1 |
-| `implementation.rust_qualified_trait_for_context` | reference | 1 |
-| `relation.env` | reference | 1 |
-| `relation.explicit_trait_impl` | reference | 1 |
-| `relation.return` | reference | 1 |
-| `relation_candidate.direct_call_from_function` | call | 1 |
-| `import.extern_crate` | binding | 1 |
+| `call.path` | call | 1 |
+| `call.turbofish` | call | 1 |
+| `call.macro` | call | 1 |
+| `import.use` | binding | 4 |
+| `import.alias` | binding | 2 |
+| `import.crate` | binding | 1 |
 | `import.glob` | binding | 1 |
-| `import.use` | binding | 1 |
-| `import_alias.extern_crate_alias` | binding | 1 |
-| `import_alias.use_alias` | binding | 1 |
-| `import_group.use_group` | binding | 1 |
-| `module_scope.inline_module` | reference | 1 |
-| `reference.module_or_type_path` | reference | 1 |
-| `reference.module_or_value_path` | reference | 1 |
-| `reference.rust_derive_trait_context` | reference | 1 |
-| `reference.rust_function_scoped_attribute_context` | reference | 1 |
-| `reference.rust_function_scoped_macro_literal_context` | reference | 1 |
-| `reference.rust_function_scoped_string_attribute_context` | reference | 1 |
-| `reference.rust_function_string_attribute_context` | reference | 1 |
-| `reference.rust_import_bound_foreign_function_attribute_context` | binding | 1 |
-| `reference.rust_import_bound_function_attribute_context` | binding | 1 |
-| `reference.rust_macro_first_identifier_context` | reference | 1 |
-| `reference.rust_macro_two_identifier_nested_identifier_context` | reference | 1 |
-| `reference.rust_struct_derive_trait_context` | reference | 1 |
-| `reference.rust_struct_field_string_attribute_context` | reference | 1 |
-| `reference.rust_struct_named_attribute_identifier_assignment_context` | reference | 1 |
-| `reference.rust_struct_named_attribute_nested_identifier_context` | reference | 1 |
-| `reference_candidate.crate` | reference | 1 |
-| `reference_candidate.field` | reference | 2 |
-| `reference_candidate.lifetime` | reference | 1 |
-| `reference_candidate.path` | reference | 1 |
-| `reference_candidate.self` | reference | 1 |
-| `reference_candidate.super` | reference | 1 |
-| `reference_candidate.type` | reference | 1 |
-| `reference_candidate.type_path` | reference | 1 |
-| `reference_candidate.value` | reference | 1 |
-| `reference_context.array_element` | reference | 1 |
-| `reference_context.array_repeat_length` | reference | 1 |
-| `reference_context.assignment_lhs` | reference | 1 |
-| `reference_context.assignment_rhs` | reference | 1 |
-| `reference_context.attribute_path` | reference | 1 |
-| `reference_context.await_operand` | reference | 1 |
-| `reference_context.binary_operand` | reference | 1 |
-| `reference_context.borrowed_value` | reference | 1 |
-| `reference_context.break_target_or_value` | reference | 1 |
-| `reference_context.call_argument` | call | 1 |
-| `reference_context.callee` | call | 1 |
-| `reference_context.cast_value` | reference | 1 |
-| `reference_context.condition` | reference | 1 |
-| `reference_context.condition_value` | reference | 1 |
-| `reference_context.const_generic_argument` | reference | 1 |
-| `reference_context.const_parameter_value` | reference | 1 |
-| `reference_context.field_shorthand_value` | reference | 1 |
-| `reference_context.field_type_position` | reference | 1 |
-| `reference_context.generic_argument_list` | reference | 1 |
-| `reference_context.generic_base_type` | reference | 1 |
-| `reference_context.generic_callable` | call | 1 |
-| `reference_context.import_selector` | binding | 1 |
-| `reference_context.initializer` | reference | 1 |
-| `reference_context.iterator_value` | reference | 1 |
-| `reference_context.lifetime_bound` | reference | 1 |
-| `reference_context.lifetime_reference` | reference | 1 |
-| `reference_context.macro_metavariable_use` | reference | 1 |
-| `reference_context.macro_path` | reference | 1 |
-| `reference_context.match_arm_value` | reference | 1 |
-| `reference_context.match_guard_condition` | reference | 1 |
-| `reference_context.match_scrutinee` | reference | 1 |
-| `reference_context.member` | reference | 1 |
-| `reference_context.parenthesized_value` | reference | 1 |
-| `reference_context.pattern_position` | reference | 1 |
-| `reference_context.range_bound` | reference | 1 |
-| `reference_context.receiver` | reference | 1 |
-| `reference_context.return_type_position` | reference | 1 |
-| `reference_context.return_value` | reference | 1 |
-| `reference_context.struct_constructor_type` | reference | 1 |
-| `reference_context.struct_field_value` | reference | 1 |
-| `reference_context.struct_update_base` | reference | 1 |
-| `reference_context.trait_bound` | reference | 1 |
-| `reference_context.trait_or_impl_type` | reference | 1 |
-| `reference_context.try_operand` | reference | 1 |
-| `reference_context.tuple_element` | reference | 1 |
-| `reference_context.type_default` | reference | 1 |
-| `reference_context.type_position` | reference | 1 |
-| `reference_context.visibility_path` | reference | 1 |
-| `reference_context.where_predicate_bound` | reference | 1 |
-| `reference_context.where_predicate_subject` | reference | 1 |
-| `reference_context.yield_value` | reference | 1 |
-| `control_flow_label.label` | reference | 1 |
-| `test_container.cfg_test_module` | reference | 1 |
-| `implementation.inherent` | reference | 1 |
-| `implementation.trait_for` | reference | 1 |
-| `implementation_type.inherent` | reference | 1 |
-| `implementation_type.trait_for` | reference | 1 |
-| `relation.associated_type_bound` | reference | 1 |
-| `relation.const_parameter_default` | reference | 1 |
-| `relation.generic_callable_application` | reference | 1 |
-| `relation.generic_type_application` | reference | 1 |
-| `relation.lifetime_bound` | reference | 1 |
-| `relation.trait_super_bound` | reference | 1 |
-| `relation.type_parameter_bound` | reference | 1 |
-| `relation.type_parameter_default` | reference | 1 |
-| `relation.where_bound` | reference | 1 |
-| `type.type_parameter_list` | reference | 1 |
-| `type_constraint.associated_type_bounds` | reference | 1 |
-| `type_constraint.for_lifetimes` | reference | 1 |
-| `type_constraint.higher_ranked_trait_bound` | reference | 1 |
-| `type_constraint.lifetime_bounds` | reference | 1 |
-| `type_constraint.removed_trait_bound` | reference | 1 |
-| `type_constraint.type_parameter_bounds` | reference | 1 |
-| `type_constraint.use_bounds` | reference | 1 |
-| `type_constraint.where_predicate` | reference | 1 |
-| `type_context.generic_parameter_list` | reference | 1 |
-| `type_expression.array` | reference | 1 |
-| `type_expression.associated_binding` | reference | 1 |
-| `type_expression.bounded` | reference | 1 |
-| `type_expression.bracketed` | reference | 1 |
-| `type_expression.dyn_trait` | reference | 1 |
-| `type_expression.generic` | reference | 1 |
-| `type_expression.generic_turbofish` | reference | 1 |
-| `type_expression.impl_trait` | reference | 1 |
-| `type_expression.never` | reference | 1 |
-| `type_expression.pointer` | reference | 1 |
-| `type_expression.primitive` | reference | 1 |
-| `type_expression.qualified` | reference | 1 |
-| `type_expression.reference` | reference | 1 |
-| `type_expression.scoped` | reference | 1 |
-| `type_expression.tuple` | reference | 1 |
-| `type_parameter.generic` | reference | 1 |
-| `type_parameter.lifetime` | reference | 1 |
-| `type_use.alias_target` | reference | 1 |
-| `type_use.cast` | reference | 1 |
-| `type_use.closure_return` | reference | 1 |
-| `type_use.const` | reference | 1 |
-| `type_use.const_parameter` | reference | 1 |
-| `type_use.field` | reference | 1 |
-| `type_use.local` | reference | 1 |
-| `type_use.parameter` | reference | 1 |
-| `type_use.return` | reference | 2 |
-| `type_use.static` | reference | 1 |
-| `type_use.tuple_field` | reference | 1 |
-| `type_use.type_parameter_default` | reference | 1 |
-| `value_origin.alias` | reference | 1 |
-| `value_origin.constructed` | reference | 1 |
-| `value_origin.constructed_binding` | reference | 1 |
-| `value_origin.declared_let` | reference | 1 |
-| `value_origin.declared_parameter` | reference | 1 |
-| `value_origin.destructured_from` | reference | 1 |
-| `value_origin.returned_binding` | reference | 1 |
-| `value_origin.returned_by` | reference | 1 |
-| `value_origin.returned_owned_binding` | reference | 1 |
+| `reference.type` | reference | 1 |
+| `reference.field` | reference | 3 |
+| `reference.path` | reference | 1 |
+| `reference.attribute` | reference | 1 |
+| `relation.implements` | implements | 2 |
+| `relation.config` | config | 1 |
+| `relation.depends` | depends | 1 |
 
-### Emitted, dropped as mentions, but read as span markers
-
-These are not waste: their spans tell the host that a role boundary
-sitting on them is really a literal or a control form.
-
-- `literal.bool` (1)
-- `literal.char` (1)
-- `literal.float` (1)
-- `literal.integer` (1)
-- `literal.negative` (1)
-- `literal.raw_string` (1)
-- `literal.string` (1)
-- `control_flow.async_block` (1)
-- `control_flow.await` (1)
-- `control_flow.break` (1)
-- `control_flow.const_block` (1)
-- `control_flow.continue` (1)
-- `control_flow.for` (1)
-- `control_flow.gen_block` (1)
-- `control_flow.if` (1)
-- `control_flow.let_chain` (1)
-- `control_flow.let_condition` (1)
-- `control_flow.loop` (1)
-- `control_flow.match` (1)
-- `control_flow.return` (1)
-- `control_flow.try` (1)
-- `control_flow.try_block` (1)
-- `control_flow.unsafe_block` (1)
-- `control_flow.while` (1)
-- `control_flow.yield` (1)
+Four `relation.*` kinds, all four among the six the host knows. The Pack emits
+no `literal.*` and no `control_flow.*`: it emits no `reference_context.*`
+either, so those spans would suppress nothing and each one was a query match
+per string, number and control form in every file for an emission the host
+discards.
 
 ## The boundary: what the grammar offers and the Pack ignores
 
-The grammar names 169 node types. The Pack looks at 150 of them.
+The grammar names 169 node types. The Pack looks at 46 of them.
+
+The number went *down*, from 150. That is the point of the rewrite: the old
+Pack reached almost every node type in the grammar by emitting a fact for every
+expression form, every literal, every pattern node and every type syntax, and
+those facts answered nothing. What is untouched now is, almost entirely,
+expression and statement syntax, pattern syntax, literals, and the type-syntax
+wrappers whose payload (`type_identifier`) is captured anyway.
 
 Untouched:
 
-- `_declaration_statement`
-- `_expression`
-- `_literal_pattern`
-- `_pattern`
-- `_type`
-- `else_clause`
-- `empty_statement`
-- `extern_modifier`
-- `generic_pattern`
-- `mut_pattern`
-- `mutable_specifier`
-- `or_pattern`
-- `range_pattern`
-- `ref_pattern`
-- `reference_pattern`
-- `remaining_field_pattern`
-- `tuple_struct_pattern`
-- `unit_type`
-- `where_clause`
+- expressions and statements: `_expression`, `_declaration_statement`,
+  `expression_statement`, `empty_statement`, `arguments`, `array_expression`,
+  `assignment_expression`, `compound_assignment_expr`, `binary_expression`,
+  `unary_expression`, `await_expression`, `break_expression`,
+  `continue_expression`, `return_expression`, `yield_expression`,
+  `try_expression`, `index_expression`, `range_expression`,
+  `parenthesized_expression`, `tuple_expression`, `unit_expression`,
+  `type_cast_expression`, `reference_expression`, `struct_expression`,
+  `field_initializer_list`, `base_field_initializer`, `if_expression`,
+  `else_clause`, `match_expression`, `match_block`, `match_arm`,
+  `match_pattern`, `for_expression`, `while_expression`, `loop_expression`,
+  `let_declaration`, `let_chain`, `let_condition`, `label`, `closure_expression`,
+  `closure_parameters`, `async_block`, `gen_block`, `const_block`, `try_block`,
+  `unsafe_block`
+- patterns: `_pattern`, `_literal_pattern`, `captured_pattern`, `field_pattern`,
+  `generic_pattern`, `mut_pattern`, `or_pattern`, `range_pattern`,
+  `ref_pattern`, `reference_pattern`, `remaining_field_pattern`,
+  `slice_pattern`, `struct_pattern`, `tuple_pattern`, `tuple_struct_pattern`
+- literals: `_literal`, `boolean_literal`, `char_literal`, `float_literal`,
+  `integer_literal`, `negative_literal`, `raw_string_literal`,
+  `escape_sequence`
+- type syntax whose payload is captured as `type_identifier`: `_type`,
+  `abstract_type`, `array_type`, `bounded_type`, `bracketed_type`,
+  `dynamic_type`, `function_type`, `generic_type_with_turbofish`,
+  `higher_ranked_trait_bound`, `never_type`, `pointer_type`, `primitive_type`,
+  `qualified_type`, `reference_type`, `removed_trait_bound`, `trait_bounds`,
+  `tuple_type`, `type_arguments`, `type_binding`, `unit_type`, `use_bounds`,
+  `where_clause`, `where_predicate`, `for_lifetimes`, `lifetime`,
+  `lifetime_parameter`, `const_parameter`
+- containers whose members are matched directly, or whose whole text is
+  carried as a shape: `enum_variant_list`, `field_declaration_list`,
+  `ordered_field_declaration_list`, `scoped_use_list`, `foreign_mod_item`,
+  `parameter`, `self_parameter`, `variadic_parameter`, `extern_modifier`
+- macro interior: `macro_rule`, `token_tree_pattern`, `token_repetition`,
+  `token_repetition_pattern`, `token_binding_pattern`, `fragment_specifier`
+- comments and markers: `line_comment`, `block_comment`, `doc_comment`,
+  `inner_doc_comment_marker`, `outer_doc_comment_marker`, `shebang`
+- leaves handled by their parent: `crate`, `self`, `super`,
+  `shorthand_field_identifier`, `mutable_specifier`; and
+  `inner_attribute_item`, whose `attribute` child is matched directly, so
+  `#![deny(..)]` is recorded like any other attribute
 
-## To decide when rewriting
+The one untouched type that carries meaning and is left out on purpose is
+`doc_comment`; see *Still to decide*.
 
-1. Which untouched node types carry meaning for an agent's question,
-   and under which capability they belong.
-2. Which kinds above route to a family the author did not mean --
-   check the family column against what the construct actually is.
-3. Which patterns ask for the same node separately and should be one.
-4. What is stated that answers no question.
+## What is wrong with it
+
+The Pack that was here declared thirteen capabilities and ran 385 query
+patterns over every Rust file to produce 340 emissions' worth of facts, of
+which the great majority answered nothing.
+
+**Half the Pack was a framework overlay, under a comment saying it was not.**
+26 output kinds carried the prefix `rust_`, and behind them were axum
+(`rust_fq_router_nest_context`, `rust_fq_router_route_context` — a pattern
+matching `Router::new().route("/x", get(handler))` down to the argument),
+diesel (`#[diesel(table_name = ...)]`, `#[diesel(belongs_to(...))]` spelled as
+`struct_named_attribute_context`), serde (`#[serde(rename = "x")]` as
+`struct_field_string_attribute_context`) and four
+`framework_neutral_rust_receiver_methods_v1` patterns matching any
+`receiver.method(string, identifier)` shape — the router builder with the names
+removed. 15 comment lines in the file asserted "Framework-neutral", "Framework
+meaning is assigned later", "semantics remain downstream". The contract forbids
+this in a language Pack; `frameworks/omega-framework-tokio` and the rest are
+where it belongs.
+
+**52 `reference_context.*` templates stored every identifier by the position it
+sat in.** `reference_context.call_argument`, `.binary_operand`, `.condition`,
+`.tuple_element`, `.range_bound`, `.await_operand`, `.parenthesized_value` —
+one mention per identifier per expression form, none of which resolves to a
+declaration and none of which any question asks for. They in turn were the only
+reason the Pack's 25 `literal.*` and `control_flow.*` templates were not dead:
+those spans suppress role boundaries, so the Pack matched every string, number,
+boolean, `if`, `match`, `loop` and `await` in every file in order to suppress
+mentions it should not have been making.
+
+**41 more templates restated type syntax as mentions.** `type_expression.array`,
+`.tuple`, `.pointer`, `.never`, `.bracketed`, `type_constraint.for_lifetimes`,
+`type_context.generic_parameter_list`, `type_use.cast`, `.local`, `.field` —
+a fact per wrapper node, all of them carrying the same `type_identifier` the
+one `(type_identifier)` capture now records once.
+
+**22 `relation.*` kinds were not relations.** `relation.struct_field`,
+`relation.enum_variant`, `relation.enum_discriminant`, `relation.union_field`,
+`relation.argument`, `relation.assignment`, `relation.initializer`,
+`relation.return`, `relation.yield`, `relation.where_bound` and the rest strip
+to a word the host does not know, so every one arrived as a plain reference —
+indistinguishable from the 79 other reference kinds. The two relations Rust
+actually has, *implements* and *depends*, were spelled
+`relation.explicit_trait_impl` and `implementation.rust_qualified_trait_for_context`,
+which are not relations either.
+
+**123 templates named an emission with the whole node.** Every attribute was
+stored under the full text of `#[derive(Debug, Clone, Serialize, Deserialize)]`;
+`scope.file` was named with the entire source file and `scope.block` with the
+entire block; `embedded_region.embedded_language_candidate` was named with the
+whole token tree of every macro invocation in the corpus.
+
+**17 carriers could never fold and 28 folded onto the wrong span.**
+`call.target_candidate`, `import.alias_candidate`, `import.module_path_candidate`,
+`scope.enclosing_owner_candidate`, `reference.member_access_candidate` and
+`embedded_region.embedded_language_candidate` end in `_candidate` without
+containing `definition` or ending in one of the five declaration suffixes, so
+the host never folded them and stored each as a reference to nothing. Ten
+`definition.category_candidate` templates took a member's name and gave it the
+*enclosing owner's* span, so one struct's attribute bag was written once per
+member and kept the last.
+
+**Nine `value_origins` templates.** No host code reads that capability.
+Four of them also carried a constant `value_semantics` attribute, and two
+`call.*` templates a constant `receiver_semantics` — a fixed string written into
+the index once per matched construct.
+
+**65 of the 132 coverage guards gave a label for a reason**, most often
+`rust_macro_expansion_semantics_unavailable` or
+`terminal_static_ceiling__rust_type_inference_call_resolution`: a generator
+confidence tier, repeated, saying nothing a reader can act on. 132 guards for
+340 templates.
+
+**The injections were kept for a bad reason.** `00-INDEX.md` records that
+omega-rust and omega-c were allowed to keep injection patterns into languages
+Omega has no grammar for, "because a template there does record the embedded
+region even when the inner language is unknown". That template is
+`embedded_region.embedded_language_candidate`: a carrier the host cannot fold,
+named with the entire token tree. The injection set also held four `regex`
+patterns keyed on the `Regex`/`RegexSet` API — a framework overlay — and one
+`#offset!`, which is not a tree-sitter directive and does nothing. The whole
+injection block is gone; the coverage guard now says plainly that a macro's
+body is not parsed.
+
+## What it should extract
+
+Rust is the implementation language of a crate. The questions asked of it are
+*where is this item declared*, *what is its signature and its visibility*,
+*who calls it*, *who implements this trait*, *what does this file import*, and
+*what is compiled only under a cfg*.
+
+| what | node | emitted as | family |
+|---|---|---|---|
+| a function | `function_item` via `name:` | `definition.function` | Callable |
+| a trait's required method | `function_signature_item` | `definition.required_method` | Callable |
+| `macro_rules!` | `macro_definition` | `definition.macro_function` | Callable |
+| a struct | `struct_item` | `definition.struct` | Type |
+| a union | `union_item` | `definition.union` | Type |
+| an enum | `enum_item` | `definition.enum` | Type |
+| a variant | `enum_variant` | `definition.enum_variant` | Type |
+| a trait | `trait_item` | `definition.trait` | Type |
+| `type X = Y` | `type_item` | `definition.type_alias` | Type |
+| an associated type | `associated_type` | `definition.associated_type` | Type |
+| a generic parameter | `type_parameter` | `definition.type_parameter` | Type |
+| a module | `mod_item` | `definition.module` | Namespace |
+| a const, a static | `const_item`, `static_item` | `definition.const`, `.static` | Value |
+| a named field | `field_declaration` | `definition.field` | Value |
+| `impl Foo` | `impl_item` via `type:` | `definition.impl_block` | Value (the owner of its members) |
+| `pub`, `pub(crate)` | `visibility_modifier` | `definition.visibility_candidate` | carrier |
+| `async`, `unsafe`, `extern "C"` | `function_modifiers` | `definition.modifier_candidate` | carrier |
+| `<T: Read>` | `type_parameters` | `definition.type_parameter_shape_candidate` | carrier |
+| `(r: T, limit: usize)` | `parameters` | `definition.parameter_shape_candidate` | carrier |
+| `-> Result<Ast>` | the `return_type:` field | `definition.return_type_candidate` | carrier |
+| a field's, const's or static's written type | the `type:` field | `definition.declared_type_candidate` | carrier |
+| what an alias aliases | `type_item` `type:` | `definition.aliased_type_candidate` | carrier |
+| `#[cfg(feature = "x")]` | `attribute_item` anchored to the item below it | `definition.cfg_candidate` | carrier |
+| `#[test] fn` | `attribute_item` anchored to the `function_item` | `test.function` | Test |
+| a function's body extent | `function_item` `body:` | `scope.function_body` | region |
+| `impl Trait for Type` | `impl_item` `trait:` | `relation.implements` | implements |
+| `#[derive(Trait)]` | `attribute_item` anchored to the type below it | `relation.implements` | implements |
+| `env!("VAR")`, `option_env!` | `macro_invocation` | `relation.config` | config |
+| `include_str!("p")`, `include!`, `include_bytes!` | `macro_invocation` | `relation.depends` | depends |
+| `use a::b;`, `use a::{b, c};` | `use_declaration`, `use_list` | `import.use` | binding |
+| `use a as b;`, `extern crate a as b;` | `use_as_clause`, `extern_crate_declaration` | `import.alias` | binding |
+| `use a::*;` | `use_wildcard`, star stripped | `import.glob` | binding |
+| `extern crate a;` | `extern_crate_declaration` | `import.crate` | binding |
+| `f(x)` | `call_expression` `function: (identifier)` | `call.function` | call |
+| `a::f(x)` | `function: (scoped_identifier)` | `call.path` | call |
+| `x.f()` | `function: (field_expression)` | `call.method` | call |
+| `f::<T>(x)` | `function: (generic_function)` | `call.turbofish` | call |
+| `m!(..)` | `macro_invocation` | `call.macro` | call |
+| every mention of a type | `type_identifier` | `reference.type` | reference |
+| `a.b`, `Foo { b: .. }`, `Foo { b }` | `field_expression`, `field_initializer`, `shorthand_field_initializer` | `reference.field` | reference |
+| `Ordering::SeqCst`, `Self::LIMIT` | `scoped_identifier` `name:` | `reference.path` | reference |
+| `#[serde(..)]`, `#[inline]` | `attribute` | `reference.attribute` | reference |
+| every expression, literal and pattern form | — | nothing | — |
+
+Three design decisions are worth stating because they cut the Pack by four
+fifths.
+
+**Containment is not a pattern, but attribute attachment has to be.** The tree
+holds containment, and the host takes a declaration's owner from the smallest
+declaration span around it — which is exactly why `impl_item` is declared: with
+it, `bar` inside `impl Foo` is owned by `Foo`; without it, a repository's
+thousand `new`s are all bare. Attributes are a different case: `#[derive]`,
+`#[test]` and `#[cfg]` are *siblings* of the item they describe, so the tree
+does not say what they attach to and the six anchored patterns that pair them
+are the only way to state it. They are anchored on both sides with
+`(attribute_item)*` between, so an intervening `#[ignore]` does not break the
+pair and a distant attribute does not claim an item that is not below it.
+
+**Nothing inside a function body is declared.** No `let`, no closure parameter,
+no `match`, `for` or `if let` binding. A local name is not an entity a question
+from another file can reach, it cannot be resolved without scoping the host does
+not do, and it is the single most numerous construct in the language. The
+guard says so.
+
+**References are emitted only where they can resolve.** A type mention, a
+field, a qualified path, a call target, an import, an attribute. There is no
+bare `(identifier)` capture anywhere in the file; the only bare capture is
+`(type_identifier)`, which the brief names explicitly as the one worth having.
+
+## Still to decide
+
+1. **Doc comments.** `doc_comment`, `line_comment` and `block_comment` are
+   untouched. The old Pack emitted them as mentions named with the whole
+   comment, which is Defect D and worse than nothing. The right shape would be
+   a `definition.documentation_candidate` carrier anchored to the item below the
+   comment run, the way `#[cfg]` is — one more pair of patterns and one more
+   attribute per documented item, holding text that can be long. Left out until
+   there is a reader for it.
+2. **`definition.type_parameter`.** Declaring every `T` makes the mentions of
+   `T` inside an item resolve to something rather than to nothing, but the host
+   resolves by name across the repository, so a `T` in one crate and a `T` in
+   another are the same name. Kept, on the grounds that a mention resolving to
+   the wrong `T` is no worse than a mention resolving to nothing and the shape
+   is what a later scoped resolver would want; revisit against the row count.
+3. **`x.f()` is two facts.** The grammar spells a method call and a field
+   access with the same `field_expression`, and a query cannot ask what the
+   parent is, so `x.f()` is a `call.method` on the call and a `reference.field`
+   on the access. Both are true statements about the bytes; if the duplication
+   costs more than it answers, the `field_expression` pattern is the one to
+   drop, since `Foo { b: .. }` and `Foo { b }` already carry the unambiguous
+   field mentions.
+4. **`#[test]` is a second declaration.** A test function is a Callable named
+   `foo` and a Test named `foo` at the same span. Two consumers in the host
+   (`production.rs`, `public_execution.rs`) filter entities by
+   `EntityFamily::Test`, so the Test entity has to exist; the alternative, a
+   carrier marking the Callable, would answer "list the tests" with nothing.
+   Kept as it is.

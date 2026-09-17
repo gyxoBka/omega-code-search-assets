@@ -34,10 +34,6 @@
   name: (_) @definition.category.event.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
 
-(event_parameter
-  name: (_) @definition.category.event.name
-) @definition.category.owner
-
 ; --- declaration_category_function ---
 
 (function_definition
@@ -55,10 +51,6 @@
 (struct_declaration
   name: (_) @definition.category.struct.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
-
-(struct_field_assignment
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
 
 (struct_member
   name: (_) @definition.category.struct.name @definition.identity.name

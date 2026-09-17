@@ -30,10 +30,6 @@
 
 ; --- declaration_category_field ---
 
-(field
-  name: (_) @definition.category.name
-) @definition.category.owner
-
 ; --- definition_identity_hints ---
 
 (table_option

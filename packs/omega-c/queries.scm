@@ -1,405 +1,328 @@
-; --- aggregates ---
+; omega-c
+;
+; C is the language of headers that declare an interface and translation units
+; that implement it, and of a preprocessor that introduces names no compiler
+; front end ever sees as declarations. The questions asked of a C file are:
+; where is this function, this type, this macro or this variable declared;
+; what does this file include; what calls this function; where is this type,
+; this member or this macro used.
+;
+; Every pattern below is rooted at one node type and answers one of those.
+; Containment is deliberately not stated: the tree already holds it, and a
+; declaration nested in another carries its container through the `within:`
+; segment. One pattern uses a parent node as a *filter* -- a `declaration`
+; directly under `translation_unit` is a file-scope variable, the same node
+; inside a function body is a local -- which is a structural filter, not a
+; containment fact, and costs one match per declaration.
 
-(struct_specifier name: (type_identifier)? @aggregate.struct.name body: (field_declaration_list)? @aggregate.struct.body) @aggregate.struct
-(union_specifier name: (type_identifier)? @aggregate.union.name body: (field_declaration_list)? @aggregate.union.body) @aggregate.union
-(enum_specifier name: (type_identifier)? @aggregate.enum.name body: (enumerator_list)? @aggregate.enum.body) @aggregate.enum
-(enumerator name: (identifier) @definition.enumerator.name value: (_)? @definition.enumerator.value) @definition.enumerator
-(preproc_include path: (_) @test.include @import.target @module.include.path @import.module_path.target @preproc.include.path) @import.statement @module.include @import.module_path.statement @preproc.include
-(call_expression function: (identifier) @test.call.name @concurrency.call.name @call.direct.name) @test.call @concurrency.call @call.direct
+; ---------------------------------------------------------------------------
+; Callables
+;
+; Every C callable -- a definition, a prototype in a header, a static helper --
+; is a `function_declarator` whose declarator is an `identifier`, however many
+; pointer declarators wrap it and whatever the return type is spelled as. One
+; root node therefore covers all of them, and the parameter list (a required
+; field, so capturing it changes nothing about what matches) is folded onto the
+; declaration as its signature.
+;
+; A `function_declarator` whose declarator is a parenthesized pointer is a
+; function *pointer*, not a function, and is not matched here.
+; ---------------------------------------------------------------------------
 
-; --- atomic_threading ---
+(function_declarator
+  declarator: (identifier) @callable.name
+  parameters: (parameter_list) @callable.parameters) @callable
 
-(type_qualifier) @concurrency.qualifier @modifier.type_qualifier
+; The return type and the storage class sit on the node *above* the declarator,
+; so they are taken from there and folded back onto the declarator's span --
+; the span the declaration above occupies. Both the defining and the declaring
+; spelling are covered; `*` is carried because `char *strdup(...)` returning
+; `char` is a wrong answer.
 
-; --- call_targets ---
+(function_definition
+  type: (_) @callable.return_type
+  declarator: (function_declarator
+    declarator: (identifier)) @callable)
 
-(call_expression
-  function: (_) @call.target) @call.expression
+(declaration
+  type: (_) @callable.return_type
+  declarator: (function_declarator
+    declarator: (identifier)) @callable)
 
-; --- calls_indirect ---
+(function_definition
+  type: (_) @callable.pointer_return_type
+  declarator: (pointer_declarator
+    declarator: (function_declarator
+      declarator: (identifier)) @callable))
 
-(call_expression function: (field_expression) @call.member.target) @call.member
-(call_expression function: (pointer_expression) @call.pointer.target) @call.pointer
+(declaration
+  type: (_) @callable.pointer_return_type
+  declarator: (pointer_declarator
+    declarator: (function_declarator
+      declarator: (identifier)) @callable))
 
-; --- calls ---
+; `static` is the whole of C's visibility model: it is the difference between a
+; name the linker can see and one it cannot.
 
-(call_expression function: (_) @call.target arguments: (argument_list) @call.arguments) @call
+(function_definition
+  (storage_class_specifier) @callable.modifier
+  declarator: (function_declarator
+    declarator: (identifier)) @callable)
 
-; --- comments ---
+(declaration
+  (storage_class_specifier) @callable.modifier
+  declarator: (function_declarator
+    declarator: (identifier)) @callable)
 
-(comment) @comment
-
-; --- complex_numbers ---
-
-(primitive_type) @type.numeric @type.primitive
-
-; --- compound_designators ---
-
-(initializer_pair designator: (_) @init.designator value: (_) @init.designated.value) @init.designated
-
-; --- control_flow ---
-
-(if_statement condition: (_) @control.if.condition) @control.if
-(switch_statement condition: (_) @control.switch.condition) @control.switch
-(case_statement value: (_)? @control.case.value) @control.case
-(while_statement condition: (_) @control.while.condition) @control.while
-(do_statement condition: (_) @control.do.condition) @control.do
-(for_statement) @control.for @scope.for
-(return_statement (_) ? @control.return.value @data.return.value) @control.return @data.return
-(goto_statement label: (statement_identifier) @control.goto.label @reference.label) @control.goto
-(labeled_statement label: (statement_identifier) @definition.label.name @definition.label) @definition.label
-(break_statement) @control.break
-(continue_statement) @control.continue
-
-; --- data_flow ---
-
-(assignment_expression left: (_) @data.write.target right: (_) @data.write.value) @data.write
-(init_declarator declarator: (_) @data.init.target @binding.name @init.target value: (_) @data.init.value @binding.initializer @init.value) @data.init @binding.initialized @init
-
-; --- declaration_category_enum ---
-
-(enum_specifier
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
-
-(enumerator
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_function ---
-
-(preproc_function_def
-  name: (_) @definition.category.function.name
-) @definition.category.owner
-
-; --- declaration_category_macro ---
-
-(macro_type_specifier
-  name: (_) @definition.category.macro.name
-) @definition.category.owner
-
-; --- declaration_category_struct ---
+; ---------------------------------------------------------------------------
+; Types
+;
+; A body is required in each of these: `struct sockaddr;` names a type it does
+; not define, and the name is already recorded as a reference to the definition
+; that does.
+; ---------------------------------------------------------------------------
 
 (struct_specifier
-  name: (_) @definition.category.struct.name
-) @definition.category.owner
-
-; --- declaration_category_union ---
+  name: (type_identifier) @struct.name
+  body: (field_declaration_list)) @struct
 
 (union_specifier
-  name: (_) @definition.category.union.name
-) @definition.category.owner
+  name: (type_identifier) @union.name
+  body: (field_declaration_list)) @union
 
-; --- declarations ---
+(enum_specifier
+  name: (type_identifier) @enum.name
+  body: (enumerator_list)) @enum
 
-(declaration type: (_) @declaration.type declarator: (_) @declaration.declarator) @declaration
-(parameter_declaration type: (_) @parameter.type declarator: (_) @parameter.name) @parameter
+(enumerator
+  name: (identifier) @enumerator.name) @enumerator
 
-; --- definition_identity_hints ---
+(enumerator
+  name: (identifier)
+  value: (_) @enumerator.value) @enumerator
 
-; --- definitions ---
+; A typedef is the one place C names a type outright. All four written forms
+; name a `type_identifier`; the fourth is the callback typedef
+; `typedef int (*cb)(void*)`, which is how C spells a function type.
 
-(function_definition declarator: (function_declarator declarator: (identifier) @definition.function.name)) @definition.function
-(type_definition declarator: (type_identifier) @definition.typedef.name) @definition.typedef
-(struct_specifier name: (type_identifier) @definition.struct.name) @definition.struct
-(union_specifier name: (type_identifier) @definition.union.name) @definition.union
-(enum_specifier name: (type_identifier) @definition.enum.name) @definition.enum
-(field_declaration declarator: (_) @definition.field.name) @definition.field
+(type_definition
+  type: [(type_identifier)
+         (primitive_type)
+         (sized_type_specifier)
+         (struct_specifier name: (type_identifier))
+         (union_specifier name: (type_identifier))
+         (enum_specifier name: (type_identifier))]? @typedef.target
+  declarator: [
+    (type_identifier) @typedef.name
+    (pointer_declarator declarator: (type_identifier) @typedef.name)
+    (array_declarator declarator: (type_identifier) @typedef.name)
+    (function_declarator
+      declarator: (parenthesized_declarator
+        (pointer_declarator declarator: (type_identifier) @typedef.name)))
+  ]) @typedef
 
-; --- embedded_regions ---
+; ---------------------------------------------------------------------------
+; Members and file-scope variables
+; ---------------------------------------------------------------------------
 
-; Omega mature-pack enrichment from exact-compatible Neovim distributed injection baseline
-; original=packs/omega-c/third_party/neovim-distributed/queries/injections.scm
-; retained third-party baseline/LICENSE remains under third_party/neovim-distributed
+(field_declaration
+  type: (_) @field.type
+  declarator: [
+    (field_identifier) @field.name
+    (pointer_declarator declarator: (field_identifier) @field.name)
+    (array_declarator declarator: (field_identifier) @field.name)
+    (function_declarator
+      declarator: (parenthesized_declarator
+        (pointer_declarator declarator: (field_identifier) @field.name)))
+  ]) @field
+
+; A header is conventionally wrapped whole in `#ifndef HEADER_H ... #endif`,
+; so a file-scope declaration is as often a child of a preprocessor branch
+; as of the translation unit. Naming only `translation_unit` declared
+; nothing in a guarded header.
+[(translation_unit
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)
+ (preproc_ifdef
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)
+ (preproc_if
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)
+ (preproc_else
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)
+ (preproc_elif
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)
+ (preproc_elifdef
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)
+ (declaration_list
+  (declaration
+    declarator: [
+      (identifier) @variable.name
+      (init_declarator declarator: (identifier) @variable.name)
+      (pointer_declarator declarator: (identifier) @variable.name)
+      (array_declarator declarator: (identifier) @variable.name)
+      (init_declarator
+        declarator: (pointer_declarator declarator: (identifier) @variable.name))
+      (init_declarator
+        declarator: (array_declarator declarator: (identifier) @variable.name))
+    ]) @variable)]
+
+; ---------------------------------------------------------------------------
+; Labels
+;
+; A label is the only name in C that `goto` can resolve against.
+; ---------------------------------------------------------------------------
+
+(labeled_statement
+  label: (statement_identifier) @label.name) @label
+
+(goto_statement
+  label: (statement_identifier) @goto.label) @goto
+
+; ---------------------------------------------------------------------------
+; The preprocessor
+;
+; A macro is a declaration, and in C it is where most constants and a good part
+; of the API surface live. The object-like form carries its replacement text as
+; a value, the function-like form its parameter list.
+; ---------------------------------------------------------------------------
+
+(preproc_def
+  name: (identifier) @macro.name) @macro
+
+(preproc_def
+  name: (identifier)
+  value: (preproc_arg) @macro.value) @macro
+
+(preproc_function_def
+  name: (identifier) @macro.function.name
+  parameters: (preproc_params) @macro.function.parameters) @macro.function
+
+(preproc_include
+  path: [(string_literal) (system_lib_string)] @include.path) @include
+
+; `#ifdef FOO`, `#elifdef FOO` and `defined(FOO)` are the three places a macro
+; is named as a condition. They are the references that make a `#define`
+; findable.
+
+(preproc_ifdef
+  name: (identifier) @macro.reference.name) @macro.reference
+
+(preproc_elifdef
+  name: (identifier) @macro.reference.name) @macro.reference
+
+(preproc_defined
+  (identifier) @macro.reference.name) @macro.reference
+
+; ---------------------------------------------------------------------------
+; Calls
+;
+; A call is recorded by the name it is written with. Every pattern is rooted at
+; `call_expression`, so the cost is one match per call site. `(*fp)(x)` is
+; recorded under the pointer's own name -- the variable, which is what the file
+; actually says.
+; ---------------------------------------------------------------------------
+
+(call_expression
+  function: (identifier) @call.name) @call
+
+(call_expression
+  function: (parenthesized_expression
+    (pointer_expression
+      argument: (identifier) @call.name))) @call
+
+(call_expression
+  function: (field_expression
+    field: (field_identifier) @call.member.name)) @call.member
+
+; ---------------------------------------------------------------------------
+; References
+;
+; `type_identifier` is the one identifier class in this grammar that always
+; names a declared type, so it is the reference stream worth keeping. The
+; general `(identifier)` sweep is not: it matches every name in every file.
+; `x.field`, `p->field` and the `.field =` of a designated initializer all
+; resolve against the same member declaration.
+; ---------------------------------------------------------------------------
+
+(type_identifier) @reference.type
+
+(field_expression
+  field: (field_identifier) @reference.member.name) @reference.member
+
+(field_designator
+  (field_identifier) @reference.member.name) @reference.member
+
+(attribute
+  name: (identifier) @attribute.name) @attribute
+
+; ---------------------------------------------------------------------------
+; The one embedded region C has
+;
+; A macro body is C text the parser hands back unparsed, so it is re-parsed as
+; C. This one pattern is retained from the Neovim distributed injections
+; baseline the old Pack was built from; the injections into languages Omega has
+; no grammar for -- printf, asm, doxygen, re2c, comment -- are not, and four of
+; those were keyed on a list of libc function names spelled into the query.
+; ---------------------------------------------------------------------------
 
 ((preproc_arg) @injection.content
   (#set! injection.self))
-
-((comment) @injection.content
-  (#set! injection.language "comment"))
-
-((comment) @injection.content
-  (#match? @injection.content "/\\*!([a-zA-Z]+:)?re2c")
-  (#set! injection.language "re2c"))
-
-((comment) @injection.content
-  (#match? @injection.content "/[*/][!*/]<?[^a-zA-Z]")
-  (#set! injection.language "doxygen"))
-
-((call_expression
-  function: (identifier) @_function
-  arguments: (argument_list
-    .
-    [
-      (string_literal
-        (string_content) @injection.content)
-      (concatenated_string
-        (string_literal
-          (string_content) @injection.content))
-    ]))
-  ; format-ignore
-  (#any-of? @_function 
-    "printf" "printf_s"
-    "vprintf" "vprintf_s"
-    "scanf" "scanf_s"
-    "vscanf" "vscanf_s"
-    "wprintf" "wprintf_s"
-    "vwprintf" "vwprintf_s"
-    "wscanf" "wscanf_s"
-    "vwscanf" "vwscanf_s"
-    "cscanf" "_cscanf"
-    "printw"
-    "scanw")
-  (#set! injection.language "printf"))
-
-((call_expression
-  function: (identifier) @_function
-  arguments: (argument_list
-    (_)
-    .
-    [
-      (string_literal
-        (string_content) @injection.content)
-      (concatenated_string
-        (string_literal
-          (string_content) @injection.content))
-    ]))
-  ; format-ignore
-  (#any-of? @_function 
-    "fprintf" "fprintf_s"
-    "sprintf"
-    "dprintf"
-    "fscanf" "fscanf_s"
-    "sscanf" "sscanf_s"
-    "vsscanf" "vsscanf_s"
-    "vfprintf" "vfprintf_s"
-    "vsprintf"
-    "vdprintf"
-    "fwprintf" "fwprintf_s"
-    "vfwprintf" "vfwprintf_s"
-    "fwscanf" "fwscanf_s"
-    "swscanf" "swscanf_s"
-    "vswscanf" "vswscanf_s"
-    "vfscanf" "vfscanf_s"
-    "vfwscanf" "vfwscanf_s"
-    "wprintw"
-    "vw_printw" "vwprintw"
-    "wscanw"
-    "vw_scanw" "vwscanw")
-  (#set! injection.language "printf"))
-
-((call_expression
-  function: (identifier) @_function
-  arguments: (argument_list
-    (_)
-    .
-    (_)
-    .
-    [
-      (string_literal
-        (string_content) @injection.content)
-      (concatenated_string
-        (string_literal
-          (string_content) @injection.content))
-    ]))
-  ; format-ignore
-  (#any-of? @_function 
-    "sprintf_s"
-    "snprintf" "snprintf_s"
-    "vsprintf_s"
-    "vsnprintf" "vsnprintf_s"
-    "swprintf" "swprintf_s"
-    "snwprintf_s"
-    "vswprintf" "vswprintf_s"
-    "vsnwprintf_s"
-    "mvprintw"
-    "mvscanw")
-  (#set! injection.language "printf"))
-
-((call_expression
-  function: (identifier) @_function
-  arguments: (argument_list
-    (_)
-    .
-    (_)
-    .
-    (_)
-    .
-    [
-      (string_literal
-        (string_content) @injection.content)
-      (concatenated_string
-        (string_literal
-          (string_content) @injection.content))
-    ]))
-  (#any-of? @_function "mvwprintw" "mvwscanw")
-  (#set! injection.language "printf"))
-
-((gnu_asm_expression
-  assembly_code: (string_literal) @injection.content)
-  (#set! injection.language "asm"))
-
-((gnu_asm_expression
-  assembly_code: (concatenated_string
-    (string_literal) @injection.content))
-  (#set! injection.language "asm"))
-
-; --- enclosing_owner_hints ---
-
-(struct_specifier 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- errors ---
-
-(ERROR) @syntax.error
-
-; --- expressions ---
-
-(binary_expression left: (_) @expr.binary.left operator: _ @expr.binary.operator right: (_) @expr.binary.right) @expr.binary
-(unary_expression operator: _ @expr.unary.operator argument: (_) @expr.unary.argument) @expr.unary
-(update_expression argument: (_) @expr.update.argument operator: _ @expr.update.operator) @expr.update
-(assignment_expression left: (_) @expr.assign.left operator: _ @expr.assign.operator right: (_) @expr.assign.right) @expr.assign
-(conditional_expression condition: (_) @expr.conditional.condition consequence: (_) @expr.conditional.true alternative: (_) @expr.conditional.false) @expr.conditional
-(comma_expression left: (_) @expr.comma.left right: (_) @expr.comma.right) @expr.comma
-
-; --- extensions ---
-
-(gnu_asm_expression) @extension.gnu_asm
-(attribute_specifier) @extension.attribute @linkage.attribute @modifier.attribute
-
-; --- function_contracts ---
-
-(function_definition type: (_) @function.return_type declarator: (_) @function.declarator body: (compound_statement) @function.body) @function.definition
-
-; --- function_pointers ---
-
-(pointer_declarator declarator: (function_declarator) @type.function_pointer)
-(call_expression function: (parenthesized_expression) @call.indirect.target) @call.indirect
-
-; --- generic_selection ---
-
-(generic_expression) @generic.selection
-
-; --- imports_modules ---
-
-; --- initialization ---
-
-(initializer_list) @init.aggregate
-(compound_literal_expression type: (_) @init.compound.type value: (initializer_list) @init.compound.value) @init.compound
-
-; --- linkage_visibility ---
-
-(storage_class_specifier) @linkage.storage @modifier.storage
-
-; --- literals ---
-
-; --- member_access_hints ---
-
-(field_expression
-  argument: (_) @reference.receiver
-  field: (_) @reference.member) @reference.member_expression
-
-; --- member_category_enum ---
-
-(enum_specifier
-  name: (_) @owner.name
-  body: (enumerator_list
-    (enumerator
-      name: (_) @owned.member_category.enum.name @owned.member.name) @owned.member)) @owner.span
-
-; --- member_category_function ---
-
-(struct_specifier
-  name: (_) @owner.name
-  body: (field_declaration_list
-    (preproc_function_def
-      name: (_) @owned.member_category.function.name @owned.member.name) @owned.member)) @owner.span
-
-; --- module_path_hints ---
-
-; --- named_scope_owners ---
-
-; --- operators ---
-
-(sizeof_expression) @operator.sizeof
-(alignof_expression) @operator.alignof
-(cast_expression type: (_) @operator.cast.type value: (_) @operator.cast.value) @operator.cast
-
-; --- owned_direct_calls_v3_81 ---
-
-; Omega v3.81 bounded direct-call ownership for C.
-; Exact subset: a direct identifier call used as a top-level expression statement
-; in the body of a named function definition. Nested control-flow/member/pointer/
-; macro-expanded calls are intentionally excluded.
-
-(function_definition
-  declarator: (function_declarator
-    declarator: (identifier) @caller.name)
-  body: (compound_statement
-    (expression_statement
-      (call_expression
-        function: (identifier) @callee.name) @call.expression))) @caller.function
-
-; --- ownership_members ---
-
-; --- preprocessor ---
-
-(preproc_def name: (identifier) @preproc.macro.name) @preproc.macro
-(preproc_function_def name: (identifier) @preproc.function_macro.name) @preproc.function_macro
-(preproc_if condition: (_) @preproc.condition) @preproc.conditional
-(preproc_ifdef name: (identifier) @preproc.condition.symbol) @preproc.conditional.symbol
-
-; --- provider_surface_enrichment ---
-
-; Exact-compatible provider surface enrichment for the full C parser commit.
-(attribute_declaration) @surface.attribute_declaration
-(escape_sequence) @surface.escape_sequence
-(false) @surface.false
-(field_designator) @surface.field_designator
-(gnu_asm_qualifier) @surface.gnu_asm_qualifier
-(linkage_specification) @surface.linkage
-(ms_pointer_modifier) @surface.ms_pointer_modifier
-(null) @surface.null
-(parenthesized_declarator) @surface.parenthesized_declarator
-(preproc_call) @surface.preproc_call
-(preproc_defined) @surface.preproc_defined
-(preproc_directive) @surface.preproc_directive
-(preproc_elifdef) @surface.preproc_elifdef
-(preproc_params) @surface.preproc_params
-(sized_type_specifier) @surface.sized_type
-(system_lib_string) @surface.system_include
-(true) @surface.true
-(type_descriptor) @surface.type_descriptor
-
-; --- references ---
-
-(field_expression argument: (_) @reference.base field: (field_identifier) @reference.member)
-(subscript_expression argument: (_) @reference.index.base index: (_) @reference.index.expression)
-
-; --- scopes ---
-
-(translation_unit) @scope.file
-(function_definition body: (compound_statement) @scope.function.body) @scope.function
-(compound_statement) @scope.block
-
-; --- signature_parameters ---
-
-(preproc_function_def
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-; --- storage_qualifiers ---
-
-; --- types ---
-
-(type_identifier) @type.named
-(pointer_declarator declarator: (_) @type.pointer.target) @type.pointer
-(array_declarator declarator: (_) @type.array.target size: (_)? @type.array.size) @type.array
-(function_declarator declarator: (_) @type.function.name parameters: (parameter_list) @type.function.parameters) @type.function
-
-; --- variadics ---
-
-(variadic_parameter) @parameter.variadic

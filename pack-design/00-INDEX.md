@@ -449,3 +449,99 @@ Four blocking defects were found by review and fixed here:
 
 Totals after wave 2 and its sweeps: **3 160 templates, 1 026 guards** (from
 3 673 and 1 348 before any of this).
+
+---
+
+# Wave 3 (rust, java, go, python, c): the heaviest Packs, and a check of mine that was measuring nothing
+
+| Pack | templates | patterns | guards | node types touched |
+|---|---|---|---|---|
+| omega-rust | 340 -> 71 | 385 -> 42 | 132 -> 6 | 150 -> 46 |
+| omega-java | 215 -> 40 | 222 -> 40 | 54 -> 5 | 123 -> 58 |
+| omega-go | 214 -> 47 | 140 -> 26 | 51 -> 7 | 93 -> 42 |
+| omega-c | 199 -> 27 | 108 -> 32 | 33 -> 6 | 88 -> 40 |
+| omega-python | 165 -> 28 | 152 -> 20 | 71 -> 8 | 80 -> 25 |
+
+Five blocking defects found by review, all fixed here:
+
+- **omega-rust** stated `(field_expression field: ...)` as a field mention.
+  tree-sitter-rust spells a method callee the same way and a query cannot see
+  the parent, so measured over `crates/` (514 files) it produced 63 649 field
+  mentions against 43 807 method calls: **68.8% of the Pack's largest emission
+  class were calls reported as fields**, resolving by name onto real field
+  declarations. Dropped; `Foo { b: .. }` and `Foo { b }` carry the unambiguous
+  ones.
+- **omega-python** listed `parameters:` before `type_parameters:` while the tree
+  has them the other way, so the optional capture never bound and the
+  type-parameter carrier was skipped on every match. And the rewrite dropped
+  `test.function` and `test.class`, which were **the only declarations in any
+  Pack besides omega-rust that reach `EntityFamily::Test`** -- the family
+  `test_projection` and `test_entity_count` read. Restored with a proper
+  `[test_capability]` block and a `Declaration` test signal, so the host drops
+  the generic declaration at the same span and a test is one entity, not two.
+- **omega-c** filtered file-scope variables on `(translation_unit (declaration))`.
+  A header is conventionally wrapped whole in `#ifndef HEADER_H ... #endif`, so
+  in a guarded header every declaration is a child of `preproc_ifdef` and was
+  declared nowhere. Seven parent forms now.
+- **omega-c and omega-cpp** both captured a typedef's target as `type: (_)`, so
+  `typedef struct { ...body... } Config;` -- the ordinary way C names a struct --
+  stored the entire body as the value of `omega.pack.aliased_type`. Restricted
+  to types that have a name.
+
+## A check of mine that was measuring a naming convention
+
+Three agents independently found the same thing: `audit.py`'s `carrier_owner`
+check compared `pat.find('@span')` with `pat.find('@name')`. A correct carrier's
+name capture is *always* inside its span, so whether the check fired depended on
+whether the span capture's spelling happened to be a prefix of another capture
+in the same pattern -- and wrapping the name in `trim(...)` hid it entirely. It
+reported 289. The real question is whether the node the name is attached to can
+occur **more than once** inside the node the span is attached to, which
+`node-types.json` answers. Measured properly: **24**.
+
+The same regex could not see through an alternation. `[ (a) (b) ] @cap` has a
+`]` between the `)` and the `@`, so every capture written that way had no owner
+recorded and was checked for neither D nor D2. Fixed.
+
+## A new class the corrected audit exposes: a carrier under a name nothing assembles
+
+A carrier's attribute name is the last dot-segment of its kind. Five names build
+a card's signature line and about thirty more are read somewhere in the engine.
+**260 carrier templates used none of them**: `category` (59), `target` (21),
+`identity` (16), `member_category` (15), `named_owner` (13), `parameter_owned`
+(9), `member_owned` (7). The value is computed and stored, and nothing ever asks
+for it.
+
+`category` is the clearest: it restates the `output_kind` the template already
+declares. All 59 deleted, in 15 Packs. Four more were `parameters` and
+`type_parameters` in omega-erlang and omega-ruby -- the same defect fixed in
+omega-scala in wave 2 -- and are renamed to the spellings the card assembles.
+**197 remain**, each needing its Pack's author to say whether the value answers
+a question under a name the engine reads, or does not answer one at all.
+
+## L, again, and much larger than the comment count suggested
+
+Every Pack in this wave carried framework overlays spelled as tree shapes with
+no literal to find them by:
+
+| Pack | what was in it |
+|---|---|
+| omega-rust | 26 kinds: axum routers matched down to the argument, diesel `#[diesel(..)]`, serde `#[serde(rename)]`, and four `framework_neutral_rust_receiver_methods_v1` patterns that are the router builder with the names taken out |
+| omega-java | 22 patterns of Spring, JAX-RS and JPA, three of which use `#eq?` to tie an annotated field to *the import that proves its type* -- a resolver's job written as a query |
+| omega-go | 21 patterns feeding 11 templates: Cobra, gin and echo routing, controller-runtime five and six levels deep |
+| omega-c | four injection patterns keyed on `#any-of?` lists of about 90 libc function names, to inject a `printf` format language Omega has no grammar for -- **L inside an injection**, a third place neither sweep read |
+
+`frameworks/omega-framework-spring-boot` and
+`frameworks/omega-framework-unreal-engine` already exist. All of these are now
+out of their language Packs.
+
+And the exemption in the injection sweep was itself wrong: omega-c and
+omega-rust kept their unresolvable injections "because a template there does
+record the embedded region". That template was
+`embedded_region.embedded_language_candidate` -- a carrier the host will not
+fold, whose name was the entire token tree of every macro invocation in the
+corpus. Defect D and the unfoldable-carrier trap in one template, and it was the
+stated reason for keeping four `Regex`-keyed injections and an `#offset!`
+directive tree-sitter does not have. Both Packs are clean now.
+
+Totals: **2 183 templates, 717 guards** (from 3 673 and 1 348 at the start).

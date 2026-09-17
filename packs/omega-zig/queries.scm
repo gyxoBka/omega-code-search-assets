@@ -19,10 +19,6 @@
 
 ; --- declaration_category_field ---
 
-(container_field
-  name: (_) @definition.category.field.name
-) @definition.category.owner
-
 ; --- declaration_category_function ---
 
 (function_declaration

@@ -287,10 +287,6 @@
 
 ; --- declaration_category_enum ---
 
-(enum_assignment
-  name: (_) @definition.category.enum.name
-) @definition.category.owner
-
 (enum_body
   name: (_) @definition.category.enum.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
@@ -311,17 +307,9 @@
   name: (_) @definition.category.function.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
 
-(function_expression
-  name: (_) @definition.category.function.name
-) @definition.category.owner
-
 (function_signature
   name: (_) @definition.category.function.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
-
-(generator_function
-  name: (_) @definition.category.function.name
-) @definition.category.owner
 
 (generator_function_declaration
   name: (_) @definition.category.function.name @definition.identity.name
@@ -348,10 +336,6 @@
 ) @definition.category.owner @definition.identity.owner @member.method_signature
 
 ; --- declaration_category_module ---
-
-(internal_module
-  name: (_) @definition.category.module.name
-) @definition.category.owner
 
 (module
   name: (_) @definition.category.module.name @definition.identity.name

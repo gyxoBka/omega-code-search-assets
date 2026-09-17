@@ -84,8 +84,18 @@
   name: (type_identifier) @alias.name
   type: (type_descriptor) @alias.target) @alias
 
+; `typedef struct { ...body... } Config;` has no named type to alias to, and
+; `type: (_)` stored the whole body as the alias target.
 (type_definition
-  type: (_) @typedef.target
+  type: [(type_identifier)
+         (primitive_type)
+         (sized_type_specifier)
+         (qualified_identifier)
+         (template_type)
+         (struct_specifier name: (type_identifier))
+         (union_specifier name: (type_identifier))
+         (enum_specifier name: (type_identifier))
+         (class_specifier name: (type_identifier))]? @typedef.target
   declarator: (type_identifier) @typedef.name) @typedef
 
 (concept_definition

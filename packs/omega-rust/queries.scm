@@ -1,1710 +1,319 @@
-(struct_item name: (_) @relation.struct.owner @owner.member_category.field.name @owner.name body: (field_declaration_list (field_declaration name: (_) @relation.struct.field @owned.member_category.field.name @owned.member.name) @owned.member)) @relation.struct.field_relation @owner.span
+; omega-rust
+;
+; Rust is the implementation language of a crate: the questions asked of it are
+; where is this item declared, what is its signature, who calls it, who
+; implements this trait, what does this file import, and what is behind a cfg.
+; Every pattern below answers one of them.
+;
+; Containment is deliberately not stated. A method inside `impl Foo` is nested
+; inside the `impl_item` declaration, and the host reads the enclosing
+; declaration from the spans; a pattern per (owner, member) pair would restate
+; what the tree already holds. Attribute attachment is the one place a pattern
+; is required: `#[derive(..)]`, `#[test]` and `#[cfg(..)]` are *siblings* of the
+; item they describe, not ancestors of it, so the tree does not say what they
+; attach to and an anchored run of sibling attributes must.
+;
+; One pattern per node. Where one match answers several questions -- a function
+; is a declaration, a visibility, a parameter shape and a return type -- the
+; questions are several templates over the one pattern.
+
+; ---------------------------------------------------------------- declarations
+
+; A function, with everything its card's signature line is built from.
+(function_item
+  (visibility_modifier)? @function.visibility
+  (function_modifiers)? @function.modifiers
+  name: [(identifier) (metavariable)] @function.name
+  type_parameters: (type_parameters)? @function.type_parameters
+  parameters: (parameters) @function.parameters
+  return_type: (_)? @function.return_type
+  body: (block) @function.body) @function
+
+; A trait's required method: a signature with no body.
+(function_signature_item
+  (visibility_modifier)? @requirement.visibility
+  (function_modifiers)? @requirement.modifiers
+  name: [(identifier) (metavariable)] @requirement.name
+  type_parameters: (type_parameters)? @requirement.type_parameters
+  parameters: (parameters) @requirement.parameters
+  return_type: (_)? @requirement.return_type) @requirement
+
+(struct_item
+  (visibility_modifier)? @struct.visibility
+  name: (type_identifier) @struct.name
+  type_parameters: (type_parameters)? @struct.type_parameters) @struct
 
 (union_item
-  name: (_) @relation.union.owner
-  body: (field_declaration_list
-    (field_declaration
-      name: (_) @relation.union.field))) @relation.union.field_relation
-(enum_item name: (_) @relation.enum.owner @owner.member_category.enum.name @owner.name body: (enum_variant_list (enum_variant name: (_) @relation.enum.variant @owned.member_category.enum.name @owned.member.name) @owned.member)) @relation.enum.variant_relation @owner.span
+  (visibility_modifier)? @union.visibility
+  name: (type_identifier) @union.name
+  type_parameters: (type_parameters)? @union.type_parameters) @union
+
+(enum_item
+  (visibility_modifier)? @enum.visibility
+  name: (type_identifier) @enum.name
+  type_parameters: (type_parameters)? @enum.type_parameters) @enum
 
 (enum_variant
-  name: (_) @relation.enum_variant.owner
-  value: (_) @relation.enum_variant.discriminant) @relation.enum_variant.discriminant_relation
-(assignment_expression left: (_) @assignment.target @relation.data.assignment.target @reference.role.assignment_lhs right: (_) @assignment.value @relation.data.assignment.value @reference.role.assignment_rhs) @assignment.simple @relation.data.assignment
-(compound_assignment_expr left: (_) @assignment.target @relation.data.assignment.target @reference.role.assignment_lhs right: (_) @assignment.value @relation.data.assignment.value @reference.role.assignment_rhs) @assignment.compound @relation.data.compound_assignment
-(let_declaration pattern: (_) @assignment.binding_pattern @relation.data.initializer.target @reference.role.pattern_position value: (_) @assignment.initializer @relation.data.initializer.value @reference.role.initializer) @assignment.let @relation.data.initializer
+  (visibility_modifier)? @variant.visibility
+  name: (identifier) @variant.name) @variant
+
+(trait_item
+  (visibility_modifier)? @trait.visibility
+  name: (type_identifier) @trait.name
+  type_parameters: (type_parameters)? @trait.type_parameters) @trait
+
+; A named field. A tuple struct's fields have no name in the grammar and are
+; not declared; see the coverage guard.
+(field_declaration
+  (visibility_modifier)? @field.visibility
+  name: (field_identifier) @field.name
+  type: (_) @field.type) @field
 
 (const_item
-  name: (identifier) @assignment.const.name
-  value: (_) @assignment.const.value) @assignment.const
+  (visibility_modifier)? @const.visibility
+  name: (identifier) @const.name
+  type: (_) @const.type) @const
 
 (static_item
-  name: (identifier) @assignment.static.name
-  value: (_) @assignment.static.value) @assignment.static
-
-; --- attributes ---
-
-(attribute_item
-  (attribute) @attribute.body) @attribute.outer
-
-(inner_attribute_item
-  (attribute) @attribute.body) @attribute.inner
-
-(attribute
-  (identifier) @attribute.path) @attribute.named
-
-(attribute
-  (scoped_identifier) @attribute.path) @attribute.scoped
-
-(attribute
-  arguments: (token_tree) @attribute.arguments) @attribute.with_arguments
-
-(attribute
-  value: (_) @attribute.value) @attribute.with_value
-
-; --- bindings ---
-
-(let_declaration
-  pattern: (_) @binding.pattern) @binding.let
-
-(parameter
-  pattern: (_) @binding.pattern) @binding.parameter
-
-(self_parameter
-  (self) @binding.self.name) @binding.self_parameter
-
-(variadic_parameter
-  pattern: (_) @binding.pattern) @binding.variadic
-
-(closure_expression
-  parameters: (closure_parameters) @binding.closure.parameters) @binding.closure
-
-(for_expression
-  pattern: (_) @binding.pattern) @binding.for
-
-(let_condition
-  pattern: (_) @binding.pattern) @binding.let_condition
-
-(match_arm
-  pattern: (match_pattern) @binding.match.pattern) @binding.match
-
-(captured_pattern
-  (identifier) @binding.captured.name) @binding.captured
-
-(field_pattern
-  name: (shorthand_field_identifier) @binding.field_shorthand.name) @binding.field_shorthand
-(const_block) @binding.pattern_shape.const_block @expression.const_block
-(call_expression function: (_) @call.target @guard.dynamic_call.target @reference.role.callee) @call.expression @guard.dynamic_call
-
-; --- calls ---
-
-(call_expression
-  function: (identifier) @call.direct.target
-  arguments: (arguments) @call.arguments) @call.direct
-
-; A scoped call names its last segment; the path before it is the qualifier.
-; A path whose last segment is a type (`Type::name()`) and `Self::name()` have
-; their own patterns below, so each call is emitted once.
-((call_expression
-  function: (scoped_identifier
-    path: (_) @call.path.qualifier
-    name: (identifier) @call.path.name) @call.path.target
-  arguments: (arguments) @call.arguments) @call.path
- (#not-match? @call.path.qualifier "(^|::)[A-Z][A-Za-z0-9_]*$"))
-
-; `Type::name()` and `module::Type::name()`: the member of a named type.
-((call_expression
-  function: (scoped_identifier
-    path: [
-      (identifier) @call.type_path.type
-      (scoped_identifier
-        name: (identifier) @call.type_path.type)
-    ] @call.type_path.qualifier
-    name: (identifier) @call.type_path.name) @call.type_path.target
-  arguments: (arguments) @call.arguments) @call.type_path
- (#match? @call.type_path.type "^[A-Z]")
- (#not-eq? @call.type_path.type "Self"))
-
-; `Self::name()`: a member of the type the enclosing declaration belongs to.
-((call_expression
-  function: (scoped_identifier
-    path: (identifier) @call.self_path.type
-    name: (identifier) @call.self_path.name) @call.self_path.target
-  arguments: (arguments) @call.arguments) @call.self_path
- (#eq? @call.self_path.type "Self"))
-
-; A method call on any receiver but `self`, which has its own pattern.
-((call_expression
-  function: (field_expression
-    value: (_) @call.method.receiver
-    field: (field_identifier) @call.method.name) @call.method.target
-  arguments: (arguments) @call.arguments) @call.method
- (#not-eq? @call.method.receiver "self"))
-
-; `self.name()`: a member of the type the enclosing declaration belongs to.
-(call_expression
-  function: (field_expression
-    value: (self)
-    field: (field_identifier) @call.self_method.name) @call.self_method.target
-  arguments: (arguments) @call.arguments) @call.self_method
-
-(call_expression
-  function: (generic_function
-    function: (identifier) @call.generic.direct.name
-    type_arguments: (type_arguments) @call.generic.type_arguments) @call.generic.target
-  arguments: (arguments) @call.arguments) @call.generic.direct
-
-(call_expression
-  function: (generic_function
-    function: (scoped_identifier) @call.generic.path.name
-    type_arguments: (type_arguments) @call.generic.type_arguments) @call.generic.target
-  arguments: (arguments) @call.arguments) @call.generic.path
-
-(call_expression
-  function: (generic_function
-    function: (field_expression
-      field: (field_identifier) @call.generic.method.name) @call.generic.method.receiver
-    type_arguments: (type_arguments) @call.generic.type_arguments) @call.generic.target
-  arguments: (arguments) @call.arguments) @call.generic.method
-
-; Catch-all is intentional: closures, parenthesized callables, indexed/function-valued
-; expressions and other dynamic call forms must be represented rather than silently lost.
-(call_expression
-  function: (_) @call.dynamic.target
-  arguments: (arguments) @call.arguments) @call.dynamic
-
-(macro_invocation
-  macro: (identifier) @call.macro.name
-  (token_tree) @call.macro.arguments) @call.macro
-
-(macro_invocation
-  macro: (scoped_identifier) @call.macro.path
-  (token_tree) @call.macro.arguments) @call.macro.scoped
-
-; --- config_consumers ---
-
-((macro_invocation
-   macro: (identifier) @config.macro.name
-   (token_tree) @config.macro.arguments) @config.macro
- (#match? @config.macro.name "^(env|option_env|include|include_str|include_bytes|cfg)$"))
-
-((attribute_item
-   (attribute
-     (identifier) @config.attribute.name
-     arguments: (token_tree) @config.attribute.arguments)) @config.attribute
- (#match? @config.attribute.name "^(cfg|cfg_attr|path)$"))
-
-((inner_attribute_item
-   (attribute
-     (identifier) @config.inner_attribute.name
-     arguments: (token_tree) @config.inner_attribute.arguments)) @config.inner_attribute
- (#match? @config.inner_attribute.name "^(cfg|cfg_attr|path)$"))
-
-; Runtime/environment APIs are post-filtered by canonical target text.
-(call_expression
-  function: (scoped_identifier) @config.api.target
-  arguments: (arguments) @config.api.arguments) @config.api.call
-(if_expression condition: (_) @control.if.condition @reference.role.condition) @control.if
-(match_expression value: (_) @control.match.value body: (match_block) @control.match.body) @control.match
-(while_expression condition: (_) @control.while.condition body: (block) @control.while.body) @control.while
-(loop_expression body: (block) @control.loop.body) @control.loop
-(for_expression pattern: (_) @control.for.pattern value: (_) @control.for.value body: (block) @control.for.body) @control.for
-(return_expression) @control.return
-(yield_expression) @control.yield
-(break_expression) @control.break
-(continue_expression) @control.continue
-(await_expression) @control.await
-(try_expression) @control.try
-(let_condition pattern: (_) @control.let.pattern @reference.role.pattern_position value: (_) @control.let.value @reference.role.condition_value) @control.let
-(let_chain) @control.let_chain
-(const_block body: (block) @control.const.body) @control.const
-(unsafe_block (block) @control.unsafe.body) @control.unsafe
-(async_block (block) @control.async.body) @control.async
-(gen_block (block) @control.gen.body) @control.gen
-(try_block (block) @control.try_block.body) @control.try_block
-(label) @control.label
-
-; --- data_handoffs ---
-
-; Bounded local data-handoff relations. These express syntax-local flow only;
-; they do not claim compiler dataflow, alias analysis, or target resolution.
-
-(call_expression
-  function: (_) @relation.data.argument.callee
-  arguments: (arguments
-    (_) @relation.data.argument.value)) @relation.data.argument
-(return_expression (_) @relation.data.return.value @reference.role.return_value) @relation.data.return
-(yield_expression (_) @relation.data.yield.value @reference.role.yield_value) @relation.data.yield
-
-; --- data ---
-
-(struct_expression
-  name: (_) @data.struct.type
-  body: (field_initializer_list) @data.struct.fields) @data.struct
-
-(field_initializer
-  field: (_) @data.field.name
-  value: (_) @data.field.value) @data.field
-(shorthand_field_initializer (identifier) @data.field_shorthand.name @reference.role.field_shorthand_value) @data.field_shorthand
-
-(base_field_initializer) @data.field_base
-(array_expression) @data.array
-(tuple_expression) @data.tuple
-(unit_expression) @data.unit
-(string_literal) @data.literal.string
-(raw_string_literal) @data.literal.raw_string
-(char_literal) @data.literal.char
-(boolean_literal) @data.literal.bool
-(integer_literal) @data.literal.integer
-(float_literal) @data.literal.float
-(negative_literal) @data.literal.negative
-
-; --- declaration_category_constant ---
-
-(const_item
-  name: (_) @definition.category.constant.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_enum ---
-
-(enum_item
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(enum_variant
-  name: (_) @definition.category.enum.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_field ---
-
-(field_declaration
-  name: (_) @definition.category.field.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_function ---
-
-(function_item
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-(function_signature_item
-  name: (_) @definition.category.function.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_macro ---
-
-(macro_definition
-  name: (_) @definition.category.macro.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_module ---
-
-(mod_item
-  name: (_) @definition.category.module.name
-) @definition.category.owner
-
-; --- declaration_category_struct ---
-
-(struct_item
-  name: (_) @definition.category.struct.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_trait ---
-
-(trait_item
-  name: (_) @definition.category.trait.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_type ---
+  (visibility_modifier)? @static.visibility
+  name: (identifier) @static.name
+  type: (_) @static.type) @static
 
 (type_item
-  name: (_) @definition.category.type.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_union ---
-
-(union_item
-  name: (_) @definition.category.union.name @definition.identity.name
-) @definition.category.owner @definition.identity.owner
-
-; --- declaration_category_variable ---
-
-; --- declaration_modifiers ---
-
-(function_item
-  (function_modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-(function_signature_item
-  (function_modifiers) @definition.modifiers.modifier
-  name: (_) @definition.modifiers.name
-) @definition.modifiers.owner
-
-; --- declaration_visibility ---
-
-(const_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(enum_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(enum_variant
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(extern_crate_declaration
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(field_declaration
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(function_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(function_signature_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(mod_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(static_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(struct_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(trait_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(type_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-(union_item
-  (visibility_modifier) @definition.visibility.modifier
-  name: (_) @definition.visibility.name
-) @definition.visibility.owner
-
-; --- definition_identity_hints ---
-
-; --- definitions_functions ---
-
-; The type an `impl` block's functions belong to, carried onto each function
-; declaration: the base type name, whatever generics or path spell it.
-(impl_item
-  type: [
-    (type_identifier) @definition.container_name_candidate.type
-    (generic_type
-      type: (type_identifier) @definition.container_name_candidate.type)
-    (scoped_type_identifier
-      name: (type_identifier) @definition.container_name_candidate.type)
-  ]
-  body: (declaration_list
-    (function_item) @definition.container_name_candidate))
-
-; The enum an enum's variants belong to, carried onto each variant: a variant
-; is named through its enum (`SessionError::UnsafeCurrent`) the way a function
-; of an `impl` is named through its type.
-(enum_item
-  name: (type_identifier) @definition.container_name_candidate.type
-  body: (enum_variant_list
-    (enum_variant) @definition.container_name_candidate))
-
-; The trait a trait's methods belong to, required or provided: a call on a
-; value of that trait reaches them as members.
-(trait_item
-  name: (type_identifier) @definition.container_name_candidate.type
-  body: (declaration_list
-    [
-      (function_signature_item)
-      (function_item)
-    ] @definition.container_name_candidate))
-
-; All Rust function-like declarations. Rule-side ancestry classification distinguishes
-; free functions, inherent methods, trait methods, trait requirements, and extern signatures.
-(function_item
-  name: [(identifier) (metavariable)] @definition.function.name
-  parameters: (parameters) @definition.function.parameters
-  body: (block) @definition.function.body) @definition.function
-
-(function_signature_item
-  name: [(identifier) (metavariable)] @definition.signature.name
-  parameters: (parameters) @definition.signature.parameters) @definition.signature
-
-; --- definitions_macros ---
-
-(macro_definition
-  name: (identifier) @definition.macro.name) @definition.macro
-
-(token_binding_pattern
-  name: (metavariable) @definition.macro_parameter.name
-  type: (fragment_specifier) @definition.macro_parameter.fragment) @definition.macro_parameter
-
-(macro_rule
-  left: (token_tree_pattern) @definition.macro_rule.pattern
-  right: (token_tree) @definition.macro_rule.expansion) @definition.macro_rule
-
-(token_repetition_pattern) @definition.macro.repetition_pattern
-(token_repetition) @definition.macro.repetition
-(token_tree_pattern) @definition.macro.token_pattern
-(token_tree) @definition.macro.token_tree
-(metavariable) @definition.macro.metavariable.candidate
-
-; --- definitions_types ---
-
-(struct_item
-  name: (type_identifier) @definition.struct.name) @definition.struct
-
-(enum_item
-  name: (type_identifier) @definition.enum.name) @definition.enum
-
-(union_item
-  name: (type_identifier) @definition.union.name) @definition.union
-
-(trait_item
-  name: (type_identifier) @definition.trait.name) @definition.trait
-
-(type_item
-  name: (type_identifier) @definition.type_alias.name
-  type: (_) @definition.type_alias.target) @definition.type_alias
+  (visibility_modifier)? @alias.visibility
+  name: (type_identifier) @alias.name
+  type_parameters: (type_parameters)? @alias.type_parameters
+  type: (_) @alias.value) @alias
 
 (associated_type
-  name: (type_identifier) @definition.associated_type.name) @definition.associated_type
-
-(enum_variant
-  name: (identifier) @definition.enum_variant.name) @definition.enum_variant
-
-(field_declaration
-  name: (field_identifier) @definition.field.name
-  type: (_) @definition.field.type) @definition.field
-
-(ordered_field_declaration_list
-  type: (_) @definition.tuple_field.type @type.annotation.tuple_field) @definition.tuple_field.container @type.owner.tuple_field
-
-(type_parameter
-  name: (type_identifier) @definition.type_parameter.name) @definition.type_parameter
-
-(const_parameter
-  name: (identifier) @definition.const_parameter.name
-  type: (_) @definition.const_parameter.type) @definition.const_parameter
-
-(lifetime_parameter
-  name: (lifetime) @definition.lifetime_parameter.name) @definition.lifetime_parameter
-
-; --- definitions_values ---
-
-(const_item
-  name: (identifier) @definition.const.name
-  type: (_) @definition.const.type) @definition.const
-
-(static_item
-  name: (identifier) @definition.static.name
-  type: (_) @definition.static.type) @definition.static
-
-; --- documentation_marker_fields ---
-
-; Exact inner/outer doc marker fields on line/block comments.
-(line_comment inner: (_) @field.doc.inner_marker)
-(line_comment outer: (_) @field.doc.outer_marker)
-(block_comment inner: (_) @field.doc.inner_marker)
-(block_comment outer: (_) @field.doc.outer_marker)
-
-; --- documentation ---
-
-(line_comment
-  doc: (doc_comment) @documentation.text) @documentation.line
-
-(block_comment
-  doc: (doc_comment) @documentation.text) @documentation.block
-
-(line_comment) @comment.line
-(block_comment) @comment.block
-(shebang) @source.shebang
-
-(dynamic_type) @guard.dynamic_type @type.dynamic
-(abstract_type) @guard.impl_trait @type.impl_trait
-
-; --- embedded_regions ---
-
-; Omega mature-pack enrichment from exact-compatible Neovim distributed injection baseline
-; original=packs/omega-rust/third_party/neovim-distributed/queries/injections.scm
-; retained third-party baseline/LICENSE remains under third_party/neovim-distributed
-
-(macro_invocation
-  macro: [
-    (scoped_identifier
-      name: (_) @_macro_name)
-    (identifier) @_macro_name
-  ]
-  (token_tree) @injection.content
-  (#not-any-of? @_macro_name "slint" "html" "json" "xml")
-  (#set! injection.language "rust")
-  (#set! injection.include-children))
-
-(macro_invocation
-  macro: [
-    (scoped_identifier
-      name: (_) @injection.language)
-    (identifier) @injection.language
-  ]
-  (token_tree) @injection.content
-  (#any-of? @injection.language "slint" "html" "json" "xml")
-  (#offset! @injection.content 0 1 0 -1)
-  (#set! injection.include-children))
-
-(macro_definition
-  (macro_rule
-    left: (token_tree_pattern) @injection.content
-    (#set! injection.language "rust")))
-
-(macro_definition
-  (macro_rule
-    right: (token_tree) @injection.content
-    (#set! injection.language "rust")))
-
-([
-  (line_comment)
-  (block_comment)
-] @injection.content
-  (#set! injection.language "comment"))
-
-(call_expression
-  function: (scoped_identifier
-    path: (identifier) @_regex
-    (#any-of? @_regex "Regex" "RegexBuilder")
-    name: (identifier) @_new
-    (#eq? @_new "new"))
-  arguments: (arguments
-    (raw_string_literal
-      (string_content) @injection.content))
-  (#set! injection.language "regex"))
-
-(call_expression
-  function: (scoped_identifier
-    path: (scoped_identifier
-      (identifier) @_regex
-      (#any-of? @_regex "Regex" "RegexBuilder") .)
-    name: (identifier) @_new
-    (#eq? @_new "new"))
-  arguments: (arguments
-    (raw_string_literal
-      (string_content) @injection.content))
-  (#set! injection.language "regex"))
-
-(call_expression
-  function: (scoped_identifier
-    path: (identifier) @_regex
-    (#any-of? @_regex "RegexSet" "RegexSetBuilder")
-    name: (identifier) @_new
-    (#eq? @_new "new"))
-  arguments: (arguments
-    (array_expression
-      (raw_string_literal
-        (string_content) @injection.content)))
-  (#set! injection.language "regex"))
-
-(call_expression
-  function: (scoped_identifier
-    path: (scoped_identifier
-      (identifier) @_regex
-      (#any-of? @_regex "RegexSet" "RegexSetBuilder") .)
-    name: (identifier) @_new
-    (#eq? @_new "new"))
-  arguments: (arguments
-    (array_expression
-      (raw_string_literal
-        (string_content) @injection.content)))
-  (#set! injection.language "regex"))
-
-((block_comment) @injection.content
-  (#match? @injection.content "/\\*!([a-zA-Z]+:)?re2c")
-  (#set! injection.language "re2c"))
-
-; --- enclosing_owner_hints ---
-
-(struct_expression 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(struct_item 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-(trait_item 
-  name: (_) @scope.enclosing_owner.name @scope.owner.name
-  body: (_) @scope.enclosing_owner.body @scope.owner.body
-) @scope.enclosing_owner.span @scope.owner
-
-; --- expressions ---
-
-; Explicit value/expression surface not already represented as calls, assignments,
-; literals, constructors or control owners. These captures preserve syntactic data
-; origins without pretending to perform compiler-level constant/data-flow analysis.
-(range_expression) @expression.range
-(unary_expression) @expression.unary
-(reference_expression) @expression.reference
-(binary_expression) @expression.binary
-(type_cast_expression) @expression.cast
-(parenthesized_expression) @expression.parenthesized
-(index_expression) @expression.index
-(field_expression) @expression.field
-(closure_expression) @expression.closure @scope.closure
-(async_block) @expression.async_block
-(gen_block) @expression.gen_block
-(try_block) @expression.try_block
-(unsafe_block) @expression.unsafe_block
-
-; --- fq_router_nest_binding_context ---
-
-; Generic Rust fully-qualified router-constructor + nested-router binding.
-; Framework-neutral: captures only source structure. Child identity must be
-; established by a separate binding fact in the framework rule layer.
-
-(let_declaration
-  pattern: (identifier) @rust.router_nest.binding
-  value: (call_expression
-    function: (field_expression
-      value: (call_expression
-        function: (scoped_identifier
-          path: (scoped_identifier
-            path: (identifier) @rust.router_nest.module_root
-            name: (identifier) @rust.router_nest.router_type)
-          name: (identifier) @rust.router_nest.constructor_name)
-        arguments: (arguments)) @rust.router_nest.constructor_call
-      field: (field_identifier) @rust.router_nest.nest_method)
-    arguments: (arguments
-      . (string_literal
-          (string_content) @rust.router_nest.prefix_literal)
-      . (identifier) @rust.router_nest.child_binding
-      .)) @rust.router_nest.nest_call) @rust.router_nest.context
-
-; --- fq_router_route_binding_context ---
-
-; Generic Rust fully-qualified router-constructor + route registration binding.
-; Framework-neutral: captures only source structure. The framework layer decides
-; whether the captured module/type/method names belong to a supported router API.
-
-(let_declaration
-  pattern: (identifier) @rust.router_route.binding
-  value: (call_expression
-    function: (field_expression
-      value: (call_expression
-        function: (scoped_identifier
-          path: (scoped_identifier
-            path: (identifier) @rust.router_route.module_root
-            name: (identifier) @rust.router_route.router_type)
-          name: (identifier) @rust.router_route.constructor_name)
-        arguments: (arguments)) @rust.router_route.constructor_call
-      field: (field_identifier) @rust.router_route.route_method)
-    arguments: (arguments
-      . (string_literal
-          (string_content) @rust.router_route.path_literal)
-      . (call_expression
-          function: (scoped_identifier
-            path: (scoped_identifier
-              path: (identifier) @rust.router_route.method_root
-              name: (identifier) @rust.router_route.method_module)
-            name: (identifier) @rust.router_route.method_wrapper)
-          arguments: (arguments
-            . (identifier) @rust.router_route.handler_identifier
-            .))
-      .)) @rust.router_route.route_call) @rust.router_route.context
-
-; --- function_scoped_attribute_context ---
-
-; Framework-neutral fully-qualified Rust outer attribute immediately preceding a function.
-; Arguments, if any, are deliberately not interpreted by this fact.
-(source_file
-  (attribute_item
-    (attribute
-      (scoped_identifier) @rust.fn_scoped_attr.attribute_path) @rust.fn_scoped_attr.attribute)
-  .
-  (function_item
-    name: (identifier) @rust.fn_scoped_attr.function_name) @rust.fn_scoped_attr.function)
-
-; --- function_scoped_macro_literal_context ---
-
-; Framework-neutral authored Rust fact:
-; a named function directly contains a let-binding whose RHS is a fully-qualified
-; two-segment macro invocation and whose outer token tree begins with a direct
-; string literal. The literal value is deliberately not captured or emitted.
-(function_item
-  name: (identifier) @rust.owned_macro.owner_name
-  body: (block
-    (let_declaration
-      value: (macro_invocation
-        macro: (scoped_identifier
-          path: (identifier) @rust.owned_macro.macro_root
-          name: (identifier) @rust.owned_macro.macro_name)
-        (token_tree
-          . (string_literal))) @rust.owned_macro.context))) @rust.owned_macro.owner
-
-; --- function_scoped_string_attribute_context ---
-
-; Framework-neutral Rust fully-qualified outer attribute with one direct plain string literal,
-; immediately preceding a function item. The Pack records source structure only.
-(source_file
-  (attribute_item
-    (attribute
-      (scoped_identifier) @rust.fn_scoped_string_attr.attribute_path
-      arguments: (token_tree
-        (string_literal
-          (string_content) @rust.fn_scoped_string_attr.arg0))) @rust.fn_scoped_string_attr.attribute)
-  .
-  (function_item
-    name: (identifier) @rust.fn_scoped_string_attr.function_name) @rust.fn_scoped_string_attr.function)
-
-; --- function_string_attribute_context ---
-
-; Framework-neutral Rust outer attribute with one direct plain string literal, immediately
-; preceding a function item. Macro expansion and framework meaning are intentionally absent.
-(source_file
-  (attribute_item
-    (attribute
-      (identifier) @rust.fn_string_attr.attribute_path
-      arguments: (token_tree
-        (string_literal
-          (string_content) @rust.fn_string_attr.arg0))) @rust.fn_string_attr.attribute)
-  .
-  (function_item
-    name: (identifier) @rust.fn_string_attr.function_name) @rust.fn_string_attr.function)
-(generic_type type: (_) @relation.generic_type.base @reference.role.generic_base_type type_arguments: (_) @relation.generic_type.arguments @reference.role.generic_argument_list) @relation.generic_type.application
-(generic_function function: (_) @relation.generic_function.base @reference.role.generic_callable type_arguments: (_) @relation.generic_function.arguments @reference.role.generic_argument_list) @relation.generic_function.application
-
-(type_parameter
-  name: (_) @relation.type_default.owner
-  default_type: (_) @relation.type_default.target) @relation.type_default
-
-(const_parameter
-  name: (_) @relation.const_default.owner
-  value: (_) @relation.const_default.target) @relation.const_default
-
-; --- generic_parameter_fields ---
-
-; Exact generic-parameter field selectors for every grammar owner exposing the field.
-(struct_item type_parameters: (_) @field.generic_parameters)
-(union_item type_parameters: (_) @field.generic_parameters)
-(enum_item type_parameters: (_) @field.generic_parameters)
-(type_item type_parameters: (_) @field.generic_parameters)
-(function_item type_parameters: (_) @field.generic_parameters)
-(function_signature_item type_parameters: (_) @field.generic_parameters)
-(impl_item type_parameters: (_) @field.generic_parameters)
-(trait_item type_parameters: (_) @field.generic_parameters)
-(associated_type type_parameters: (_) @field.generic_parameters)
-(higher_ranked_trait_bound type_parameters: (_) @field.generic_parameters)
-
-(use_wildcard) @guard.glob.any @import.glob
-(impl_item type: (_) @implementation.target @type.impl.target @reference.role.trait_or_impl_type) @implementation.inherent @type.impl
-
-(impl_item
-  trait: (_) @implementation.trait @relation.implements.trait @type.impl.trait
-  type: (_) @implementation.target @relation.implements.type @type.impl.target) @implementation.trait_for @relation.implements @type.impl.trait_for
-
-; --- import_alias_hints ---
-
-(use_as_clause
-  path: (_) @import.target
-  alias: (_) @import.alias) @import.statement
-
-; --- import_bound_attribute_context ---
-
-; Framework-neutral explicit three-segment Rust use import plus an immediately
-; bound unqualified outer attribute on a top-level function or foreign function block.
-; The Pack records syntax only; Framework rules must validate imported/attribute names.
-(source_file
-  (use_declaration
-    argument: (scoped_identifier
-      path: (scoped_identifier
-        path: (identifier) @rust.import_attr.import_root
-        name: (identifier) @rust.import_attr.import_module)
-      name: (identifier) @rust.import_attr.import_member)) @rust.import_attr.use
-  (attribute_item
-    (attribute
-      (identifier) @rust.import_attr.attribute_path) @rust.import_attr.attribute) @rust.import_attr.attribute_item
-  .
-  (function_item
-    name: (identifier) @rust.import_attr.function_name) @rust.import_attr.function)
-
-(source_file
-  (use_declaration
-    argument: (scoped_identifier
-      path: (scoped_identifier
-        path: (identifier) @rust.import_foreign.import_root
-        name: (identifier) @rust.import_foreign.import_module)
-      name: (identifier) @rust.import_foreign.import_member)) @rust.import_foreign.use
-  (attribute_item
-    (attribute
-      (identifier) @rust.import_foreign.attribute_path) @rust.import_foreign.attribute) @rust.import_foreign.attribute_item
-  .
-  (foreign_mod_item
-    body: (declaration_list
-      (function_signature_item
-        name: (identifier) @rust.import_foreign.function_name))) @rust.import_foreign.block)
-(use_declaration argument: (_) @import.argument @reference.role.import_selector) @import.declaration
-
-(use_as_clause
-  path: (_) @import.alias.path
-  alias: (identifier) @import.alias.name) @import.alias
-
-(scoped_use_list
-  path: (_) @import.group.path
-  list: (use_list) @import.group.list) @import.group
-
-(extern_crate_declaration
-  name: (identifier) @import.extern_crate.name) @import.extern_crate
-
-(extern_crate_declaration
-  name: (identifier) @import.extern_crate.name
-  alias: (identifier) @import.extern_crate.alias) @import.extern_crate.aliased
-
-; --- labels ---
-
-; Rust control-flow labels are lexical control targets, not lifetimes.
-; Capture declarations on label-owning constructs separately from break/continue references.
-
-(while_expression
-  (label) @definition.control_label)
-
-(loop_expression
-  (label) @definition.control_label)
-
-(for_expression
-  (label) @definition.control_label)
-
-(block
-  (label) @definition.control_label)
-
-(break_expression
-  (label) @reference.role.loop_label_reference)
-
-(continue_expression
-  (label) @reference.role.loop_label_reference)
-
-; --- macro_first_identifier_context ---
-
-; Framework-neutral direct macro shape: macro!(Identifier ...)
-; Only the first direct named identifier in the outer token tree is captured.
-(macro_invocation
-  macro: (identifier) @rust.macro_first.macro_name
-  (token_tree
-    . (identifier) @rust.macro_first.arg0_identifier)) @rust.macro_first.context
-
-; --- macro_two_identifier_nested_identifier_context ---
-
-; Framework-neutral direct macro shape with two outer identifiers followed by
-; a nested token tree whose first direct identifier is captured.
-; Example shape only: m!(left -> right(inner)); punctuation is not interpreted.
-(macro_invocation
-  macro: (identifier) @rust.macro_relation.macro_name
-  (token_tree
-    . (identifier) @rust.macro_relation.arg0_identifier
-    . (identifier) @rust.macro_relation.arg1_identifier
-    . (token_tree
-      . (identifier) @rust.macro_relation.nested0_identifier))) @rust.macro_relation.context
-
-; --- macros_guards ---
-
-(macro_definition) @guard.macro_definition @scope.macro
-
-; --- member_access_hints ---
-
-(field_expression
-  value: (_) @reference.receiver
-  field: (_) @reference.member) @reference.member_expression
-
-; --- member_category_field ---
-
-(enum_variant
-  name: (_) @owner.member_category.field.name @owner.name
-  body: (field_declaration_list
-    (field_declaration
-      name: (_) @owned.member_category.field.name @owned.member.name) @owned.member)) @owner.span
-
-; --- module_path_hints ---
-
-(scoped_use_list 
-  path: (_) @import.module_path.target
-) @import.module_path.statement
-
-; --- modules ---
+  name: (type_identifier) @associated.name) @associated
 
 (mod_item
-  name: (identifier) @module.name) @module.declaration
+  (visibility_modifier)? @module.visibility
+  name: (identifier) @module.name) @module
 
-(mod_item
-  name: (identifier) @module.inline.name
-  body: (declaration_list) @module.inline.body) @module.inline
+; `macro_rules! foo` is invoked like a callable, so it is declared as one.
+(macro_definition
+  name: (identifier) @macro.name) @macro
 
-(scoped_identifier) @module.path.value @reference.path.candidate
-(scoped_type_identifier) @module.path.type @reference.type_path.candidate @type.path
+; A generic parameter is declared so that the mentions of `T` inside the item
+; have something to resolve to.
+(type_parameter
+  name: (type_identifier) @type_parameter.name) @type_parameter
 
-; --- named_scope_owners ---
-
-(function_item
-  name: (_) @scope.owner.name
-  body: (_) @scope.owner.body) @scope.owner
-
-; --- operator_calls ---
-
-; Rust operator-like syntax can invoke trait/compiler dispatch. We index the
-; syntactic operation as a call candidate while guarding exact target/type
-; resolution, which belongs to compiler semantics.
-
-(binary_expression
-  left: (_) @operator.binary.left
-  operator: _ @operator.binary.token
-  right: (_) @operator.binary.right) @operator.binary
-
-(compound_assignment_expr
-  left: (_) @operator.assign.left
-  operator: _ @operator.assign.token
-  right: (_) @operator.assign.right) @operator.assign
-
-(unary_expression
-  ["-" "!" "*"] @operator.unary.token
-  (_) @operator.unary.operand) @operator.unary
-
-(index_expression
-  (_) @operator.index.base
-  (_) @operator.index.key) @operator.index
-(try_expression (_) @operator.try.value @reference.role.try_operand) @operator.try
-
-; --- ownership_members ---
-
-; --- ownership_parameters ---
-
-(function_item
-  name: (_) @owner.name
-  parameters: (parameters
-    (parameter) @owned.parameter)) @owner.span
-
-(function_item
-  name: (_) @owner.name
-  parameters: (parameters
-    (self_parameter) @owned.parameter)) @owner.span
-
-(function_item
-  name: (_) @owner.name
-  parameters: (parameters
-    (variadic_parameter) @owned.parameter)) @owner.span
-
-(function_signature_item
-  name: (_) @owner.name
-  parameters: (parameters
-    (parameter) @owned.parameter)) @owner.span
-
-(function_signature_item
-  name: (_) @owner.name
-  parameters: (parameters
-    (self_parameter) @owned.parameter)) @owner.span
-
-(function_signature_item
-  name: (_) @owner.name
-  parameters: (parameters
-    (variadic_parameter) @owned.parameter)) @owner.span
-
-; --- path_origin_hints ---
-
-(scoped_use_list path: [(self) (super) (crate)] @import.path_origin.root) @import.path_origin.statement
-
-; --- provider_surface_enrichment ---
-
-; Exact-compatible provider surface enrichment for grammar nodes not previously named by Omega semantic queries.
-(escape_sequence) @surface.escape_sequence
-(inner_doc_comment_marker) @surface.doc.inner_marker
-(outer_doc_comment_marker) @surface.doc.outer_marker
-(type_parameters) @surface.type_parameters
-
-; --- qualified_chain_hints ---
-
-(scoped_identifier
-  path: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
-
-(scoped_type_identifier
-  path: (_) @reference.qualified_chain.base
-  name: (_) @reference.qualified_chain.leaf
-) @reference.qualified_chain.span
-
-; --- qualified_trait_impl_context ---
-
-; Framework-neutral explicit fully-qualified Rust trait implementation.
-; Only a scoped trait path and direct simple target type are captured. `use`
-; resolution, aliases, generic target types and compiler trait solving remain out of scope.
+; An impl block is declared under the name of the type it is for. That is what
+; puts `Foo::bar` under `Foo` rather than at the top of the module: the host
+; takes a declaration's owner from the smallest declaration span around it, and
+; without this one a method would be a bare `bar`. Where the self type is not a
+; path -- `impl Trait for &[u8]` -- no name can be taken and nothing matches.
 (impl_item
-  trait: (scoped_type_identifier) @rust.qualified_impl.trait_path
-  type: (type_identifier) @rust.qualified_impl.type_name) @rust.qualified_impl.context
+  type_parameters: (type_parameters)? @impl.type_parameters
+  trait: [(type_identifier) @impl.trait
+          (scoped_type_identifier name: (type_identifier) @impl.trait)
+          (generic_type type: (type_identifier) @impl.trait)
+          (generic_type type: (scoped_type_identifier name: (type_identifier) @impl.trait))]?
+  type: [(type_identifier) @impl.name
+         (scoped_type_identifier name: (type_identifier) @impl.name)
+         (generic_type type: (type_identifier) @impl.name)
+         (generic_type type: (scoped_type_identifier name: (type_identifier) @impl.name))]) @impl
 
-; --- receiver_hints ---
-
-(self) @reference.receiver @reference.self
-
-(super) @reference.receiver @reference.super
-
-; --- reexport_hints ---
+; -------------------------------------------------------------------- imports
 
 (use_declaration
-  (visibility_modifier)
-  argument: (_) @module.reexport.target
-) @module.reexport.statement
+  argument: (identifier) @use.name) @use
 
-; --- reference_roles_extended ---
+(use_declaration
+  argument: (scoped_identifier
+    name: (identifier) @use.scoped.name)) @use.scoped
 
-; Additional exact syntactic reference/value/type roles required for complete
-; Rust context accounting. These are context boundaries, not name-resolution claims.
+; Each entry of `use a::{b, c::d};` is its own import.
+(use_list
+  (identifier) @use.item)
 
-(array_expression
-  length: (_) @reference.role.array_repeat_length)
-(array_expression
-  (_) @reference.role.array_element)
+(use_list
+  (scoped_identifier
+    name: (identifier) @use.item.scoped.name) @use.item.scoped)
 
-(range_expression
-  (_) @reference.role.range_bound)
-(tuple_expression
-  (_) @reference.role.tuple_element)
-(parenthesized_expression
-  (_) @reference.role.parenthesized_value)
-
-(struct_expression
-  name: (_) @reference.role.struct_constructor_type)
-(field_initializer
-  value: (_) @reference.role.struct_field_value)
-(base_field_initializer
-  (_) @reference.role.struct_update_base)
-
-(await_expression
-  (_) @reference.role.await_operand)
-(break_expression
-  (_) @reference.role.break_target_or_value)
-(where_predicate left: (_) @reference.role.where_predicate_subject @relation.where.subject bounds: (_) @reference.role.where_predicate_bound @relation.where.bound) @relation.where.bound_relation
-(function_item return_type: (_) @reference.role.return_type_position @type.return.function) @type.owner.function
-(function_signature_item return_type: (_) @reference.role.return_type_position @type.return.signature) @type.owner.signature
-(closure_expression return_type: (_) @reference.role.return_type_position @type.return.closure) @type.owner.closure
-(field_declaration type: (_) @reference.role.field_type_position @type.annotation.field) @type.owner.field
-(const_item type: (_) @reference.role.field_type_position @type.annotation.const) @type.owner.const
-(static_item type: (_) @reference.role.field_type_position @type.annotation.static) @type.owner.static
-(type_item type: (_) @reference.role.field_type_position @type.alias.target) @type.owner.alias
-(let_declaration type: (_) @reference.role.field_type_position @type.annotation.let) @type.owner.let
-
-(const_parameter
-  value: (_) @reference.role.const_parameter_value)
 (use_as_clause
-  path: (_) @reference.role.import_selector)
+  path: (_) @use.alias.path
+  alias: (identifier) @use.alias.name) @use.alias
+
+; `use a::b::*;` -- the name is the path it opens, with the star removed.
+(use_wildcard) @use.glob
+
+(extern_crate_declaration
+  name: (identifier) @crate.name
+  alias: (identifier)? @crate.alias) @crate
+
+; ---------------------------------------------------------------------- calls
+
+(call_expression
+  function: (identifier) @call.function.name) @call.function
+
+(call_expression
+  function: (scoped_identifier
+    name: (identifier) @call.path.name)) @call.path
+
+(call_expression
+  function: (field_expression
+    field: (field_identifier) @call.method.name)) @call.method
+
+(call_expression
+  function: (generic_function
+    function: [(identifier) @call.turbofish.name
+               (scoped_identifier name: (identifier) @call.turbofish.name)
+               (field_expression field: (field_identifier) @call.turbofish.name)])) @call.turbofish
 
 (macro_invocation
-  macro: (_) @reference.role.macro_path)
+  macro: [(identifier) @call.macro.name
+          (scoped_identifier name: (identifier) @call.macro.name)]) @call.macro
 
-(impl_item
-  trait: (_) @reference.role.trait_or_impl_type)
-(trait_item
-  bounds: (_) @reference.role.trait_bound)
-(type_parameter
-  bounds: (_) @reference.role.trait_bound)
-(type_parameter default_type: (_) @reference.role.type_default @type.parameter.default) @type.parameter.with_default
-(associated_type
-  bounds: (_) @reference.role.trait_bound)
-(lifetime_parameter
-  bounds: (_) @reference.role.lifetime_bound)
+; ----------------------------------------------------------------- references
 
-(reference_type
-  (lifetime) @reference.role.lifetime_reference)
-(self_parameter
-  (lifetime) @reference.role.lifetime_reference)
-(bounded_type
-  (lifetime) @reference.role.lifetime_reference)
-(use_bounds
-  (lifetime) @reference.role.lifetime_reference)
-(trait_bounds
-  (lifetime) @reference.role.lifetime_reference)
-(type_arguments
-  (lifetime) @reference.role.lifetime_reference)
+; Every mention of a type. This is the one bare capture the Pack makes, and it
+; is the one the brief allows: a type mention is always an answer someone
+; wants. A bare `(identifier)` would be every identifier in the file and is not
+; captured anywhere here.
+(type_identifier) @reference.type
 
-(type_arguments
-  [(_literal) (block)] @reference.role.const_generic_argument)
+; `a.b` is not stated. tree-sitter-rust spells a method callee as
+; `field_expression` too, and a query cannot see the parent, so this pattern
+; reported every method call as a mention of a field: measured over
+; crates/ (514 files), 63 649 field mentions against 43 807 method calls --
+; 68.8% of them were calls, and they resolved by name onto real field
+; declarations. `Foo { b: .. }` and `Foo { b }` below carry the field mentions
+; that are unambiguous.
 
-(visibility_modifier
-  [(crate) (identifier) (metavariable) (scoped_identifier) (self) (super)] @reference.role.visibility_path)
-
-(attribute
-  [(crate) (identifier) (metavariable) (scoped_identifier) (self) (super)] @reference.role.attribute_path)
-
-(match_pattern
-  condition: (_) @reference.role.match_guard_condition)
-
-(token_tree
-  (metavariable) @reference.role.macro_metavariable_use)
-
-(call_expression
-  arguments: (arguments
-    (_) @reference.role.argument))
-
-(field_expression
-  value: (_) @reference.role.receiver
-  field: (field_identifier) @reference.role.member)
-
-(binary_expression
-  left: (_) @reference.role.binary_operand
-  right: (_) @reference.role.binary_operand)
-
-(type_cast_expression
-  value: (_) @reference.role.cast_value
-  type: (_) @reference.role.type_position)
-
-(reference_expression
-  value: (_) @reference.role.borrowed_value)
-
-(while_expression
-  condition: (_) @reference.role.condition)
-
-(for_expression
-  pattern: (_) @reference.role.pattern_position
-  value: (_) @reference.role.iterator_value)
-
-(match_expression
-  value: (_) @reference.role.match_scrutinee)
-
-(match_arm
-  pattern: (_) @reference.role.pattern_position
-  value: (_) @reference.role.match_arm_value)
-
+; `Foo { port: 8080 }` and `Foo { port }` are both mentions of the field.
 (field_initializer
-  field: (field_identifier) @reference.role.member
-  value: (_) @reference.role.initializer)
+  field: (field_identifier) @reference.initializer.name) @reference.initializer
 
-(parameter
-  pattern: (_) @reference.role.pattern_position
-  type: (_) @reference.role.type_position)
+(shorthand_field_initializer
+  (identifier) @reference.shorthand)
 
-; --- references ---
+; `Ordering::SeqCst`, `Self::LIMIT`, `Enum::Variant` -- the qualified value
+; paths that resolve to a const, a static or a variant declared elsewhere.
+(scoped_identifier
+  name: (identifier) @reference.path.name) @reference.path
 
-; Exhaustive candidate pass. Role filtering removes definition/binding/import-name spans,
-; while retaining value, type, field, path and lifetime references in every expression form.
+; `#[serde(..)]`, `#[tokio::main]`, `#[inline]` -- which attribute is on what.
+(attribute
+  [(identifier) @reference.attribute.name
+   (scoped_identifier name: (identifier) @reference.attribute.name)]) @reference.attribute
 
-(type_identifier) @reference.type.candidate
-(field_identifier) @reference.field.candidate
-(shorthand_field_identifier) @reference.field_shorthand.candidate
-(lifetime) @reference.lifetime.candidate
-(crate) @reference.crate
-(enum_variant body: (_) @field.body.enum_variant)
+; ------------------------------------------------------------------- implements
 
-; --- scoped_call_context ---
+; `impl Trait for Type` is carried by the impl pattern above. `#[derive(..)]`
+; is the other half of the answer to "who implements this trait", and it is a
+; sibling of the type it applies to, so the run of attributes between the
+; derive and the declaration is anchored on both sides.
 
-; Framework-neutral direct Rust scoped-call contexts.
-; Two-segment call: root::member(...)
-(call_expression
-  function: (scoped_identifier
-    path: (identifier) @rust.scoped_call.root
-    name: (identifier) @rust.scoped_call.member) @rust.scoped_call.target) @rust.scoped_call.context
-
-; Direct identifier binding to a four-segment scoped constructor call:
-; let binding = root::module::Type::constructor(...);
-(let_declaration
-  pattern: (identifier) @rust.scoped_ctor.binding
-  value: (call_expression
-    function: (scoped_identifier
-      path: (scoped_identifier
-        path: (scoped_identifier
-          path: (identifier) @rust.scoped_ctor.root
-          name: (identifier) @rust.scoped_ctor.module)
-        name: (identifier) @rust.scoped_ctor.type_name)
-      name: (identifier) @rust.scoped_ctor.constructor) @rust.scoped_ctor.target) @rust.scoped_ctor.call) @rust.scoped_ctor.context
-
-; --- scopes ---
-
-(source_file) @scope.file
-(block) @scope.block
-(match_arm) @scope.match_arm
-
-; --- semantic_relations ---
-
-; Explicit semantic relations preserved from the original Rust baseline and widened.
-
-; Candidate calls inside functions. Rule normalization joins the enclosing function
-; with the test classification emitted by tests.json before emitting relation.tests.
-(function_item
-  name: (identifier) @relation.test.source
-  body: (block
-    (expression_statement
-      (call_expression function: (_) @relation.test.target) @relation.test.call))) @relation.test.function
-
-; Environment/config consumption with a statically extractable key.
-(call_expression
-  function: (scoped_identifier) @relation.config.function
-  arguments: (arguments (string_literal) @relation.config.key)) @relation.config
-
-; Returning an identifier is a directly observable data handoff.
-(return_expression (identifier) @relation.data.return.value) @relation.data.return
-
-; --- signature_parameters ---
-
-(function_item
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-(function_signature_item
-  name: (_) @definition.signature.name
-  parameters: (_) @definition.signature.parameters
-) @definition.signature.owner
-
-; --- signature_return_type ---
-
-(function_item
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-(function_signature_item
-  name: (_) @definition.signature.name
-  return_type: (_) @definition.signature.return_type
-) @definition.signature.owner
-
-; The type a function returns, as the name a call on its result is resolved
-; through: the base type, whatever generics, path or reference spell it. A
-; function returning the type it belongs to says so instead.
-(function_item
-  return_type: [
-    (type_identifier) @definition.return_type_head_candidate.type
-    (generic_type
-      type: (type_identifier) @definition.return_type_head_candidate.type)
-    (scoped_type_identifier
-      name: (type_identifier) @definition.return_type_head_candidate.type)
-    (reference_type
-      type: (type_identifier) @definition.return_type_head_candidate.type)
-  ]
-  (#not-eq? @definition.return_type_head_candidate.type "Self")) @definition.return_type_head_candidate
-
-(function_signature_item
-  return_type: [
-    (type_identifier) @definition.return_type_head_candidate.type
-    (generic_type
-      type: (type_identifier) @definition.return_type_head_candidate.type)
-    (scoped_type_identifier
-      name: (type_identifier) @definition.return_type_head_candidate.type)
-    (reference_type
-      type: (type_identifier) @definition.return_type_head_candidate.type)
-  ]
-  (#not-eq? @definition.return_type_head_candidate.type "Self")) @definition.return_type_head_candidate
-
-(function_item
-  return_type: (type_identifier) @definition.return_self_candidate.type
-  (#eq? @definition.return_self_candidate.type "Self")) @definition.return_self_candidate
-
-(function_signature_item
-  return_type: (type_identifier) @definition.return_self_candidate.type
-  (#eq? @definition.return_self_candidate.type "Self")) @definition.return_self_candidate
-
-; --- signature_type_parameters ---
-
-(associated_type
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(enum_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(function_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(function_signature_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(struct_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(trait_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(type_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-(union_item
-  name: (_) @definition.signature.name
-  type_parameters: (_) @definition.signature.type_parameters
-) @definition.signature.owner
-
-; --- struct_derive_trait_context ---
-
-; Framework-neutral Rust derive trait immediately bound to a struct declaration.
-; Only direct identifier entries in #[derive(...)] are captured. Attribute aliases,
-; proc-macro expansion, nested paths and derive semantics remain downstream.
 ((source_file
-  (attribute_item
-    (attribute
-      (identifier) @rust.derive.attribute_path
-      arguments: (token_tree
-        (identifier) @rust.derive.trait_name)) @rust.derive.attribute) @rust.derive.attribute_item
-  .
-  (struct_item
-    name: (type_identifier) @rust.derive.owner_struct) @rust.derive.struct)
-  (#eq? @rust.derive.attribute_path "derive"))
+   (attribute_item
+     (attribute
+       (identifier) @derive.attribute
+       arguments: (token_tree (identifier) @derive.trait)))
+   .
+   (attribute_item)*
+   .
+   [(struct_item name: (type_identifier))
+    (enum_item name: (type_identifier))
+    (union_item name: (type_identifier))] @derive.owner)
+ (#eq? @derive.attribute "derive"))
 
-; --- struct_field_string_attribute_context ---
+((declaration_list
+   (attribute_item
+     (attribute
+       (identifier) @derive.attribute
+       arguments: (token_tree (identifier) @derive.trait)))
+   .
+   (attribute_item)*
+   .
+   [(struct_item name: (type_identifier))
+    (enum_item name: (type_identifier))
+    (union_item name: (type_identifier))] @derive.owner)
+ (#eq? @derive.attribute "derive"))
 
-; Framework-neutral Rust struct-field outer attribute with one direct key = "simple_name" item.
-; Captures only authored source structure. Framework meaning is assigned later.
-(struct_item
-  name: (type_identifier) @rust.struct_field_string_attr.owner_struct
-  body: (field_declaration_list
-    (attribute_item
-      (attribute
-        (identifier) @rust.struct_field_string_attr.attribute_path
-        arguments: (token_tree
-          (identifier) @rust.struct_field_string_attr.attribute_key
-          .
-          (string_literal
-            (string_content) @rust.struct_field_string_attr.target_name))) @rust.struct_field_string_attr.attribute)
-    .
-    (field_declaration
-      name: (field_identifier) @rust.struct_field_string_attr.field_name) @rust.struct_field_string_attr.field))
-
-; --- struct_named_attribute_context ---
-
-; Framework-neutral owner-bound Rust struct attribute contexts.
-; Strict subset: the matched outer attribute must be the immediately preceding named sibling of the struct.
+; ----------------------------------------------------------------------- tests
 ;
-; Examples:
-;   #[diesel(table_name = users)]
-;   struct User { id: i32 }
-;
-;   #[diesel(belongs_to(User))]
-;   struct Post { user_id: i32 }
-;
-; The Pack records syntax only. Attribute/framework meaning and cross-file resolution remain downstream.
-
-(source_file
-  (attribute_item
-    (attribute
-      (identifier) @rust.struct_attr_assign.attribute_path
-      arguments: (token_tree
-        (identifier) @rust.struct_attr_assign.key
-        (identifier) @rust.struct_attr_assign.value))) @rust.struct_attr_assign.attribute
-  .
-  (struct_item
-    name: (type_identifier) @rust.struct_attr_assign.owner_struct) @rust.struct_attr_assign.struct)
-
-(source_file
-  (attribute_item
-    (attribute
-      (identifier) @rust.struct_attr_nested.attribute_path
-      arguments: (token_tree
-        (identifier) @rust.struct_attr_nested.directive
-        (token_tree
-          (identifier) @rust.struct_attr_nested.target_identifier))) @rust.struct_attr_nested.attribute)
-  .
-  (struct_item
-    name: (type_identifier) @rust.struct_attr_nested.owner_struct) @rust.struct_attr_nested.struct)
-
-; --- tests ---
-
-; Primary test markers. These are captured independently from items; the rule
-; contract associates only a contiguous outer-attribute chain on the same
-; parent with the following function. This avoids relying on sibling-anchor
-; query behavior for correctness.
 ; A function is a test when the attribute run immediately above it carries a
-; primary test attribute, and a module is a test container when that run
-; carries #[cfg(test)].
-;
-; The attributes used to be captured on their own, in patterns no template
-; named, beside an unguarded `(function_item)` and an unguarded `(mod_item)`.
-; Nothing joined them, so every function in the corpus was emitted as a test:
-; 6 053 of them, in a repository with 1 258 `#[test]`. `find` answered a
-; plain function twice, once as a test, and everything counted per test
-; counted the whole corpus.
-;
-; The run is anchored on both sides, so the attribute belongs to the
-; declaration below it rather than to any declaration below it. Auxiliary
-; markers -- #[ignore], #[case] -- never make a test by themselves, which is
-; what the intervening `(attribute_item)*` allows without matching on.
+; primary test attribute. The run is anchored on both sides, so the attribute
+; belongs to the declaration below it rather than to any declaration below it.
+; Auxiliary markers -- #[ignore], #[should_panic] -- never make a test by
+; themselves, which is what the intervening `(attribute_item)*` allows without
+; matching on. Captured on its own, `(function_item)` beside `(attribute_item)`
+; made every function in the corpus a test: 6 053 of them where 1 258 `#[test]`
+; were written.
 
 ((source_file
    (attribute_item
      (attribute
-       [(identifier) @test.primary.name
-        (scoped_identifier name: (identifier) @test.primary.name)])) @test.primary.attribute
+       [(identifier) @test.attribute
+        (scoped_identifier name: (identifier) @test.attribute)]))
    .
    (attribute_item)*
    .
    (function_item
-     name: [(identifier) (metavariable)] @test.function.name) @test.function.candidate)
- (#match? @test.primary.name "^(test|bench|rstest|test_case)$"))
+     name: [(identifier) (metavariable)] @test.function.name) @test.function)
+ (#match? @test.attribute "^(test|bench)$"))
 
 ((declaration_list
    (attribute_item
      (attribute
-       [(identifier) @test.primary.name
-        (scoped_identifier name: (identifier) @test.primary.name)])) @test.primary.attribute
+       [(identifier) @test.attribute
+        (scoped_identifier name: (identifier) @test.attribute)]))
    .
    (attribute_item)*
    .
    (function_item
-     name: [(identifier) (metavariable)] @test.function.name) @test.function.candidate)
- (#match? @test.primary.name "^(test|bench|rstest|test_case)$"))
+     name: [(identifier) (metavariable)] @test.function.name) @test.function)
+ (#match? @test.attribute "^(test|bench)$"))
+
+; ------------------------------------------------------- conditional compilation
+;
+; `#[cfg(..)]` says an item is only built under a condition, which is the
+; question "what is behind this feature, and what is test-only". The condition
+; is recorded verbatim on the declaration below it; it is never evaluated.
 
 ((source_file
    (attribute_item
      (attribute
-       (identifier) @test.cfg.attribute
-       arguments: (token_tree) @test.cfg.arguments)) @test.cfg.attribute_item
+       (identifier) @cfg.attribute
+       arguments: (token_tree) @cfg.condition))
    .
    (attribute_item)*
    .
-   (mod_item name: (identifier) @test.module.name) @test.module.candidate)
- (#eq? @test.cfg.attribute "cfg")
- (#match? @test.cfg.arguments "^\\(\\s*test\\s*\\)$"))
+   [(function_item) (function_signature_item) (mod_item) (struct_item)
+    (union_item) (enum_item) (trait_item) (impl_item) (const_item)
+    (static_item) (type_item) (macro_definition)] @cfg)
+ (#eq? @cfg.attribute "cfg"))
 
 ((declaration_list
    (attribute_item
      (attribute
-       (identifier) @test.cfg.attribute
-       arguments: (token_tree) @test.cfg.arguments)) @test.cfg.attribute_item
+       (identifier) @cfg.attribute
+       arguments: (token_tree) @cfg.condition))
    .
    (attribute_item)*
    .
-   (mod_item name: (identifier) @test.module.name) @test.module.candidate)
- (#eq? @test.cfg.attribute "cfg")
- (#match? @test.cfg.arguments "^\\(\\s*test\\s*\\)$"))
+   [(function_item) (function_signature_item) (mod_item) (struct_item)
+    (union_item) (enum_item) (trait_item) (impl_item) (const_item)
+    (static_item) (type_item) (macro_definition)] @cfg)
+ (#eq? @cfg.attribute "cfg"))
 
-; --- three_segment_scoped_call_context ---
+; ------------------------------------------------- what the crate reads at build
+;
+; `env!` and `include_str!` are the two language-level ways a Rust file depends
+; on something that is not Rust: an environment variable and a file on disk.
 
-; Framework-neutral direct Rust three-segment scoped-call context.
-; Captures only root::namespace::member(...); import aliases, deeper chains,
-; method dispatch, macro expansion and runtime semantics remain unresolved.
-(call_expression
-  function: (scoped_identifier
-    path: (scoped_identifier
-      path: (identifier) @rust.three_scoped.root
-      name: (identifier) @rust.three_scoped.namespace)
-    name: (identifier) @rust.three_scoped.member) @rust.three_scoped.target) @rust.three_scoped.context
+((macro_invocation
+   macro: (identifier) @config.macro
+   (token_tree
+     (string_literal (string_content) @config.variable))) @config
+ (#any-of? @config.macro "env" "option_env"))
 
-; --- trait_bounds ---
-
-; Explicit Rust type-bound relations. These preserve syntactic ownership and
-; bounded type/lifetime relationships without pretending to resolve traits.
-
-(trait_item
-  name: (_) @relation.trait_super.owner
-  bounds: (_) @relation.trait_super.bound) @relation.trait_super
-
-(type_parameter
-  name: (_) @relation.type_parameter.owner
-  bounds: (_) @relation.type_parameter.bound) @relation.type_parameter.bound_relation
-
-(associated_type
-  name: (_) @relation.associated_type.owner
-  bounds: (_) @relation.associated_type.bound) @relation.associated_type.bound_relation
-
-(lifetime_parameter
-  name: (_) @relation.lifetime.owner
-  bounds: (_) @relation.lifetime.bound) @relation.lifetime.bound_relation
-
-; --- types ---
-
-(parameter type: (_) @type.annotation.parameter) @type.owner.parameter
-(const_parameter type: (_) @type.annotation.const_parameter) @type.owner.const_parameter
-(type_parameter) @type.parameter
-(lifetime_parameter) @type.lifetime_parameter
-(where_predicate left: (_) @type.where.subject bounds: (trait_bounds) @type.where.bounds) @type.where.predicate
-(type_cast_expression type: (_) @type.cast.target) @type.cast
-(reference_type) @type.reference
-(pointer_type) @type.pointer
-(array_type) @type.array
-(tuple_type) @type.tuple
-(function_type) @type.function
-(generic_type) @type.generic
-(qualified_type) @type.qualified
-(type_binding) @type.associated_binding
-(bracketed_type) @type.bracketed
-(generic_type_with_turbofish) @type.generic_turbofish
-(bounded_type) @type.bounded
-(use_bounds) @type.use_bounds
-(never_type) @type.never
-(primitive_type) @type.primitive
-(higher_ranked_trait_bound) @type.higher_ranked_bound
-(removed_trait_bound) @type.removed_trait_bound
-(for_lifetimes) @type.for_lifetimes
-
-(type_parameter
-  bounds: (trait_bounds) @type.parameter.bounds) @type.parameter.with_bounds
-
-(lifetime_parameter
-  bounds: (trait_bounds) @type.lifetime.bounds) @type.lifetime.with_bounds
-
-(associated_type
-  bounds: (trait_bounds) @type.associated.bounds) @type.associated.with_bounds
-
-; --- declared_value_types ---
-
-; A local name whose type its declaration states: a parameter `name: T` or a
-; `let name: T`. The type is the base type the annotation names, through a
-; reference, generics or a path; a primitive is no type with members.
-(parameter
-  pattern: (identifier) @value.declared.binding
-  type: [
-    (type_identifier) @value.declared.type
-    (generic_type type: (type_identifier) @value.declared.type)
-    (scoped_type_identifier name: (type_identifier) @value.declared.type)
-    (reference_type type: [
-      (type_identifier) @value.declared.type
-      (generic_type type: (type_identifier) @value.declared.type)
-      (scoped_type_identifier name: (type_identifier) @value.declared.type)
-    ])
-  ]) @value.declared.parameter
-
-(let_declaration
-  pattern: (identifier) @value.declared.binding
-  type: [
-    (type_identifier) @value.declared.type
-    (generic_type type: (type_identifier) @value.declared.type)
-    (scoped_type_identifier name: (type_identifier) @value.declared.type)
-    (reference_type type: [
-      (type_identifier) @value.declared.type
-      (generic_type type: (type_identifier) @value.declared.type)
-      (scoped_type_identifier name: (type_identifier) @value.declared.type)
-    ])
-  ]) @value.declared.let
-
-; --- value_origins ---
-
-; Explicit value-origin relations retained for downstream provenance/retrieval.
-(let_declaration
-  pattern: (identifier) @origin.binding
-  value: (struct_expression name: (_) @origin.struct.type)) @origin.struct
-
-(let_declaration
-  pattern: (identifier) @origin.binding
-  value: (call_expression function: (_) @origin.call.target)) @origin.call
-
-(let_declaration
-  pattern: (identifier) @origin.binding
-  value: (identifier) @origin.alias.source) @origin.alias
-
-; What a call on a local reaches through: the function whose return it holds,
-; with the type that function is named through (`Store::open(..)`), or the type a
-; struct literal builds.
-(let_declaration
-  pattern: (identifier) @origin.returned.binding
-  value: (call_expression
-    function: (identifier) @origin.returned.callable)) @origin.returned.plain
-
-(let_declaration
-  pattern: (identifier) @origin.returned.binding
-  value: (call_expression
-    function: (scoped_identifier
-      path: (identifier) @origin.returned.owner
-      name: (identifier) @origin.returned.callable))) @origin.returned.owned
-
-(let_declaration
-  pattern: (identifier) @origin.returned.binding
-  value: (call_expression
-    function: (scoped_identifier
-      path: (scoped_identifier
-        name: (identifier) @origin.returned.owner)
-      name: (identifier) @origin.returned.callable))) @origin.returned.owned
-
-(let_declaration
-  pattern: (identifier) @origin.constructed.binding
-  value: (struct_expression
-    name: [
-      (type_identifier) @origin.constructed.type
-      (scoped_type_identifier
-        name: (type_identifier) @origin.constructed.type)
-    ])) @origin.constructed
-
-; Destructuring still has a value source even when there is no single local name.
-(let_declaration
-  pattern: [(tuple_pattern) (struct_pattern) (slice_pattern)] @origin.pattern
-  value: (_) @origin.pattern.source) @origin.destructure
-
-; --- visibility ---
-
-(struct_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(enum_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(union_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(type_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(function_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(mod_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(use_declaration (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(const_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(static_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-(trait_item (visibility_modifier) @definition.visibility) @definition.visibility.owner
-
-; --- framework_neutral_rust_receiver_methods_v1 ---
-
-(call_expression
-  function: (field_expression
-    value: (identifier) @rust.receiver_id.receiver
-    field: (field_identifier) @rust.receiver_id.method)
-  arguments: (arguments
-    (identifier) @rust.receiver_id.arg0)) @rust.receiver_id.context
-
-(call_expression
-  function: (field_expression
-    value: (identifier) @rust.receiver_string_id.receiver
-    field: (field_identifier) @rust.receiver_string_id.method)
-  arguments: (arguments
-    (string_literal) @rust.receiver_string_id.arg0_string
-    (identifier) @rust.receiver_string_id.arg1_identifier)) @rust.receiver_string_id.context
-
-(call_expression
-  function: (field_expression
-    value: (identifier) @rust.receiver_route.receiver
-    field: (field_identifier) @rust.receiver_route.method)
-  arguments: (arguments
-    (string_literal) @rust.receiver_route.path_literal
-    (call_expression
-      function: (identifier) @rust.receiver_route.wrapper
-      arguments: (arguments
-        (identifier) @rust.receiver_route.handler)))) @rust.receiver_route.context
-
-(call_expression
-  function: (field_expression
-    value: (identifier) @rust.receiver_noarg.receiver
-    field: (field_identifier) @rust.receiver_noarg.method)
-  arguments: (arguments)) @rust.receiver_noarg.context
-
-; --- rust_derive_owner_generalized_v1 ---
-; Direct #[derive(...)] trait items bound to a following struct or enum declaration,
-; allowing intervening outer attributes. This is authored syntax only.
-((source_file
-  (attribute_item
-    (attribute
-      (identifier) @rust.derive.general.attribute_path
-      arguments: (token_tree
-        (identifier) @rust.derive.general.trait_name)) @rust.derive.general.attribute) @rust.derive.general.attribute_item
-  .
-  (attribute_item)*
-  .
-  (struct_item name: (type_identifier) @rust.derive.general.owner) @rust.derive.general.declaration)
-  (#eq? @rust.derive.general.attribute_path "derive"))
-
-((source_file
-  (attribute_item
-    (attribute
-      (identifier) @rust.derive.general.attribute_path
-      arguments: (token_tree
-        (identifier) @rust.derive.general.trait_name)) @rust.derive.general.attribute) @rust.derive.general.attribute_item
-  .
-  (attribute_item)*
-  .
-  (enum_item name: (type_identifier) @rust.derive.general.owner) @rust.derive.general.declaration)
-  (#eq? @rust.derive.general.attribute_path "derive"))
+((macro_invocation
+   macro: (identifier) @include.macro
+   (token_tree
+     (string_literal (string_content) @include.path))) @include
+ (#any-of? @include.macro "include" "include_str" "include_bytes"))

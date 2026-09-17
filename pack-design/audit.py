@@ -72,8 +72,40 @@ def is_scope(k):
     return k == 'scope' or k.startswith('scope.')
 
 
+SIGNATURE_NAMES = {'visibility', 'type_parameter_shape', 'parameter_shape',
+                   'return_type', 'modifier'}
+# every other carried name the engine reads somewhere
+READ_CARRIED = set("""
+abstract_owner argument_count container_name declared_return_callable
+declared_return_type_json declared_type dependency_binding explicit_relation
+explicit_type_hint generic_arity imported_name is_static lexical_target_local
+overload_signature parameter_count parameter_shapes_json presence_expression
+presence_guard receiver_semantics receiver_type return_chain_depth return_self
+return_type_head returned_by_callable source_language source_name
+type_sketch_json value_origin_alias value_origin_callable
+value_origin_callable_owner value_origin_container value_origin_kind
+value_origin_type value_semantics value_sketch_kind value_sketch_type_json
+""".split())
+
 GENERIC_NAME = {'identifier', 'word', 'name', 'simple_identifier', 'variable_name',
                 'atom', 'symbol', 'bare_word', 'plain_value'}
+
+
+def repeats_in(pack):
+    """For each node type, the child types it may hold more than one of."""
+    path = 'grammars/%s/node-types.json' % pack
+    if not os.path.exists(path):
+        return {}
+    out = {}
+    for n in json.load(open(path, encoding='utf-8')):
+        kids = n.get('children') or {}
+        types = {x['type'] for x in kids.get('types', [])} if kids.get('multiple') else set()
+        for f in (n.get('fields') or {}).values():
+            if f.get('multiple'):
+                types |= {x['type'] for x in f.get('types', [])}
+        if types:
+            out[n['type']] = types
+    return out
 
 
 def node_children(pack):
@@ -104,11 +136,17 @@ def audit(pack):
     tpl_blob = json.dumps(templates)
     src = open(q, encoding='utf-8').read() if os.path.exists(q) else ''
     HAS_CHILDREN = node_children(pack)
+    REPEATS_IN = repeats_in(pack)
 
     # which node type is each capture attached to
     owner = {}
     for pat in pats:
-        for m in re.finditer(r'\((\w+)[^()]*?\)\s*@([\w.\-]+)', pat):
+        for m in re.finditer(r'\((\w+)[^()]*?\)[\]\s]*@([\w.\-]+)', pat):
+            owner.setdefault(m.group(2), m.group(1))
+        # `[ (a) (b) ] @cap` -- the capture trails the alternation. A plain
+        # `(node)...@cap` regex cannot see past the `]`, so such captures were
+        # never checked for D or D2 at all.
+        for m in re.finditer(r'\[\s*\((\w+)[^\]]*\]\s*@([\w.\-]+)', pat):
             owner.setdefault(m.group(2), m.group(1))
         for m in re.finditer(r'^\((\w+)\b', pat):
             for c in re.findall(r'@([\w.\-]+)\s*$', pat):
@@ -186,23 +224,47 @@ def audit(pack):
             detail['I2'].append('(%s) @%s is every identifier in the file'
                                 % (m.group(1), m.group(2)))
 
-    # carrier folding onto an owner: the name is a descendant of the span
+    # A carrier folded onto a container that holds many of the named node.
+    #
+    # This compared `pat.find('@span')` with `pat.find('@name')`, which is a
+    # naming-convention detector, not a containment test: a correct carrier's
+    # name capture is always inside its span, and whether the check fired
+    # depended on whether the span capture's spelling happened to be a prefix of
+    # another capture in the same pattern. Wrapping the name in `trim(...)` also
+    # made it invisible. The real question is whether the node the name is
+    # attached to can occur more than once inside the node the span is attached
+    # to: then N of them write one attribute and the last one wins.
     for t in templates:
         if not t['output_kind'].endswith('_candidate'):
             continue
         n = t.get('name')
-        if not (isinstance(n, dict) and n.get('kind') == 'capture_ref'):
+        nm = None
+        if isinstance(n, dict):
+            if n.get('kind') == 'capture_ref':
+                nm = n['name']
+            else:
+                inner = re.findall(r'"kind": ?"capture_ref", ?"name": ?"([\w.\-]+)"', json.dumps(n))
+                nm = inner[0] if len(inner) == 1 else None
+        if not nm or nm == t['span_capture']:
             continue
-        for pat in pats:
-            caps = set(re.findall(r'@([\w.\-]+)', pat))
-            if t['span_capture'] in caps and n['name'] in caps:
-                si = pat.find('@' + t['span_capture'])
-                ni = pat.find('@' + n['name'])
-                if si > ni:       # the span closes after the name: the name is inside it
-                    f['carrier_owner'] += 1
-                    detail['carrier_owner'].append('%s: name @%s sits inside span @%s'
-                                                   % (t['output_kind'], n['name'], t['span_capture']))
-                break
+        sp_node, nm_node = owner.get(t['span_capture']), owner.get(nm)
+        if not sp_node or not nm_node or sp_node == nm_node:
+            continue
+        if nm_node in REPEATS_IN.get(sp_node, ()):
+            f['carrier_owner'] += 1
+            detail['carrier_owner'].append('%s: (%s) repeats inside (%s)'
+                                           % (t['output_kind'], nm_node, sp_node))
+
+    # A carrier under a name nothing assembles.
+    for t in templates:
+        k = t['output_kind']
+        if not k.endswith('_candidate'):
+            continue
+        carried = k.rsplit('.', 1)[-1][:-len('_candidate')]
+        if carried in SIGNATURE_NAMES or carried in READ_CARRIED:
+            continue
+        f['carrier_unread'] += 1
+        detail['carrier_unread'].append('omega.pack.%s (%s)' % (carried, k))
 
     # a literal marker with nothing to suppress
     kinds_all = {t['output_kind'] for t in templates}
@@ -270,6 +332,7 @@ LABEL = {
     'I2': 'I2 a bare leaf capture, every one in the file',
     'carrier_owner': '   carrier folded onto its owner, overwriting itself',
     'dead_marker': '   literal marker with no reference_context to suppress',
+    'carrier_unread': '   carrier under a name nothing assembles',
 }
 
 

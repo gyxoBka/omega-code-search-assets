@@ -2,11 +2,11 @@ schema_version = 1
 distribution_class = "production"
 kind = "language"
 name = "omega-python"
-version = "1.0.0"
+version = "2.0.0"
 pack_runtime_version = "2"
 parser_id = "tree-sitter-python"
 compatible_grammar_identities = ["tree-sitter-python@bffb65a8cfe4e46290331dfef0dbf0ef3679de11#nodes:7ff6914d278faf4254d923e1205b887f940cfb3db46a81eddbde01e782707ac3"]
-capabilities = ["bindings", "calls", "data", "definitions", "imports", "modules", "references", "scopes", "tests", "types"]
+capabilities = ["bindings", "calls", "definitions", "imports", "references", "scopes", "tests", "types"]
 license = "MIT"
 source = "https://github.com/gyxoBka/omega-code-search-assets"
 
@@ -18,3 +18,24 @@ max_emitted_ir = 36000
 max_injection_depth = 4
 max_decoder_expansion = 2048
 max_string_bytes = 65536
+
+# A test declaration is the canonical identity of the callable it declares: the
+# host drops the generic `definition.*` at the same span so a test is one
+# entity, in the Test family the test projection reads.
+[test_capability]
+schema_version = 1
+
+[test_capability.declaration_forms."python.test_function"]
+coverage_family = "python.convention"
+
+[test_capability.declaration_forms."python.test_class"]
+coverage_family = "python.convention"
+
+# The edge from `test_parse_header` to `parse_header` is read off the name, so
+# it is a convention candidate and the host files it as one.
+[test_capability.conventions."python.name_convention"]
+coverage_family = "python.convention"
+
+[test_capability.coverage_families."python.convention"]
+semantics = "partial_only"
+held_out_eligible = false

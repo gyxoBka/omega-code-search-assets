@@ -291,14 +291,6 @@
   name: (_) @definition.category.function.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
 
-(function_expression
-  name: (_) @definition.category.function.name
-) @definition.category.owner
-
-(generator_function
-  name: (_) @definition.category.function.name
-) @definition.category.owner
-
 (generator_function_declaration
   name: (_) @definition.category.function.name @definition.identity.name
 ) @definition.category.owner @definition.identity.owner
