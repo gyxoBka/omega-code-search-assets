@@ -106,18 +106,33 @@ declarator span gives a member.
 
 ---
 
-## 2. A framework overlay for nixpkgs stdenv
+## 2. A framework overlay for nixpkgs stdenv -- decided against
 
 omega-nix carried 22 injection patterns keyed on nixpkgs and home-manager
-library names — `writeShellApplication`, `runCommand*`, `writeBash*`,
-`nixosTest`, `testScript`, `^[A-Za-z]+Phase$`, `^pre[A-Za-z]+$` — which is a
-framework overlay inside a language Pack and was removed on that ground.
+library names -- `writeShellApplication`, `runCommand*`, `writeBash*`,
+`nixosTest`, `testScript`, `^[A-Za-z]+Phase$`, `^pre[A-Za-z]+$` -- which is
+framework knowledge inside a language Pack, and they were removed on that
+ground. The open question was whether they should come back as
+`frameworks/omega-framework-nixpkgs-stdenv`.
 
-Parsing the bash inside `buildPhase` is worth having. It now has nowhere to
-live: there is no `frameworks/omega-framework-nixpkgs-stdenv`.
+**They cannot, and the reason is structural.** An injection is declared by a
+**Pack**: `injection_content` is a capture on a Pack template, compiled by
+`pack/runtime.rs`, and a grammar bundle declares what it can host in
+`known_injection_relationships`. The Framework layer has no injection mechanism
+at all -- an `OverlayProgram` is match clauses over facts and two kinds of
+output, and nothing in `framework/overlay.rs` reaches the parser.
 
-**Done looks like:** that framework exists, or the index records a decision not
-to have it.
+So the only place a nixpkgs injection could live is omega-nix, which is exactly
+what the layering forbids: `Framework -> Pack -> Grammar`, and a Pack states
+what the language says, not what a library means by it. Parsing the bash inside
+`buildPhase` stays unavailable, and that is the correct trade at this layering.
+
+**What would change the answer:** a host feature letting a framework overlay
+request an injection -- a detector matching `writeShellApplication` and naming
+the capture whose text is bash. That is a real design question, not an oversight,
+and it would serve every library-defined embedded language: a SQL string in a Go
+constant, a GraphQL template literal in TypeScript, a shell script in a
+Dockerfile `RUN`. Nothing depends on it today.
 
 ---
 
@@ -136,17 +151,12 @@ From `python pack-design/audit.py`, after all 61 rewrites:
 
 ---
 
-## 4. Grammars that cannot carry their language
+## 4. Grammars that cannot carry their language -- done
 
-`grammars/omega-vbscript` (JJK96/tree-sitter-vbscript@6d9548e) has no node for
-`Class`/`End Class`, `Property Get/Let/Set`, `Const`, `Set`, `Select Case`,
-`With`, `On Error` or `Option Explicit`, and parses a parenthesised call
-statement (`Helper(n)`, legal and common) as an `ERROR` node. Its bundle already
-says `status = "experimental"`. omega-vbscript is at that grammar's ceiling and
-the remaining gap is entirely upstream.
-
-**Done looks like:** a list in `pack-design/00-INDEX.md` of grammars whose
-ceiling a Pack has reached, so nobody re-opens a closed question.
+`pack-design/00-INDEX.md` now has a *Grammars at their ceiling* section holding
+the measured cases: omega-vbscript, whose grammar has no node for most of the
+language, and omega-cpp's export macro. A Pack at its grammar's ceiling is not a
+Pack defect, and the section exists so nobody rediscovers one.
 
 ---
 
@@ -210,34 +220,18 @@ the import join is the answer, and fastify and next-js are written that way.
 
 ---
 
-## 8. omega-cpp does not see a class declared with an export macro before its name
+## 8. omega-cpp and the export macro -- closed as a grammar ceiling
 
-Measured with `dump_call_emissions` over `packs/omega-cpp` on a canonical
-Unreal header:
+`class MYGAME_API AHero : public ACharacter { … }` emits `reference.type
+MYGAME_API` and nothing else, while `class __declspec(dllexport) AHero : …` and
+`UCLASS() class ATwo : …` both state the class, its base and its fields.
+`class_specifier` has no slot for a bare identifier before the name and cannot
+have one without the preprocessor, since `class FOO BAR` is a class named `FOO`
+with a stray `BAR` until something says `FOO` is a macro.
 
-```cpp
-class MYGAME_API AHero : public ACharacter { GENERATED_BODY() int Health; };
-struct MYGAME_API FRow : public FTableRowBase { GENERATED_BODY() int V; };
-```
-
-Total emissions for both declarations: `reference.type MYGAME_API` twice and
-`call.function GENERATED_BODY` twice. **No `definition.class`, no
-`definition.struct`, no `relation.implements`.**
-
-It is the macro **between `class` and the name** that does it, and nothing else.
-Measured alongside it, `UCLASS() class ATwo : public AActor { GENERATED_BODY()
-int H; };` emits `definition.class ATwo`, `relation.implements AActor` and
-`definition.field H` — everything a rule needs. A wave-5 agent generalised the
-first measurement to all Unreal headers and deleted 13 working rules on that
-basis; the deletion was reverted.
-
-`class EXPORT_MACRO Name` is not an Unreal peculiarity: it is how every C++
-library that ships a DLL declares a public class (`MYLIB_API`, `CORE_EXPORT`,
-`__declspec(dllexport)` behind a macro).
-
-**Done looks like:** omega-cpp declaring the class in that shape. Until then
-omega-framework-unreal-engine answers for the plain spelling only, and its
-`coverage.gaps` says so.
+Nothing omega-cpp can do reaches it. Written up with the measurements in
+`pack-design/00-INDEX.md` under *Grammars at their ceiling*, beside
+omega-vbscript, so it is not re-opened as a Pack defect.
 
 ---
 

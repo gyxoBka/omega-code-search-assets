@@ -1100,3 +1100,51 @@ noise so much as failing to answer.
 
 Both are recorded here rather than papered over, and neither is a language
 Pack's problem.
+
+---
+
+# Grammars at their ceiling
+
+A Pack can only say what its grammar parses. These are the cases measured and
+closed, so nobody re-opens them as Pack defects.
+
+## omega-cpp: a bare macro between `class` and the name
+
+```cpp
+class MYGAME_API AHero : public ACharacter { int Health; };
+```
+
+emits `reference.type MYGAME_API` and **nothing else** -- no class, no base, no
+field. The declaration that follows it parses normally, so the loss is the one
+declaration. Measured beside it:
+
+| written | stated |
+|---|---|
+| `class __declspec(dllexport) AHero : public ACharacter {…}` | `definition.class AHero`, `relation.implements ACharacter`, its fields |
+| `UCLASS() class ATwo : public AActor {…}` | the same |
+| `class MYGAME_API AHero : public ACharacter {…}` | nothing |
+
+`class_specifier` in `node-types.json` has `name` and `body` fields and a child
+list holding `alignas_qualifier`, `attribute_declaration`,
+`attribute_specifier`, `base_class_clause`, `ms_declspec_modifier` and
+`virtual_specifier`. There is **no slot for a bare identifier** before the name,
+and there cannot be one without the preprocessor: `class FOO BAR` is
+`class`-named-`FOO` with a stray `BAR` until something says `FOO` is a macro.
+`__declspec` works because the grammar has a node for it.
+
+`class EXPORT_MACRO Name` is how every C++ library shipping a DLL declares a
+public class -- `MYLIB_API`, `CORE_EXPORT`, Unreal's `MYGAME_API`. Nothing
+omega-cpp can do reaches it; it is upstream, in tree-sitter-cpp.
+
+**Consequence:** omega-framework-unreal-engine answers for the `UCLASS()`
+spelling, which is the one Unreal's own header tool requires, and its
+`coverage.gaps` says so.
+
+## omega-vbscript: most of the language
+
+`grammars/omega-vbscript` (JJK96/tree-sitter-vbscript@6d9548e) has no node for
+`Class`/`End Class`, `Property Get/Let/Set`, `Const`, `Set`, `Select Case`,
+`With`, `On Error` or `Option Explicit`, and parses a parenthesised call
+statement -- `Helper(n)`, legal and common -- as an `ERROR`. Its bundle already
+says `status = "experimental"`. omega-vbscript is at that grammar's ceiling and
+the remaining gap is entirely upstream.
