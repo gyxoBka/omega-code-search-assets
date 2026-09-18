@@ -78,6 +78,26 @@ Three things to do while porting, not after:
   keys; if nothing else in this file (or in a Pack) ever emits an entity under
   the key you point at, the relation dangles.
 
+## 3a. Two things wave 1 proved
+
+**An attribute is write-only.** `OverlayFact::field` resolves the `fields` map
+and a fixed list of built-in names, and **never consults `attributes`**. The
+only clause that reads one is `attribute_equals`, against a single literal
+constant. So a value published as an attribute can be tested for equality and
+used for nothing else -- not as a canonical key, not as a relation end, not as
+an entity attribute, not as a join key. If you need a value, it must be in
+`fields`; if the Pack has it in `attributes`, that is a Pack change to report,
+not a rule to bend around.
+
+**The audit cannot see a dangling relation.** A relation's ends are rendered
+canonical keys. If no rule anywhere ever mints an entity under the key you point
+at, the relation goes nowhere -- and both kinds exist, both clauses parse, and
+`overlay_audit.py` reports the rule as live. omega-framework-unity shipped 12
+such relations, sourced at a key that four strictly-conditioned rules minted.
+**Before you finish: list every canonical key your file mints, list every key
+your relations address, and check the second set is contained in the first.** If
+a relation needs an entity that no rule mints, mint it in the same rule.
+
 ## 4. Verification
 
 ```bash

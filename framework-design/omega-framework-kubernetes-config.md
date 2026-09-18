@@ -5,290 +5,141 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-153 overlay rules, 16 detection rules. **0 can match, 153 cannot.**
+**35 overlay rules, 16 detection rules. 35 live, 0 cannot match.** It replaces
+153 rules of which 0 could match.
 
 Selector: `framework:kubernetes-config`. Maturity: `semantic-overlay-full`.
+Host languages: yaml, json. The only Pack that carries these manifests is
+`omega-yaml`.
 
-### Entities it declares
+### What `omega-yaml` emits, which is the whole of what a rule can match
 
-| entity_kind | rules |
-|---|---|
-| `Container` | 16 |
-| `ContainerField` | 16 |
-| `Resource` | 9 |
-| `ProbeConfiguration` | 9 |
-| `CRDName` | 8 |
-| `CRDVersionField` | 8 |
-| `Workload` | 6 |
-| `CRDProperty` | 6 |
-| `Image` | 4 |
-| `SecretReference` | 4 |
-| `Config` | 2 |
-| `KubernetesObject` | 2 |
-| `Namespace` | 2 |
-| `CustomResourceDefinition` | 2 |
-| `Ingress` | 2 |
-| `IngressClass` | 2 |
-| `PersistentVolumeClaim` | 2 |
-| `PersistentVolume` | 2 |
-| `Role` | 2 |
-| `ClusterRole` | 2 |
-| `RoleBinding` | 2 |
-| `ClusterRoleBinding` | 2 |
-| `NetworkPolicy` | 2 |
-| `HorizontalPodAutoscaler` | 2 |
-| `PodDisruptionBudget` | 2 |
-| `StorageClass` | 2 |
-| `PriorityClass` | 2 |
-| `ResourceQuota` | 2 |
-| `LimitRange` | 2 |
-| `Gateway` | 2 |
-| `HTTPRoute` | 2 |
-| `Label` | 2 |
-| `Annotation` | 2 |
-| `EnvironmentVariable` | 2 |
-| `ContainerPortField` | 2 |
-| `EnvironmentSource` | 2 |
-| `VolumeMountField` | 2 |
-| `ConfigMapReference` | 2 |
-| `PersistentVolumeClaimReference` | 2 |
-| `ServicePortField` | 2 |
-| `IngressHost` | 2 |
-| `ServiceAccountReference` | 2 |
-| `StorageClassReference` | 2 |
-| `PersistentVolumeReference` | 2 |
-| `ScaleTargetField` | 2 |
-| `SelectorField` | 2 |
-| `PermissionField` | 2 |
-| `SubjectReference` | 2 |
-| `RoleReference` | 2 |
-| `EnvironmentReference` | 2 |
-| `EnvironmentSourceReference` | 2 |
-| `VolumeSourceReference` | 2 |
-| `ServiceAccount` | 1 |
-| `Service` | 1 |
-| `BackendReference` | 1 |
+| kind | name | attributes | span |
+|---|---|---|---|
+| `definition.config_key` | the mapping key | `value`, when the value is a scalar | the whole pair |
+| `definition.config_key` | the mapping key | — (a key set to a map, a sequence or a block scalar) | the whole pair |
+| `relation.data` | the scalar itself | — | the sequence element |
+| `definition.anchor` / `reference.anchor` / `reference.tag` / `definition.tag_shorthand` | the anchor, alias or tag name | — | the node |
 
-### Relations it declares
+There is no document fact, no mapping fact, no sequence-item fact and no
+ancestry field. A key nested under another key lies inside that key's span, so
+`fact_join_by_span` with `within` and `same_path` is how this overlay reaches
+`spec.template.spec.containers` and every other path it used to spell out in a
+field.
 
-| relation_kind | rules |
-|---|---|
-| `configured_by` | 41 |
-| `references` | 24 |
-| `contains` | 22 |
-| `uses_image` | 4 |
-| `selects` | 3 |
-| `has_label` | 2 |
-| `has_annotation` | 2 |
-| `in_namespace` | 1 |
+## What was wrong with it
 
-### Fact kinds it matches
+- **All 153 rules were dead.** Every one of them was keyed to a fact kind no
+  Pack emits: 30 distinct kinds across the file, 144 rules entering on 29
+  spellings of `data.yaml_document_*_context` and 9 on `structured.entry`. The old
+  omega-yaml published one pattern per shape of ancestry
+  (`..._depth3_named_sequence_item_field_context`) with the ancestor keys in
+  `a0`…`a3`; that whole family is gone, and with it every field the overlay
+  read: `doc_kind`, `doc_name`, `doc_namespace`, `key`, `value`, `a0`…`a3`,
+  `sequence_key`, `owner_key`, `owner_name`, `nested1_key`, `nested2_key` and
+  eight more. 20 field names, none of them published by any Pack today.
+- **The file was written twice.** 51 rules existed only as the `.unspecified`
+  half of an `.explicit` / `.unspecified` pair, because the old Pack had a
+  separate kind for a document with a `metadata.namespace` and one without. One Pack fact now covers both,
+  and the namespace is not a fact the overlay can read at all (below), so the
+  pairing is not just redundant, it is unstateable.
+- **It restated Kubernetes' own schema rather than answering questions.** 41
+  `configured_by` and 22 `contains` relations dressed up leaf scalars as
+  entities — `ContainerField` (16 rules), `CRDVersionField` (8),
+  `ServicePortField`, `ScaleTargetField`, `PermissionField`, `SelectorField`
+  (2 each): entity kinds whose canonical key was the key name they were read
+  from and whose only relation pointed back at the document they came from. `served:
+  true` under a CRD version is not a fact an agent asks the graph for; it is the
+  YAML re-emitted.
+- **Its identity model cannot be rebuilt.** 106 of the 153 rules rendered
+  `{doc_name}` — the object's `metadata.name` — into a canonical key or a
+  relation end, across 55 entity kinds. The value of a scalar key is now
+  an *attribute*, and an attribute is testable (`attribute_equals`) but never
+  renderable into a canonical key. So those 106 rules are not portable at
+  all; what replaces them keys on the path and the declared kind.
 
-| kind | rules | a Pack emits it |
+## What it states now
+
+| what it answers | which Pack fact | which entity or relation |
 |---|---|---|
-| `structured.entry` | 27 | **no** |
-| `data.yaml_document_identity_context` | 25 | **no** |
-| `data.yaml_document_identity_no_namespace_context` | 21 | **no** |
-| `data.yaml_document_depth2_context` | 9 | **no** |
-| `data.yaml_document_named_mapping2_context` | 9 | **no** |
-| `data.yaml_document_no_namespace_depth2_context` | 8 | **no** |
-| `data.yaml_document_depth1_context` | 7 | **no** |
-| `data.yaml_document_no_namespace_depth1_context` | 7 | **no** |
-| `data.yaml_document_depth1_sequence_item_field_context` | 6 | **no** |
-| `data.yaml_document_no_namespace_depth1_sequence_item_field_context` | 6 | **no** |
-| `data.yaml_document_depth3_sequence_nested_context` | 5 | **no** |
-| `data.yaml_document_depth3_named_sequence_item_field_context` | 5 | **no** |
-| `data.yaml_document_no_namespace_depth3_named_sequence_item_field_context` | 5 | **no** |
-| `data.yaml_document_depth1_named_sequence_item_field_context` | 5 | **no** |
-| `data.yaml_document_no_namespace_depth1_named_sequence_item_field_context` | 5 | **no** |
-| `data.yaml_document_depth3_nested_sequence_item_field_context` | 3 | **no** |
-| `data.yaml_document_no_namespace_depth3_nested_sequence_item_field_context` | 3 | **no** |
-| `data.yaml_document_no_namespace_depth3_sequence_nested_context` | 3 | **no** |
-| `data.yaml_document_top_sequence_item_field_context` | 2 | **no** |
-| `data.yaml_document_no_namespace_top_sequence_item_field_context` | 2 | **no** |
-| `data.yaml_document_named_nested2_context` | 2 | **no** |
-| `data.yaml_document_named_nested_sequence_mapping_context` | 2 | **no** |
-| `data.yaml_document_named_projected_sequence_context` | 2 | **no** |
-| `data.yaml_document_depth3_context` | 1 | **no** |
-| `data.yaml_document_depth4_context` | 1 | **no** |
-| `data.yaml_document_depth3_nested_named_sequence_item_field_context` | 1 | **no** |
-| `data.yaml_document_no_namespace_depth3_nested_named_sequence_item_field_context` | 1 | **no** |
-| `data.yaml_document_depth3_sequence_item_field_context` | 1 | **no** |
-| `data.yaml_document_no_namespace_depth3_sequence_item_field_context` | 1 | **no** |
-| `data.yaml_document_nested_route_backend_context` | 1 | **no** |
+| which files are Kubernetes manifests | `definition.config_key` named `apiVersion` | entity `KubernetesManifest` `k8s:manifest:{path}` |
+| where the Deployment / Service / Ingress / CRD / Role … is declared (26 kinds, one rule each) | `definition.config_key` named `kind` with `value` = that kind, in a file that also has an `apiVersion` key | entity `KubernetesObject` `k8s:object:{path}:<Kind>`, relation `contains` from the manifest |
+| which keys a ConfigMap provides, and where `nginx.conf` is defined | a `definition.config_key` inside the span of the key `data`, in a file declaring `kind: ConfigMap` | entity `ConfigKey` `k8s:config-key:ConfigMap:{path}:{key}`, relation `contains` from `k8s:object:{path}:ConfigMap` |
+| which keys a Secret provides (`data`, `stringData`) | the same, against `kind: Secret` | entity `ConfigKey` `k8s:config-key:Secret:…`, relation `contains` |
+| which manifests set a given label, and which labels a project uses | `definition.config_key` inside the span of `labels`, itself inside `metadata` | entity `LabelKey` `k8s:label:{key}`, relation `has_label` from the manifest |
+| the same for annotations (`kubernetes.io/ingress.class`, `argocd.argoproj.io/*`) | `definition.config_key` inside `annotations` inside `metadata` | entity `AnnotationKey`, relation `has_annotation` |
+| which API resources an RBAC role grants access to | `relation.data` (a sequence scalar) inside `resources` inside `rules` | entity `ApiResource` `k8s:rbac:resource:{name}`, relation `grants` from the manifest |
+| which verbs it grants | `relation.data` inside `verbs` inside `rules` | entity `Verb` `k8s:rbac:verb:{name}`, relation `grants` |
+| which hostnames the cluster terminates TLS for | `relation.data` inside `hosts` inside `tls`, in a file declaring `kind: Ingress` | entity `IngressHost` `k8s:host:{name}`, relation `serves` from `k8s:object:{path}:Ingress` |
 
-Clause vocabulary in use: `field_equals` x584, `field_present` x203, `fact_kind` x153, `field_in` x78, `attribute_equals` x27, `(join)` x23, `fact_join_by_owner` x18, `fact_join_by_field` x5.
+Every rule reaches its context with `fact_join_by_span` `within` + `same_path`,
+or with `fact_join_by_field` on the built-in `path` for "somewhere else in this
+same document". No rule reads a published field: the only names it uses are
+`definition.name` and `path`, both of which any fact answers, and the one
+attribute `omega-yaml` publishes, `value`.
 
-Fields read: `doc_kind`, `key`, `value`, `a0`, `a1`, `doc_name`, `sequence_key`, `a2`, `owner_name_key`, `owner_name`, `outer_sequence_key`, `nested1_key`, `nested2_key`, `parent_key`, `kind_key`, `owner_key`, `nested_sequence_key`, `metadata_key`, `name_key`, `inner_sequence_key`.
+26 of the 35 rules are the per-kind rules, and they are near-identical on
+purpose: `attribute_equals` compares against one constant, so naming 26 kinds
+costs 26 rules. They collapse to one the moment the Pack publishes `value` as a
+field.
 
-## Why a rule cannot match
+## A field only the Pack can supply
 
-| rule | what no Pack emits |
-|---|---|
-| `k8s.serviceaccount.entity` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name`, `kind_key`, `metadata_key`, `name_key` |
-| `k8s.workload.serviceaccount` | kind `data.yaml_document_depth3_context`, `data.yaml_document_identity_context`; field `a0`, `a1`, `a2`, `doc_kind`, `doc_name`, `key`, `kind_key`, `value` |
-| `k8s.service.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.deployment.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.statefulset.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.daemonset.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.job.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.cronjob.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.pod.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.configmap.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.secret.entity` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `k8s.service.selects.workload.explicit-namespace` | kind `data.yaml_document_depth2_context`, `data.yaml_document_depth4_context`; field `a0`, `a1`, `a2`, `a3`, `doc_kind`, `doc_name`, `doc_namespace`, `key`, `kind_key`, `metadata_key`, `name_key`, `namespace_key`, `value` |
-| `k8s.workload.volume.configmap` | kind `data.yaml_document_depth3_sequence_nested_context`, `data.yaml_document_identity_context`; field `a0`, `a1`, `a2`, `doc_kind`, `doc_name`, `doc_namespace`, `key`, `kind_key`, `metadata_key`, `name_key`, `namespace_key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.workload.volume.secret` | kind `data.yaml_document_depth3_sequence_nested_context`, `data.yaml_document_identity_context`; field `a0`, `a1`, `a2`, `doc_kind`, `doc_name`, `doc_namespace`, `key`, `kind_key`, `metadata_key`, `name_key`, `namespace_key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.object.any.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.namespace.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.customresourcedefinition.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.ingress.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.ingressclass.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.persistentvolumeclaim.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.persistentvolume.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.role.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.clusterrole.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.rolebinding.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.clusterrolebinding.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.networkpolicy.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.horizontalpodautoscaler.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.poddisruptionbudget.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.storageclass.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.priorityclass.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.resourcequota.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.limitrange.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.gateway.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.httproute.identity.explicit` | kind `data.yaml_document_identity_context`; field `doc_kind`, `doc_name` |
-| `k8s.object.namespace-membership.explicit` | kind `data.yaml_document_identity_context`, `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name`, `doc_namespace` |
-| `k8s.object.any.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.namespace.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.customresourcedefinition.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.ingress.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.ingressclass.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.persistentvolumeclaim.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.persistentvolume.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.role.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.clusterrole.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.rolebinding.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.clusterrolebinding.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.networkpolicy.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.horizontalpodautoscaler.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.poddisruptionbudget.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.storageclass.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.priorityclass.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.resourcequota.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.limitrange.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.gateway.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.httproute.identity.unspecified` | kind `data.yaml_document_identity_no_namespace_context`; field `doc_kind`, `doc_name` |
-| `k8s.metadata.labels.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `key`, `value` |
-| `k8s.metadata.annotations.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `key`, `value` |
-| `k8s.metadata.labels.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `key`, `value` |
-| `k8s.metadata.annotations.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `key`, `value` |
-| `k8s.crd.spec-group.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.crd.spec-scope.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.crd.spec-conversion.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.crd.spec-group.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.crd.spec-scope.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.crd.spec-conversion.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-kind.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-plural.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-singular.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-listKind.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-kind.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-plural.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-singular.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.names-listKind.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.crd.version-name.explicit` | kind `data.yaml_document_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-served.explicit` | kind `data.yaml_document_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-storage.explicit` | kind `data.yaml_document_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-deprecated.explicit` | kind `data.yaml_document_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-name.unspecified` | kind `data.yaml_document_no_namespace_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-served.unspecified` | kind `data.yaml_document_no_namespace_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-storage.unspecified` | kind `data.yaml_document_no_namespace_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.crd.version-deprecated.unspecified` | kind `data.yaml_document_no_namespace_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.container.image.workload-explicit` | kind `data.yaml_document_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.imagePullPolicy.workload-explicit` | kind `data.yaml_document_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.command.workload-explicit` | kind `data.yaml_document_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.args.workload-explicit` | kind `data.yaml_document_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image-ref.workload-explicit` | kind `data.yaml_document_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image.workload-unspecified` | kind `data.yaml_document_no_namespace_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.imagePullPolicy.workload-unspecified` | kind `data.yaml_document_no_namespace_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.command.workload-unspecified` | kind `data.yaml_document_no_namespace_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.args.workload-unspecified` | kind `data.yaml_document_no_namespace_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image-ref.workload-unspecified` | kind `data.yaml_document_no_namespace_depth3_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image.pod-explicit` | kind `data.yaml_document_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.imagePullPolicy.pod-explicit` | kind `data.yaml_document_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.command.pod-explicit` | kind `data.yaml_document_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.args.pod-explicit` | kind `data.yaml_document_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image-ref.pod-explicit` | kind `data.yaml_document_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image.pod-unspecified` | kind `data.yaml_document_no_namespace_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.imagePullPolicy.pod-unspecified` | kind `data.yaml_document_no_namespace_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.command.pod-unspecified` | kind `data.yaml_document_no_namespace_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.args.pod-unspecified` | kind `data.yaml_document_no_namespace_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.image-ref.pod-unspecified` | kind `data.yaml_document_no_namespace_depth1_named_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `owner_name`, `owner_name_key`, `sequence_key`, `value` |
-| `k8s.container.env-value.explicit` | kind `data.yaml_document_depth3_nested_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_name`, `inner_name_key`, `key`, `nested_sequence_key`, `outer_name`, `outer_name_key`, `outer_sequence_key`, `value` |
-| `k8s.container.env-value.unspecified` | kind `data.yaml_document_no_namespace_depth3_nested_named_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_name`, `inner_name_key`, `key`, `nested_sequence_key`, `outer_name`, `outer_name_key`, `outer_sequence_key`, `value` |
-| `k8s.container.ports.explicit` | kind `data.yaml_document_depth3_nested_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `nested_sequence_key`, `outer_sequence_key`, `owner_name`, `owner_name_key`, `value` |
-| `k8s.container.envFrom.explicit` | kind `data.yaml_document_depth3_nested_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `nested_sequence_key`, `outer_sequence_key`, `owner_name`, `owner_name_key`, `value` |
-| `k8s.container.volumeMounts.explicit` | kind `data.yaml_document_depth3_nested_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `nested_sequence_key`, `outer_sequence_key`, `owner_name`, `owner_name_key`, `value` |
-| `k8s.container.ports.unspecified` | kind `data.yaml_document_no_namespace_depth3_nested_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `nested_sequence_key`, `outer_sequence_key`, `owner_name`, `owner_name_key`, `value` |
-| `k8s.container.envFrom.unspecified` | kind `data.yaml_document_no_namespace_depth3_nested_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `nested_sequence_key`, `outer_sequence_key`, `owner_name`, `owner_name_key`, `value` |
-| `k8s.container.volumeMounts.unspecified` | kind `data.yaml_document_no_namespace_depth3_nested_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `nested_sequence_key`, `outer_sequence_key`, `owner_name`, `owner_name_key`, `value` |
-| `k8s.volume.configMap.explicit` | kind `data.yaml_document_depth3_sequence_nested_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.volume.secret.explicit` | kind `data.yaml_document_depth3_sequence_nested_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.volume.persistentVolumeClaim.explicit` | kind `data.yaml_document_depth3_sequence_nested_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.volume.configMap.unspecified` | kind `data.yaml_document_no_namespace_depth3_sequence_nested_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.volume.secret.unspecified` | kind `data.yaml_document_no_namespace_depth3_sequence_nested_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.volume.persistentVolumeClaim.unspecified` | kind `data.yaml_document_no_namespace_depth3_sequence_nested_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `owner_key`, `sequence_key`, `value` |
-| `k8s.image-pull-secret.explicit` | kind `data.yaml_document_depth3_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.image-pull-secret.unspecified` | kind `data.yaml_document_no_namespace_depth3_sequence_item_field_context`; field `a0`, `a1`, `a2`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.service.port.explicit` | kind `data.yaml_document_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.ingress.host.explicit` | kind `data.yaml_document_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.service.port.unspecified` | kind `data.yaml_document_no_namespace_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.ingress.host.unspecified` | kind `data.yaml_document_no_namespace_depth1_sequence_item_field_context`; field `a0`, `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.pod.serviceAccountName.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.persistentvolumeclaim.storageClassName.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.persistentvolumeclaim.volumeName.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.pod.serviceAccountName.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.persistentvolumeclaim.storageClassName.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.persistentvolumeclaim.volumeName.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.hpa.scale-target.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.networkpolicy.selector.explicit` | kind `data.yaml_document_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.hpa.scale-target.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.networkpolicy.selector.unspecified` | kind `data.yaml_document_no_namespace_depth2_context`; field `a0`, `a1`, `doc_kind`, `key`, `value` |
-| `k8s.rbac.rule-field.explicit` | kind `data.yaml_document_top_sequence_item_field_context`; field `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.rbac.subject-field.explicit` | kind `data.yaml_document_top_sequence_item_field_context`; field `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.rbac.rule-field.unspecified` | kind `data.yaml_document_no_namespace_top_sequence_item_field_context`; field `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.rbac.subject-field.unspecified` | kind `data.yaml_document_no_namespace_top_sequence_item_field_context`; field `doc_kind`, `key`, `sequence_key`, `value` |
-| `k8s.rbac.role-ref.explicit` | kind `data.yaml_document_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.rbac.role-ref.unspecified` | kind `data.yaml_document_no_namespace_depth1_context`; field `a0`, `doc_kind`, `key`, `value` |
-| `k8s.env.valueFrom.configMapKeyRef` | kind `data.yaml_document_named_nested2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.env.valueFrom.secretKeyRef` | kind `data.yaml_document_named_nested2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.envFrom.name.configMapRef` | kind `data.yaml_document_named_nested_sequence_mapping_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `outer_sequence_key`, `value` |
-| `k8s.envFrom.name.secretRef` | kind `data.yaml_document_named_nested_sequence_mapping_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.livenessProbe.httpGet` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.livenessProbe.tcpSocket` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.livenessProbe.exec` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.readinessProbe.httpGet` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.readinessProbe.tcpSocket` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.readinessProbe.exec` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.startupProbe.httpGet` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.startupProbe.tcpSocket` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.probe.startupProbe.exec` | kind `data.yaml_document_named_mapping2_context`; field `a0`, `a1`, `a2`, `doc_kind`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.projected.secret` | kind `data.yaml_document_named_projected_sequence_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.projected.configMap` | kind `data.yaml_document_named_projected_sequence_context`; field `a0`, `a1`, `a2`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `nested2_key`, `outer_sequence_key`, `value` |
-| `k8s.ingress.backend-service` | kind `data.yaml_document_nested_route_backend_context`; field `a0`, `doc_kind`, `inner_sequence_key`, `key`, `nested1_key`, `nested2_key`, `nested3_key`, `outer_sequence_key`, `path_key`, `value` |
+**Pack `omega-yaml`, kind `definition.config_key`, field `value`.**
 
-## To decide when rewriting
+`omega-yaml` already computes the scalar value of a key and publishes it as the
+*attribute* `value`. `OverlayFact::field` (overlay.rs:56) resolves fields and
+the built-in names; it does not fall back to attributes, and neither
+`render` nor `evaluate_attributes` nor `fact_join_by_field` ever reads an
+attribute. An attribute can only be compared to a literal constant by
+`attribute_equals`. So for a Kubernetes manifest the overlay can ask *is this
+`kind: Deployment`* but can never learn:
 
-1. For each dead kind above, which of the vocabulary in `00-CONTRACT.md` §6
-   states the same thing? `call.target_candidate` is `call.function`;
-   `structured.entry` is `definition.config_key`; a `*_context` kind is
-   usually a declaration plus a join.
-2. Which rules only restate their input, and should go rather than be ported?
-3. Which rules are one language's spelling of something every language now
-   spells the same way, and collapse into one rule?
-4. Which fields are genuinely needed, and which are reachable by
-   `fact_join_by_span` with `within` or by `definition.name`?
-5. What does this framework actually let an agent ask that the language
-   Packs alone cannot answer? That is the whole point of the overlay.
+- `metadata.name` — the object's identity, and the key every relation in the old
+  file was keyed on;
+- `metadata.namespace`;
+- `spec.template.spec.containers[].image` — which image a workload runs;
+- `spec.selector.matchLabels.*` values — which pods a Service selects;
+- `configMap.name` / `secret.name` / `claimName` in a volume,
+  `serviceAccountName`, `storageClassName`, `roleRef.name`, an HPA's
+  `scaleTargetRef.name`, an Ingress backend's `service.name` — i.e. every
+  reference from one Kubernetes object to another.
+
+Neither of the first two options in the brief reaches it. `definition.name` is
+the *key* (`image`), not the value; `path`, `path.dir`, `path.stem` describe the
+file. `fact_join_by_span` relates a fact to the facts around it but carries no
+value across, and `fact_join_by_field` compares fields, which is exactly what
+the value is not. This is not a new byte on any emission — the Pack emits the
+same text today as an attribute; the ask is that it also be a field, or that the
+host flatten attributes into the field namespace on read.
+
+With that one field, this overlay regains object identity
+(`k8s:object:{value}`), the workload→image, workload→ConfigMap,
+workload→Secret, Service→workload, RoleBinding→Role and Ingress→Service
+relations, and the 26 per-kind rules become one.
+
+## Still to decide
+
+- **A file is not a document.** A path is the only identity the overlay has, and
+  a manifest file commonly holds several `---`-separated documents. A same-file
+  join (`fact_join_by_field` on `path`) therefore relates a data key to *a*
+  ConfigMap in that file rather than to the one document it belongs to, and a
+  file holding both a ConfigMap and a Secret makes both `k8s.configmap.data-key`
+  and `k8s.secret.data-key` fire for the same key. Span joins are exact; only
+  the same-file joins carry this. The exact form needs a document fact from the
+  Pack (span of one `---` document), which is a bigger ask than the `value`
+  field and is not made here.
+- **`enclosing.qname` is real at runtime but not auditable.**
+  `facts_of_surface` (overlay.rs:1200) synthesizes `definition.qname`,
+  `enclosing.qname` and `definition.container` on every fact from the enclosing
+  definitions' spans — for YAML that is the dotted key path,
+  `spec.template.spec.containers.image`, which is precisely what `a0`…`a3` used
+  to publish. A rule could match `field_prefix definition.qname
+  "spec.template.spec.containers."` in one clause instead of chaining `within`
+  joins. `overlay_audit.py`'s `BUILTIN` set does not list those three names, so
+  such a rule would be counted dead by the audit although the host resolves it.
+  This overlay uses span joins and stays auditable; the gap belongs in
+  `00-INDEX.md`, not in one framework.
+- **`apiGroups`** is reachable the same way `resources` is, but its commonest
+  value is the empty string (the core group), which renders an empty canonical
+  key. Left out rather than emitted as `k8s:rbac:api-group:`.

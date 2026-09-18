@@ -156,16 +156,169 @@ Path globs: `**/*.tf`.
 | `terraform.depends_on3.ephemeral.resource` | kind `reference.hcl_block_list_traversal3_context`; field `attribute_key`, `owner_kind`, `target_root` |
 | `terraform.module-providers-mapping.data` | kind `data.hcl_block_object_entry_one_label_context`; field `attribute_key`, `object_key`, `object_value`, `owner_kind` |
 
-## To decide when rewriting
+## What was wrong with it
 
-1. For each dead kind above, which of the vocabulary in `00-CONTRACT.md` §6
-   states the same thing? `call.target_candidate` is `call.function`;
-   `structured.entry` is `definition.config_key`; a `*_context` kind is
-   usually a declaration plus a join.
-2. Which rules only restate their input, and should go rather than be ported?
-3. Which rules are one language's spelling of something every language now
-   spells the same way, and collapse into one rule?
-4. Which fields are genuinely needed, and which are reachable by
-   `fact_join_by_span` with `within` or by `definition.name`?
-5. What does this framework actually let an agent ask that the language
-   Packs alone cannot answer? That is the whole point of the overlay.
+Measured, before: **86 overlay rules, 0 live, 86 dead.** After: **40 rules, 40
+live, 0 dead.**
+
+1. **Every rule was keyed to a kind omega-hcl no longer emits.** All 11 fact
+   kinds in the table above are gone. The old Pack published one kind per
+   syntactic shape it wanted to reach — `reference.hcl_block_traversal_context`
+   for a two-segment traversal, `reference.hcl_block_traversal3_context` for a
+   three-segment one, `data.hcl_block_attribute_context` for an attribute inside
+   a block, `data.hcl_unlabeled_block_attribute_context` for one inside an
+   unlabeled block — and each carried the owner block's identity in fields
+   (`owner_kind`, `owner_label0`, `attribute_key`). The rewritten omega-hcl emits
+   five kinds in total: `definition.config_block`, `definition.config_attribute`,
+   `definition.config_entry`, `call.function`, `reference.traversal`. Nothing
+   carries its owner any more, because the owner's span already contains it.
+2. **The `*3_context` split was a pure duplication.** 35 of the 86 rules
+   (`terraform.references3.*`, 20; `terraform.depends_on3.*`, 12; the three
+   `*_data_source` rules) existed only because the old Pack spelled a
+   three-segment traversal under a different kind than a two-segment one. There
+   is now one `reference.traversal`, so those 35 rules collapse into the 16
+   `terraform.references.*` and 4 `terraform.depends_on.*` rules below.
+3. **The owner/target cross-product was written out by hand.** `owner_kind` ×
+   `target_root` produced 35 `references` rules and 16 `depends_on` rules. The
+   owner is now one `fact_join_by_span` with `within`, which is the same clause
+   in every one of them; only the two canonical-key prefixes differ.
+4. **Eight `MetaArgument` rules stated `count` and `for_each` separately per
+   owner kind.** `field_in` over `definition.name` does both in one rule, so
+   8 became 2.
+5. **Five rules could not be ported at all, because the value they read is no
+   longer a field.** `terraform.module.source`, `terraform.provider.alias`,
+   `terraform.provider-selection.{resource,module}` and
+   `terraform.module-providers-mapping.data` all rendered a string *value*
+   (`{value}`, `{object_value}`, `{target_name}`) into an entity key. omega-hcl
+   carries a scalar value as an **attribute**, and `OverlayFact::field` — which
+   is what `render()` and `field_ref` go through — reads fields only. An
+   attribute is reachable by `attribute_equals` against a constant and in no
+   other way, so those five entities (`ModuleSource`, `ProviderAlias`,
+   `ProviderMapping`) are gone rather than half-stated. The same reason removes
+   the *value* of `count`/`for_each` while keeping the fact that they are set.
+6. **Three rules only restated their input.** `terraform.import.block`,
+   `terraform.moved.block` and `terraform.removed.block` each emitted an entity
+   named after the block type with no relation to anything. They are now one
+   `StateOperation` rule plus one rule that relates the operation to the
+   resource it names.
+7. **The asset's own declarations were untrue.** `host.required_capabilities`
+   demanded `bindings`, `data` and `scopes`; omega-hcl publishes
+   `calls, definitions, references`. `coverage.gaps` claimed module provider
+   mappings were "materialized as exact source mappings". Both corrected.
+
+`detection_rules` was left alone: two atoms on `specifier`/`name`, still true.
+
+## What it states now
+
+40 rules. Every entity key is rendered from `definition.name`, `path` or
+`source.start` — the only identifying values omega-hcl puts in fields — so both
+ends of every relation are reachable.
+
+### Declarations — 15 rules
+
+| what | which Pack fact | entity / relation |
+|---|---|---|
+| a resource, data source, module, variable, output, provider, ephemeral resource, check (8 rules) | `definition.config_block` + `attribute_equals block_type` | `Resource`, `DataSource`, `Module`, `Variable`, `Output`, `Provider`, `EphemeralResource`, `Check` at `terraform:<kind>:{definition.name}` |
+| a local value | `definition.config_attribute` inside the block named `locals` (`fact_join_by_span` `within`) | `Local` at `terraform:local:{definition.name}` |
+| the `terraform` block of a file | `definition.config_block` named `terraform` | `TerraformConfig` at `terraform:terraform:{path}` |
+| where state lives | `definition.config_block` `block_type=backend` inside the `terraform` block | `Backend` + `contains` from `TerraformConfig` |
+| which providers the configuration requires | `definition.config_attribute` inside the block named `required_providers` | `Provider` + `depends_on` from `TerraformConfig` |
+| a pending `moved` / `import` / `removed` | `definition.config_block`, `field_in definition.name` | `StateOperation` at `terraform:state-op:{path}:{source.start}` |
+| which resource that operation names | `reference.traversal` inside it, joined by name to a `resource` block | `references` StateOperation -> Resource |
+
+Question answered: *what does this configuration declare, and under what
+address*; *where is state stored*; *which providers does it need*; *what
+refactors are pending*.
+
+### Containment — 6 rules
+
+| what | which Pack fact | relation |
+|---|---|---|
+| a `lifecycle` block | `definition.config_block` named `lifecycle`, owner joined `within` a `resource` | `Lifecycle` + `contains` from Resource |
+| a `dynamic "x"` block in a resource or data source (2 rules) | `definition.config_block` `block_type=dynamic`, owner joined `within` | `DynamicBlock` + `contains` |
+| an `assert` block | `definition.config_block` named `assert`, owner a `check` | `Assertion` + `contains` from Check |
+| `count` / `for_each` on a resource or module (2 rules) | `definition.config_attribute`, `field_in ["count","for_each"]`, owner joined `within` | `MetaArgument` + `contains` |
+
+Question answered: *is this resource multi-instance*; *does it have lifecycle
+rules*; *which nested blocks are generated*.
+
+### References — 16 rules
+
+Current fact is always `reference.traversal`; the owner block is a
+`fact_join_by_span` `within` `definition.config_block` filtered by
+`attribute_equals block_type`. Owner ∈ {resource, module, output, data} ×
+target ∈ {variable, local, module, resource}.
+
+| what | which Pack fact | relation |
+|---|---|---|
+| `var.x` read in a block | `reference.traversal`, `attribute_equals root=var` | `configured_by` owner -> `terraform:variable:{definition.name}` |
+| `local.x` read in a block | `attribute_equals root=local` | `configured_by` owner -> `terraform:local:{definition.name}` |
+| `module.m.out` read in a block | `attribute_equals root=module` | `references` owner -> `terraform:module:{definition.name}` |
+| `aws_x.y.attr` read in a block | `fact_join_by_field` on `definition.name` to a `definition.config_block` with `block_type=resource` | `references` owner -> `terraform:resource:{target.definition.name}` |
+
+Question answered: *which variables configure this module*, *which resources
+does this output expose*, *what breaks if I delete this local*.
+
+### Explicit ordering — 4 rules
+
+| what | which Pack fact | relation |
+|---|---|---|
+| `depends_on = [module.m]` in a resource or module | `reference.traversal` `within` the `definition.config_attribute` named `depends_on`, `attribute_equals root=module` | `depends_on` owner -> Module |
+| `depends_on = [aws_x.y]` in a resource or module | same, plus the join by name to a `resource` block | `depends_on` owner -> Resource |
+
+The attribute a reference sits in is reached by a second `fact_join_by_span`
+`within` on `definition.config_attribute` — no Pack field is needed for it.
+These four rules overlap the `references.*` rules by design: a `depends_on`
+entry is both a reference and an explicit ordering, and the two relation kinds
+answer different questions.
+
+## A field only the Pack can supply
+
+**Pack `omega-hcl`, kind `definition.config_block`, field `type_label` (and
+`block_type`); kind `reference.traversal`, field `root`.**
+
+The Pack already computes all three — they are published as **attributes**. The
+overlay can test an attribute against a constant (`attribute_equals`) but can
+never render one: `render()` and `field_ref` both go through
+`Binding::resolve` -> `OverlayFact::field`, which reads `fields` and the
+built-in names and never looks at `attributes`. No join reaches them either;
+`fact_join_by_field` and `additional_field_equalities` compare fields only.
+
+Three consequences, all of them visible in `coverage.gaps`:
+
+1. A resource is keyed `terraform:resource:{definition.name}` — its last label
+   alone. `aws_vpc.main` and `aws_subnet.main` collide. With `type_label` as a
+   field the key would be the real Terraform address `aws_vpc.main`.
+2. A traversal's target kind cannot be discriminated except by the roots that
+   are constants (`var`, `local`, `module`). "Root is a resource type" is
+   `attribute_equals` against an open set, which does not exist, so the four
+   resource-reference rules fall back to joining by name to a `resource` block —
+   correct whenever a resource of that name exists, and a false positive when a
+   variable and a resource share a name. Those rules carry `confidence: high`,
+   not `exact`.
+3. `data.aws_ami.web` is not stated at all. The traversal pattern captures only
+   the first segment, which for a data source is the *type*, not the name, so
+   the reference cannot be addressed to the `DataSource` entity's key. This one
+   needs the Pack to capture the second segment as well, not just a field move.
+
+No Pack was asked for anything else: the owner of a nested construct, the
+attribute a reference sits in, and the enclosing block of a local are all
+reached by `fact_join_by_span` with `within`.
+
+## Still to decide
+
+1. **`definition.container` / `enclosing.qname` are usable but unaudited.**
+   `facts_of_surface` adds both to every fact's field map, and they would have
+   let the `depends_on` rules read the enclosing attribute name directly instead
+   of joining. `pack-design/overlay_audit.py`'s `BUILTIN` set does not list
+   them, so a rule reading them is reported dead. The joins are used instead;
+   either the audit's list should grow or the contract should say these are not
+   for overlays.
+2. **The owner cross-product is still 16 rules.** It collapses to 4 the day an
+   entity key can carry the owner's block type — i.e. the day `block_type` is a
+   field — because the source end could then be one rendered
+   `terraform:{owner.block_type}:{owner.definition.name}`.
+3. **`provider = aws.west`** (provider selection with an alias) is not stated:
+   the traversal gives `west`, the alias, while the `Provider` entity is keyed
+   by the provider name `aws`, which is the traversal's root attribute. Left
+   out rather than pointed at a key nothing emits.

@@ -22,55 +22,82 @@
   ],
   "emits": {
     "entities": [
+      "ApiDocument",
       "ApiOperation",
-      "Callback",
-      "CompositionReference",
-      "Discriminator",
-      "Example",
-      "Header",
-      "Link",
-      "OperationMetadata",
-      "Parameter",
-      "ParameterComponent",
       "PathItem",
-      "Reference",
-      "RequestBody",
       "Response",
-      "ResponseComponent",
-      "Schema",
       "SecurityScheme",
-      "Server",
+      "Tag",
       "Webhook"
     ],
     "relations": [
       "contains",
-      "references",
-      "request_schema",
-      "response_schema"
+      "declared_in",
+      "responds",
+      "secured_by",
+      "tagged"
     ]
   },
   "rules": [
+    {
+      "id": "openapi3.document",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "openapi"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "info"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiDocument",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
     {
       "id": "openapi3.operation",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "grandparent_key",
-          "value": "paths"
+          "value": "definition.config_key"
         },
         {
           "kind": "field_in",
-          "field": "key",
+          "field": "definition.name",
           "values": [
             "get",
             "put",
@@ -78,12 +105,36 @@
             "delete",
             "options",
             "head",
-            "patch"
+            "patch",
+            "trace"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "owner_key"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "path_item",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "/"
+            },
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "paths"
+                }
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
@@ -93,454 +144,213 @@
           "entity_kind": "ApiOperation",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:{key}:{owner_key}"
+            "template": "openapi3:operation:{method}:{normalized_path}"
           },
           "attributes": {
             "method": {
               "kind": "field_ref",
-              "field": "key"
+              "field": "definition.name"
             },
             "path": {
               "kind": "field_ref",
-              "field": "owner_key"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.schema",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "grandparent_key",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Schema",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:schema:#/components/schemas/{key}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "key"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.schema.json",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_owned_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "grandparent_key",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Schema",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:schema:#/components/schemas/{key}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "key"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.ref.direct.yaml",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "value",
-          "value": "#/components/schemas/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:#/components/schemas/{a2}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:{value}"
-          },
-          "attributes": {
-            "ref_kind": "internal_schema_direct"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.ref.direct.json",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "value",
-          "value": "#/components/schemas/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:#/components/schemas/{a2}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:{value}"
-          },
-          "attributes": {
-            "ref_kind": "internal_schema_direct"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.security_scheme",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "grandparent_key",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "securitySchemes"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SecurityScheme",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:security:{key}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "key"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.server",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_mapping_sequence_item"
-        },
-        {
-          "kind": "field_equals",
-          "field": "sequence_key",
-          "value": "servers"
-        },
-        {
-          "kind": "field_equals",
-          "field": "item_key",
-          "value": "url"
-        },
-        {
-          "kind": "field_present",
-          "field": "item_value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Server",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:server:{item_value}"
-          },
-          "attributes": {
-            "url": {
-              "kind": "field_ref",
-              "field": "item_value"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.parameter",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_sequence_mapping_field"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "a2",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "sequence_key",
-          "value": "parameters"
-        },
-        {
-          "kind": "field_equals",
-          "field": "item_key",
-          "value": "name"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "item_value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Parameter",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:parameter:{a2}:{a1}:{item_value}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
+              "field": "path_item.definition.name"
             },
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PathItem",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:path:{normalized_path}"
+          },
+          "attributes": {
             "path": {
               "kind": "field_ref",
-              "field": "a1"
+              "field": "path_item.definition.name"
             },
-            "name": {
+            "document": {
               "kind": "field_ref",
-              "field": "item_value"
+              "field": "path"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:path:{normalized_path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declared_in",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     },
     {
-      "id": "openapi3.response",
+      "id": "openapi3.operation.response",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth4_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
+          "value": "definition.config_key"
         },
         {
           "kind": "field_in",
-          "field": "a2",
+          "field": "definition.name",
           "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
+            "100",
+            "101",
+            "102",
+            "103",
+            "200",
+            "201",
+            "202",
+            "203",
+            "204",
+            "205",
+            "206",
+            "207",
+            "208",
+            "226",
+            "300",
+            "301",
+            "302",
+            "303",
+            "304",
+            "305",
+            "307",
+            "308",
+            "400",
+            "401",
+            "402",
+            "403",
+            "404",
+            "405",
+            "406",
+            "407",
+            "408",
+            "409",
+            "410",
+            "411",
+            "412",
+            "413",
+            "414",
+            "415",
+            "416",
+            "417",
+            "418",
+            "421",
+            "422",
+            "423",
+            "424",
+            "425",
+            "426",
+            "428",
+            "429",
+            "431",
+            "451",
+            "500",
+            "501",
+            "502",
+            "503",
+            "504",
+            "505",
+            "506",
+            "507",
+            "508",
+            "510",
+            "511",
+            "1XX",
+            "2XX",
+            "3XX",
+            "4XX",
+            "5XX",
+            "default"
           ]
         },
         {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "responses"
+            }
+          ]
         },
         {
-          "kind": "field_present",
-          "field": "a1"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "op",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "get",
+                "put",
+                "post",
+                "delete",
+                "options",
+                "head",
+                "patch",
+                "trace"
+              ]
+            }
+          ]
         },
         {
-          "kind": "field_present",
-          "field": "key"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "path_item",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "/"
+            },
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "paths"
+                }
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
@@ -550,377 +360,32 @@
           "entity_kind": "Response",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:response:{a2}:{a1}:{key}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "key"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.request_schema",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "a2",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "requestBody"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a4",
-          "value": "content"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a6",
-          "value": "schema"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "request_schema",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:{value}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.response_schema",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth8_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "a2",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "content"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a7",
-          "value": "schema"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "response_schema",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:{value}"
+            "template": "openapi3:response:{method}:{normalized_path}:{status}"
           },
           "attributes": {
             "status": {
               "kind": "field_ref",
-              "field": "a4"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.operation.json.request",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_operation_request_schema_ref"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root_key",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "method",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "path"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "ref",
-          "value": "#/components/schemas/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiOperation",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:{method}:{path}"
-          },
-          "attributes": {
+              "field": "definition.name"
+            },
             "method": {
               "kind": "field_ref",
-              "field": "method"
+              "field": "op.definition.name"
             },
             "path": {
               "kind": "field_ref",
-              "field": "path"
+              "field": "path_item.definition.name"
             }
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation.json.response",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
         },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_operation_response_schema_ref"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root_key",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "method",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "path"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "ref",
-          "value": "#/components/schemas/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiOperation",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:{method}:{path}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "method"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.request_schema.json",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_operation_request_schema_ref"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root_key",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "method",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "path"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "ref",
-          "value": "#/components/schemas/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "relation_candidate",
-          "relation_kind": "request_schema",
+          "relation_kind": "responds",
           "source": {
             "kind": "by_canonical_key",
-            "template": "openapi3:{method}:{path}"
+            "template": "openapi3:operation:{method}:{normalized_path}"
           },
           "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:{ref}"
+            "kind": "current"
           },
           "attributes": {}
         }
@@ -929,132 +394,111 @@
       "confidence": "exact"
     },
     {
-      "id": "openapi3.response_schema.json",
+      "id": "openapi3.operation.tag",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
+          "value": "relation.data"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_operation_response_schema_ref"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root_key",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "method",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "path"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "ref",
-          "value": "#/components/schemas/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "response_schema",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{method}:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:{ref}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "status"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "tags"
             }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response.json",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_operation_response_schema_ref"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root_key",
-          "value": "paths"
-        },
-        {
-          "kind": "field_in",
-          "field": "method",
-          "values": [
-            "get",
-            "put",
-            "post",
-            "delete",
-            "options",
-            "head",
-            "patch"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "path"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "op",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "get",
+                "put",
+                "post",
+                "delete",
+                "options",
+                "head",
+                "patch",
+                "trace"
+              ]
+            }
+          ]
         },
         {
-          "kind": "field_prefix",
-          "field": "ref",
-          "value": "#/components/schemas/"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "path_item",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "/"
+            },
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "paths"
+                }
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Response",
+          "entity_kind": "Tag",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:response:{method}:{path}:{status}"
+            "template": "openapi3:tag:{tag}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "tagged",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:operation:{method}:{normalized_path}"
+          },
+          "target": {
+            "kind": "current"
           },
           "attributes": {
             "method": {
               "kind": "field_ref",
-              "field": "method"
+              "field": "op.definition.name"
             },
             "path": {
               "kind": "field_ref",
-              "field": "path"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "status"
+              "field": "path_item.definition.name"
             }
           }
         }
@@ -1063,331 +507,75 @@
       "confidence": "exact"
     },
     {
-      "id": "openapi3.component.schemas.yaml_depth3_pair",
+      "id": "openapi3.operation.security",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
+          "value": "definition.config_key"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "security"
+            }
+          ]
         },
         {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "op",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "get",
+                "put",
+                "post",
+                "delete",
+                "options",
+                "head",
+                "patch",
+                "trace"
+              ]
+            }
+          ]
         },
         {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Schema",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:schemas:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "path_item",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "/"
             },
-            "component_group": "schemas",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.responses.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "responses"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ResponseComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:responses:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "responses",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.parameters.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "parameters"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ParameterComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:parameters:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "parameters",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.examples.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "examples"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Example",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:examples:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "examples",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.requestBodies.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "requestBodies"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RequestBody",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:requestBodies:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "requestBodies",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.headers.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "headers"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Header",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:headers:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "headers",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.securitySchemes.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "securitySchemes"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "paths"
+                }
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
@@ -1397,15 +585,34 @@
           "entity_kind": "SecurityScheme",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:component:securitySchemes:{a2}"
+            "template": "openapi3:security_scheme:{scheme}"
           },
           "attributes": {
-            "name": {
+            "scheme": {
               "kind": "field_ref",
-              "field": "a2"
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "secured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:operation:{method}:{normalized_path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "op.definition.name"
             },
-            "component_group": "securitySchemes",
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path_item.definition.name"
+            }
           }
         }
       ],
@@ -1413,802 +620,90 @@
       "confidence": "exact"
     },
     {
-      "id": "openapi3.component.links.yaml_depth3_pair",
+      "id": "openapi3.webhook",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
+          "value": "definition.config_key"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get",
+            "put",
+            "post",
+            "delete",
+            "options",
+            "head",
+            "patch",
+            "trace"
+          ]
         },
         {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "links"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "event",
+          "where": [
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "webhooks"
+                }
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Link",
+          "entity_kind": "ApiOperation",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:component:links:{a2}"
+            "template": "openapi3:operation:{method}:webhooks/{event}"
           },
           "attributes": {
-            "name": {
+            "method": {
               "kind": "field_ref",
-              "field": "a2"
+              "field": "definition.name"
             },
-            "component_group": "links",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.callbacks.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:callbacks:{a2}"
-          },
-          "attributes": {
-            "name": {
+            "event": {
               "kind": "field_ref",
-              "field": "a2"
+              "field": "event.definition.name"
             },
-            "component_group": "callbacks",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.pathItems.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "pathItems"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PathItem",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:pathItems:{a2}"
-          },
-          "attributes": {
-            "name": {
+            "document": {
               "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "pathItems",
-            "source_only": true
+              "field": "path"
+            }
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.schemas.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
         },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Schema",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:schemas:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "schemas",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.responses.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "responses"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ResponseComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:responses:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "responses",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.parameters.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "parameters"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ParameterComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:parameters:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "parameters",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.examples.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "examples"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Example",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:examples:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "examples",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.requestBodies.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "requestBodies"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RequestBody",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:requestBodies:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "requestBodies",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.headers.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "headers"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Header",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:headers:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "headers",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.securitySchemes.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "securitySchemes"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SecurityScheme",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:securitySchemes:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "securitySchemes",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.links.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "links"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Link",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:links:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "links",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.callbacks.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:callbacks:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "callbacks",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.component.pathItems.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "pathItems"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PathItem",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:component:pathItems:{a2}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "component_group": "pathItems",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.webhook.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "webhooks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Webhook",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:webhook:{a1}"
+            "template": "openapi3:webhook:{event}"
           },
           "attributes": {
-            "name": {
+            "event": {
               "kind": "field_ref",
-              "field": "a1"
+              "field": "event.definition.name"
             },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.webhook.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "webhooks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Webhook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:webhook:{a1}"
-          },
-          "attributes": {
-            "name": {
+            "document": {
               "kind": "field_ref",
-              "field": "a1"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-callback.json_depth5_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth5_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
+              "field": "path"
+            }
           }
         },
         {
@@ -2216,2675 +711,24 @@
           "relation_kind": "contains",
           "source": {
             "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
+            "template": "openapi3:webhook:{event}"
           },
           "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
+            "kind": "current"
           },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-callback.yaml_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
+          "attributes": {}
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-callback.json_depth6_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth6_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-callback.json_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-callback.yaml_depth8_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth8_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "callbacks"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Callback",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:callback:{a1}:{a2}:{a4}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-links.json_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "links"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Link",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-links:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-links:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-headers.json_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "headers"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Header",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-headers:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-headers:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-examples.json_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "examples"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Example",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-examples:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-examples:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-links.yaml_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "links"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Link",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-links:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-links:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-headers.yaml_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "headers"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Header",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-headers:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-headers:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-examples.yaml_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "examples"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Example",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-examples:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-examples:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-links.yaml_depth8_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth8_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "links"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Link",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-links:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-links:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-headers.yaml_depth8_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth8_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "headers"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Header",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-headers:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-headers:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.response-examples.yaml_depth8_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth8_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "responses"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a5",
-          "value": "examples"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_present",
-          "field": "a4"
-        },
-        {
-          "kind": "field_present",
-          "field": "a6"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Example",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:response-examples:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "a1"
-            },
-            "method": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "a6"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:response-examples:{a1}:{a2}:{a4}:{a6}"
-          },
-          "attributes": {
-            "status": {
-              "kind": "field_ref",
-              "field": "a4"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.schema.discriminator.yaml_depth4_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth4_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "discriminator"
-        },
-        {
-          "kind": "field_in",
-          "field": "key",
-          "values": [
-            "propertyName",
-            "mapping"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Discriminator",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:discriminator:{a2}:{path}:{source.start}"
-          },
-          "attributes": {
-            "schema": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "field": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:#/components/schemas/{a2}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:discriminator:{a2}:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.schema.discriminator.json_depth4_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth4_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "components"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a1",
-          "value": "schemas"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a3",
-          "value": "discriminator"
-        },
-        {
-          "kind": "field_in",
-          "field": "key",
-          "values": [
-            "propertyName",
-            "mapping"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Discriminator",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:discriminator:{a2}:{path}:{source.start}"
-          },
-          "attributes": {
-            "schema": {
-              "kind": "field_ref",
-              "field": "a2"
-            },
-            "field": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:schema:#/components/schemas/{a2}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:discriminator:{a2}:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.ref.any.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
+          "relation_kind": "declared_in",
           "source": {
             "kind": "current"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
+            "template": "openapi3:document:{document}"
           },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.yaml_depth4_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth4_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.yaml_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.yaml_depth8_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth8_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.json_depth4_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth4_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.json_depth5_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth5_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.json_depth6_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth6_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.ref.any.json_depth7_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth7_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Reference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Authored ref is exact; target resolution remains exact only for separately normalized internal component refs."
-    },
-    {
-      "id": "openapi3.composition-ref.json_depth1_array_item_field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth1_array_item_field"
-        },
-        {
-          "kind": "field_in",
-          "field": "array_key",
-          "values": [
-            "allOf",
-            "oneOf",
-            "anyOf"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "CompositionReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "composition": {
-              "kind": "field_ref",
-              "field": "array_key"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.composition-ref.json_depth2_array_item_field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth2_array_item_field"
-        },
-        {
-          "kind": "field_in",
-          "field": "array_key",
-          "values": [
-            "allOf",
-            "oneOf",
-            "anyOf"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "CompositionReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "composition": {
-              "kind": "field_ref",
-              "field": "array_key"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.composition-ref.json_depth3_array_item_field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_array_item_field"
-        },
-        {
-          "kind": "field_in",
-          "field": "array_key",
-          "values": [
-            "allOf",
-            "oneOf",
-            "anyOf"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "CompositionReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "composition": {
-              "kind": "field_ref",
-              "field": "array_key"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.composition-ref.yaml_depth3_sequence_mapping_field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_sequence_mapping_field"
-        },
-        {
-          "kind": "field_in",
-          "field": "sequence_key",
-          "values": [
-            "allOf",
-            "oneOf",
-            "anyOf"
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "item_key",
-          "value": "$ref"
-        },
-        {
-          "kind": "field_present",
-          "field": "item_value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "CompositionReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "composition": {
-              "kind": "field_ref",
-              "field": "sequence_key"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "item_value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:composition-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "openapi3.operation-meta.operationId.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "operationId"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OperationMetadata",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:operationId"
-          },
-          "attributes": {
-            "field": "operationId",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:operationId"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-meta.summary.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "summary"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OperationMetadata",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:summary"
-          },
-          "attributes": {
-            "field": "summary",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:summary"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-meta.description.yaml_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "description"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OperationMetadata",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:description"
-          },
-          "attributes": {
-            "field": "description",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:description"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-meta.operationId.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "operationId"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OperationMetadata",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:operationId"
-          },
-          "attributes": {
-            "field": "operationId",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:operationId"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-meta.summary.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "summary"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OperationMetadata",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:summary"
-          },
-          "attributes": {
-            "field": "summary",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:summary"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation-meta.description.json_depth3_pair",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_depth3_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "a0",
-          "value": "paths"
-        },
-        {
-          "kind": "field_present",
-          "field": "a1"
-        },
-        {
-          "kind": "field_present",
-          "field": "a2"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "description"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OperationMetadata",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:description"
-          },
-          "attributes": {
-            "field": "description",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:{a2}:{a1}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation-meta:{a1}:{a2}:description"
-          },
-          "attributes": {
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
@@ -4894,11 +738,9 @@
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "external/relative-file $ref targets are preserved as authored Reference entities but exact cross-file resolution requires snapshot/path resolution outside Framework rules",
-      "templated/generated specifications and runtime server behavior remain terminal external/runtime ceilings",
-      "deep schema validation semantics (JSON Schema evaluation, discriminator runtime dispatch, example validation) are not executed; authored composition/discriminator/ref structure is indexed",
-      "very deep content/media-type/example trees beyond retained bounded structured path depth remain raw structured evidence unless a dedicated deeper owner fact is added",
-      "callback/link runtime expression evaluation is not executed; authored callback/link/header/example identities and targets remain indexed evidence"
+      "a $ref target, a server url, an operationId, a summary and a parameter name are the *value* of a configuration key; omega-json and omega-yaml publish that value as an attribute, and an overlay can only compare an attribute for equality -- it cannot render one into a canonical key, so those constructs cannot be named or related here",
+      "a component under components/<section> cannot be told apart from a key nested deeper inside it: fact_join_by_span with `within` reaches every enclosing key, not the immediate parent, so components/schemas, components/responses and the rest are not emitted",
+      "templated/generated specifications and runtime server behavior remain terminal external evidence outside static Framework rule scope"
     ]
   },
   "provenance": [

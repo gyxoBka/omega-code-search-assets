@@ -1,3634 +1,1871 @@
 {
-  "schema_version": 2,
-  "asset": "omega-framework-unity",
-  "selector": "framework:unity",
-  "maturity_target": "semantic-overlay-full",
-  "host": {
-    "languages": [
-      "c-sharp",
-      "yaml"
-    ],
-    "required_packs": [
-      "omega-c-sharp",
-      "omega-yaml"
-    ],
-    "required_capabilities": [
-      "calls",
-      "data",
-      "definitions",
-      "imports",
-      "references"
-    ]
-  },
-  "evidence_inputs": [
-    "calls_members",
-    "existing_language_ir",
-    "structured_documents"
+ "schema_version": 2,
+ "asset": "omega-framework-unity",
+ "selector": "framework:unity",
+ "maturity_target": "semantic-overlay-full",
+ "host": {
+  "languages": [
+   "c-sharp"
   ],
-  "emits": {
-    "entities": [
-      "Asset",
-      "AssetMenu",
-      "AssetReference",
-      "ComponentRequirement",
-      "GameComponent",
-      "GameObjectReference",
-      "LifecycleHook",
-      "PrefabReference",
-      "ScriptAssetReference",
-      "SerializedChildren",
-      "SerializedField",
-      "SerializedName",
-      "SerializedObject",
-      "SerializedParent",
-      "SourceObjectReference"
-    ],
-    "relations": [
-      "configured_by",
-      "contains",
-      "handles",
-      "references",
-      "uses_resource"
-    ]
-  },
-  "rules": [
-    {
-      "id": "unity.monobehaviour.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "UnityEngine",
-          "member_prefix": "MonoBehaviour"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "GameComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:component:{definition.qname}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.scriptable.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "UnityEngine",
-          "member_prefix": "ScriptableObject"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Asset",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:asset-type:{definition.qname}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.awake",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "Awake"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:Awake:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "Awake",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:Awake:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "Awake"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.onenable",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnEnable"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnEnable:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnEnable",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnEnable:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnEnable"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.start",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "Start"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:Start:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "Start",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:Start:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "Start"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.fixedupdate",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "FixedUpdate"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:FixedUpdate:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "FixedUpdate",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:FixedUpdate:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "FixedUpdate"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.update",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "Update"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:Update:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "Update",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:Update:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "Update"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.lateupdate",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "LateUpdate"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:LateUpdate:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "LateUpdate",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:LateUpdate:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "LateUpdate"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.ondisable",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnDisable"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnDisable:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnDisable",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnDisable:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnDisable"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.ondestroy",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnDestroy"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnDestroy:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnDestroy",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnDestroy:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnDestroy"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.ontriggerenter",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnTriggerEnter"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnTriggerEnter:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnTriggerEnter",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnTriggerEnter:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnTriggerEnter"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.ontriggerexit",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnTriggerExit"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnTriggerExit:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnTriggerExit",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnTriggerExit:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnTriggerExit"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.oncollisionenter",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnCollisionEnter"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnCollisionEnter:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnCollisionEnter",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnCollisionEnter:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnCollisionEnter"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.lifecycle.oncollisionexit",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.csharp_lifecycle_method_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "method_name",
-          "value": "OnCollisionExit"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.csharp_class_base_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "base_name",
-              "values": [
-                "MonoBehaviour",
-                "ScriptableObject"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:lifecycle:OnCollisionExit:{path}:{owner_class}"
-          },
-          "attributes": {
-            "method": "OnCollisionExit",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "unity:lifecycle:OnCollisionExit:{path}:{owner_class}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "phase": "OnCollisionExit"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.field.serializefield",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_field_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "SerializeField"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "field": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "type": {
-              "kind": "field_ref",
-              "field": "field_type"
-            },
-            "attribute": "SerializeField"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.field.hideininspector",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_field_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "HideInInspector"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "field": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "type": {
-              "kind": "field_ref",
-              "field": "field_type"
-            },
-            "attribute": "HideInInspector"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.field.header",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_field_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "Header"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "field": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "type": {
-              "kind": "field_ref",
-              "field": "field_type"
-            },
-            "attribute": "Header"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.field.tooltip",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_field_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "Tooltip"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "field": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "type": {
-              "kind": "field_ref",
-              "field": "field_type"
-            },
-            "attribute": "Tooltip"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.field.range",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_field_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "Range"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "field": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "type": {
-              "kind": "field_ref",
-              "field": "field_type"
-            },
-            "attribute": "Range"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.class-attr.createassetmenu",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_class_string_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "CreateAssetMenu"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AssetMenu",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:assetmenu:{path}:{owner_class}:{source.start}"
-          },
-          "attributes": {
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:assetmenu:{path}:{owner_class}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.class-attr.requirecomponent",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.csharp_attributed_class_string_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "RequireComponent"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentRequirement",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:componentrequirement:{path}:{owner_class}:{source.start}"
-          },
-          "attributes": {
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:componentrequirement:{path}:{owner_class}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.resources.load",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.csharp_class_member_string_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "receiver",
-          "value": "Resources"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "Load"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AssetReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:resource:{arg1}:{path}:{source.start}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "arg1"
-            },
-            "operation": "Load"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:resource:{arg1}:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.resources.loadasync",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.csharp_class_member_string_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "receiver",
-          "value": "Resources"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "LoadAsync"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AssetReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:resource:{arg1}:{path}:{source.start}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "arg1"
-            },
-            "operation": "LoadAsync"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:resource:{arg1}:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "unity.serialized-object.gameobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "GameObject"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "GameObject",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.transform",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Transform"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Transform",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.recttransform",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "RectTransform"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "RectTransform",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.monobehaviour",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "MonoBehaviour"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "MonoBehaviour",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.prefabinstance",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "PrefabInstance"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "PrefabInstance",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.prefab",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Prefab"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Prefab",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.scriptableobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "ScriptableObject"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "ScriptableObject",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.meshrenderer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "MeshRenderer"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "MeshRenderer",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.skinnedmeshrenderer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "SkinnedMeshRenderer"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "SkinnedMeshRenderer",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.camera",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Camera"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Camera",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.light",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Light"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Light",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.rigidbody",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Rigidbody"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Rigidbody",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.collider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Collider"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Collider",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.boxcollider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "BoxCollider"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "BoxCollider",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.spherecollider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "SphereCollider"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "SphereCollider",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.capsulecollider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "CapsuleCollider"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "CapsuleCollider",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.audiosource",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "AudioSource"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "AudioSource",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-object.animator",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_top_level_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "Animator"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized:{path}:{source.start}"
-          },
-          "attributes": {
-            "unity_type": "Animator",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text-serialized YAML object; runtime/editor instantiation is not claimed."
-    },
-    {
-      "id": "unity.serialized-field.m_name",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_Name"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedName",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_Name",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-field.m_script",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_Script"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ScriptAssetReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_Script",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-field.m_gameobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_GameObject"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "GameObjectReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_GameObject",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-field.m_prefabinstance",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_PrefabInstance"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PrefabReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_PrefabInstance",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-field.m_correspondingsourceobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_CorrespondingSourceObject"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SourceObjectReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_CorrespondingSourceObject",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-field.m_children",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_Children"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedChildren",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_Children",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-field.m_father",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_Father"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedParent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_Father",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-field:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored Unity text YAML field; fileID/guid normalization is deferred to generic asset resolver."
-    },
-    {
-      "id": "unity.serialized-custom-field.monobehaviour",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "parent_key",
-          "value": "MonoBehaviour"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-custom:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": "MonoBehaviour",
-            "field": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored serialized field; runtime deserialization/effective object value is not claimed."
-    },
-    {
-      "id": "unity.serialized-custom-field.scriptableobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "parent_key",
-          "value": "ScriptableObject"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-custom:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": "ScriptableObject",
-            "field": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored serialized field; runtime deserialization/effective object value is not claimed."
-    },
-    {
-      "id": "unity.serialized-config.m-tagstring",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_TagString"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_TagString",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored scalar configuration field from Unity text-serialized YAML; editor/runtime effective state is not claimed."
-    },
-    {
-      "id": "unity.serialized-config.m-layer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_Layer"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_Layer",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored scalar configuration field from Unity text-serialized YAML; editor/runtime effective state is not claimed."
-    },
-    {
-      "id": "unity.serialized-config.m-isactive",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_IsActive"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_IsActive",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored scalar configuration field from Unity text-serialized YAML; editor/runtime effective state is not claimed."
-    },
-    {
-      "id": "unity.serialized-config.m-staticeditorflags",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_StaticEditorFlags"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_StaticEditorFlags",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored scalar configuration field from Unity text-serialized YAML; editor/runtime effective state is not claimed."
-    },
-    {
-      "id": "unity.serialized-config.m-enabled",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_Enabled"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_Enabled",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored scalar configuration field from Unity text-serialized YAML; editor/runtime effective state is not claimed."
-    },
-    {
-      "id": "unity.serialized-config.m-editorclassidentifier",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "m_EditorClassIdentifier"
-        },
-        {
-          "kind": "field_present",
-          "field": "parent_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{unity,prefab,asset}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SerializedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": {
-              "kind": "field_ref",
-              "field": "parent_key"
-            },
-            "field": "m_EditorClassIdentifier",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "unity:serialized-config:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored scalar configuration field from Unity text-serialized YAML; editor/runtime effective state is not claimed."
-    }
+  "required_packs": [
+   "omega-c-sharp"
   ],
-  "coverage": {
-    "mode": "explicit-classified",
-    "gaps": [
-      "MonoBehaviour/ScriptableObject types, lifecycle methods, serialized-field attributes and literal Resources.Load references are materialized",
-      "text-serialized .unity/.prefab/.asset YAML object kinds, names, script/gameObject/prefab/source references and authored serialized fields are materialized; fileID/guid cross-file normalization requires generic asset reference resolution",
-      "binary/Library/imported asset formats not present as readable text and runtime GameObject/component graph, prefab overrides and lifecycle ordering require editor/runtime evidence"
-    ]
-  },
-  "provenance": [
-    {
-      "source_id": "assetripper",
-      "repository": "https://github.com/AssetRipper/AssetRipper",
-      "path": "Source/AssetRipper.Assets/**",
-      "revision": "7e6dcf80b253d3a218d33ef9ec2f6a45c128e3af",
-      "confidence": "high",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    },
-    {
-      "source_id": "unity-cs-reference",
-      "repository": "https://github.com/Unity-Technologies/UnityCsReference",
-      "path": "Runtime/**",
-      "revision": "9d487cab41b00c50af020b56d27a3c768d54f770",
-      "confidence": "medium",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    }
-  ],
-  "runtime_status": "terminal-static-source-contract",
-  "detection_rules": [
-    {
-      "id": "unity.exact_signature.1..asmdef",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "binding"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "specifier",
-            "value": ".asmdef"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": ".asmdef",
-          "source": "binding.specifier"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.2..asmdef",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "reference"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "name",
-            "value": ".asmdef"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": ".asmdef",
-          "source": "reference.name"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.3..asmdef",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "package:.asmdef"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": ".asmdef",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.4..asmdef",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": ".asmdef"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": ".asmdef",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.1.assembly-csharp.dll",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "binding"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "specifier",
-            "value": "Assembly-CSharp.dll"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "Assembly-CSharp.dll",
-          "source": "binding.specifier"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.2.assembly-csharp.dll",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "reference"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "name",
-            "value": "Assembly-CSharp.dll"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "Assembly-CSharp.dll",
-          "source": "reference.name"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.3.assembly-csharp.dll",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "package:assembly-csharp.dll"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "Assembly-CSharp.dll",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.4.assembly-csharp.dll",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "Assembly-CSharp.dll"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "Assembly-CSharp.dll",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.1.unityengine",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "binding"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "specifier",
-            "value": "UnityEngine"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "UnityEngine",
-          "source": "binding.specifier"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.2.unityengine",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "reference"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "name",
-            "value": "UnityEngine"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "UnityEngine",
-          "source": "reference.name"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.3.unityengine",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "package:unityengine"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "UnityEngine",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "unity.exact_signature.4.unityengine",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "UnityEngine"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "unity"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "unity",
-          "framework_name": "Unity",
-          "signature": "UnityEngine",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    }
+  "required_capabilities": [
+   "calls",
+   "definitions",
+   "implements",
+   "imports",
+   "references"
   ]
+ },
+ "evidence_inputs": [
+  "existing_language_ir",
+  "calls_members"
+ ],
+ "emits": {
+  "entities": [
+   "Asset",
+   "AssetMenu",
+   "ComponentPolicy",
+   "Coroutine",
+   "EditorExtension",
+   "EditorOnlyScript",
+   "GameComponent",
+   "InspectorField",
+   "LifecycleHook",
+   "ResourceLoad",
+   "SceneTransition",
+   "SerializedType"
+  ],
+  "relations": [
+   "configured_by",
+   "depends",
+   "handles"
+  ]
+ },
+ "rules": [
+  {
+   "id": "unity.component",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "relation.implements"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "MonoBehaviour"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GameComponent",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "base": "MonoBehaviour",
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.scriptable-object",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "relation.implements"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "ScriptableObject"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Asset",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "base": "ScriptableObject",
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.editor-extension",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "relation.implements"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "Editor",
+      "EditorWindow",
+      "PropertyDrawer",
+      "DecoratorDrawer",
+      "ScriptableWizard",
+      "AssetPostprocessor",
+      "AssetModificationProcessor",
+      "EditorTool",
+      "MaterialEditor"
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "EditorExtension",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "base": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.serializable-type",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.attribute"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "Serializable"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "SerializedType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "unity.lifecycle",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.method"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "Awake",
+      "OnEnable",
+      "Start",
+      "FixedUpdate",
+      "Update",
+      "LateUpdate",
+      "OnDisable",
+      "OnDestroy",
+      "OnValidate",
+      "Reset",
+      "OnGUI",
+      "OnApplicationQuit",
+      "OnApplicationPause",
+      "OnApplicationFocus",
+      "OnTriggerEnter",
+      "OnTriggerStay",
+      "OnTriggerExit",
+      "OnTriggerEnter2D",
+      "OnTriggerStay2D",
+      "OnTriggerExit2D",
+      "OnCollisionEnter",
+      "OnCollisionStay",
+      "OnCollisionExit",
+      "OnCollisionEnter2D",
+      "OnCollisionStay2D",
+      "OnCollisionExit2D",
+      "OnBecameVisible",
+      "OnBecameInvisible",
+      "OnDrawGizmos",
+      "OnDrawGizmosSelected",
+      "OnMouseDown",
+      "OnMouseUp",
+      "OnMouseEnter",
+      "OnMouseExit",
+      "OnMouseOver",
+      "OnMouseDrag",
+      "OnParticleCollision",
+      "OnAnimatorMove",
+      "OnAnimatorIK",
+      "OnPreRender",
+      "OnPostRender",
+      "OnRenderObject",
+      "OnWillRenderObject",
+      "OnAudioFilterRead"
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "LifecycleHook",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:lifecycle:{cls.definition.name}:{definition.name}"
+     },
+     "attributes": {
+      "phase": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "phase": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.coroutine",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.type"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "IEnumerator"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.method",
+     "relation": "within",
+     "same_path": true,
+     "bind": "m"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Coroutine",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:coroutine:{cls.definition.name}:{m.definition.name}"
+     },
+     "attributes": {
+      "method": {
+       "kind": "field_ref",
+       "field": "m.definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "mode": "coroutine"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "unity.requires-component",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.type"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "reference.attribute",
+     "relation": "within",
+     "same_path": true,
+     "bind": "attr",
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "RequireComponent"
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GameComponent",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "reason": "RequireComponent"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.custom-editor",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.type"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "reference.attribute",
+     "relation": "within",
+     "same_path": true,
+     "bind": "attr",
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "CustomEditor",
+        "CustomEditorForRenderPipeline"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GameComponent",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "role": "inspector"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.custom-property-drawer",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.type"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "reference.attribute",
+     "relation": "within",
+     "same_path": true,
+     "bind": "attr",
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "CustomPropertyDrawer"
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "SerializedType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "role": "property_drawer"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.create-asset-menu",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.attribute"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "CreateAssetMenu"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "AssetMenu",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:asset-menu:{cls.definition.name}"
+     },
+     "attributes": {
+      "asset_type": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configured_by",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": "CreateAssetMenu"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.component-policy",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.attribute"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "ExecuteAlways",
+      "ExecuteInEditMode",
+      "DisallowMultipleComponent",
+      "SelectionBase",
+      "DefaultExecutionOrder",
+      "AddComponentMenu",
+      "HelpURL",
+      "ContextMenu",
+      "ImageEffectAllowedInSceneView"
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ComponentPolicy",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:policy:{cls.definition.name}:{definition.name}"
+     },
+     "attributes": {
+      "policy": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configured_by",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "unity.inspector-field",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.attribute"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "SerializeField",
+      "SerializeReference",
+      "HideInInspector",
+      "Header",
+      "Tooltip",
+      "Range",
+      "Min",
+      "Space",
+      "TextArea",
+      "Multiline",
+      "ColorUsage",
+      "FormerlySerializedAs",
+      "NonSerialized"
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "InspectorField",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:inspector-field:{path}:{source.start}"
+     },
+     "attributes": {
+      "attribute": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configured_by",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "unity.component-lookup",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.type"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "call.method",
+     "relation": "within",
+     "same_path": true,
+     "bind": "call",
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "GetComponent",
+        "GetComponents",
+        "GetComponentInChildren",
+        "GetComponentsInChildren",
+        "GetComponentInParent",
+        "GetComponentsInParent",
+        "TryGetComponent",
+        "FindObjectOfType",
+        "FindObjectsOfType",
+        "FindAnyObjectByType",
+        "FindObjectsByType"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GameComponent",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": {
+       "kind": "field_ref",
+       "field": "call.definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.spawns",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.type"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "call.method",
+     "relation": "within",
+     "same_path": true,
+     "bind": "call",
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "Instantiate",
+        "AddComponent",
+        "CreateInstance"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GameComponent",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{definition.name}"
+     },
+     "attributes": {
+      "class": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": {
+       "kind": "field_ref",
+       "field": "call.definition.name"
+      },
+      "mode": "instantiate"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "unity.resources-load",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "call.method"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "Load",
+      "LoadAsync",
+      "LoadAll",
+      "LoadAllAsync",
+      "UnloadAsset"
+     ]
+    },
+    {
+     "kind": "field_equals",
+     "field": "receiver_hint",
+     "value": "Resources"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ResourceLoad",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:resources-load:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": "Resources"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.scene-load",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "call.method"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "LoadScene",
+      "LoadSceneAsync",
+      "UnloadSceneAsync",
+      "GetSceneByName",
+      "SetActiveScene"
+     ]
+    },
+    {
+     "kind": "field_equals",
+     "field": "receiver_hint",
+     "value": "SceneManager"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.class",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UnityType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "SceneTransition",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:scene-transition:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {
+      "via": "SceneManager"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  },
+  {
+   "id": "unity.editor-only-script",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "import.namespace"
+    },
+    {
+     "kind": "path_glob",
+     "value": "**/*.cs"
+    },
+    {
+     "kind": "field_prefix",
+     "field": "definition.name",
+     "value": "UnityEditor"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "EditorOnlyScript",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:editor-script:{path}"
+     },
+     "attributes": {
+      "namespace": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "declared_in": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high"
+  }
+ ],
+ "coverage": {
+  "mode": "explicit-classified",
+  "gaps": [
+   "C# sources: the MonoBehaviour/ScriptableObject/Editor role of a declared type, its engine lifecycle callbacks and coroutines, the typeof() wiring of RequireComponent/CustomEditor/CustomPropertyDrawer, the editor-authoring attributes and GetComponent/Instantiate/Resources/SceneManager reach are materialized",
+   "the field a [SerializeField] decorates is not named: omega-c-sharp spans definition.field on the variable_declarator, so no span join relates the attribute to the declarator; the entity is keyed by attribute span and attached to the enclosing type instead",
+   "string arguments (CreateAssetMenu menuName, Resources.Load path, SceneManager.LoadScene name) are not Pack facts, so an asset path is never claimed",
+   "text-serialized .unity/.prefab/.asset YAML is unreachable: no grammar registers those extensions, so no Pack parses a scene, a prefab or a ScriptableObject instance and no fileID/guid relation can be stated",
+   "binary and Library/imported assets, prefab overrides, the runtime GameObject graph and lifecycle ordering require editor/runtime evidence"
+  ]
+ },
+ "provenance": [
+  {
+   "source_id": "assetripper",
+   "repository": "https://github.com/AssetRipper/AssetRipper",
+   "path": "Source/AssetRipper.Assets/**",
+   "revision": "7e6dcf80b253d3a218d33ef9ec2f6a45c128e3af",
+   "confidence": "high",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  },
+  {
+   "source_id": "unity-cs-reference",
+   "repository": "https://github.com/Unity-Technologies/UnityCsReference",
+   "path": "Runtime/**",
+   "revision": "9d487cab41b00c50af020b56d27a3c768d54f770",
+   "confidence": "medium",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  }
+ ],
+ "runtime_status": "terminal-static-source-contract",
+ "detection_rules": [
+  {
+   "id": "unity.exact_signature.1..asmdef",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "binding"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "specifier",
+      "value": ".asmdef"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": ".asmdef",
+     "source": "binding.specifier"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.2..asmdef",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "reference"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "name",
+      "value": ".asmdef"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": ".asmdef",
+     "source": "reference.name"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.3..asmdef",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "package:.asmdef"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": ".asmdef",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.4..asmdef",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": ".asmdef"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": ".asmdef",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.1.assembly-csharp.dll",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "binding"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "specifier",
+      "value": "Assembly-CSharp.dll"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "Assembly-CSharp.dll",
+     "source": "binding.specifier"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.2.assembly-csharp.dll",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "reference"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "name",
+      "value": "Assembly-CSharp.dll"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "Assembly-CSharp.dll",
+     "source": "reference.name"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.3.assembly-csharp.dll",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "package:assembly-csharp.dll"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "Assembly-CSharp.dll",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.4.assembly-csharp.dll",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "Assembly-CSharp.dll"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "Assembly-CSharp.dll",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.1.unityengine",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "binding"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "specifier",
+      "value": "UnityEngine"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "UnityEngine",
+     "source": "binding.specifier"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.2.unityengine",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "reference"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "name",
+      "value": "UnityEngine"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "UnityEngine",
+     "source": "reference.name"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.3.unityengine",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "package:unityengine"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "UnityEngine",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "unity.exact_signature.4.unityengine",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "UnityEngine"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "unity"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "unity",
+     "framework_name": "Unity",
+     "signature": "UnityEngine",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  }
+ ]
 }

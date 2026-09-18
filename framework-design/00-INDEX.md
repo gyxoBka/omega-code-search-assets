@@ -91,3 +91,78 @@ Run `python pack-design/overlay_audit.py <name>` for any one of them.
 atoms, `rules.rs`). It is not affected by the Pack rewrite and is not measured
 above; a Framework rewrite should leave a working detector alone unless it says
 something untrue.
+
+---
+
+# Framework wave 1 (kubernetes-config, node-js, terraform, openapi-v3, unity)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-kubernetes-config | 153 -> 35 | 0 | 35 |
+| omega-framework-node-js | 98 -> 13 | 0 | 13 |
+| omega-framework-terraform | 86 -> 40 | 0 | 40 |
+| omega-framework-openapi-specification-v3 | 73 -> 6 | 0 | 6 |
+| omega-framework-unity | 56 -> 17 | 2 | 17 |
+
+**466 rules became 111, and all 111 match.** Every one of the five came out at
+zero dead rules, and each is between a third and a twelfth of its former size.
+That is the shape the contract predicted: the old files carried one rule per
+language spelling of a construct, and per nesting depth of a YAML document, and
+the new vocabulary states each of those once.
+
+omega-kubernetes-config is the clearest case: 153 rules, one per Kubernetes kind
+per depth per namespace spelling, reading `a0`…`a3`, `doc_kind`, `doc_name`,
+`kind_key`, `metadata_key` — became 35 over `definition.config_key` with span
+joins.
+
+## One blocking defect: a relation whose source nobody mints
+
+omega-framework-unity emitted 12 relations sourced at
+`unity:type:{cls.definition.name}`, bound by a `fact_join_by_span` with **no
+`where`** — so any enclosing class at all. But that key is minted by only four
+rules, each of which requires the class to name `MonoBehaviour`,
+`ScriptableObject`, one of nine editor bases, or to carry `[Serializable]`. So
+`static class SceneLoader { SceneManager.LoadScene("Main"); }` emitted a
+`depends` from a key nothing in the graph ever creates.
+
+`overlay_audit.py` cannot see this: both ends parse, both kinds exist, and the
+rule matches. **A dangling canonical key is invisible to the audit and only a
+reader can catch it**, which is what the review pass is for. Each of the 12
+rules now mints the class it points at, under a neutral `UnityType`, so the
+source always exists.
+
+## The finding four of five agents brought back: an attribute is write-only
+
+`OverlayFact::field` (overlay.rs:56) resolves the `fields` map and then a fixed
+list of built-in names. **It never consults `attributes`.** The only clause that
+reads an attribute is `attribute_equals`, which compares it to one literal
+constant — there is no `attribute_in`, no `attribute_prefix`, and `field_ref`
+and `{placeholder}` rendering both go through `field`.
+
+So a value a Pack publishes as an *attribute* can be tested for equality against
+a constant and used for nothing else: it cannot become a canonical key, a
+relation end, an entity attribute, or a join key.
+
+Four frameworks hit this independently and all four named the same remedy —
+**move the value from `attributes` to `fields` in the Pack template**, which is
+the same bytes in a different map:
+
+| Pack | kind | value published as an attribute |
+|---|---|---|
+| omega-yaml, omega-json | `definition.config_key` | `value` |
+| omega-hcl | `definition.config_block` | `block_type`, `type_label` |
+| omega-hcl | `reference.traversal` | `root` |
+| omega-javascript, omega-typescript, omega-tsx | `binding.import_alias`, `import.symbol` | `qualifier` — which the host also reads for external resolution |
+
+A fifth is not a field at all: omega-c-sharp spans `definition.field` on the
+`variable_declarator`, while `reference.attribute` spans the `attribute` node,
+and the attribute is a direct child of `field_declaration` while the declarator
+is a grandchild — so `[SerializeField] private float speed;` cannot be joined
+`within`, and *which fields does the inspector show* is unanswerable.
+
+**These are collected, not acted on.** The overlays written in this wave do not
+depend on them; they are written against what the Packs emit today. The Pack
+change is one deliberate edit at the end of the framework work, not five edits
+scattered through it.
+
+Totals: **1 525 -> 1 170 overlay rules; 1 415 -> 951 that cannot match.**
