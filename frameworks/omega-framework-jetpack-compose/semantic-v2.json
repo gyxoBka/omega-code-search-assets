@@ -17,391 +17,231 @@
     ]
   },
   "evidence_inputs": [
-    "decorators_annotations",
-    "calls_members",
-    "existing_language_ir",
-    "authored_source_files",
-    "definition.kotlin_annotated_function_context",
-    "call.kotlin_annotated_owner_direct_call_context"
+    "definition.modifier_candidate",
+    "definition.function",
+    "definition.class",
+    "call.function",
+    "call.method"
   ],
   "emits": {
     "entities": [
-      "Component",
-      "ComposeCall",
-      "Effect",
-      "Route",
-      "State",
-      "NavigationAction",
-      "RouteReference"
+      "ComposeComponent",
+      "ComposeState",
+      "ComposeEffect",
+      "ComposeNavGraph",
+      "ComposeNavigationAction",
+      "ComposeEntryPoint"
     ],
     "relations": [
-      "calls",
-      "contains",
       "renders",
-      "navigates_to"
+      "declares",
+      "hosts",
+      "navigates"
     ]
   },
   "rules": [
     {
-      "id": "compose.composable.function",
+      "id": "compose.composable.declaration",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.kotlin_annotated_function_context"
+          "value": "definition.modifier_candidate"
         },
         {
-          "kind": "field_equals",
-          "field": "annotation_name",
-          "value": "Composable"
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "@Composable"
         },
         {
-          "kind": "field_present",
-          "field": "function_name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.kt"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "same",
+          "same_path": true,
+          "bind": "fn"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Component",
+          "entity_kind": "ComposeComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "compose:component:{path}:{function_name}"
+            "template": "compose:composable:{fn.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "function_name"
+              "field": "fn.definition.name"
             },
-            "declaration": "@Composable"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "compose.remember.call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.kotlin_annotated_owner_direct_call_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "annotation_name",
-          "value": "Composable"
-        },
-        {
-          "kind": "field_equals",
-          "field": "callee_name",
-          "value": "remember"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.kt"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "State",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "compose:state:{path}:{owner_name}:{source.start}"
-          },
-          "attributes": {
-            "owner": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "owner_name"
+              "field": "path"
             },
-            "source_only": true
+            "modifiers": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Only a direct simple-identifier remember() call inside an independently captured @Composable function owner. Member/aliased calls and non-Compose owners remain outside this rule."
+      "coverage_note": "omega-kotlin emits the whole modifier run of a declaration as one name, so this reads the `@Composable`-first spelling. `@Preview`-first is the other rule; a list starting with a third annotation is not reached."
     },
     {
-      "id": "compose.composable.direct-child",
+      "id": "compose.composable.preview",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.kotlin_annotated_owner_direct_call_context"
+          "value": "definition.modifier_candidate"
         },
         {
-          "kind": "field_equals",
-          "field": "annotation_name",
-          "value": "Composable"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "callee_name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.kt"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.kotlin_annotated_function_context",
-          "current_field": "callee_name",
-          "join_field": "function_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
-            }
-          ],
-          "bind": "callee"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "calls",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "compose:component:{path}:{owner_name}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "callee",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "attributes": {
-            "evidence": "same_file_direct_composable_call"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "compose:component:{path}:{owner_name}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "callee",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "attributes": {
-            "evidence": "same_file_direct_composable_call"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "compose:component:{path}:{owner_name}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "callee",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "attributes": {
-            "evidence": "same_file_direct_composable_call"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "compose.composable.nested-call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.kotlin_direct_call_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "call_name"
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "@Preview"
         },
         {
           "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
-          "relation": "within",
+          "fact_kind": "definition.function",
+          "relation": "same",
           "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
-            }
-          ],
-          "bind": "owner"
+          "bind": "fn"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ComposeCall",
+          "entity_kind": "ComposeComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "compose:call:{path}:{source.start}"
+            "template": "compose:composable:{fn.definition.name}"
           },
           "attributes": {
-            "callee": {
+            "name": {
               "kind": "field_ref",
-              "field": "call_name"
+              "field": "fn.definition.name"
             },
-            "source_only": true
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "modifiers": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "preview_harness": "true"
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "A `@Preview` function is by definition also `@Composable`; this is the Android Studio template spelling, which puts `@Preview` first."
     },
     {
-      "id": "compose.composable.nested-child",
+      "id": "compose.composable.renders",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.kotlin_direct_call_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "call_name"
+          "value": "call.function"
         },
         {
           "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
+          "fact_kind": "definition.function",
           "relation": "within",
           "same_path": true,
+          "bind": "owner",
           "where": [
             {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
             }
-          ],
-          "bind": "owner"
+          ]
         },
         {
           "kind": "fact_join_by_field",
-          "fact_kind": "definition.kotlin_annotated_function_context",
-          "current_field": "call_name",
-          "join_field": "function_name",
-          "same_path": true,
+          "fact_kind": "definition.function",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "same_path": false,
+          "bind": "callee",
           "where": [
             {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
             }
-          ],
-          "bind": "callee"
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "relation_candidate",
-          "relation_kind": "calls",
-          "source": {
-            "kind": "by_joined_field",
-            "bind": "owner",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "callee",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "attributes": {
-            "evidence": "same_file_nested_composable_call"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_joined_field",
-            "bind": "owner",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "callee",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
-          },
-          "attributes": {
-            "evidence": "same_file_nested_composable_call"
-          }
-        },
-        {
-          "kind": "relation_candidate",
           "relation_kind": "renders",
           "source": {
-            "kind": "by_joined_field",
-            "bind": "owner",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{owner.definition.name}"
           },
           "target": {
-            "kind": "by_joined_field",
-            "bind": "callee",
-            "field": "function_name",
-            "template": "compose:component:{path}:{value}"
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{callee.definition.name}"
           },
           "attributes": {
-            "evidence": "same_file_nested_composable_call"
+            "callee": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "The callee join is repository-wide, so a screen declared in one file and invoked from another is one edge. Kotlin import resolution is not available to an overlay, so two composables of the same simple name in one repository are one node."
     },
     {
-      "id": "compose.state.nested",
+      "id": "compose.state.remember",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.kotlin_direct_call_context"
+          "value": "call.function"
         },
         {
           "kind": "field_in",
-          "field": "call_name",
+          "field": "definition.name",
           "values": [
             "remember",
             "rememberSaveable",
+            "rememberUpdatedState",
             "mutableStateOf",
             "mutableStateListOf",
             "mutableStateMapOf",
+            "mutableIntStateOf",
+            "mutableLongStateOf",
+            "mutableFloatStateOf",
+            "mutableDoubleStateOf",
             "derivedStateOf",
             "collectAsState",
             "collectAsStateWithLifecycle"
@@ -409,24 +249,32 @@
         },
         {
           "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
+          "fact_kind": "definition.function",
           "relation": "within",
           "same_path": true,
+          "bind": "owner",
           "where": [
             {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
             }
-          ],
-          "bind": "owner"
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "State",
+          "entity_kind": "ComposeState",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "compose:state:{path}:{source.start}"
@@ -434,9 +282,34 @@
           "attributes": {
             "api": {
               "kind": "field_ref",
-              "field": "call_name"
+              "field": "definition.name"
             },
-            "source_only": true
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "compose:state:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
@@ -444,16 +317,104 @@
       "confidence": "exact"
     },
     {
-      "id": "compose.effect.nested",
+      "id": "compose.state.observed",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.kotlin_direct_call_context"
+          "value": "call.method"
         },
         {
           "kind": "field_in",
-          "field": "call_name",
+          "field": "definition.name",
+          "values": [
+            "collectAsState",
+            "collectAsStateWithLifecycle",
+            "observeAsState",
+            "subscribeAsState"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComposeState",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "compose:state:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "compose:state:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`flow.collectAsState()` is a member call, a different Pack fact from the bare-call state builders, so it needs its own rule."
+    },
+    {
+      "id": "compose.effect",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
           "values": [
             "LaunchedEffect",
             "DisposableEffect",
@@ -464,24 +425,32 @@
         },
         {
           "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
+          "fact_kind": "definition.function",
           "relation": "within",
           "same_path": true,
+          "bind": "owner",
           "where": [
             {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
             }
-          ],
-          "bind": "owner"
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Effect",
+          "entity_kind": "ComposeEffect",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "compose:effect:{path}:{source.start}"
@@ -489,9 +458,34 @@
           "attributes": {
             "api": {
               "kind": "field_ref",
-              "field": "call_name"
+              "field": "definition.name"
             },
-            "source_only": true
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "compose:effect:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
@@ -499,264 +493,237 @@
       "confidence": "exact"
     },
     {
-      "id": "compose.navigation.route",
+      "id": "compose.navigation.host",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.kotlin_string_arg_context"
+          "value": "call.function"
         },
         {
           "kind": "field_in",
-          "field": "call_name",
+          "field": "definition.name",
           "values": [
-            "composable",
-            "dialog",
-            "navigation"
+            "NavHost",
+            "AnimatedNavHost"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
           "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
+          "fact_kind": "definition.function",
           "relation": "within",
           "same_path": true,
+          "bind": "owner",
           "where": [
             {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
             }
-          ],
-          "bind": "owner"
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Route",
+          "entity_kind": "ComposeNavGraph",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "compose:route:{path}:{arg0}"
+            "template": "compose:nav-graph:{path}:{source.start}"
           },
           "attributes": {
-            "route": {
+            "api": {
               "kind": "field_ref",
-              "field": "arg0"
+              "field": "definition.name"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "hosts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "compose:nav-graph:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The destinations inside the graph carry their route in a string literal, which omega-kotlin does not publish; the destination composables themselves are reached by compose.composable.renders."
+    },
+    {
+      "id": "compose.navigation.action",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "navigate",
+            "popBackStack",
+            "navigateUp",
+            "clearBackStack"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.modifier_candidate",
+              "relation": "same",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_prefix",
+                  "field": "definition.name",
+                  "value": "@Composable"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComposeNavigationAction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "compose:nav-action:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "navigates",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "compose:composable:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "compose:nav-action:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The route argument is a string literal and is not published, so this states that the composable navigates and by which API, not where to."
+    },
+    {
+      "id": "compose.entry-point",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "setContent"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "host"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComposeEntryPoint",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "compose:entry-point:{host.definition.name}"
+          },
+          "attributes": {
+            "host": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             },
             "api": {
               "kind": "field_ref",
-              "field": "call_name"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "compose.navigation.navigate-literal",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.kotlin_member_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "navigate"
-        },
-        {
-          "kind": "field_present",
-          "field": "receiver"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
+              "field": "definition.name"
             }
-          ],
-          "bind": "owner"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "NavigationAction",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "compose:navigation-action:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "navigate",
-            "receiver": {
-              "kind": "field_ref",
-              "field": "receiver"
-            },
-            "route": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "compose:route-reference:{path}:{arg0}"
-          },
-          "attributes": {
-            "route": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "resolved_target": false,
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "navigates_to",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "compose:navigation-action:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "compose:route-reference:{path}:{arg0}"
-          },
-          "attributes": {
-            "resolved_target": false,
-            "source_only": true
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Literal navigation request is exact authored evidence; RouteReference is not promoted to a resolved Route declaration."
-    },
-    {
-      "id": "compose.navigation.popbackstack-literal",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.kotlin_member_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "popBackStack"
-        },
-        {
-          "kind": "field_present",
-          "field": "receiver"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.kotlin_annotated_function_context",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "annotation_name",
-              "value": "Composable"
-            }
-          ],
-          "bind": "owner"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "NavigationAction",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "compose:navigation-action:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "popBackStack",
-            "receiver": {
-              "kind": "field_ref",
-              "field": "receiver"
-            },
-            "route": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "compose:route-reference:{path}:{arg0}"
-          },
-          "attributes": {
-            "route": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "resolved_target": false,
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "navigates_to",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "compose:navigation-action:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "compose:route-reference:{path}:{arg0}"
-          },
-          "attributes": {
-            "resolved_target": false,
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Literal navigation request is exact authored evidence; RouteReference is not promoted to a resolved Route declaration."
+      "coverage_note": "`setContent` in a class body is the Activity that starts the Compose tree. The composable it is passed cannot be reached: a call fact spans only the callee identifier, so the lambda argument is not a joinable span."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "same-file @Composable declarations and nested simple-identifier calls are source-exact; imported/aliased/overloaded composable target resolution requires normal Kotlin import/type resolver evidence",
-      "Compose state/effect API call sites and literal navigation requests are materialized as authored source evidence; runtime lifetime/recomposition/back-stack semantics are not inferred",
-      "literal Navigation Compose route declarations are materialized; navigation targets are retained as RouteReference until declaration resolution proves a Route identity",
-      "compiler-plugin lowering, slot table, layout measurement and runtime UI tree are outside static source truth"
+      "omega-kotlin publishes the whole modifier run of a declaration as one definition.modifier_candidate name, not one fact per annotation, so a composable is recognised by the @Composable-first and @Preview-first spellings only; `@Inject @Composable fun` is not reached.",
+      "omega-kotlin publishes no argument text, so every Navigation Compose route literal -- composable(\"home\"), navController.navigate(\"details/1\") -- is unreachable. Navigation is stated as which composable hosts the graph and which composable moves the back stack, never as a route string.",
+      "Composable calls are resolved by simple name across the repository because Kotlin import resolution is not part of an overlay fact; two composables of the same name are one node.",
+      "compiler-plugin lowering, slot table, recomposition and the runtime UI tree are outside static source truth."
     ]
   },
   "provenance": [

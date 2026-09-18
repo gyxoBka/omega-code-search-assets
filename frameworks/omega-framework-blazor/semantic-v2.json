@@ -23,283 +23,232 @@
   },
   "evidence_inputs": [
     "authored_source_files",
-    "existing_language_ir",
-    "structured_documents",
-    "call.csharp_global_member_string_context"
+    "existing_language_ir"
   ],
   "emits": {
     "entities": [
-      "BaseType",
-      "Component",
-      "Dependency",
-      "EventBinding",
-      "HandlerReference",
-      "Interface",
-      "RenderMode",
-      "Route",
-      "RouteReference",
-      "Section",
-      "TypeParameter",
-      "View"
+      "BlazorComponent",
+      "BlazorLifecycleHook",
+      "BlazorMember",
+      "BlazorParameter",
+      "BlazorRenderMode",
+      "BlazorRoute",
+      "BlazorService",
+      "BlazorType"
     ],
     "relations": [
-      "configures",
-      "contains",
+      "binds_handler",
+      "declares",
+      "declares_parameter",
+      "derives_from",
+      "implements_lifecycle",
       "injects",
-      "navigates_to",
-      "references_handler",
-      "renders",
-      "routes_to"
+      "renders_as",
+      "rendered_in_layout",
+      "serves"
     ]
   },
   "rules": [
-    {
-      "id": "blazor.component_view",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.file"
-        },
-        {
-          "kind": "path_glob",
-          "value": "**/*.razor",
-          "field": "file.path"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Component",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:component:{file.path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "file.path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "View",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:view:{file.path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "file.path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:component:{file.path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:view:{file.path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:component:{file.path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:view:{file.path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
     {
       "id": "blazor.page.route",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "data.razor_page_route"
-        },
-        {
-          "kind": "field_present",
-          "field": "route"
+          "value": "definition.config_route"
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Route",
+          "entity_kind": "BlazorRoute",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "blazor:route:{route}"
           },
           "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "route"
+            "route": {
+              "kind": "normalize_route",
+              "source": "definition.name"
             },
-            "source_path": {
+            "template": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
               "kind": "field_ref",
               "field": "path"
             }
           }
         },
         {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
           "kind": "relation_candidate",
-          "relation_kind": "navigates_to",
+          "relation_kind": "serves",
           "source": {
             "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
+            "template": "blazor:component:{path.stem}"
           },
           "target": {
             "kind": "by_canonical_key",
             "template": "blazor:route:{route}"
           },
-          "attributes": {
-            "source": "authored_page_directive_same_file"
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact"
     },
     {
-      "id": "blazor.literal_href.navigation",
+      "id": "blazor.layout",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.razor_literal_href_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "href"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "href",
-          "value": "/"
-        },
-        {
-          "kind": "field_not_prefix",
-          "field": "href",
-          "value": "//"
+          "value": "relation.depends"
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.razor"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "data.file",
-          "current_field": "path",
-          "join_field": "file.path",
-          "where": [
-            {
-              "kind": "path_glob",
-              "field": "file.path",
-              "value": "**/*.razor"
-            }
-          ],
-          "bind": "component"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "navigates_to",
-          "source": {
-            "kind": "by_joined_field",
-            "bind": "component",
-            "field": "file.path",
-            "template": "blazor:component:{value}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:route:{href}"
-          },
-          "attributes": {
-            "source": "literal_href",
-            "internal_absolute_path": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.inject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "binding.razor_inject"
-        },
-        {
           "kind": "field_present",
-          "field": "declaration"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.razor"
+          "field": "definition.name"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Dependency",
+          "entity_kind": "BlazorComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "blazor:dependency:{path}:{source.start}"
+            "template": "blazor:component:{path.stem}"
           },
           "attributes": {
-            "declaration": {
+            "component": {
               "kind": "field_ref",
-              "field": "declaration"
-            },
-            "source_only": true
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{definition.name}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "injects",
+          "relation_kind": "rendered_in_layout",
           "source": {
             "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
+            "template": "blazor:component:{path.stem}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "blazor:dependency:{path}:{source.start}"
+            "template": "blazor:component:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.base_type",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.container",
+          "value": ""
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{path.stem}"
           },
           "attributes": {
-            "declaration_only": true
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:type:{definition.name}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "derives_from",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:type:{definition.name}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
@@ -311,398 +260,639 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "data.razor_rendermode"
-        },
-        {
-          "kind": "field_present",
-          "field": "mode"
+          "value": "relation.config"
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "RenderMode",
+          "entity_kind": "BlazorComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "blazor:rendermode:{path}:{mode}"
+            "template": "blazor:component:{path.stem}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorRenderMode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:rendermode:{definition.name}"
           },
           "attributes": {
             "mode": {
               "kind": "field_ref",
-              "field": "mode"
+              "field": "definition.name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configures",
+          "relation_kind": "renders_as",
           "source": {
             "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
+            "template": "blazor:component:{path.stem}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "blazor:rendermode:{path}:{mode}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.basetype",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "type_relation.razor_inherits"
-        },
-        {
-          "kind": "field_present",
-          "field": "type"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.razor"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "BaseType",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:basetype:{path}:{type}"
-          },
-          "attributes": {
-            "type": {
-              "kind": "field_ref",
-              "field": "type"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:basetype:{path}:{type}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.interface",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "type_relation.razor_implements"
-        },
-        {
-          "kind": "field_present",
-          "field": "type"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.razor"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Interface",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:interface:{path}:{type}"
-          },
-          "attributes": {
-            "type": {
-              "kind": "field_ref",
-              "field": "type"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:interface:{path}:{type}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.typeparameter",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.razor_type_parameter"
-        },
-        {
-          "kind": "field_present",
-          "field": "name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.razor"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "TypeParameter",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:typeparameter:{path}:{name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:typeparameter:{path}:{name}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.section",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.razor_section"
-        },
-        {
-          "kind": "field_present",
-          "field": "name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.razor"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Section",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:section:{path}:{name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:section:{path}:{name}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.event-binding",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.razor_named_attribute_identifier_context"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "attribute_name",
-          "value": "@on"
-        },
-        {
-          "kind": "field_present",
-          "field": "handler_name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.razor"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "EventBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:event:{path}:{source.start}"
-          },
-          "attributes": {
-            "event": {
-              "kind": "field_ref",
-              "field": "attribute_name"
-            },
-            "handler": {
-              "kind": "field_ref",
-              "field": "handler_name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:handler-ref:{path}:{handler_name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "handler_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references_handler",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "blazor:event:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:handler-ref:{path}:{handler_name}"
-          },
-          "attributes": {
-            "candidate_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "blazor.navigationmanager.navigate-to",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.csharp_global_member_string_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "receiver",
-          "value": "NavigationManager"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "NavigateTo"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg1"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "blazor:navigation:{path}:{source.start}"
-          },
-          "attributes": {
-            "route": {
-              "kind": "field_ref",
-              "field": "arg1"
-            },
-            "api": "NavigationManager.NavigateTo"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "routes_to",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "blazor:navigation:{path}:{source.start}"
+            "template": "blazor:rendermode:{definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.inject",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.injected_service"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.declared_type_candidate",
+          "relation": "same",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "service"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorService",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:service:{service.definition.name}"
+          },
+          "attributes": {
+            "service": {
+              "kind": "field_ref",
+              "field": "service.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:service:{service.definition.name}"
+          },
+          "attributes": {
+            "as": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.parameter",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Parameter",
+            "CascadingParameter",
+            "EditorRequired",
+            "SupplyParameterFromQuery",
+            "SupplyParameterFromForm",
+            "SupplyParameterFromPersistentComponentState"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.property",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "prop"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorParameter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:parameter:{path.stem}.{prop.definition.name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "prop.definition.name"
+            },
+            "marker": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_parameter",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:parameter:{path.stem}.{prop.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.parameter.code_behind",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor.cs"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Parameter",
+            "CascadingParameter",
+            "EditorRequired",
+            "SupplyParameterFromQuery",
+            "SupplyParameterFromForm",
+            "SupplyParameterFromPersistentComponentState"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.property",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "prop"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{cls.definition.name}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorParameter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:parameter:{cls.definition.name}.{prop.definition.name}"
+          },
+          "attributes": {
+            "parameter": {
+              "kind": "field_ref",
+              "field": "prop.definition.name"
+            },
+            "marker": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_parameter",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:parameter:{cls.definition.name}.{prop.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.lifecycle",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "OnInitialized",
+            "OnInitializedAsync",
+            "OnParametersSet",
+            "OnParametersSetAsync",
+            "OnAfterRender",
+            "OnAfterRenderAsync",
+            "SetParametersAsync",
+            "ShouldRender",
+            "BuildRenderTree",
+            "Dispose",
+            "DisposeAsync"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorLifecycleHook",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:lifecycle:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "implements_lifecycle",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:member:{path.stem}.{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:lifecycle:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.member",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorMember",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:member:{path.stem}.{definition.name}"
+          },
+          "attributes": {
+            "member": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:member:{path.stem}.{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.member.code_behind",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor.cs"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{cls.definition.name}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorMember",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:member:{cls.definition.name}.{definition.name}"
+          },
+          "attributes": {
+            "member": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:member:{cls.definition.name}.{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "blazor.markup.handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.razor"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.method",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "handler"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BlazorComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "binds_handler",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "blazor:component:{path.stem}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "blazor:member:{path.stem}.{handler.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      ".razor page/component directives, injection, render mode, type relations, sections, event-handler references, literal href and NavigationManager.NavigateTo routes are materialized; .cshtml MVC/Razor Pages belong to ASP.NET/Razor semantics",
-      "event bindings remain HandlerReference candidates until Razor/C# cross-language owner resolution proves the actual method; dynamic/query/interpolated navigation requires value/path evidence",
-      "runtime render tree, cascading values, generic component instantiation and reflection are runtime/compiler semantics"
+      "Scope is `**/*.razor` and its `**/*.razor.cs` code-behind. `.cshtml` MVC views and Razor Pages belong to omega-framework-asp-net-core, and `@section` -- which only `.cshtml` accepts -- is therefore not matched here.",
+      "A parameter's declared type is not reachable: omega-razor spans `reference.attribute` on the attribute and `definition.declared_type_candidate` on the whole property declaration, and `fact_join_by_span` only reaches a fact that CONTAINS the current one, so the marker can reach the property but nothing can reach the property's type from the marker.",
+      "The event a markup binding fires is not reachable: omega-razor publishes the razor attribute name (`onclick`, `bind-Value`) as the ATTRIBUTE `attribute` on `reference.attribute_value`, and an attribute can only be compared to one literal constant. The handler method is stated; which DOM event calls it is not.",
+      "A navigation target is not reachable: `NavigationManager.NavigateTo(\"/counter\")` arrives as `call.method NavigateTo` with no argument text, and `<a href=\"/counter\">` is plain markup omega-razor does not emit at all. Literal-href and NavigateTo routing edges are therefore absent.",
+      "Component usage in markup (`<Counter Title=\"x\" />`) is not emitted by omega-razor, so which component renders which other component is unanswerable; only the layout edge from `@layout` survives.",
+      "Runtime render tree, cascading value flow, generic component instantiation and reflection are runtime/compiler semantics."
     ]
   },
   "provenance": [

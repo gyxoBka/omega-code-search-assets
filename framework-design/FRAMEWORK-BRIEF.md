@@ -259,6 +259,29 @@ rule wins, and which outputs are dropped.
 
 Never: several kinds on one key template.
 
+## 3h. Two facts about matching the audit used to get wrong
+
+**`data.file` exists, and it is the only way to address a file.** The host
+pushes one synthetic fact per artifact before any Pack emission
+(`OverlayFact::artifact`, `overlay.rs:41`): kind `data.file`, field `path`,
+empty name, zero span. A rule about the file tree rather than about a
+declaration — file-based routing, a migration, a manifest — matches it, and
+`path.dir`, `path.stem` and the `normalized_file_route` placeholder all work on
+it. The audit used to report it dead and three routing frameworks lost twenty,
+eleven and ten rules to that. Do not delete a `data.file` rule on the grounds
+that no Pack emits the kind.
+
+**A kind is only live in the language your Framework runs on.** `call.member`
+is emitted by omega-c, omega-cpp and omega-c-sharp and by no JavaScript Pack,
+so a Node framework matching it matches nothing however many Packs in the
+repository do emit it. `overlay_audit.py` now scopes its surface to your
+`host.required_packs`, and reports a kind that only another language emits as
+dead, naming the emitters. When you see that line, decide which of the two it
+is: a rule written against the wrong language — delete it — or a manifest that
+under-declares its packs, which is the case when your Framework legitimately
+reads a second language's file, the way axum reads `Cargo.toml` and fastify
+reads `package.json`. Then add the Pack to `host.required_packs`.
+
 ## 4. Verification
 
 ```bash

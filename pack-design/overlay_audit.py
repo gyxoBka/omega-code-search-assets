@@ -26,12 +26,27 @@ BUILTIN = {'path', 'file.path', 'source.path', 'path.value', 'path.dir', 'path.s
 FRAMEWORKS = 'frameworks'
 
 
-def pack_surface():
-    """kind -> what the Packs emit under it: field names, attribute names."""
+_SURFACES = {}
+
+
+def pack_surface(only=None):
+    """kind -> what the Packs emit under it: field names, attribute names.
+
+    `only` restricts the surface to one framework's `host.required_packs`. A
+    rule is alive only if the Pack of the language it runs on emits its kind:
+    `call.member` is emitted by omega-c and omega-cpp and by no JavaScript
+    Pack, so a Node framework matching it matches nothing however many other
+    Packs in the repository do emit it.
+    """
+    key = None if only is None else frozenset(only)
+    if key in _SURFACES:
+        return _SURFACES[key]
     fields = collections.defaultdict(set)
     attrs = collections.defaultdict(set)
     kinds = set()
     for p in sorted(os.listdir(PACKS)):
+        if only is not None and p not in only:
+            continue
         rp = os.path.join(PACKS, p, 'rules.json')
         if not os.path.exists(rp):
             continue
@@ -40,7 +55,28 @@ def pack_surface():
             kinds.add(k)
             fields[k] |= set((t.get('fields') or {}).keys())
             attrs[k] |= set((t.get('attributes') or {}).keys())
+    # The host pushes one synthetic fact per artifact before any Pack emission
+    # (OverlayFact::artifact, overlay.rs:41). It is how a file-shaped rule --
+    # file-based routing, a migration, a manifest -- addresses the file itself.
+    kinds.add('data.file')
+    fields['data.file'] |= {'path'}
+    _SURFACES[key] = (kinds, fields, attrs)
     return kinds, fields, attrs
+
+
+_EMITTERS = {}
+
+
+def emitters_of():
+    """kind -> the Packs that emit it, read once."""
+    if not _EMITTERS:
+        for p in sorted(os.listdir(PACKS)):
+            rp = os.path.join(PACKS, p, 'rules.json')
+            if not os.path.exists(rp):
+                continue
+            for t in json.load(open(rp, encoding='utf-8')).get('templates', []):
+                _EMITTERS.setdefault(t['output_kind'], []).append(p)
+    return _EMITTERS
 
 
 def walk_clauses(clauses, out):
@@ -90,8 +126,21 @@ def audit(fw, kinds, fields, attrs):
     if not os.path.exists(path):
         return None
     doc = json.load(open(path, encoding='utf-8'))
+    required = (doc.get('host') or {}).get('required_packs')
+    undeclared = {}
+    if required:
+        all_kinds, _, _ = kinds, fields, attrs
+        kinds, fields, attrs = pack_surface(set(required))
+        # A kind some Pack emits, but not one this Framework declares, is a
+        # manifest that under-declares its packs, not a rule that matches
+        # nothing. Say which Pack, so the fix is one line either way.
+        for k in all_kinds - kinds:
+            emitters = emitters_of().get(k)
+            if emitters:
+                undeclared[k] = ', '.join(emitters)
     rules = doc.get('rules') or []
     dead, live, detail = 0, 0, []
+    undeclared_rules, note = 0, []
     for r in rules:
         out = {'kinds': set(), 'fields': set(), 'attrs': set(),
                'bad_glob': set(), 'scoped': set()}
@@ -107,15 +156,24 @@ def audit(fw, kinds, fields, attrs):
         for k in out['kinds'] & kinds:
             supplied_a |= attrs.get(k, set())
         missing_attr = out['attrs'] - supplied_a
-        if missing_kind or missing_field or missing_attr or out['bad_glob'] or out['scoped']:
+        # A kind that only another language's Pack emits does not match here,
+        # whether the manifest under-declares its packs or the rule is simply
+        # written against the wrong language. Name the emitters and let the
+        # reader decide which of the two it is.
+        undeclared_here = sorted(missing_kind & set(undeclared))
+        missing_kind -= set(undeclared)
+        extra = (['brace glob ' + g for g in sorted(out['bad_glob'])] +
+                 ['scoped package ' + g for g in sorted(out['scoped'])] +
+                 ['%s, emitted only by %s, which host.required_packs does not list'
+                  % (k, undeclared[k]) for k in undeclared_here])
+        if missing_kind or missing_field or missing_attr or extra:
             dead += 1
-            extra = (['brace glob ' + g for g in sorted(out['bad_glob'])] +
-                     ['scoped package ' + g for g in sorted(out['scoped'])])
             detail.append((r.get('id', '?'), sorted(missing_kind),
                            sorted(missing_field), sorted(missing_attr) + extra))
         else:
             live += 1
     return {'rules': len(rules), 'live': live, 'dead': dead, 'detail': detail,
+            'undeclared': undeclared_rules, 'note': note,
             'detection_rules': len(doc.get('detection_rules') or [])}
 
 
@@ -132,6 +190,9 @@ def main():
         fw, r = rows[0]
         print('%s: %d overlay rules, %d detection rules -- %d live, %d cannot match\n'
               % (fw, r['rules'], r['detection_rules'], r['live'], r['dead']))
+        for rid, kinds_ in r['note']:
+            print('   %-46s matches %s -- add that Pack to host.required_packs'
+                  % (rid[:46], ', '.join(kinds_)))
         for rid, mk, mf, ma in r['detail']:
             bits = []
             if mk:
@@ -150,6 +211,13 @@ def main():
             print('%-44s %6d %6d %6d' % (fw, r['rules'], r['live'], r['dead']))
     print('\n%d overlay rules across %d frameworks; %d cannot match any Pack emission (%d%%)'
           % (tot, len(rows), dead, round(100 * dead / max(tot, 1))))
+    und = sum(r['undeclared'] for _, r in rows)
+    if und:
+        print('%d more match a kind whose Pack the manifest does not list '
+              'in host.required_packs' % und)
+        for fw, r in sorted(rows, key=lambda x: -x[1]['undeclared']):
+            if r['undeclared']:
+                print('   %-44s %d' % (fw, r['undeclared']))
 
 
 if __name__ == '__main__':

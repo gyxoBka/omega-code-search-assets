@@ -14,9 +14,7 @@
     ],
     "required_capabilities": [
       "calls",
-      "data",
       "definitions",
-      "imports",
       "references"
     ]
   },
@@ -27,35 +25,35 @@
   ],
   "emits": {
     "entities": [
-      "Component",
-      "ComponentReference",
-      "DirectiveUse",
-      "EventBinding",
-      "HandlerReference",
-      "RenderReference",
-      "RuneUse",
-      "Snippet",
-      "StoreReference",
-      "View"
+      "SvelteBehavior",
+      "SvelteComponent",
+      "SvelteComponentName",
+      "SvelteEventHandler",
+      "SvelteHandlerFunction",
+      "SvelteRuneUse",
+      "SvelteSnippet",
+      "SvelteStoreSubscription"
     ],
     "relations": [
-      "contains",
+      "declares",
       "event_calls",
+      "handles",
       "renders",
-      "renders_expression",
       "subscribes",
-      "uses_directive",
-      "uses_rune"
+      "uses_action",
+      "uses_attachment",
+      "uses_rune",
+      "uses_transition"
     ]
   },
   "rules": [
     {
-      "id": "svelte.component_view",
+      "id": "svelte.component.declares",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "data.svelte_element"
+          "value": "reference.svelte_value"
         },
         {
           "kind": "path_glob",
@@ -66,90 +64,56 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Component",
+          "entity_kind": "SvelteComponentName",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "svelte:component:{path}"
+            "template": "svelte:component-name:{path.stem}"
           },
           "attributes": {
-            "path": {
+            "name": {
               "kind": "field_ref",
-              "field": "path"
+              "field": "path.stem"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "View",
+          "entity_kind": "SvelteComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "svelte:view:{path}:{source.start}"
+            "template": "svelte:component:{path}"
           },
           "attributes": {
             "path": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "tag": {
-              "kind": "field_ref",
-              "field": "name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "contains",
+          "relation_kind": "declares",
           "source": {
             "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
+            "template": "svelte:component-name:{path.stem}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "svelte:view:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "by_canonical_key",
             "template": "svelte:component:{path}"
           },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:view:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact"
     },
     {
-      "id": "svelte.authored-event-binding",
+      "id": "svelte.component.use",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "data.svelte_event_directive_binding_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive",
-          "value": "on"
-        },
-        {
-          "kind": "field_present",
-          "field": "event_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "handler_expression"
+          "value": "reference.svelte_component"
         },
         {
           "kind": "path_glob",
@@ -160,121 +124,30 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "EventBinding",
+          "entity_kind": "SvelteComponentName",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "svelte:event:{path}:{source.start}:{event_name}"
-          },
-          "attributes": {
-            "event": {
-              "kind": "field_ref",
-              "field": "event_name"
-            },
-            "handler_expression": {
-              "kind": "field_ref",
-              "field": "handler_expression"
-            },
-            "handler_resolved": false
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "svelte.authored-modern-event-attribute",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.svelte_event_attribute_context"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "attribute_name",
-          "value": "on"
-        },
-        {
-          "kind": "field_present",
-          "field": "handler_expression"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.svelte"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "EventBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:event:{path}:{source.start}:{attribute_name}"
-          },
-          "attributes": {
-            "event_attribute": {
-              "kind": "field_ref",
-              "field": "attribute_name"
-            },
-            "handler_expression": {
-              "kind": "field_ref",
-              "field": "handler_expression"
-            },
-            "handler_resolved": false
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "svelte.template.imported-component-render",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.svelte_element"
-        },
-        {
-          "kind": "field_present",
-          "field": "name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.svelte"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_named_binding_context",
-          "current_field": "name",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_present",
-              "field": "module_source"
-            }
-          ],
-          "bind": "component_import"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:component-ref:{path}:{name}"
+            "template": "svelte:component-name:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "name"
-            },
-            "source_only": true,
-            "import_resolved": true
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
@@ -286,12 +159,506 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "svelte:component-ref:{path}:{name}"
+            "template": "svelte:component-name:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.snippet.declaration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.snippet_function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteSnippet",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:snippet:{path}:{definition.name}"
           },
           "attributes": {
-            "source_only": true,
-            "import_resolved": true
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:snippet:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.snippet.render",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.snippet"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteSnippet",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:snippet:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:snippet:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.event.handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "relation.handles",
+          "relation": "within",
+          "same_path": true,
+          "bind": "event"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteEventHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:event-handler:{path}:{source.start}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "event.definition.name"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:event-handler:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.event.handler.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "relation.handles",
+          "relation": "within",
+          "same_path": true,
+          "bind": "event"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.function",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "same_path": true,
+          "bind": "handler_function"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteHandlerFunction",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:handler-function:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "event_calls",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:event-handler:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:handler-function:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.action.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_action"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteBehavior",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:action:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_action",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:action:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.transition.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_transition"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteBehavior",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:transition:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_transition",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:transition:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.attachment.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.svelte_attachment"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteBehavior",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:attachment:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_attachment",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:attachment:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "svelte.store.subscription",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_value"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "$"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.svelte"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteStoreSubscription",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:store:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "subscribes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "svelte:store:{path}:{definition.name}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
@@ -303,11 +670,11 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.ecmascript_direct_context"
+          "value": "call.function"
         },
         {
           "kind": "field_in",
-          "field": "call_name",
+          "field": "definition.name",
           "values": [
             "$props",
             "$state",
@@ -327,7 +694,7 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "RuneUse",
+          "entity_kind": "SvelteRuneUse",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "svelte:rune:{path}:{source.start}"
@@ -335,9 +702,22 @@
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "call_name"
-            },
-            "source_only": true
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SvelteComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "svelte:component:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
@@ -351,375 +731,21 @@
             "kind": "by_canonical_key",
             "template": "svelte:rune:{path}:{source.start}"
           },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "svelte.template.directive-use",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.svelte_directive_context"
-        },
-        {
-          "kind": "field_in",
-          "field": "directive",
-          "values": [
-            "use",
-            "transition",
-            "in",
-            "out",
-            "animate",
-            "bind",
-            "class",
-            "style",
-            "on"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "directive"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.svelte"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "DirectiveUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:directive:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": {
-              "kind": "field_ref",
-              "field": "directive"
-            },
-            "identifier": {
-              "kind": "field_ref",
-              "field": "identifier"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_directive",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:directive:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "candidate"
-    },
-    {
-      "id": "svelte.snippet.owned",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.svelte_snippet"
-        },
-        {
-          "kind": "field_present",
-          "field": "name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.svelte"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Snippet",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:snippet:{path}:{name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "name"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:snippet:{path}:{name}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "svelte.render.expression",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.svelte_render_expression"
-        },
-        {
-          "kind": "field_present",
-          "field": "expression"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.svelte"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RenderReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:render-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "expression": {
-              "kind": "field_ref",
-              "field": "expression"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders_expression",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:render-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "candidate"
-    },
-    {
-      "id": "svelte.event.resolved-handler.svelte_event_directive_binding_context",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.svelte_event_directive_binding_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "handler_expression"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.function",
-          "current_field": "handler_expression",
-          "join_field": "definition.name",
-          "same_path": true,
-          "bind": "handler"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:handler:{path}:{handler_expression}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "handler_expression"
-            },
-            "source_only": true,
-            "resolved_same_file_function": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "event_calls",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:handler:{path}:{handler_expression}"
-          },
-          "attributes": {
-            "source_only": true,
-            "resolved_same_file_function": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact"
-    },
-    {
-      "id": "svelte.event.resolved-handler.svelte_event_attribute_context",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.svelte_event_attribute_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "handler_expression"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.function",
-          "current_field": "handler_expression",
-          "join_field": "definition.name",
-          "same_path": true,
-          "bind": "handler"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:handler:{path}:{handler_expression}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "handler_expression"
-            },
-            "source_only": true,
-            "resolved_same_file_function": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "event_calls",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:handler:{path}:{handler_expression}"
-          },
-          "attributes": {
-            "source_only": true,
-            "resolved_same_file_function": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "svelte.store.reference",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.svelte_expression"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "name",
-          "value": "$"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.svelte"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StoreReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "svelte:store-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "expression": {
-              "kind": "field_ref",
-              "field": "name"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "subscribes",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "svelte:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "svelte:store-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "JS/TS script semantics require injected AnalysisUnits; TypeScript script blocks are supported only by the retained TypeScript grammar and TSX is not relevant to ordinary Svelte script blocks.",
-      "Dynamic component expressions, store alias/value flow and directive target resolution remain candidate-only until generic resolver/value-flow proves a target.",
-      "Runtime-generated component trees/navigation and reactive scheduling remain runtime ceilings; authored runes/directives/snippets/events/template references are materialized."
+      "A component's identity is minted from any `{expression}` in its markup (omega-svelte emits no per-file fact), so a component whose markup contains no single-identifier expression is not registered under its own name and a `renders` edge naming it has no `declares` edge to a file.",
+      "`<Foo/>` is resolved to a file by Svelte's filename convention (`svelte:component-name:{path.stem}`), not by the import: omega-javascript spans `import.module` on the specifier string and the local binding on a sibling node, so neither a span join nor a field join relates the two. Two `Button.svelte` files in different directories therefore both claim the name.",
+      "`{...}` is one raw JS/TS token in the Svelte grammar, so an expression is stated only when it is a single identifier: `{$page.url}`, `onclick={() => ...}` and `use:clickOutside={opts}` contribute no handler or store name.",
+      "Runes in `.svelte.js` / `.svelte.ts` rune modules are outside the `**/*.svelte` glob that makes `svelte:component:{path}` meaningful, so they are not stated.",
+      "Runtime-generated component trees, `<svelte:component this={X}>` and reactive scheduling remain runtime ceilings."
     ]
   },
   "provenance": [

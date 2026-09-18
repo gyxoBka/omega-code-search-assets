@@ -536,3 +536,64 @@ perfectly ordinary Cargo spelling.
 Totals: **823 -> 820 overlay rules; 255 -> 193 that cannot match.** Thirty-nine
 frameworks match everything they name; sixteen still hold dead rules, four of
 them deferred behind the host fix in item 7.
+
+---
+
+# Framework wave 9 (blazor, express, svelte, bun, jetpack-compose)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-bun | 20 -> 11 | 10 | 11 |
+| omega-framework-express | 19 -> 11 | 8 | 11 |
+| omega-framework-blazor | 11 -> 11 | 0 | 11 |
+| omega-framework-svelte | 11 -> 11 | 0 | 11 |
+| omega-framework-jetpack-compose | 10 -> 9 | 0 | 9 |
+
+71 rules became 53, all live, and no review found a blocking defect.
+
+blazor is the wave's best answer to *what does a Framework add*. omega-razor
+publishes no field on any of its 56 templates, so every rule works from kind,
+name, path, span and the host's built-ins — and the overlay still states which
+URL a component serves, which layout wraps it, what it inherits, how it renders,
+which services it injects, what its `[Parameter]` API is, which lifecycle hooks
+it implements, and which method a `@onclick` in the markup calls. The injection
+edge is the shape worth copying: `definition.injected_service` (the variable)
+joined `same`-span to `definition.declared_type_candidate` (its type), keyed by
+the **type**, with the local name carried as a relation attribute. A carrier at
+the same span is how a fieldless Pack is read.
+
+The one edge that joins a component to its code-behind is that both sides land
+on `blazor:component:{name}` — `path.stem` for `Counter.razor`, the enclosing
+class name for `Counter.razor.cs`.
+
+## Three defects in the audit itself, all found by the agents
+
+**`data.file` is host-synthesized and the audit called it dead.**
+`OverlayFact::artifact` pushes one `data.file` fact per artifact, with field
+`path`, before any Pack emission — it is how a file-shaped rule addresses the
+file itself. The audit built its kind set from `packs/*/rules.json` alone, so it
+reported every such rule dead, and this index's own missing-kind table carried
+`data.file 49` as if no Pack emitted it. Seeded now. **That mismeasurement cost
+coverage**: next-js had 20 `data.file` rules, nuxt 11, sveltekit 10, and all of
+them were deleted across waves 2 and 3. Those three still answer file-based
+routing through a declaration inside the file plus a path glob, which is
+narrower — a `+page.svelte` with no script has nothing to hang on. Recorded as
+`OWED.md` item 13 and scheduled as its own pass.
+
+**Liveness was per-repository, not per-language.** A rule counted as live if
+*any* Pack in the repository emitted its kind. Ten bun rules matched
+`call.member`, which omega-c, omega-cpp and omega-c-sharp emit and no JavaScript
+Pack does, so the audit said ten live where the true figure was zero. Every
+framework declares `host.required_packs`, so the surface is now built from that
+list, and a kind only another language emits is reported dead with the emitters
+named — because it is either a rule written against the wrong language or a
+manifest that under-declares its packs, and the reader has to decide which.
+omega-framework-axum was the second: it reads `Cargo.toml` and declared only
+`omega-rust`, so all twelve of its rules were scoped-dead. Manifest fixed.
+
+Scoping pushed the count the other way and the two corrections nearly cancel:
+**802 overlay rules; 193 -> 168 that cannot match.**
+
+Seven non-deferred frameworks still hold dead rules — fastify 20, flask 8,
+pydantic 8, pytorch-extensions 8, terraform-providers 8, godot 6,
+pytorch-inductor 5 — and four are deferred behind item 7.

@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 8. Numbers come from
+Last updated after framework wave 9. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -36,6 +36,9 @@ different map.**
 | omega-php | `reference.attribute` | the attribute's argument text — `#[Route('/orders/{id}')]` is where a Symfony URL is stated | symfony |
 | omega-xml | `definition.config_attribute` | `value` | maui — `Route="home"`, `x:Class="MyApp.DetailsPage"` |
 | omega-prisma | `definition.config_setting` | `value` | prisma — `provider = "postgresql"` is the most-asked fact about a schema |
+| omega-razor | `reference.attribute_value` | `attribute` — which event a handler is bound to | blazor |
+| omega-javascript, omega-typescript, omega-tsx | `call.method`, `call.function` | `arg0` (first string-literal argument), `receiver` | express, bun, fastify |
+| omega-kotlin | `call.function`, `call.method` | first string-literal argument — a Navigation Compose destination | jetpack-compose |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
@@ -119,7 +122,7 @@ kept, because that is the statement the whole framework contract rests on.
 
 ## 6. The framework waves themselves
 
-16 of 55 frameworks still hold rules that cannot match: **193 of 820**. The
+11 of 55 frameworks still hold rules that cannot match: **168 of 802**, measured with the surface scoped to each framework's own `host.required_packs`. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -336,3 +339,37 @@ those two languages are reachable only through `Containerfile` and `.caddyfile`.
 omega-php and omega-blade can never claim it. It needs a suffix rule — matching
 the tail of the filename rather than the extension — which `detect_path` does
 not have.
+
+---
+
+## 13. The file-shaped rules deleted while the audit called `data.file` dead
+
+`OverlayFact::artifact` (`overlay.rs:41`) pushes one synthetic `data.file` fact
+per artifact, with field `path`, before any Pack emission. It is how a rule
+addresses the file itself — file-based routing, a migration, a manifest.
+`overlay_audit.py` built its kind set from `packs/*/rules.json` only, so it
+reported every such rule dead, and the frameworks whose whole subject is the
+file tree were rewritten against that mismeasurement:
+
+| framework | `data.file` rules at the baseline | now |
+|---|---|---|
+| omega-framework-next-js | 20 | 0 |
+| omega-framework-nuxt | 11 | 0 |
+| omega-framework-sveltekit | 10 | 0 |
+| omega-framework-astro | 3 | 3 |
+| omega-framework-vue | 3 | 0 |
+| omega-framework-blazor | 2 | 0 |
+| omega-framework-django | 1 | 0 |
+
+All three routing frameworks still answer *which URL does this file serve*, but
+through a **declaration inside the file** plus a path glob — `next.pages.route`
+matches a `definition.function` under `pages/`, `nuxt.page` a
+`scope.template_block`. That is narrower than the file itself in a way that
+shows at the edges: a `+page.svelte` that is static markup, a `pages/about.vue`
+with only a template, a route file whose default export the Pack does not
+declare, all produce no Route.
+
+The audit is fixed. **Done looks like:** one pass over those seven, restoring a
+file-shaped rule wherever the question is about the file and not about a
+declaration in it, with `normalized_file_route` / `normalized_pages_route` used
+in the key as before.
