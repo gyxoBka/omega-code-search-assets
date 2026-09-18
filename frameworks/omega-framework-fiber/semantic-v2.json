@@ -25,6 +25,7 @@
   ],
   "emits": {
     "entities": [
+      "Application",
       "Controller",
       "Dependency",
       "FiberFile",
@@ -48,6 +49,102 @@
     ]
   },
   "rules": [
+    {
+      "id": "fiber.app.construct",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "New"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "fiber"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Application",
+          "canonical_key": {
+            "template": "fiber:app:{path}:{source.start}"
+          },
+          "attributes": {
+            "framework": "fiber",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fiber:app:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "fiber.New(): where the application is constructed. The receiver field now published on omega-go's call.method is what separates it from every other New() in the file."
+    },
     {
       "id": "fiber.dependency.import",
       "match": [
@@ -81,7 +178,7 @@
             "template": "fiber:file:{path}"
           },
           "attributes": {
-            "path": {
+            "file": {
               "kind": "field_ref",
               "field": "path"
             },
@@ -117,667 +214,7 @@
       ],
       "evidence_class": "observed",
       "confidence": "exact",
-      "coverage_note": "Which files are Fiber files and which part of the Fiber stack each one pulls in -- the router itself, a middleware under .../middleware/*, a storage driver, a template engine, a contrib package. The module name is the import's own name, so omega-go needs no field for it, and this is the only fact that says a Go file is a Fiber file at all; every other rule in this file is gated on it."
-    },
-    {
-      "id": "fiber.route.registration",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Get",
-            "Head",
-            "Post",
-            "Put",
-            "Delete",
-            "Connect",
-            "Options",
-            "Trace",
-            "Patch",
-            "All",
-            "Add"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.go"
-        },
-        {
-          "kind": "path_segment",
-          "exclude": [
-            "vendor",
-            "testdata",
-            "third_party"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.package",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "bind": "fiber_import",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "github.com/gofiber/"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "template": "fiber:route:{path}:{source.start}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FiberFile",
-          "canonical_key": {
-            "template": "fiber:file:{path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "framework": "fiber"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "fiber:file:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fiber:route:{path}:{source.start}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Where an HTTP route is registered, and under which verb. Fiber spells every registration as a method on the app or on a group -- app.Get, api.Post, app.Add -- so one rule over call.method covers all eleven verbs that eight per-verb, per-import-spelling rules used to cover. The registration site is identified by its byte offset because omega-go publishes no call argument, so the path literal is not reachable; see 'A field only the Pack can supply'."
-    },
-    {
-      "id": "fiber.route.registrar",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Get",
-            "Head",
-            "Post",
-            "Put",
-            "Delete",
-            "Connect",
-            "Options",
-            "Trace",
-            "Patch",
-            "All",
-            "Add"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.go"
-        },
-        {
-          "kind": "path_segment",
-          "exclude": [
-            "vendor",
-            "testdata",
-            "third_party"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.package",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "bind": "fiber_import",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "github.com/gofiber/"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "fn",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteRegistrar",
-          "canonical_key": {
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "function": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "registers_route",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fiber:route:{path}:{source.start}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Which function wires the routing table up -- setupRoutes, RegisterHandlers, main. The enclosing function is reached with fact_join_by_span/within against scope.function_body, which omega-go emits for every function and method body, so no Pack field is involved. This answers 'where do I add a route'."
-    },
-    {
-      "id": "fiber.middleware.use",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "Use"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.go"
-        },
-        {
-          "kind": "path_segment",
-          "exclude": [
-            "vendor",
-            "testdata",
-            "third_party"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.package",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "bind": "fiber_import",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "github.com/gofiber/"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "fn",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Middleware",
-          "canonical_key": {
-            "template": "fiber:middleware:{path}:{source.start}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            },
-            "installed_in": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteRegistrar",
-          "canonical_key": {
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "function": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fiber:middleware:{path}:{source.start}"
-          },
-          "attributes": {
-            "declared_via": "Use"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Where the request pipeline is assembled. app.Use is the one spelling Fiber has for installing middleware, on the app or on a group; which middleware package is installed is answered by fiber.dependency.import in the same file, because omega-go publishes no call argument."
-    },
-    {
-      "id": "fiber.router.group",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Group",
-            "Route",
-            "Mount"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.go"
-        },
-        {
-          "kind": "path_segment",
-          "exclude": [
-            "vendor",
-            "testdata",
-            "third_party"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.package",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "bind": "fiber_import",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "github.com/gofiber/"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "fn",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteGroup",
-          "canonical_key": {
-            "template": "fiber:group:{path}:{source.start}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            },
-            "declared_via": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteRegistrar",
-          "canonical_key": {
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "function": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "mounts",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fiber:group:{path}:{source.start}"
-          },
-          "attributes": {
-            "declared_via": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Where the URL tree branches. Group, Route and Mount are the three Fiber methods that create a sub-router; the old file had four rules for Group alone, one per aliased/unaliased import spelling, and none of them could match."
-    },
-    {
-      "id": "fiber.static.mount",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Static"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.go"
-        },
-        {
-          "kind": "path_segment",
-          "exclude": [
-            "vendor",
-            "testdata",
-            "third_party"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.package",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "bind": "fiber_import",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "github.com/gofiber/"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "fn",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StaticResource",
-          "canonical_key": {
-            "template": "fiber:static:{path}:{source.start}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            },
-            "mounted_in": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteRegistrar",
-          "canonical_key": {
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "function": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "fiber:registrar:{path}:{fn.definition.name}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fiber:static:{path}:{source.start}"
-          },
-          "attributes": {
-            "declared_via": "Static"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Whether this service serves files off disk as well as handlers, and from which function. The directory and the URL prefix are both call arguments, which omega-go does not publish."
-    },
-    {
-      "id": "fiber.service.listen",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Listen",
-            "ListenTLS",
-            "ListenTLSWithCertificate",
-            "ListenMutualTLS",
-            "ListenMutualTLSWithCertificate",
-            "Listener"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.go"
-        },
-        {
-          "kind": "path_segment",
-          "exclude": [
-            "vendor",
-            "testdata",
-            "third_party"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.package",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "bind": "fiber_import",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "github.com/gofiber/"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "fn",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Service",
-          "canonical_key": {
-            "template": "fiber:service:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "entrypoint": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "listen_via": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FiberFile",
-          "canonical_key": {
-            "template": "fiber:file:{path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "framework": "fiber"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "fiber:file:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fiber:service:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "listen_via": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Which function starts the server, and whether it serves TLS. Listen is the last call of a Fiber main, so this is the process entry point of the service -- the question 'where does this binary begin' that the Go Pack alone does not answer."
+      "coverage_note": "Which files are Fiber files and which part of the Fiber stack each pulls in -- the router, a middleware under .../middleware/*, a storage driver, a template engine, a contrib package. This is the only fact that says a Go file is a Fiber file at all; every other rule here is gated on it."
     },
     {
       "id": "fiber.handler.function",
@@ -839,7 +276,7 @@
               "kind": "field_ref",
               "field": "fn.definition.name"
             },
-            "path": {
+            "file": {
               "kind": "field_ref",
               "field": "path"
             },
@@ -876,8 +313,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Which plain functions are Fiber handlers. A Fiber handler is func(c *fiber.Ctx) error, and Ctx is the type name omega-go emits for the qualified type in that signature; the declaration is the function whose span contains the type reference. The path-free HandlerName key is what a route registration in another file lands on."
+      "confidence": "candidate",
+      "coverage_note": "A plain handler function, recognised by the *fiber.Ctx in its signature. The HandlerName hub is the key a route registration names its handler by, so this is what makes the route -> handler edge land on a declaration."
     },
     {
       "id": "fiber.handler.method",
@@ -951,7 +388,7 @@
               "kind": "field_ref",
               "field": "owner.definition.name"
             },
-            "path": {
+            "file": {
               "kind": "field_ref",
               "field": "path"
             },
@@ -969,7 +406,7 @@
               "kind": "field_ref",
               "field": "owner.definition.name"
             },
-            "path": {
+            "file": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -1005,45 +442,666 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high",
-      "coverage_note": "Which types are Fiber controllers, and which of their methods answer requests. omega-go carries the receiver type onto the method as definition.receiver_candidate spanning the whole method declaration, so the owning struct is reachable by span alone -- this is the only statement in Go of the link between a method and the type it hangs off."
+      "confidence": "candidate",
+      "coverage_note": "A method whose signature mentions *fiber.Ctx, and the struct it hangs off: which types are controllers and which of their methods answer requests. definition.receiver_candidate spans the whole method declaration and is named for the receiver type, so `within` reaches the owning struct with no Pack field."
     },
     {
-      "id": "fiber.route.handler_reference",
+      "id": "fiber.middleware.use",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.member"
+          "value": "call.method"
         },
         {
-          "kind": "field_not_in",
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Use"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.last_arg"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "fiber:middleware:{path}:{call.last_arg}"
+          },
+          "attributes": {
+            "middleware": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            },
+            "installed_in": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "mounted_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fiber:middleware:{path}:{call.last_arg}"
+          },
+          "attributes": {
+            "declared_via": "Use"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "app.Use(cors.New()) and app.Use(prefix, limiter.New()): which middleware are installed and in which function the pipeline is assembled. The middleware is the last argument in both spellings, so call.last_arg names it; before the call view was published this rule could only say that a Use() happened somewhere."
+    },
+    {
+      "id": "fiber.route.add",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Add"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg2"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1_text"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "route_literal": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HandlerName",
+          "canonical_key": {
+            "template": "fiber:handler-name:{call.last_arg_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fiber:handler-name:{call.last_arg_name}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "`app.Add(method, path, handler)`: the verb is the first argument and the URL the second, so the route joins the same key space as the verb shorthands."
+    },
+    {
+      "id": "fiber.route.registrar",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
           "field": "definition.name",
           "values": [
-            "Add",
-            "All",
-            "Connect",
-            "Delete",
             "Get",
-            "Group",
             "Head",
-            "Listen",
-            "ListenMutualTLS",
-            "ListenMutualTLSWithCertificate",
-            "ListenTLS",
-            "ListenTLSWithCertificate",
-            "Listener",
-            "Mount",
-            "Name",
-            "New",
-            "Next",
-            "Options",
-            "Patch",
             "Post",
             "Put",
-            "Route",
-            "Static",
+            "Patch",
+            "Delete",
+            "Connect",
+            "Options",
             "Trace",
-            "Use"
+            "All"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteRegistrar",
+          "canonical_key": {
+            "template": "fiber:registrar:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "function": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers_route",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:registrar:{path}:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which function wires the routing table up -- where do I add a route. It carries exactly the clauses of fiber.route.verb, so the route key it addresses is always one that rule mints."
+    },
+    {
+      "id": "fiber.route.verb",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Get",
+            "Head",
+            "Post",
+            "Put",
+            "Patch",
+            "Delete",
+            "Connect",
+            "Options",
+            "Trace",
+            "All"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HandlerName",
+          "canonical_key": {
+            "template": "fiber:handler-name:{call.last_arg_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fiber:handler-name:{call.last_arg_name}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "app.Get(url, handler) and the other nine verbs: the HTTP method is the call's own name and the URL is call.arg0_text, so the Route is keyed by what it serves -- http:{method}:{normalized_route} -- and the :id, {id} and [id] parameter spellings are one identity. The last argument is the handler, which is the other end of `handles`."
+    },
+    {
+      "id": "fiber.router.group",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Group",
+            "Route",
+            "Mount"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteGroup",
+          "canonical_key": {
+            "template": "fiber:group:{normalized_prefix}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "declared_via": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "mounted_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fiber:group:{normalized_prefix}"
+          },
+          "attributes": {
+            "declared_via": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "app.Group(prefix) / Route / Mount: where the URL tree branches, and under which prefix. The prefix is call.arg0_text, so the sub-router is keyed by the URL subtree it owns rather than by its registration site."
+    },
+    {
+      "id": "fiber.service.listen",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Listen",
+            "ListenTLS",
+            "ListenTLSWithCertificate",
+            "ListenMutualTLS",
+            "ListenMutualTLSWithCertificate",
+            "Listener"
           ]
         },
         {
@@ -1075,74 +1133,195 @@
         },
         {
           "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
+          "fact_kind": "scope.function_body",
           "relation": "within",
           "same_path": true,
-          "bind": "route",
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "definition.name",
-              "values": [
-                "Get",
-                "Head",
-                "Post",
-                "Put",
-                "Delete",
-                "Connect",
-                "Options",
-                "Trace",
-                "Patch",
-                "All",
-                "Add"
-              ]
-            }
-          ]
+          "bind": "fn",
+          "where": []
         }
       ],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "HandlerName",
+          "entity_kind": "Service",
           "canonical_key": {
-            "template": "fiber:handler-name:{definition.name}"
+            "template": "fiber:service:{path}:{fn.definition.name}"
           },
           "attributes": {
-            "name": {
+            "entrypoint": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "listen_via": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "address": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
             }
           }
         },
         {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
           "kind": "relation_candidate",
-          "relation_kind": "handles",
+          "relation_kind": "declares",
           "source": {
             "kind": "by_canonical_key",
-            "template": "fiber:handler-name:{definition.name}"
+            "template": "fiber:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fiber:route:{path}:{route.source.start}"
+            "template": "fiber:service:{path}:{fn.definition.name}"
           },
           "attributes": {
-            "method": {
+            "listen_via": {
               "kind": "field_ref",
-              "field": "route.definition.name"
+              "field": "definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "medium",
-      "coverage_note": "Which handler answers a registration -- the one cross-file edge Fiber has. app.Get(\"/users\", handlers.ListUsers) puts a selector inside the registration call, and omega-go emits reference.member for it, so the handler named there joins by span to the route even though the argument list itself is not published. The selector naming the registration method is excluded by name, as are the middleware constructors that appear in the same argument list."
+      "confidence": "candidate",
+      "coverage_note": "app.Listen(addr): which function starts the server, whether it serves TLS, and -- now that the first argument is published -- on which address or port."
+    },
+    {
+      "id": "fiber.static.mount",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Static"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.go"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "vendor",
+            "testdata",
+            "third_party"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "fiber_import",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gofiber/"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StaticResource",
+          "canonical_key": {
+            "template": "fiber:static:{normalized_mount}"
+          },
+          "attributes": {
+            "mount": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            },
+            "mounted_in": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FiberFile",
+          "canonical_key": {
+            "template": "fiber:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "fiber"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fiber:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fiber:static:{normalized_mount}"
+          },
+          "attributes": {
+            "declared_via": "Static"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "app.Static(prefix, dir): whether the service serves files off disk, under which URL prefix, and from which directory. The URL prefix is the identity; the directory is carried as an attribute because it arrives quoted."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "omega-go publishes no call argument, so no route path literal, no mounted directory and no Group prefix is reachable; a Route is identified by its registration site, and the URL it serves is not stated.",
-      "app.Get and api.Get are the same fact to the overlay -- omega-go's call.method carries the method name only, not the receiver -- so a route registered on a group is not distinguished from one registered on the app, and a group's routes are not nested under it.",
+      "app.Add(verb, url, handler) puts the URL in call.arg1, which omega-go publishes with its quote bytes; a canonical key template has no strip, so an Add route is keyed by its registration site and not by the URL it serves. Every other verb is keyed by its URL.",
+      "omega-go emits no definition for a short variable declaration, so `api := app.Group(prefix)` never binds the name api to that prefix. call.method now publishes the receiver, so api.Get and app.Get are distinguishable as text, but a route registered on a group is still keyed by its own path with the group prefix not prepended, and the group's routes are not nested under it.",
+      "An aliased router import -- f \"github.com/gofiber/fiber/v2\" -- makes the constructor read f.New(), which fiber.app.construct does not recognise; every other rule is gated on the import path and is unaffected.",
       "runtime route state: routes built in a loop, handlers held in a slice or a map, and anything registered through reflection are outside static scope."
     ]
   },

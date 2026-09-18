@@ -833,3 +833,64 @@ pydantic. Items 1 and 11 are both it.
 20, 11 and 10 `data.file` rules while the audit wrongly reported that kind dead.
 They answer file-based routing through a declaration inside the file instead,
 which is narrower at the edges.
+
+---
+
+# Second pass, wave A (gin, fiber, axum, vapor, fastify)
+
+The first wave written against a call that has arguments. Every one of these
+keyed its routes by the byte offset they were written at and said so in
+`coverage.gaps`; all five now key by the URL they serve, in the shared
+`http:{method}:{normalized_route}` space express and fastapi already used, so
+`/users/:id`, `/users/{id}` and `/users/[id]` are one identity across languages.
+
+| Framework | rules | what it can now say |
+|---|---|---|
+| omega-framework-gin | 12 -> 15 | the URL, `r.Group("/api/v1")` prefixes, a static mount by what it serves |
+| omega-framework-axum | 12 -> 14 | `.route("/users/:id", get(h))` and `.nest("/api", …)` |
+| omega-framework-vapor | 12 -> 14 | `app.get("todos", ":id")` |
+| omega-framework-fiber | 10 -> 11 | the URL and the handler behind it |
+| omega-framework-fastify | 15 -> 15 | the URL, a registration's prefix |
+
+## Four of the five traded an edge for the URL, and the reviews caught it
+
+The same defect in gin, fiber, axum and vapor: the new rule keyed the handler on
+`call.last_arg`, **the argument as written**. A handler is written
+`ctrl.GetUser`, `handlers.ListUsers`, `handlers::show_user` at the registration
+and declared as `GetUser`, `ListUsers`, `show_user`, so the route key and the
+declaration key never met and *which function answers this route* — the one
+cross-file edge these overlays have — was silently gone. `overlay_audit.py`,
+`key_collisions.py` and `dangling_ends.py` all report clean on it: both keys are
+minted, they just never meet.
+
+Fixed once, in the Packs rather than four times in the Frameworks. The ten
+call-bearing Packs now publish:
+
+| field | `r.GET("/users/:id", ctrl.GetUser)` |
+|---|---|
+| `call.arg0_text` | `/users/:id` |
+| `call.arg0_name` | `/users/:id` — the last segment, for when argument 0 is a name |
+| `call.arg1_text` | `ctrl.GetUser` |
+| `call.last_arg_name` | **`GetUser`** — the name it refers to |
+
+The separators are the language's own: omega-rust splits on `::` before `.`, so
+`get(handlers::show_user)` reaches `show_user`.
+
+`call.arg1_text` closed the other half of it. gin's `r.Handle("GET", "/legacy",
+h)` and fiber's `app.Add(method, path, h)` put the verb in argument 0 and the
+URL in argument 1; both were keyed by offset and both now join the shared route
+space.
+
+## A registration whose path is not an argument
+
+vapor's reviewer measured its own canonical `TodoController` and found that four
+of six registrations have no path literal at all — `todos.get(use: index)`
+inherits the group's prefix, `todos.on(.PATCH, ":todoID", use: update)` puts the
+method first. The rewrite had guarded on `field_prefix call.arg0 = "\""` and
+dropped them entirely, which is a deletion dressed as a narrowing. Both forms
+are stated now: the path form in the `http:` space, the bare form as
+`vapor:route:{path}:{source.start}` with its handler — real, located where it is
+written, and honest that its URL is not derivable there.
+
+762 overlay rules, 0 that cannot match, 0 collisions, 3 dangling candidates (all
+pydantic, all read). Engine suite green.

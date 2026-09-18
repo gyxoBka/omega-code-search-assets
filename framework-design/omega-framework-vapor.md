@@ -5,8 +5,8 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-**12 overlay rules, 8 detection rules. 12 live, 0 cannot match.** (Was 15 rules,
-0 live.)
+**13 overlay rules, 8 detection rules. 13 live, 0 cannot match.** (Was 12 rules,
+12 live; before that 15 rules, 0 live.)
 
 Selector: `framework:vapor`. Maturity: `semantic-overlay-full`. One language,
 one Pack: `omega-swift`.
@@ -17,18 +17,21 @@ one Pack: `omega-swift`.
 |---|---|---|
 | `VaporType` | `vapor:type:{path}:{type}` -- the neutral hub | 9, all minting it identically |
 | `VaporTypeName` | `vapor:type-name:{name}` | 7 |
-| `Route` | `vapor:route:{path}:{fn}:{method}:{start}` | 2 |
+| `Route` | `http:{method}:{normalized_route}` | 2, minting it identically |
+| `RouteRegistrar` | `vapor:registrar:{path}:{fn}` | 2, minting it identically |
+| `RouteGroup` | `vapor:group:{path}:{fn}:{normalized_prefix}` | 1 |
 | `Controller`, `Model`, `Migration`, `Middleware`, `Payload`, `Worker` | one key space each: `vapor:controller:`, `vapor:model:`, ... | 1 each |
-| `VaporFile`, `Dependency`, `RouteRegistrar`, `RequestHandler`, `ModelField`, `Application` | one key space each | 1 each |
+| `VaporFile`, `Dependency`, `RequestHandler`, `ModelField`, `Application` | one key space each | 1 each |
 
 No key template is minted under more than one entity kind:
-`python pack-design/key_collisions.py vapor` reports nothing.
+`python pack-design/key_collisions.py vapor` reports
+`0 entity outputs are overwritten by a same-key rule that sorts first`.
 
 ### Relations it declares
 
 | relation_kind | rules |
 |---|---|
-| `declares` | 6 |
+| `declares` | 7 |
 | `has_role` | 6 |
 | `depends_on`, `registers_route`, `serves`, `handles`, `has_field`, `mounts` | 1 each |
 
@@ -37,183 +40,213 @@ No key template is minted under more than one entity kind:
 | kind | rules | a Pack emits it |
 |---|---|---|
 | `relation.implements` | 6 | yes (omega-swift) |
-| `call.swift` | 3 | yes |
+| `call.arguments` | 3 | yes -- new, and the whole of this wave |
 | `reference.type` | 2 | yes |
-| `import.swift_module` | 1 + 3 joins | yes |
+| `call.swift` | 1 + 1 join | yes |
+| `import.swift_module` | 1 + 5 joins | yes |
 | `definition.swift_type` | 9 joins | yes |
-| `definition.swift_function` | 3 joins | yes |
+| `definition.swift_function` | 4 joins | yes |
 | `definition.swift_property` | 1 join | yes |
 
-No rule reads a Pack `field`: **omega-swift publishes no field on any of its 43
-templates**, so the overlay has kind, name, path and span and nothing else.
-Everything a rule reads is a built-in — `definition.name`, `path`,
-`source.start` — or a `<bind>.definition.name` from a join.
+Three rules now read Pack `fields`: `call.arg0` and `call.arg0_text` on
+`call.arguments`. Everything else is a built-in -- `definition.name`, `path` --
+or a `<bind>.definition.name` from a join.
 
 ---
 
 ## What was wrong with it
 
-### This wave: the whole type classification was computed and thrown away
+### This wave: a route had no URL, and the file said so in four places
 
-`overlay_audit.py` reported 12 rules, 12 live, 0 dead -- and nine of those rules
-minted an entity on the single key template
+The previous rewrite was written against a Pack that captured a call's callee
+and nothing else. It said, correctly for the time:
 
-    vapor:type:{path}:{owner.definition.name}
+> `vapor:route:{path}:{receiver}:{member}:{arg0}` was a key made of three
+> things that do not exist.
 
-under **seven different entity kinds**. `Entity::named` builds its id from the
-canonical key alone and `apply_overlay_runs` does `entities.entry(id)
-.or_insert(entity)`, so the alphabetically first rule id wins with its kind *and*
-its attributes. `vapor.controller.declaration` sorts first, so the graph got a
-`Controller` and lost, silently:
+and it keyed the `Route` entity by **file, declaring function, method and byte
+offset** instead:
 
-| kind dropped | rule | what the answer was |
-|---|---|---|
-| `Model` | `vapor.model.declaration` | which types back database tables |
-| `Migration` | `vapor.migration.declaration` | which types change the schema |
-| `Middleware` | `vapor.middleware.declaration` | what sits in front of a handler |
-| `Payload` | `vapor.payload.declaration` | which types cross the wire |
-| `Worker` | `vapor.worker.declaration` | what runs outside a request |
-| `VaporType` x3 | `.controller.route`, `.controller.handler`, `.model.field` | the hub the `serves`/`handles`/`has_field` edges hang off |
+    vapor:route:{path}:{fn.definition.name}:{definition.name}:{source.start}
 
-**8 entity outputs overwritten.** In practice that meant: in any Vapor project,
-a type that conformed to `RouteCollection` anywhere in the file swallowed every
-other classification in the same file for that type name, and -- worse -- a
-`Model` in a file with no controller still lost its `role` and `conforms_to`
-attributes to whichever of the six role rules happened to fire, because the
-attributes collide exactly as the kind does. Five of the six answers the
-previous section of this document advertised did not reach the graph at all.
+That is an identity no question reaches. *Which route serves `GET /todos`* was
+unanswerable; *which file byte 167 of `TodoController.swift` is in* was the only
+thing the key could be looked up by. Both route rules carried it, so **2 of 12
+rules, 2 of the file's 30 entity outputs and 2 of its 18 relation ends** addressed an identity
+that exists nowhere else in the graph and could never meet another framework's
+route or a consumer's URL.
 
-The fix is brief 3g remedy 2, a key space per classification. Each role rule now
-mints **two** entities: the neutral hub `vapor:type:{path}:{type}` as a
-`VaporType` with the same two attributes (`name`, `path`) that every one of the
-nine rules gives it -- so the nine agree and the hub is stable no matter which
-sorts first -- and its own `vapor:<role>:{path}:{type}` carrying the kind, the
-`role` and the `conforms_to` protocol name. A `has_role` edge runs hub -> role
-entity. Remedy 1 (one neutral kind, classification in the relations) was
-rejected because a Vapor type is routinely several things at once -- `final class
-Todo: Model, Content` is the ordinary spelling -- and remedy 1 keeps one
-attribute set, so `conforms_to` would still be lost for all but one role.
+omega-swift now emits `call.arguments` on the same span as the call, with
+`call.arg0`, `call.arg0_text`, `call.arg1`, `call.arg2` and `call.last_arg`.
+Measured on a hand-written Vapor file with
+`dump_call_emissions.exe packs/omega-swift grammars/omega-swift routes.swift`:
 
-### The previous wave: all 15 rules were dead, and 14 of them dead twice over
+| source | fact | `call.arg0` | `call.arg0_text` |
+|---|---|---|---|
+| `routes.grouped("todos")` | `call.arguments grouped` | `"todos"` | `todos` |
+| `todos.get(":todoID", use: show)` | `call.arguments get` | `":todoID"` | `:todoID` |
+| `todos.get(use: index)` | `call.arguments get` | `use: index` | `use: index` |
+| `todos.on(.PATCH, ":todoID", use: update)` | `call.arguments on` | `.PATCH` | `.PATCH` |
+| `app.get("hello") { req in "hi" }` | `call.arguments get` | `"hello"` | `hello` |
 
-| cause | rules |
-|---|---|
-| matched `call.swift_receiver_member_string_argument_context`, a kind no Pack emits | 10 |
-| matched `call.swift_receiver_member_string_segment_context`, a kind no Pack emits | 1 |
-| matched `call.target_candidate`, a carrier kind the Pack rewrite removed | 2 |
-| matched `import.module_path_candidate`, likewise | 2 |
-| **also** read `member`, `receiver`, `arg0` or `literal` — fields no Pack publishes | 11 |
+So **four `coverage.gaps` sentences were false** as of this Pack version, and
+one line of the "A field only the Pack can supply" section -- *"a string literal
+in omega-swift is not a fact: the Pack's 43 templates emit no kind for a
+`line_string_literal` anywhere"* -- was the reason the whole route design was
+built around the byte offset. It is a 44th template now.
 
-Beyond the dead kinds, four things were wrong in kind, not in degree:
+Three further things the measurement settled, each of which shaped a clause:
 
-1. **Eleven rules were the same rule.** `vapor.route.get`, `.post`, `.put`,
-   `.patch`, `.delete`, `.on`, `.websocket`, `.member-string`,
-   `.literal-segment`, `vapor.group.group` and `.grouped` were byte-identical
-   apart from one string in a `field_equals` on `member`. That is one rule over
-   the callee's own name. They are one rule now (two, counting the
-   controller-scoped variant).
+1. **`call.arguments` carries the callee as its own `name`.** It is not a bare
+   argument bag, so the three route rules match it **directly** rather than
+   matching `call.swift` and joining `fact_join_by_span relation: "same"` back
+   to it. One fact, one clause, identical result.
+2. **`call.arg0_text` is not always a path.** `todos.get(use: index)` is the
+   ordinary Vapor spelling for a root route, and its first argument is the
+   labelled handler. Keying on it would have minted `http:get:/use: index`. The
+   gate is `field_prefix call.arg0 "\""` -- *the first argument is a string
+   literal* -- which is exactly the discriminator, and it also drops
+   `dictionary.get(key)`.
+3. **`on` cannot be keyed by URL.** Its first argument is the method
+   (`.PATCH`), its path is `call.arg1`, and `call.arg1` has **no** text form:
+   the Pack strips quotes for `arg0` only. A canonical key template has no
+   strip (brief 3l), so `":todoID"` with its quote bytes can never meet
+   `:todoID`. `on` is out of the verb list, and that is now a gap sentence
+   rather than a silent miss.
 
-2. **Four rules restated their input.** The two `vapor.generic-api-call.*` rules
-   minted `vapor:api-use:{path}:{source.start}` — an entity whose whole content
-   is the file and byte offset it was found at — and then ran `uses_api` from
-   `current` to the key `current` had just been minted under: the self-loop
-   wave 2 and wave 6 both found. The two `vapor.generic-dependency.*` rules did
-   the same for imports. All four are deleted.
+### The previous wave: the type classification was computed and thrown away
 
-3. **Two of them were also unreachable in principle.** The
-   `external_path_matches` package was `https://github.com/vapor/vapor.git`, a
-   whole URL; `parse_external_path` splits on `/` and takes the first part, so
-   the package there is `https:`. No input could ever match.
+Nine rules minted an entity on the single key template
+`vapor:type:{path}:{owner.definition.name}` under **seven different entity
+kinds**, so `vapor.controller.declaration` sorted first and the graph lost
+`Model`, `Migration`, `Middleware`, `Payload`, `Worker` and three `VaporType`
+hubs -- **8 entity outputs overwritten**. The fix was brief 3g remedy 2, a key
+space per classification, with the neutral hub minted identically by all nine
+rules. It is untouched this wave, and `key_collisions.py` still reports nothing.
 
-4. **The framework's central fact is not stated by any Pack, and the old file
-   pretended otherwise.** Every route rule read `arg0` — the route's URL. The
-   omega-swift call query is
+### The wave before: all 15 rules were dead
 
-   ```scm
-   (call_expression . [(simple_identifier) @call.callee
-                       (navigation_expression suffix: (navigation_suffix
-                         suffix: (simple_identifier) @call.callee))]
-     (call_suffix)) @call
-   ```
-
-   The callee is captured; **no argument is, and neither is the receiver.** So
-   `app.get("todos", ":id")` reaches the overlay as one fact, `call.swift` named
-   `get`. There is no `arg0`, no `receiver`, no string literal anywhere in
-   omega-swift's 43 templates. `vapor:route:{path}:{receiver}:{member}:{arg0}`
-   was a key made of three things that do not exist.
-
-   The rewrite does not work around this. It states what is there — the HTTP
-   method, the function that declares the route, the controller that owns it —
-   and `coverage.gaps` now says the URL is unreachable instead of claiming
-   "literal route components are materialized in source order".
-
-The old file also spent its whole budget on routing, which is the one thing
-Swift's facts cannot carry, and said nothing about models, migrations,
-middleware, payloads, jobs or handlers — all of which are stated by
-`relation.implements` and reachable exactly.
+10 matched `call.swift_receiver_member_string_argument_context`, 1 matched
+`call.swift_receiver_member_string_segment_context`, 2 matched
+`call.target_candidate`, 2 matched `import.module_path_candidate` -- four kinds
+no Pack emits -- and 11 of them **also** read `member`, `receiver`, `arg0` or
+`literal`, fields no Pack published. Eleven of them were the same rule with one
+string changed; four restated their input as `vapor:api-use:{path}:{source.start}`
+with a `uses_api` self-loop; two named the package
+`https://github.com/vapor/vapor.git`, which `parse_external_path` reads as the
+package `https:`.
 
 ---
 
 ## What it states now
 
 `{owner}`, `{fn}`, `{prop}`, `{reg}` below are `fact_join_by_span` / `within`
-bindings on the current fact — the enclosing type, function, property, or the
-enclosing call. "hub" is the neutral `VaporType` at
-`vapor:type:{path}:{owner}`: every rule that needs a type as a relation end
-mints it, all nine with the identical kind and the identical two attributes, and
-the classification hangs off it as its own entity in its own key space.
+bindings on the current fact -- the enclosing type, function, property, or the
+enclosing call. "hub" is the neutral `VaporType` at `vapor:type:{path}:{owner}`:
+every rule that needs a type as a relation end mints it, all nine with the
+identical kind and the identical two attributes.
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
+| **which URL a route serves, and with which method** | `call.arguments` named `get`…`webSocket` whose `call.arg0` begins with a quote, in a `Vapor`-importing file, + `{fn}` `definition.swift_function` | `Route http:{method}:{normalized_route}` (attributes `method`, `route`), `RouteRegistrar vapor:registrar:{path}:{fn}`, `registers_route` |
+| **which URLs a controller serves** | the same, plus `{owner}` `definition.swift_type` | hub, `Route` at the identical key, `serves` |
+| **which path prefix a function's routes sit under** | `call.arguments` named `grouped`/`group` with a literal first argument + `{fn}` | `RouteGroup vapor:group:{path}:{fn}:{normalized_prefix}`, `RouteRegistrar`, `declares` |
 | which files are Vapor server files, and which part of the stack each pulls in (router, Fluent, **which database driver**, Leaf, JWT, Queues) | `import.swift_module` named in a 27-module list | `VaporFile vapor:file:{path}`, `Dependency vapor:package:{name}`, `depends_on` |
-| which types register routes | `relation.implements` named `RouteCollection`/`AsyncRouteCollection` + `{owner}` `definition.swift_type` | `VaporType vapor:type:{path}:{owner}` (hub), `Controller vapor:controller:{path}:{owner}`, `VaporTypeName`, `declares`, `has_role` |
+| which types register routes | `relation.implements` named `RouteCollection`/`AsyncRouteCollection` + `{owner}` | hub, `Controller vapor:controller:{path}:{owner}`, `VaporTypeName`, `declares`, `has_role` |
 | which types back database tables | `relation.implements` in 6 `Model*` protocols + `{owner}` | hub, `Model vapor:model:{path}:{owner}`, `declares`, `has_role` |
 | which types change the schema | `relation.implements` `Migration`/`AsyncMigration` + `{owner}` | hub, `Migration vapor:migration:{path}:{owner}`, `declares`, `has_role` |
 | what sits in front of a handler (middleware, authenticators, lifecycle) | `relation.implements` in 13 protocols + `{owner}` | hub, `Middleware vapor:middleware:{path}:{owner}`, `declares`, `has_role` |
 | which types cross the wire, and which are validated | `relation.implements` in 7 protocols (`Content`, `Validatable`, …) + `{owner}` | hub, `Payload vapor:payload:{path}:{owner}`, `declares`, `has_role` |
 | what runs outside a request (queued job, scheduled job, CLI command) | `relation.implements` in 6 protocols + `{owner}` | hub, `Worker vapor:worker:{path}:{owner}`, `declares`, `has_role` |
-| where routes are declared and **which HTTP methods** they answer | `call.swift` named `get`…`on`/`webSocket`, in a file that imports `Vapor`, + `{fn}` `definition.swift_function` | `RouteRegistrar vapor:registrar:{path}:{fn}`, `Route vapor:route:{path}:{fn}:{method}:{start}`, `registers_route` |
-| which HTTP methods **a controller** serves | the same, plus `{owner}` `definition.swift_type` | `VaporType`, `Route` (same key), `serves` |
-| which functions answer a request | `reference.type` named `Request`/`WebSocket`, Vapor-importing file, + `{fn}` + `{owner}` | `VaporType`, `RequestHandler vapor:handler:{path}:{owner}:{fn}`, `handles` |
-| which columns back a model, and which are associations (`@Parent`, `@Children`, `@Siblings`) rather than scalars | `reference.type` named in 15 Fluent wrappers + `{prop}` `definition.swift_property` + `{owner}` | `VaporType`, `ModelField vapor:model-field:{path}:{model}:{prop}`, `has_field` |
+| which functions answer a request | `reference.type` named `Request`/`WebSocket`, Vapor-importing file, + `{fn}` + `{owner}` | hub, `RequestHandler vapor:handler:{path}:{owner}:{fn}`, `handles` |
+| which columns back a model, and which are associations (`@Parent`, `@Children`, `@Siblings`) rather than scalars | `reference.type` named in 15 Fluent wrappers + `{prop}` `definition.swift_property` + `{owner}` | hub, `ModelField vapor:model-field:{path}:{model}:{prop}`, `has_field` |
 | which controllers, middleware, migrations and jobs the app **installs** | `call.swift` (upper-case initial) whose span lies inside `{reg}` a `call.swift` named `register`/`add`/`use`/`grouped`/`group`, Vapor-importing file | `Application vapor:app:{path}`, `VaporTypeName vapor:type-name:{name}`, `mounts` |
 
-### Two mechanisms worth naming
+### What is newly answerable
 
-**"This file imports Vapor" is a `fact_join_by_field` on `path` against itself.**
-`{"fact_kind": "import.swift_module", "current_field": "path", "join_field":
-"path", "same_path": true, "where": [definition.name == "Vapor"]}`. Both sides
-are the built-in `path`, so this needs no Pack field and is a real gate: without
-it, `call.swift` named `get` matches every `.get(` in every Swift file in the
-repository. Three rules carry it. It is not the vacuous `field_present` on a
-built-in that wave 6 found in symfony — it constrains the file, not the fact.
+Before this wave, *"where does `GET /todos` get served"* had no answer at all in
+a Vapor project, and a `Route` node could not be reached except by knowing the
+file and the byte offset it was written at. Now:
 
-**Every relation end is minted by a rule with at least the conditions of the
-rule that addresses it** (brief §3a, §3b):
+- `http:get:/todos` is one identity across the whole graph, and
+  `http:get:/users/{}` is the same node whether it was written `:id` in Vapor,
+  `{id}` in Spring or `[id]` in Next -- `normalize_http_path` folds all three.
+- A controller's URL surface is a one-hop query: `serves` from
+  `vapor:type:{path}:{Controller}`.
+- A function's group prefix is stated, so *"what lives under `/api`"* has a
+  partial answer where it previously had none.
+
+### Three mechanisms worth naming
+
+**"This file imports Vapor" is a `fact_join_by_field` on `path` against
+itself.** `{"fact_kind": "import.swift_module", "current_field": "path",
+"join_field": "path", "same_path": true, "where": [definition.name == "Vapor"]}`.
+Both sides are the built-in `path`, so it needs no Pack field and is a real
+gate: without it, `call.arguments` named `get` matches every `.get("…")` in
+every Swift file in the repository. Five rules carry it. It is not the vacuous
+`field_present` on a built-in that wave 6 found in symfony -- it constrains the
+file, not the fact.
+
+**`field_prefix` on `call.arg0` is how you ask whether an argument is a
+literal.** `call.arg0` is the argument as written, quote bytes and all;
+`call.arg0_text` is the same value stripped. Testing the quoted form and keying
+on the stripped form (brief 3l) is what separates `todos.get(":todoID", …)` from
+`todos.get(use: index)` without a Pack field.
+
+**An entity's canonical key renders against its own attributes only.**
+`emit()` calls `render(&canonical_key.template, binding, &values)` with that
+output's `values`, and only *relation* ends see the accumulated `scope`
+(`overlay.rs:884-955`). So `http:{method}:{normalized_route}` works inside the
+`Route` output because `method` and `route` are its own attributes, and the
+`registers_route` end two outputs later works because the scope carries them
+forward. The `RouteRegistrar` and `RouteGroup` entities name their file
+attribute `file`, not `path`, so nothing in the accumulated scope can shadow the
+built-in `{path}` in a later relation end (brief 3k, the express `express:app:`
+bug).
+
+### Every relation end is minted by a rule with at least the conditions of the rule that addresses it
 
 | key addressed | minted by |
 |---|---|
-| `vapor:file:{path}` | `vapor.dependency.import` (only rule addressing it) |
-| `vapor:package:{name}` | same rule |
-| `vapor:type:{path}:{owner}` | all nine type-scoped rules, each as `VaporType` with the same two attributes — the six role rules, **and** `vapor.controller.route`, `.controller.handler`, `.model.field`, because a type need not conform to `RouteCollection` to serve a route |
+| `vapor:file:{path}`, `vapor:package:{name}` | `vapor.dependency.import` (the only rule addressing either) |
+| `vapor:type:{path}:{owner}` | all nine type-scoped rules, each as `VaporType` with the same two attributes |
 | `vapor:controller:…`, `vapor:model:…`, `vapor:migration:…`, `vapor:middleware:…`, `vapor:payload:…`, `vapor:worker:…` | one rule each, the only minter and the only addresser of its key space |
-| `vapor:route:{path}:{fn}:{method}:{start}` | `vapor.route.registration`; `vapor.controller.route` is that rule's match plus one join, so the key always exists, and it mints it again anyway |
-| `vapor:handler:…`, `vapor:model-field:…`, `vapor:registrar:…`, `vapor:app:{path}` | minted in the same rule that addresses them |
+| `http:{method}:{normalized_route}` | `vapor.route.registration` and `vapor.controller.route`, both as `Route` with the identical attributes; the second is the first's match plus one join, so the key always exists |
+| `vapor:registrar:{path}:{fn}` | `vapor.route.registration` and `vapor.route.group`, both as `RouteRegistrar` with the identical attributes |
+| `vapor:group:…`, `vapor:handler:…`, `vapor:model-field:…`, `vapor:app:{path}` | minted in the same rule that addresses them |
 | `vapor:type-name:{name}` | the six role rules (from `{owner}`) and `vapor.component.mounted` (from the constructor's own name) |
 
 `vapor:type-name:` is the one cross-file node. Swift resolves a type by its bare
 name and omega-swift emits no qualifier, so `app.register(collection:
 TodoController())` in `routes.swift` and `struct TodoController:
 RouteCollection` in `Controllers/TodoController.swift` meet at
-`vapor:type-name:TodoController` — the same device omega-framework-swiftui uses
-for `ViewName`. No relation in this file addresses a key no rule mints.
+`vapor:type-name:TodoController`. No relation in this file addresses a key no
+rule mints. No rule uses `Reference::current`, so the wave-2 "`current` is the
+first output" trap does not apply. No attribute depends on `external.*`, so no
+entity can be dropped as unresolvable while its relation still renders.
 
-No rule uses `Reference::current`, so the wave-2 "`current` is the first output"
-trap does not apply; every end is an explicit `by_canonical_key`. No attribute
-depends on `external.*`, so no entity can be dropped as unresolvable while its
-relation still renders.
+---
 
 ## Still to decide
+
+- **Whether a `Route` should be keyed by the composed URL rather than the
+  registration call's first argument.** `todos.get("todos", ":id")` states
+  `/todos`, not `/todos/{}`; a route inside `routes.grouped("api")` states its
+  own path, not `/api/…`. Composing either needs string concatenation of two
+  facts, which the overlay has no operator for -- `expr.rs` lives in the Pack,
+  and a canonical key template only substitutes. The alternative designs are
+  both worse: keying by the whole argument list would produce quoted bytes in an
+  identity (brief 3l), and keeping the old byte-offset key answers nothing. One
+  path component that agrees with every other framework's identity beats a
+  precise identity that agrees with nothing, so this stands until either a Pack
+  publishes a composed `call.args_text` or the host gains a join operator.
+
+- **`vapor.route.registration` and `vapor.controller.route` stay
+  `confidence: candidate`.** omega-swift publishes no `receiver`, so a rule
+  cannot tell `app.get("hello")` from `cache.get("hello")` in a file that
+  happens to import Vapor. The literal-argument gate narrows it considerably --
+  a dictionary lookup keyed by a literal in a Vapor file is rarer than a bare
+  `.get(` was -- but it does not close it.
 
 - **Whether `has_role` should be six relation kinds instead of one.**
   `is_model` / `is_middleware` / … would let a query reach a classification
@@ -222,63 +255,44 @@ relation still renders.
   twice over, so this stays one kind until a consumer asks.
 
 - **`vapor.component.mounted` is heuristic.** It keeps a constructed type whose
-  name does not begin with a lower-case letter, using the same twenty-six
-  `field_not_prefix` clauses omega-framework-swiftui uses to separate a child
-  view from a chained modifier. `add`, `use` and `grouped` are ordinary Swift
-  names, so the Vapor-import gate plus the upper-case initial is the whole
-  filter; it is `confidence: candidate` for that reason. A tighter rule would
-  need the receiver (`app.migrations`, `app.middleware`), which omega-swift does
-  not capture.
-- **`vapor.route.registration` accepts any `.get`/`.on` in a Vapor-importing
-  file**, including `dictionary.get(...)`. Also `candidate`. The alternative —
-  gating on the enclosing function being named `boot`, `routes` or `configure` —
-  would drop routes registered from a helper, and Vapor does not require those
-  names, so the looser rule with an honest confidence is the better trade.
-- **A `Route` with no URL.** The entity exists because "which HTTP methods does
-  this controller serve, and where are they declared" is a question worth
-  answering, and it is the most this Pack permits. If it later reads as noise,
-  the remedy is a Pack change, not a rule change — see below.
+  name does not begin with a lower-case letter, using twenty-six
+  `field_not_prefix` clauses. `call.arg0_text` does not improve it:
+  `app.register(collection: TodoController())` yields
+  `collection: TodoController()`, label and parentheses included, while the
+  nested `call.swift` named `TodoController` is the clean statement of the same
+  thing. Left as it was.
 
 ## A field only the Pack can supply
 
-**Pack `omega-swift`, kind `call.swift`, fields `arg0` (first string-literal
-argument) and `receiver`.**
+The `arg0` half of this section is **discharged**: omega-swift publishes
+`call.arg0` and `call.arg0_text` on `call.arguments`, and the three route rules
+above are written against them.
 
-Vapor's routing table — the single question an agent asks about a Vapor project,
-*which URL does this route serve* — is a string literal in a call argument:
-`app.get("todos", ":id")`, `routes.grouped("api", "v2")`, `@Field(key: "title")`,
-`static let schema = "todos"`.
+What remains:
 
-Neither of the first two options in the brief §2 reaches it:
+**Pack `omega-swift`, kind `call.arguments`, field `receiver`** -- the
+`navigation_expression` prefix of the call, `app` in `app.get("hello")`. Ten
+Packs publish the canonical call view; omega-swift publishes the five argument
+fields but not `receiver`. It cannot be reached otherwise:
 
-- **Not derivable.** The built-in names are `path`, `path.dir`, `path.stem`,
+- **Not derivable.** The built-ins are `path`, `path.dir`, `path.stem`,
   `definition.name`, `enclosing.name`, `source.*`, `external.*`, `row_kind`.
-  `definition.name` for this fact is the callee, `get`. Vapor routing is not
-  file-based, so `normalized_file_route` says nothing about it.
-- **Not joinable.** `fact_join_by_span` relates a fact to a fact. A string
-  literal in omega-swift is not a fact: the Pack's 43 templates emit no kind for
-  a `line_string_literal` anywhere, so there is nothing at that span to join to.
-  `fact_join_by_field` needs a published field on one side, which is the thing
-  being asked for.
+  `definition.name` on this fact is the callee, `get`.
+- **Not joinable.** The receiver is a `simple_identifier` inside the
+  `navigation_expression`; omega-swift emits no fact spanning it (a property
+  read outside call position is not recorded -- the Pack's own coverage guard
+  says so), so there is nothing at that span for `fact_join_by_span` to bind,
+  and `fact_join_by_field` would need the field being asked for.
 
-So it is genuinely a Pack change, and it is two captures on a query that already
-matches the node:
+It would retire `confidence: candidate` on `vapor.route.registration`,
+`vapor.controller.route` and `vapor.route.group`, and it is one capture on a
+query that already matches the node. This is reported for `OWED.md` rather than
+acted on here; the thirteen rules above are written against what omega-swift
+emits today.
 
-```scm
-(call_expression
-  .  [ … @call.callee … ]
-  (call_suffix (value_arguments (value_argument
-    (line_string_literal) @call.arg0))) ) @call
-```
-
-`receiver` (the `navigation_expression` prefix) would separate `app.get` from
-`dictionary.get` and retire the `confidence: candidate` on two rules; `arg0`
-would give Vapor, and every string-keyed API in Swift, its URLs back. The cost
-is the one the contract names: bytes on every `call.swift` emission in every
-Swift repository. **`arg0` is the one that earns it** — without it no Swift
-framework overlay can ever state a route path, a table name or a column name.
-`receiver` is a smaller win and can wait.
-
-This is reported for `OWED.md` rather than acted on here — the Pack is not this
-agent's to edit — and the twelve rules above are written against what
-omega-swift emits today.
+**Pack `omega-swift`, kind `call.arguments`, field `call.arg1_text`** (and
+`arg2_text`) -- the same strip applied to the later arguments. Without it,
+`routes.on(.PATCH, ":id", use: update)` and the multi-component spelling
+`todos.get("todos", ":id")` cannot contribute their path to an identity, because
+a canonical key template has no strip. Lower priority than `receiver`: it buys
+one Vapor spelling, where `receiver` buys precision for every Swift framework.

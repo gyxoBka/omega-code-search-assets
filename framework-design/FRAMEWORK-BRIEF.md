@@ -356,8 +356,19 @@ Nine Packs publish the canonical call view on their call templates:
 | `call.arg0` | `"/users/:id"` -- as written, quote bytes and all |
 | `call.arg0_text` | `/users/:id` -- without the quotes |
 | `call.arg1`, `call.arg2` | `mw`, `getUser` |
+| `call.arg1_text` | the second argument unquoted -- `r.Handle("GET", "/legacy", h)` puts the URL there |
 | `call.last_arg` | `getUser` |
 | `receiver` | `app` |
+
+| `call.arg0_name`, `call.last_arg_name` | `GetUser` -- the last segment of a qualified name |
+
+**Key a handler on `*_name`, never on the argument as written.** A handler is
+written `ctrl.GetUser`, `handlers.ListUsers`, `handlers::show_user` at the
+registration and declared as `GetUser`, `ListUsers`, `show_user`. Four
+frameworks in one wave keyed the route end on `call.last_arg` and lost *which
+function answers this route* -- and all three checks reported clean, because
+both keys are minted, they simply never meet. The separators are the language's
+own: omega-rust splits on `::` before `.`.
 
 **Key on `call.arg0_text`, never on `call.arg0`**: a canonical key template has
 no strip, so a value that carries its quote bytes cannot be an identity and can

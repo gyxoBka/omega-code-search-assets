@@ -5,108 +5,98 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-**12 overlay rules, 4 detection rules. 12 live, 0 cannot match.** (Was 12 rules,
-0 live.)
+**15 overlay rules, 4 detection rules. 15 live, 0 cannot match.** (Wave 5: 12
+rules, 12 live. Wave 1: 12 rules, 0 live.)
 
 Selector: `framework:gin`. Maturity: `semantic-overlay-full`. One language, one
 Pack: `omega-go`.
+
+`python pack-design/key_collisions.py gin` reports nothing, and
+`python pack-design/dangling_ends.py gin` reports nothing.
 
 ### Entities it declares
 
 | entity_kind | rules that mint it |
 |---|---|
-| `Handler` | 4 (`gin:handler:{name}`, deliberately path-free so a route in one file reaches a handler declared in another) |
-| `Router` | 5 (shared hub key, minted by every rule that points at it) |
+| `Handler` | 6 (`gin:handler:{name}`, deliberately path-free so a route in one file reaches a handler declared in another) |
+| `Router` | 8 (`gin:router:{path}:{function}` — one neutral hub kind, one attribute set) |
+| `Route` | 3 (`http:{method}:{normalized_route}` for the verb form, `gin:route:{path}:{start}` for `Handle`/`Match`) |
 | `Middleware` | 3 |
-| `Route`, `Controller`, `StaticResource`, `Dependency`, `Package`, `RequestModel`, `ValidatedField`, `RequestBinding` | 1 each |
+| `RouterConstructor` | 2 |
+| `Controller`, `RouterGroup`, `StaticResource`, `Dependency`, `Package`, `RequestModel`, `ValidatedField`, `RequestBinding` | 1 each |
 
 ### Relations it declares
 
 | relation_kind | rules |
 |---|---|
-| `configured_by` | 2 |
-| `handles`, `mounts`, `declares`, `uses_resource`, `depends_on`, `validates`, `binds_request` | 1 each |
+| `mounts` | 3 |
+| `handles`, `declares`, `configured_by` | 2 each |
+| `uses_resource`, `depends_on`, `validates`, `binds_request` | 1 each |
 
 ### Fact kinds it matches
 
 | kind | rules | a Pack emits it |
 |---|---|---|
-| `call.method` | 3 + 3 joins | yes (omega-go) |
+| `call.method` | 6 + 2 joins | yes (omega-go) |
 | `definition.return_type_candidate` | 3 | yes |
 | `definition.parameter_shape_candidate` | 2 | yes |
-| `import.package` | 1 | yes |
+| `import.package` | 1 + 9 joins | yes |
 | `reference.member` | 1 | yes |
 | `definition.tag_candidate` | 1 | yes |
 | `call.function` | 1 | yes |
-| `scope.function_body` | 5 joins | yes |
+| `scope.function_body` | 6 joins | yes |
 | `definition.function` | 3 joins | yes |
 | `definition.method`, `definition.receiver_candidate`, `definition.field`, `definition.struct` | 1 join each | yes |
-
-**No rule reads a Pack `field`.** `omega-go` publishes no `fields` and no
-`attributes` on any of its 47 templates, so the overlay has kind, name, path and
-span and nothing else. Everything a rule reads is a built-in — `definition.name`,
-`path`, `path.dir`, `source.start` — or a `<bind>.definition.name` from a join.
-Every span join carries `same_path: true`, because `same_path` defaults to
-`false` and a bare span join would otherwise pair facts from unrelated files.
 
 ---
 
 ## What was wrong with it
 
-**All 12 rules were dead, and 10 of them were dead twice over.**
+This is the second pass. The first pass (wave 5) killed the eight private Go
+fact kinds and the thirteen invented fields the generator had written against;
+that part of the history is below under *the wave-1 file*. What was wrong with
+the **wave-5 file** is one thing, and it was not the rules' fault:
 
-| cause | rules |
+**`omega-go` published no argument of a call, so a route had no URL.** All
+twelve rules were live and none of them could say what any route served. The
+file said so itself, four times: the first `coverage.gaps` entry, the
+`Route` key `gin:route:{path}:{method}:{handler}`, the whole *A field only the
+Pack can supply* section, and *Still to decide* items 2 and 3. `omega-go` now
+publishes `call.arg0`, `call.arg0_text`, `call.arg1`, `call.arg2`,
+`call.last_arg` and `receiver` on `call.method` and `call.function`. Measured on
+the fixture in this document:
+
+```
+470-503  call.method  name=GET  call.arg0="\"/users/:id\""  call.arg0_text="/users/:id"
+                                call.arg1="ctrl.GetUser"     call.last_arg="ctrl.GetUser"
+                                receiver="r"
+580-598  call.method  name=Group  call.arg0_text="/api/v1"   receiver="r"
+536-571  call.method  name=Handle call.arg0_text="GET"  call.arg1="\"/legacy\""  call.last_arg="Healthz"
+627-658  call.method  name=Static call.arg0_text="/assets"   call.arg1="\"./public\""
+405-426  call.method  name=Use    call.arg0_text="cors.Default()"  receiver="r"
+```
+
+So, concretely, what was wrong with the twelve rules that were all "live":
+
+| defect | rules affected |
 |---|---|
-| matched `call.go_receiver_string_identifier_context`, a kind no Pack emits | 5 |
-| matched `call.go_receiver_method_chain_string_argument_context` | 2 |
-| matched `definition.go_import_alias_constructor_binding_context` | 2 |
-| matched `definition.go_import_alias_group_binding_context` | 2 |
-| matched `definition.category_candidate` (join) | 2 |
-| matched `call.go_receiver_identifier_argument_context` | 1 |
-| matched `call.target_candidate` / `import.target_candidate`, carriers the Pack rewrite removed | 2 |
-| **also** read `receiver`, `method_name`, `path_literal`, `handler_identifier`, `import_path`, `constructor_name`, `group_method`, `group_binding`, `root_binding`, `prefix`, `binding`, `arg1`, `arg1_identifier` — 13 fields no Pack publishes | 10 |
-| **also** read the attribute `symbol_category`, which no Pack publishes | 2 |
+| a `Route` keyed by method + handler name rather than by the URL it serves, so gin's routes shared no identity with the ten other HTTP frameworks in this repository | 1 |
+| a route registered with a bare identifier handler (`r.GET("/healthz", Healthz)`) minted **no Route at all**, because the rule was written with the handler's `reference.member` as the current fact and a bare identifier emits none | 1 |
+| `StaticResource` keyed `gin:static:{path}:{source.start}` — a byte offset, so the same mount moves identity on every edit above it, and the URL it serves was not recorded | 1 |
+| no rule for `r.Group("/api/v1")` at all: the sub-router and its prefix were invisible | 0 (missing) |
+| **`role` on the shared `Router` hub was computed and thrown away.** Six rules minted `gin:router:{path}:{fn}` with three different `role` values; `candidate_order` sorts by rule id, so `gin.middleware.use_function_result` wins over `gin.router.engine_builder` and `role=engine_builder` never materialized in any file that also called `r.Use(...)`. The old document asserted the opposite — "`gin.router.engine_builder` … run first so their `role` attribute wins the first-materialization race" — and that claim was false. `key_collisions.py` could not see it because the kind was the same in all six. | 6 |
+| every call-keyed rule matched on the bare method name with no gate, so `X.GET(...)`, `X.Use(...)`, `X.Group(...)` and `X.Static(...)` in an Echo or Fiber file in the same repository would have been read as gin | 5 |
+| `parameter_shape` / `return_shape` / `form` / `source_form` carried as entity attributes on keys several rules mint, so the same first-rule-wins rule silently dropped them | 5 |
 
-Every one of the eight kinds was a private Go spelling invented by the old
-generator, and every one of the thirteen fields was a piece of a call's argument
-list that `omega-go` has never published. The file was written against a
-vocabulary in which `r.GET("/users/:id", ctrl.GetUser)` arrived as one fact
-carrying `receiver=r`, `method_name=GET`, `path_literal=/users/:id` and
-`handler_identifier=ctrl.GetUser`. Measured with `dump_call_emissions` on
-exactly that line, `omega-go` emits **two** facts:
+### What the wave-1 file got wrong, kept for the record
 
-```
-629-636  reference.member  name=GET       | api.GET
-629-664  call.method       name=GET       | api.GET("/users/:id", ctrl.GetUser)
-651-663  reference.member  name=GetUser   | ctrl.GetUser
-```
-
-`call.method`'s name is the selected member alone, its span is the whole call
-expression, and there is no string-literal fact anywhere. So the receiver, the
-package qualifier and **the route path are all unreachable**, and the argument
-that used to be `handler_identifier` is reachable only as a separate
-`reference.member` whose span lies inside the call's.
-
-That is the whole rewrite in one line: **the old file read a call's parts out of
-one fact; the new one relates the facts the call is made of, by span.**
-
-Two rules were also pure input-restatement and are gone rather than ported:
-`gin.generic-api-call.github-com-gin-gonic-gin` minted an `ApiUse` keyed by the
-call's own name with a `uses_api` edge to itself, and
-`gin.generic-dependency.github-com-gin-gonic-gin` minted a `Dependency` keyed by
-the import it had just read. The second is replaced by `gin.dependency.import`,
-which keeps the Dependency but gives it an end — the Go package that imports it.
-
-Five of the old rules were one Go spelling apiece of the same construct
-(`gin.route.root`, `gin.route.group`, `gin.route.any`, `gin.route.handle`,
-`gin.route.match`, differing only in which router binding and which method-name
-list they demanded). They are now one rule, `gin.route.registration`, because a
-`call.method` named `GET` and a `call.method` named `Any` are the same fact.
-
-Two dead clauses the audit now flags were **not** present here: no brace glob
-and no scoped-package `external_path_matches`. But `external` was unusable
-anyway — `omega-go` publishes no `qualifier`, so the two `external_path_matches`
-clauses in the old file could never have resolved even if their kinds existed.
+All 12 rules were dead, and 10 of them twice over: eight private Go fact kinds
+(`call.go_receiver_string_identifier_context` and friends), thirteen fields no
+Pack publishes (`receiver`, `method_name`, `path_literal`, `handler_identifier`,
+…), one attribute (`symbol_category`), and two `external_path_matches` clauses
+that could never resolve because `omega-go` publishes no `qualifier`. Five of
+them were one Go spelling apiece of the same construct. Two restated their
+input. The detail is in the wave-5 revision of this file.
 
 ---
 
@@ -114,141 +104,180 @@ clauses in the old file could never have resolved even if their kinds existed.
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
-| **Which functions are gin HTTP handlers** | `definition.parameter_shape_candidate` whose name globs `**gin.Context*`, joined `same`-span to `definition.function` | `Handler` `gin:handler:{name}` |
+| **Which route serves `GET /users/:id`, and which handler answers it** | `call.method` named `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`HEAD`/`OPTIONS`/`Any`, `call.arg0_text` for the URL, `call.last_arg` for the handler, gated by an `import.package` join on `github.com/gin-` | `Route` `http:{method}:{normalized_route}` (`method`, `route`) + `Handler` + `Router`; `Route handles Handler`, `Router mounts Route` carrying `registered_in` and `via_receiver` |
+| **…and which *declared* function that handler is**, across files | `reference.member` (not a router method name) joined `within` the same verb `call.method`, reading `reg.call.arg0_text` for the URL | the same `Route` key + `Handler` `gin:handler:{member}`, `Route handles Handler` |
+| **Which functions are gin HTTP handlers** | `definition.parameter_shape_candidate` globbing `**gin.Context*`, joined `same`-span to `definition.function` | `Handler` `gin:handler:{name}` |
 | **Which methods are gin handlers, and on which controller** | same, joined `same`-span to `definition.method` **and** `definition.receiver_candidate` | `Handler` + `Controller`, `Controller declares Handler` |
-| **Which functions are gin middleware** | `definition.return_type_candidate` globbing `**gin.HandlerFunc*`, joined `same`-span to `definition.function` | `Middleware` `gin:middleware:{name}` |
-| **Where is the engine built** | `definition.return_type_candidate` globbing `**gin.Engine*`, joined `same`-span to `definition.function` | `Router` `gin:router:{path}:{name}`, `role=engine_builder` |
-| **Which function builds a sub-router** | same, globbing `**gin.RouterGroup*` | `Router`, `role=group_builder` |
-| **Which handler answers which HTTP method, and where is it registered** | `reference.member` joined `within` a `call.method` named `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`HEAD`/`OPTIONS`/`Any`/`Handle`/`Match`, and `within` a `scope.function_body` | `Route` + `Handler` + `Router`; `Route handles Handler`, `Router mounts Route` |
-| **Which middleware is installed on which router** (local factory) | `call.function` joined `within` a `call.method` named `Use`, and `within` a `scope.function_body` | `Middleware` + `Router`, `Router configured_by Middleware` |
-| **…and from a third-party package** (`r.Use(cors.Default())`) | `call.method` joined `within` a `call.method` named `Use`, and `within` a `scope.function_body` | `Middleware` + `Router`, `Router configured_by Middleware` |
-| **Which routers serve static files or HTML templates** | `call.method` named `Static`/`StaticFS`/`StaticFile`/`StaticFileFS`/`LoadHTMLGlob`/`LoadHTMLFiles`, joined `within` a `scope.function_body` | `StaticResource` + `Router`, `Router uses_resource StaticResource` |
+| **Which routes are registered through `Handle`/`Match`, with which verb** | `call.method` named `Handle`/`Match`, `call.arg0_text` is the verb, `call.last_arg` the handler | `Route` `gin:route:{path}:{start}` + `Handler` + `Router`; `handles`, `mounts` |
+| **Which sub-routers exist, and at what URL prefix** | `call.method` named `Group`, `call.arg0_text` | `RouterGroup` `gin:group:{path}:{normalized_prefix}`, `Router mounts RouterGroup` |
+| **Where is the router constructed, and what does it return** | `definition.return_type_candidate` globbing `**gin.Engine*` / `**gin.RouterGroup*`, joined `same`-span to `definition.function` | `RouterConstructor` `gin:router-constructor:{path}:{fn}` (`return_shape`), `RouterConstructor declares Router` |
+| **Which functions are gin middleware** | `definition.return_type_candidate` globbing `**gin.HandlerFunc*` + `same`-span `definition.function` | `Middleware` `gin:middleware:{name}` |
+| **Which middleware is installed on which router, and how it is written** | `call.function` (local) or `call.method` (package) joined `within` a `call.method` named `Use`, reading `use.call.arg0_text` and `use.receiver` | `Middleware` + `Router`, `Router configured_by Middleware` carrying `installed_as`, `via_receiver`, `source_form` |
+| **What a router serves statically, and from which URL prefix** | `call.method` named `Static`/`StaticFS`/`StaticFile`/`StaticFileFS`/`LoadHTMLGlob`/`LoadHTMLFiles`, `call.arg0_text` | `StaticResource` `gin:static:{path}:{directive}:{mount}` + `Router`, `Router uses_resource StaticResource` |
 | **Which Go packages pull in gin or a gin-contrib middleware** | `import.package` whose name prefixes `github.com/gin-` | `Dependency` + `Package`, `Package depends_on Dependency` |
-| **Which request payloads gin validates, and with which rules** | `definition.tag_candidate` globbing `**binding:*`, joined `same`-span to `definition.field` and `within` `definition.struct` | `ValidatedField` (carries the whole struct tag) + `RequestModel`, `RequestModel validates ValidatedField` |
-| **Which handlers parse a request body, and with which binder** | `call.method` named `ShouldBind*`/`Bind*`/`MustBindWith`, joined `within` a `scope.function_body` | `RequestBinding` + `Handler`, `Handler binds_request RequestBinding` |
+| **Which request payloads gin validates, and with which rules** | `definition.tag_candidate` globbing `**binding:*`, `same`-span `definition.field`, `within` `definition.struct` | `ValidatedField` (the whole struct tag) + `RequestModel`, `RequestModel validates ValidatedField` |
+| **Which handlers parse a request body, with which binder and into what** | `call.method` named `ShouldBind*`/`Bind*`/`MustBindWith`, `call.arg0_text` for the bound variable, `within` `scope.function_body` | `RequestBinding` + `Handler`, `Handler binds_request RequestBinding` |
 
-### The two joins that carry the file
+### What is new since wave 5
+
+Three answers the overlay could not give at all:
+
+1. **A route has a URL.** `http:{method}:{normalized_route}` is the same key
+   space express, fastapi, rails, laravel and vapor mint, so `/users/:id`,
+   `/users/{id}` and `/users/[id]` are one route and a gin route can be asked
+   for by what it serves. A bare-identifier handler now mints a Route too,
+   because the rule's current fact is the call and not the handler reference.
+2. **A sub-router has a prefix.** `r.Group("/api/v1")` is a `RouterGroup` the
+   enclosing router `mounts`.
+3. **A static mount has a URL**, and a `Use(...)` edge carries the expression as
+   it was written (`cors.Default()`), which is the only place the middleware's
+   package survives.
+
+And one defect removed: the `Router` hub now carries **one** attribute set
+(`router_name`, `declared_in`) in all eight rules that mint it, so nothing it
+computes depends on rule-id ordering. The classification that used to live in
+`role` moved to its own key space, `gin:router-constructor:{path}:{fn}`, related
+back to the hub by `declares` — remedy 2 in brief §3g, chosen over remedy 1
+because `return_shape` is a real value and not just a label.
+
+### The three joins that carry the file
 
 `definition.parameter_shape_candidate` and `definition.return_type_candidate`
 are emitted on a span **byte-identical** to the declaration's own, so
 `fact_join_by_span` with `relation: "same"` reaches the declaration from the
-signature text with no Pack field at all. That is what makes
-*which functions take a `*gin.Context`* — the only reliable definition of a gin
-handler — statable, and the same trick answers *which function returns
-`gin.HandlerFunc`* and *which returns `*gin.Engine`*. It is the same join
-`omega-framework-kotlin-multiplatform` found on `definition.modifier_candidate`.
+signature text with no Pack field at all. That is what makes *which functions
+take a `*gin.Context`* — the only reliable definition of a gin handler —
+statable.
 
 `call.method`'s span covers the whole call expression, so everything written
-inside a gin call — the handler reference, the middleware constructor — lies
-*within* it. Every rule about a call's arguments is therefore written with the
-**argument as the current fact** and the call joined `within`, not the other way
-round.
+inside a gin call lies *within* it. The handler-reference rule and the two
+middleware rules are written with the **argument as the current fact** and the
+call joined `within`, which is also how they read the call's own
+`call.arg0_text` back out through the bind (`reg.call.arg0_text`,
+`use.call.arg0_text`).
+
+`fact_join_by_field` on `import.package` with `same_path` is the gate. Every
+rule keyed on a bare method name (`GET`, `Use`, `Group`, `Static`,
+`ShouldBindJSON`, `Handle`) carries it, because Echo spells its routes `e.GET`
+and Fiber spells its groups `app.Group`, and without the gate a repository
+holding two Go web frameworks would attribute both to gin. `external_path_matches`
+is not an option here: `omega-go` publishes no `qualifier`, so `external` is
+empty on every Go fact (brief §3i).
 
 ### Key containment
 
-Canonical keys minted: `gin:handler:{name}`, `gin:controller:{path}:{name}`,
-`gin:middleware:{name}`, `gin:router:{path}:{name}`,
-`gin:route:{path}:{method}:{handler}`, `gin:static:{path}:{start}`,
-`gin:dependency:{module}`, `gin:package:{dir}`,
-`gin:request-model:{path}:{name}`, `gin:validated-field:{path}:{model}:{field}`,
+Canonical keys minted: `http:{method}:{normalized_route}`,
+`gin:route:{path}:{start}`, `gin:handler:{name}`,
+`gin:controller:{path}:{name}`, `gin:middleware:{name}`,
+`gin:router:{path}:{fn}`, `gin:router-constructor:{path}:{fn}`,
+`gin:group:{path}:{normalized_prefix}`,
+`gin:static:{path}:{directive}:{mount}`, `gin:dependency:{module}`,
+`gin:package:{dir}`, `gin:request-model:{path}:{name}`,
+`gin:validated-field:{path}:{model}:{field}`,
 `gin:request-binding:{path}:{start}`.
 
-Keys addressed by a relation end: `gin:controller:…`, `gin:handler:…`,
-`gin:router:…`, `gin:package:…`, `gin:request-model:…`, plus `current`. Every
-one of them is minted **by the same rule that addresses it**, under the same
-clauses, so no end can dangle — the failure wave 1 found in unity and wave 2
-found in next-js. `gin:router:{path}:{name}` is the shared hub: the five rules
-that point at a router each mint it, and `gin.router.engine_builder` /
-`gin.router.group_builder` run first so their `role` attribute wins the
-first-materialization race in `overlay_ir.rs`.
+Every key a relation end addresses is minted by the same rule that addresses it,
+under the same clauses, with one deliberate exception:
+`gin.route.handler_reference` addresses `http:{method}:{normalized_route}` and
+mints it as its own first output with attribute expressions that render the same
+values as `gin.route.registration`'s, because that rule's clauses are a strict
+superset of this one's (any handler reference inside a verb call implies the verb
+call). Both mint it as kind `Route`, so §3g's first-rule-wins costs nothing.
 
 In every rule the entity meant by `current` is the **first** entity output, per
 the `emit()` rule that sets `own_key` once in output order.
-
-Measured end to end: a 60-line gin file (router constructor, group, controller
-methods, middleware, static mounts, binding tags) put 11 of the 12 rules into
-output — 38 entity candidates and 19 relation candidates, 0 unresolved attributes and 0 unresolved
-keys. The twelfth, `gin.router.group_builder`, is byte-for-byte
-`gin.router.engine_builder` with one glob changed and needs only a
-`*gin.RouterGroup`-returning function in the fixture.
 
 ---
 
 ## A field only the Pack can supply
 
-**Pack `omega-go`, kind `call.method` (and `call.function`), field
-`arguments`** — or, better, a separate emission per string-literal argument.
+**Pack `omega-go`, kinds `call.method` and `call.function`, field
+`call.arg1_text`** (and `call.arg2_text`, `call.last_arg_text`).
 
-`omega-go` emits no fact for a `interpreted_string_literal` anywhere. The
-consequence is the single largest thing this overlay cannot say:
+`call.arg0_text` exists precisely because a canonical key template has no strip
+and a value carrying its quote bytes can never be an identity (brief §3l). The
+same is true of every other argument, and `omega-go` publishes `call.arg1` and
+`call.arg2` raw. Two gin constructs put their route in argument **1**, not 0:
 
-- **a route's path.** `r.GET("/users/:id", h)` is `call.method GET` and nothing
-  more, so `Route` is keyed by method plus handler name and *which route serves
-  `/users/:id`* has no answer. Every other HTTP framework in this repository —
-  fastapi, rails, laravel, vapor — answers it, and gin cannot.
-- **a group's prefix**, so nested `r.Group("/api/v1")` cannot be composed into a
-  route's full path.
-- **the directory and URL of a static mount**, so `StaticResource` records only
-  that a mount exists and in which function.
-- **the verb of `Handle("GET", …)` and `Match([]string{…}, …)`**, which are
-  string arguments too.
+- `r.Handle("GET", "/legacy", h)` and `r.Match([]string{...}, "/x", h)` — the
+  verb is `arg0`, the URL is `arg1`, and it arrives as `"\"/legacy\""`. So the
+  one route form gin shares with `net/http`'s vocabulary cannot join the
+  `http:{method}:{normalized_route}` key space that every other route in this
+  file uses.
+- `r.Static("/assets", "./public")` and `r.StaticFS`, whose served directory is
+  `arg1`. The mount's URL is recorded; what it serves is not.
 
 Why neither of the first two options in the brief reaches it:
 
 1. **Derivation.** The built-ins give `path`, `path.dir`, `path.stem`,
-   `definition.name` and the span. A route path is neither the artifact path nor
-   any emission's name; gin is not a file-routed framework, so
-   `normalized_file_route` has nothing to derive from.
-2. **A join.** `fact_join_by_span` relates two *emissions*. There is no emission
-   at the literal's span to join to — the literal produces nothing at all. A
-   join can only reach a fact that exists, and this one does not.
+   `definition.name` and the span. A route's second argument is none of those,
+   and gin is not a file-routed framework, so `normalized_file_route` has
+   nothing to derive from. `normalize_route` does not strip quotes either —
+   `normalize_http_path("\"/legacy\"")` trims `/` and returns `/"/legacy"`.
+2. **A join.** `omega-go` emits no fact at an `interpreted_string_literal`'s
+   span, so there is no emission to join to. `fact_join_by_span` relates two
+   emissions and this one does not exist.
 
-So this is the third case: a Pack field. The cheapest shape that fixes all four
-bullets is one new template, `literal.string`, named by the literal's text and
-spanned on the literal node — then the existing `within` join reaches it from
-the enclosing `call.method` exactly as `reference.member` already does, at no
-cost to any `call.*` emission that has no literal in it. It is not a gin
-concern: every Go framework overlay (and `omega-framework-tokio`'s addresses,
-and any SQL-in-Go rule) has the same hole.
+The shape is already decided: `call.arg0_text` is a `default` to `""` wrapped in
+one `strip_prefix`/`strip_suffix` pair per quote style, and Go has two (`"` and
+`` ` ``). `call.arg1_text` is the identical expression over `select(…, 1)`. It
+costs the same bytes on the same emissions that already carry `call.arg1`.
 
-A second, much smaller item: **`call.method` publishes the selected member but
-not the receiver's package.** `r.Use(cors.Default())` yields `call.method
-Default`, so the middleware is keyed `gin:middleware:Default` and collides with
-`gin.Default`. `reference.member` has the same limitation — it spans
-`cors.Default` but is named `Default`. A `qualifier` field on `reference.member`
-would fix it, and is the same `qualifier` row already in `OWED.md` item 1 for
-the JS/TS Packs.
+This is not a gin concern. Every framework whose registration API puts a path in
+the second argument has it — `omega-framework-echo`'s `e.Static(prefix, root)`,
+`omega-framework-fiber`'s `app.Add(method, path, h)` and `app.Static`, and
+`net/http`'s `mux.Handle(pattern, h)`.
+
+A second, much smaller item, unchanged from wave 5: **`reference.member` is
+named by the selected member alone and publishes no receiver.** `call.method`
+now publishes `receiver`, but `reference.member` does not, so
+`r.Use(cors.Default())` still keys the middleware `gin:middleware:Default` and
+collides with `gin.Default`. A `receiver` field on `reference.member` — the same
+capture the `call.method` template already takes — would fix it.
 
 ---
 
 ## Still to decide
 
 1. **Is `gin:handler:{name}` path-free correctly?** The key deliberately omits
-   the path so a `r.GET("/x", ctrl.GetUser)` in `routes.go` reaches the
+   the path so `r.GET("/x", ctrl.GetUser)` in `routes.go` reaches the
    `func (c *UserController) GetUser(c *gin.Context)` declared in
    `controllers/user.go` — the one edge a language Pack cannot state. The price
    is that two unrelated `GetUser` handlers in two Go packages become one
-   entity. `omega-framework-kotlin-multiplatform` made the same trade
-   deliberately for `expect`. It can be tightened to
-   `gin:handler:{path.dir}:{name}` if same-package registration turns out to be
-   the norm, which would keep most real edges and lose cross-package ones.
-2. **`gin.middleware.use_package_result` has no way to tell gin middleware from
-   any other method call inside a `Use(…)`.** `r.Use(a.B(c.D()))` mints
+   entity. It can be tightened to `gin:handler:{path.dir}:{name}` if
+   same-package registration turns out to be the norm, which would keep most
+   real edges and lose cross-package ones.
+2. **A qualified registration mints two Handler entities.** For
+   `r.GET("/users/:id", ctrl.GetUser)`, `gin.route.registration` mints
+   `gin:handler:ctrl.GetUser` from `call.last_arg` and
+   `gin.route.handler_reference` mints `gin:handler:GetUser` from the inner
+   `reference.member`; the Route has a `handles` edge to both. Only the second
+   meets the declaration. The first is kept because it is the *only* thing that
+   works for the bare-identifier form (`r.GET("/healthz", Healthz)`), which is
+   the commoner spelling in small gin services, and there is no clause that can
+   ask whether `call.last_arg` contains a dot. Collapsing it needs either
+   `call.last_arg_text` split on `.` in the Pack, or a `field_contains` clause
+   in the overlay — neither exists, and neither is worth asking for to remove
+   one duplicate edge.
+3. **A route's full path is the route as written, not the composed path.**
+   `api := r.Group("/api/v1"); api.GET("/ping", h)` mints
+   `http:GET:/ping`, not `http:GET:/api/v1/ping`. Composing them needs to know
+   that the receiver `api` is the value of that `Group` call, and Go's short
+   variable declaration emits no `definition.variable` at all (measured: `var
+   req CreateReq` emits one, `api := r.Group(...)` emits none). Both halves are
+   published — the group's prefix on the `RouterGroup`, the receiver name on the
+   `mounts` edge — so a consumer can compose them; the overlay does not, because
+   the binding from `api` to the call is a fact no Pack states.
+4. **`gin.middleware.use_package_result` still cannot tell gin middleware from
+   any other method call inside a `Use(...)`.** `r.Use(a.B(c.D()))` mints
    `gin:middleware:B` *and* `gin:middleware:D`, because both lie within the
-   `Use` call's span. Narrowing it needs argument-position information, which is
-   the Pack change above. Kept as-is: the overlay only runs on projects the
-   detector says are gin, and over-naming a middleware is a cheaper error than
-   naming none.
-3. **A bare-identifier handler is invisible to `gin.route.registration`.**
-   `r.GET("/healthz", Healthz)` emits no `reference.member` for `Healthz` — a
-   plain identifier is not a `selector_expression` — so no `Route` is minted,
-   although `gin.handler.function` still declares `Healthz` as a `Handler`. This
-   is the same literal/argument gap: `call.function` is emitted only for a call,
-   not for an identifier passed as a value. Recording it rather than working
-   around it, because the workaround (joining *any* identifier-shaped fact
-   within the call) would have to invent a fact.
-4. **`LoadHTMLGlob` / `LoadHTMLFiles` are in the static list.** They mount HTML
-   templates, not a static directory, so they arguably want their own entity
-   kind. Folded into `StaticResource` with a `directive` attribute for now,
-   since without the literal argument the two are indistinguishable in what they
-   can say.
+   `Use` call's span. `use.call.arg0_text` now records the written expression on
+   the edge, which makes the over-naming legible but does not prevent it.
+   Narrowing it needs argument-position information the Pack does not publish.
+   Kept as-is: the overlay only runs on projects the detector says are gin, and
+   over-naming a middleware is a cheaper error than naming none.
+5. **`LoadHTMLGlob` / `LoadHTMLFiles` are in the static list.** They mount HTML
+   templates, not a static directory. They are now distinguishable — the
+   `directive` attribute is in the key and the glob is the `mount` — so folding
+   them into `StaticResource` costs nothing an agent cannot undo with one field
+   read. Splitting them into their own entity kind is still open.

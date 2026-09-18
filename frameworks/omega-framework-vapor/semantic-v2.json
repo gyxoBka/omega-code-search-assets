@@ -35,6 +35,7 @@
       "Payload",
       "RequestHandler",
       "Route",
+      "RouteGroup",
       "RouteRegistrar",
       "VaporFile",
       "VaporType",
@@ -953,7 +954,7 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.swift"
+          "value": "call.arguments"
         },
         {
           "kind": "field_in",
@@ -966,9 +967,13 @@
             "delete",
             "head",
             "options",
-            "on",
             "webSocket"
           ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0",
+          "value": "\""
         },
         {
           "kind": "path_segment",
@@ -1006,6 +1011,23 @@
       "outputs": [
         {
           "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
           "entity_kind": "RouteRegistrar",
           "canonical_key": {
             "template": "vapor:registrar:{path}:{fn.definition.name}"
@@ -1015,34 +1037,9 @@
               "kind": "field_ref",
               "field": "fn.definition.name"
             },
-            "path": {
+            "file": {
               "kind": "field_ref",
               "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "template": "vapor:route:{path}:{fn.definition.name}:{definition.name}:{source.start}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "function": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
             }
           }
         },
@@ -1055,7 +1052,7 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "vapor:route:{path}:{fn.definition.name}:{definition.name}:{source.start}"
+            "template": "http:{method}:{normalized_route}"
           },
           "attributes": {
             "method": {
@@ -1067,14 +1064,14 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "Where the routes are declared and which HTTP methods they answer. Eleven per-verb rules collapse to one over the callee's own name; the declaring function is the declaration whose span contains the call, which also covers a route written inside a group closure because the closure lies inside that function. The URL is a string argument and omega-swift captures no call arguments, so the method and the declaring function are the whole of what a Pack states."
+      "coverage_note": "Which URL a route serves, and which HTTP method answers it. omega-swift emits call.arguments on the same span as the call, carrying call.arg0_text -- the first argument with its quote bytes stripped -- so a Vapor route is keyed by what it serves, http:{method}:{normalized_route}, the identity every HTTP framework here mints. The method is the callee's own name, so eleven per-verb rules stay collapsed into one; requiring call.arg0 to begin with a quote keeps the rule to routes written with a literal path and drops dictionary.get(key) and the label-only spelling todos.get(use: index). The declaring function is the declaration whose span contains the call, which also covers a route written inside a group closure."
     },
     {
       "id": "vapor.controller.route",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.swift"
+          "value": "call.arguments"
         },
         {
           "kind": "field_in",
@@ -1087,9 +1084,13 @@
             "delete",
             "head",
             "options",
-            "on",
             "webSocket"
           ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0",
+          "value": "\""
         },
         {
           "kind": "path_segment",
@@ -1135,6 +1136,23 @@
       "outputs": [
         {
           "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
           "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
@@ -1151,31 +1169,6 @@
           }
         },
         {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "template": "vapor:route:{path}:{fn.definition.name}:{definition.name}:{source.start}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "function": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            }
-          }
-        },
-        {
           "kind": "relation_candidate",
           "relation_kind": "serves",
           "source": {
@@ -1184,7 +1177,7 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "vapor:route:{path}:{fn.definition.name}:{definition.name}:{source.start}"
+            "template": "http:{method}:{normalized_route}"
           },
           "attributes": {
             "method": {
@@ -1196,7 +1189,118 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "Which HTTP methods a controller serves. The same match as vapor.route.registration plus the enclosing type, so the route key it addresses is always minted by that rule; it mints the type key as well, because vapor.controller.declaration only mints that key for a type that declares a RouteCollection conformance."
+      "coverage_note": "Which URLs a controller serves. The same match as vapor.route.registration plus the enclosing type, and it mints the Route under the identical key with the identical kind and the identical attributes, so the two rules agree on the identity (brief 3g) and the serves edge never dangles. It mints the neutral hub as well, because a type need not conform to RouteCollection to register a route."
+    },
+    {
+      "id": "vapor.route.group",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "grouped",
+            "group"
+          ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0",
+          "value": "\""
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "Pods",
+            "Carthage",
+            ".build",
+            "DerivedData",
+            "Checkouts"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.swift_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "Vapor"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteGroup",
+          "canonical_key": {
+            "template": "vapor:group:{path}:{fn.definition.name}:{normalized_prefix}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "function": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteRegistrar",
+          "canonical_key": {
+            "template": "vapor:registrar:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "function": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:registrar:{path}:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:group:{path}:{fn.definition.name}:{normalized_prefix}"
+          },
+          "attributes": {
+            "prefix": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Which path prefix the routes declared in this function sit under: routes.grouped(\"api\", \"v2\"). The prefix is the first argument of the grouping call, reachable since omega-swift began emitting call.arguments, and it is route-normalized so a parameterised prefix agrees with the route spellings of every other framework. Only the first prefix component is stated -- grouped(\"api\", \"v2\") gives /api -- and a group nested in another group is not folded in."
     },
     {
       "id": "vapor.controller.handler",
@@ -1672,14 +1776,135 @@
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
       "coverage_note": "Which controllers, middleware, migrations and jobs this app actually installs: app.register(collection: TodoController()), app.middleware.use(APIKeyMiddleware()), app.migrations.add(CreateTodo()), routes.grouped(UserAuthenticator()). The component is a type constructed inside the installing call, which the Pack states as a call.swift whose span lies strictly inside it; the twenty-six lowercase-initial exclusions keep type constructors and drop ordinary calls. The target is the shared VaporTypeName node the declaration rules link to the declaring type, so this edge resolves across files -- the one cross-file answer Swift's names permit."
+    },
+    {
+      "id": "vapor.route.registration.bare",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "head",
+            "options",
+            "webSocket",
+            "on"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "call.arg0",
+          "value": "\""
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "Pods",
+            "Carthage",
+            ".build",
+            "DerivedData",
+            "Checkouts"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.swift_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "Vapor"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "vapor:route:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "handler": {
+              "kind": "field_ref",
+              "field": "call.last_arg_name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteRegistrar",
+          "canonical_key": {
+            "template": "vapor:registrar:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "function": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers_route",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:registrar:{path}:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:route:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "`todos.get(use: index)` and `todos.on(.PATCH, \":todoID\", use: update)` register a route whose path is not the first argument -- it is inherited from the group, or it comes after the method. The registration is real and is stated where it is written; only its URL is not derivable here."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "a route's URL is unreachable: omega-swift captures a call's callee and nothing else, so the string literals in app.get(\"todos\", \":id\") are stated by no Pack fact and the overlay states the HTTP method and the declaring function instead",
-      "a group prefix, a schema name (static let schema = \"todos\") and a @Field(key:) column name are string literals for the same reason",
-      "a route registered against a named handler (use: create) is not tied to that handler: the handler identity is an argument, not a callee",
+      "a route's URL is the first argument of the registration call only: todos.get(\"todos\", \":id\") states /todos, and the remaining path components are further arguments, for which the Pack publishes call.arg1 and call.arg2 with their quote bytes still on and no text form an identity could key on",
+      "routes.on(.PATCH, \":id\", use: update) is not keyed by URL: its first argument is the method and the path is call.arg1, which carries its quotes",
+      "a group prefix is stated but not composed: a route inside routes.grouped(\"api\") is keyed by its own path, not by /api joined to its path, because the overlay cannot concatenate two facts",
+      "a schema name (static let schema = \"todos\") and a @Field(key:) column name are string literals in a property initialiser and a property-wrapper attribute, neither of which is a call omega-swift emits call.arguments for",
+      "a route registered against a named handler (use: create) is not tied to that handler: call.last_arg for that spelling is the whole labelled argument, \"use: create\", not the function name",
+      "omega-swift publishes no receiver, so a route rule cannot separate app.get from dictionary.get and stays confidence: candidate",
       "middleware ordering, dependency injection through Application storage and runtime router mutation are runtime semantics"
     ]
   },

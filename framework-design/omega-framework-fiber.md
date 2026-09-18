@@ -75,11 +75,14 @@ Path globs: `**/*.go`.
 
 ## What was wrong with it
 
-All 14 rules were dead. Measured before the rewrite:
+Two rewrites, two different faults. Both are recorded because the second one is
+invisible unless you know the first.
+
+### Pass 1: every rule was dead (14 of 14)
+
+Measured before the first rewrite:
 
     omega-framework-fiber: 14 overlay rules, 4 detection rules -- 0 live, 14 cannot match
-
-Three separable faults, with counts.
 
 **Ten fact kinds, none of which any Pack emits (14 of 14 rules).** Every rule was
 keyed to the old generator's private Go spellings —
@@ -89,126 +92,174 @@ keyed to the old generator's private Go spellings —
 `call.go_receiver_identifier_argument_context`,
 `call.go_receiver_method_chain_string_argument_context`, plus the two carriers
 the host never folded, `call.target_candidate` and `import.target_candidate`.
-omega-go emits 47 templates and not one of these.
 
-**Fifteen fields, none of which any Pack publishes.** `import_path`,
+**Fifteen fields, none of which any Pack published.** `import_path`,
 `constructor_name`, `method_name`, `receiver`, `path_literal`,
 `handler_identifier`, `group_method`, `package_receiver`, `binding`,
-`root_binding`, `group_binding`, `prefix`, `arg1_identifier`, `arg1` — and one
-attribute, `symbol_category`. **omega-go publishes no `fields` and no
-`attributes` on any of its 47 templates at all**, so every `field_present`
-(x32), `field_in` (x20) and `field_equals` (x12) clause in the file read
-something that cannot exist. The whole file was written against a Pack that no
-longer exists.
+`root_binding`, `group_binding`, `prefix`, `arg1_identifier`, `arg1`, and the
+attribute `symbol_category`: 32 `field_present`, 20 `field_in` and 12
+`field_equals` clauses reading values that could not exist.
 
-**Eight rules were four rules written twice.** `fiber.router.root` /
-`fiber.router.root.unaliased`, `.group` / `.group.unaliased`, `fiber.route.root`
-/ `.root.unaliased`, `fiber.route.group` / `.group.unaliased` were byte-identical
-apart from reading `binding` versus `package_receiver` — the difference between
-`f := fiber.New()` reached through an aliased import and through an unaliased
-one. The overlay has no access to an import's alias relative to a call, so the
-distinction was never real; the collapse is 8 rules to 2.
+**Eight rules were four rules written twice** — `.root` / `.root.unaliased`,
+`.group` / `.group.unaliased` and so on, differing only in `binding` versus
+`package_receiver`. Two more (`fiber.generic-api-call.*`,
+`fiber.generic-dependency.*`) minted an entity named after their own input.
 
-Two rules were pure restatement. `fiber.generic-api-call.*` minted an `ApiUse`
-keyed by the thing it had just read, and `fiber.generic-dependency.*` a
-`Dependency` likewise, both over carrier kinds that resolved to nothing. Both
-are gone; the dependency question is answered properly by
-`fiber.dependency.import` over `import.package`.
+That pass produced 10 live rules.
 
-**14 rules -> 10, all live.**
+### Pass 2: a route had no URL (7 of 10 rules)
 
-    omega-framework-fiber: 10 overlay rules, 4 detection rules -- 10 live, 0 cannot match
+The pass-1 file was clean by the audit and still could not answer the one
+question a router framework exists to answer. Its own `coverage.gaps` said so:
+
+> omega-go publishes no call argument, so no route path literal, no mounted
+> directory and no Group prefix is reachable; a Route is identified by its
+> registration site, and the URL it serves is not stated.
+
+That sentence is now false. omega-go publishes `call.arg0`, `call.arg0_text`,
+`call.arg1`, `call.arg2`, `call.last_arg` and `receiver` as fields on
+`call.method` and `call.function`. Measured with `dump_call_emissions` on a
+hand-written `main.go`:
+
+    347-377  call.method  name=Get  call.arg0="\"/users/:id\""  call.arg0_text="/users/:id"
+                                    call.arg1="getUser"  call.last_arg="getUser"  receiver="app"
+
+The concrete damage in the pass-1 file, with counts:
+
+| what was wrong | rules affected |
+|---|---|
+| `Route` keyed `fiber:route:{path}:{source.start}` — a byte offset, so the same URL in two files was two entities and no question could reach it by URL | 2 (`fiber.route.registration`, `fiber.route.registrar`) |
+| the handler edge was guessed from `reference.member` inside the call span, which fires for every middleware argument as well as the handler, and misses a plain `getUser` that emits no member reference at all | 1 (`fiber.route.handler_reference`, 25 hand-maintained exclusions) |
+| `RouteGroup` said a sub-router existed but not its prefix | 1 |
+| `StaticResource` said files were served but not under which URL or from which directory | 1 |
+| `Middleware` said a `Use()` happened but not which middleware | 1 |
+| `Service` said the server started but not on which address | 1 |
+| no rule at all for `fiber.New()`, because `New` could not be told from any other `New` without the receiver | 0 (missing) |
+
+**10 rules -> 11, all live.**
+
+    omega-framework-fiber: 11 overlay rules, 4 detection rules -- 11 live, 0 cannot match
+
+Net: one rule deleted (`fiber.route.handler_reference`, superseded by
+`call.last_arg`), two added (`fiber.app.construct`, made possible by `receiver`;
+`fiber.route.add`, split out because `Add` puts the verb in argument 0), and
+`fiber.route.registration` renamed `fiber.route.verb` and rekeyed by URL.
 
 ## What it states now
 
-omega-go is an extreme case of the rewritten Pack vocabulary: kind, name, path
-and span, and nothing else. Every rule below is built from those four, plus
-`fact_join_by_span`/`within` and one `fact_join_by_field` on `path` that gates
-each rule on the file importing something under `github.com/gofiber/`.
+Every rule is gated on the same clause — a `fact_join_by_field` on `path`
+requiring the file to import something under `github.com/gofiber/` — so
+`call.method Get` never means `Map.Get`.
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
-| Which Go files are Fiber files, and which part of the stack each pulls in (router, `middleware/*`, storage driver, template engine, contrib) | `import.package`, name prefixed `github.com/gofiber/` | `FiberFile` `fiber:file:{path}`, `Dependency` `fiber:package:{module}`, `depends_on` |
-| Where an HTTP route is registered and under which verb | `call.method` named `Get`…`Add` (11 verbs), in a file that imports gofiber | `Route` `fiber:route:{path}:{offset}`, `declares` from the `FiberFile` |
-| Which function wires the routing table up — *where do I add a route* | the same call, `within` `scope.function_body` | `RouteRegistrar` `fiber:registrar:{path}:{fn}`, `registers_route` -> Route |
-| Where the request pipeline is assembled | `call.method` named `Use`, `within` `scope.function_body` | `Middleware` `fiber:middleware:{path}:{offset}`, `configured_by` from the registrar |
-| Where the URL tree branches into sub-routers | `call.method` named `Group`, `Route`, `Mount` | `RouteGroup` `fiber:group:{path}:{offset}`, `mounts` from the registrar |
-| Whether the service also serves files off disk, and from where in the code | `call.method` named `Static` | `StaticResource` `fiber:static:{path}:{offset}`, `uses_resource` from the registrar |
-| Which function starts the server, and whether it serves TLS — the process entry point | `call.method` named `Listen`, `ListenTLS`, `ListenMutualTLS`, … | `Service` `fiber:service:{path}:{fn}`, `declares` from the `FiberFile` |
-| Which plain functions are Fiber handlers | `type_use.name` named `Ctx` (from `*fiber.Ctx`), `within` `definition.function` | `Handler` `fiber:handler:{path}:{fn}`, `HandlerName` `fiber:handler-name:{fn}`, `declares` |
-| Which types are Fiber controllers and which of their methods answer requests | `type_use.name` `Ctx` `within` `definition.method` **and** `within` `definition.receiver_candidate` | `Handler`, `Controller` `fiber:controller:{path}:{type}`, `declares` controller -> handler |
-| Which handler answers a given registration — the one cross-file edge | `reference.member` `within` a route-registering `call.method`, with the registration and middleware-constructor names excluded | `HandlerName` `fiber:handler-name:{name}`, `handles` -> the `Route` |
+| **Which URL does this route serve, and under which verb** | `call.method` named `Get`…`All`, `call.arg0_text` | `Route` `http:{method}:{normalized_route}`, `declares` from the `FiberFile` |
+| **Which handler answers it** | the same call's `call.last_arg` | `HandlerName` `fiber:handler-name:{call.last_arg}`, `handles` Route -> HandlerName |
+| Which files are Fiber files, and which part of the stack each pulls in | `import.package`, name prefixed `github.com/gofiber/` | `FiberFile` `fiber:file:{path}`, `Dependency` `fiber:package:{module}`, `depends_on` |
+| Where the application object is constructed | `call.method` named `New` with `receiver` = `fiber` | `Application` `fiber:app:{path}:{offset}`, `declares` from the `FiberFile` |
+| Which function wires the routing table up — *where do I add a route* | the same verb call, `within` `scope.function_body` | `RouteRegistrar` `fiber:registrar:{path}:{fn}`, `registers_route` -> the Route's URL key |
+| A route registered with a non-standard verb | `call.method` named `Add`, `call.arg0_text` = the verb, `call.arg1` = the URL | `Route` `fiber:route:{path}:{offset}`, `handles`, `declares` |
+| Which middleware are installed, and in which function | `call.method` named `Use`, `call.last_arg` | `Middleware` `fiber:middleware:{path}:{call.last_arg}`, `configured_by` from the `FiberFile` |
+| Which URL subtree a sub-router owns | `call.method` named `Group`/`Route`/`Mount`, `call.arg0_text` | `RouteGroup` `fiber:group:{normalized_prefix}`, `mounts` from the `FiberFile` |
+| Which URL prefix serves files off disk, and from which directory | `call.method` named `Static`, `call.arg0_text` + `call.arg1` | `StaticResource` `fiber:static:{normalized_mount}`, `uses_resource` from the `FiberFile` |
+| Which function starts the server, on which address, and whether over TLS | `call.method` named `Listen`…`Listener`, `call.arg0_text` | `Service` `fiber:service:{path}:{fn}`, `declares` from the `FiberFile` |
+| Which plain functions are Fiber handlers | `type_use.name` named `Ctx`, `within` `definition.function` | `Handler` `fiber:handler:{path}:{fn}`, `HandlerName` `fiber:handler-name:{fn}`, `declares` |
+| Which types are controllers and which of their methods answer requests | `type_use.name` `Ctx` `within` `definition.method` **and** `within` `definition.receiver_candidate` | `Handler`, `Controller` `fiber:controller:{path}:{type}`, `declares` |
 
-Two joins carry the file. `scope.function_body` is emitted by omega-go for every
-function and method body, so *which function does this* costs no Pack field.
+Three joins carry the file. `scope.function_body` is emitted for every function
+and method body, so *which function does this* costs no Pack field.
 `definition.receiver_candidate` spans the whole `method_declaration` and is named
-for the receiver's type, so `within` reaches the owning struct from anything
-inside the method — the only place in Go where the link between a method and its
-type is written down, and the same trick omega-kotlin-multiplatform used on
-`definition.modifier_candidate`.
+for the receiver's type, so `within` reaches the owning struct — the only place
+in Go where the link between a method and its type is written down. The import
+join is the package gate.
 
-Key hygiene: every canonical key a relation addresses is minted by a rule with
-the same or weaker conditions. `fiber:registrar:…` is minted by each of the four
-rules that address it; `fiber:handler-name:…` is minted by the two handler rules
-*and* by `fiber.route.handler_reference` itself, so a route pointing at a symbol
-that is not recognisable as a handler still lands on an entity that exists;
-`fiber:route:…` is minted by `fiber.route.registration`, whose clauses are a
-strict subset of those in the two rules that point at it.
+**Key hygiene.** `http:{method}:{normalized_route}` is minted only by
+`fiber.route.verb`; `fiber.route.registrar` addresses it and carries that rule's
+clauses byte for byte, including `field_present call.arg1`, so it can never point
+at a key that was not minted. `fiber:handler-name:{…}` is minted by
+`fiber.route.verb` and `fiber.route.add` at the registration side and by
+`fiber.handler.function` / `fiber.handler.method` at the declaration side, under
+one kind, so an unrecognised handler still lands on an entity that exists. Every
+FiberFile emission carries the identical attribute pair (`file`, `framework`), so
+the first-rule-wins overwrite in `apply_overlay_runs` cannot lose anything.
+No attribute is named `path`, `name` or any other built-in (brief 3k);
+`{normalized_route}`, `{normalized_prefix}` and `{normalized_mount}` are the
+route-normalized forms of the attributes `route`, `prefix` and `mount`.
+
+    python pack-design/key_collisions.py fiber
+    0 entity outputs are overwritten by a same-key rule that sorts first
 
 ## A field only the Pack can supply
 
-**Pack: omega-go. Kind: `call.method`. Fields: the call's string-literal
-arguments, and the receiver expression.**
+**Pack: omega-go. Kind: `call.method` (and `call.function`). Field:
+`call.arg1_text` — the second argument with its quote bytes stripped.**
 
-Fiber's central question — *which URL does this route serve* — is the path
-literal in `app.Get("/users/:id", h)`. omega-go's `call.method` template captures
-`(call_expression function: (selector_expression field: (field_identifier)))`
-and names the fact after the field identifier alone. The argument list is inside
-the emission's span but is not published, and there is no fact of any kind over a
-Go `interpreted_string_literal`, so:
+`call.arg0_text` exists and is exactly what was needed; its sibling does not.
+Two constructs in Fiber put the value that is an identity in argument 1:
 
-- no built-in name reaches it — `definition.name` is `Get`, `path` is the file;
-- no join reaches it — `fact_join_by_span` can only bind *another emission*, and
-  omega-go emits nothing over the argument; `fact_join_by_field` needs a field on
-  one side and omega-go publishes none anywhere.
+- `app.Add("PURGE", "/cache", h)` — argument 0 is the verb, argument 1 is the
+  URL. `call.arg1` arrives as `"\"/cache\""`.
+- `app.Static("/assets", "./public")` — argument 1 is the directory served.
 
-The same gap costs the receiver: `app.Get` and `api.Get` are indistinguishable,
-so a route registered on a group cannot be attributed to that group, and
-`fiber.router.group` can say a sub-router exists but not what it is mounted
-under. It also costs `app.Static("/assets", "./public")` its directory and
-`app.Use(cors.New())` the identity of the middleware, which is why
-`fiber.middleware.use` leans on the import in the same file instead.
+A canonical key template has no strip (`resolve_placeholder` renders a value
+verbatim) and an attribute value is a constant, a `field_ref` or a
+`normalize_route`, none of which strips. So:
 
-This is not a Fiber peculiarity: every router in every language identifies a
-route by a string argument to a call. A `call.method` field carrying the first
-string-literal argument (and one carrying the receiver's text, as
-`definition.receiver_candidate` already does for method declarations) would be
-the single highest-value addition to the Go Pack for framework work. It is
-recorded here rather than acted on, per the hard rules.
+- no built-in name reaches it — `definition.name` is `Add`, `path` is the file;
+- no join reaches it — `fact_join_by_span` binds another *emission*, and omega-go
+  emits nothing over a Go `interpreted_string_literal`; `fact_join_by_field`
+  would have to join a quoted value against an unquoted one, which is precisely
+  the mismatch brief 3j warns about.
+
+The fix is the one already applied to argument 0: wrap `call.arg1` (and, for
+symmetry, `call.arg2` and `call.last_arg`) in the same
+`strip_prefix`/`strip_suffix` pair per quote style. It is not a new field in the
+sense of new information — the bytes are already published — only a second
+spelling of what is already there. This is not a Fiber peculiarity: `Add` is how
+every Go router spells a custom verb, and a static mount everywhere names a
+directory as its second argument.
+
+**Second, smaller: omega-go emits no `definition.variable` for a short variable
+declaration.** `api := app.Group("/api/v2")` publishes the `Group` call and its
+prefix, but nothing binds the name `api`. That is an emission, not a field, and
+it is what stops a route registered on a group from being nested under it — see
+the second `coverage.gaps` entry.
 
 ## Still to decide
 
-**The `Ctx` handler test is a heuristic, and is the only one in the file.** A
-Fiber handler is `func(c *fiber.Ctx) error`; the fact the overlay sees is
+**The Route key does not include a group prefix.** `api.Get("/health", h)` is
+keyed `http:Get:/health`, not `http:Get:/api/v2/health`. The receiver `api` is
+now published, and the group's prefix is now published, but nothing links the
+two because omega-go does not declare `api`. Recorded as a gap rather than
+guessed at; the `receiver` attribute is carried on every Route so an agent can
+at least see that the route was registered on something other than the app.
+
+**`{method}` is the call's own name, so it is `Get`, not `GET` or `get`.**
+The task's shape — `http:{method}:{normalized_route}`, method from the call name
+— is followed literally. omega-framework-express follows the same shape and its
+call names are lowercase, so a Go route and a Node route serving the same URL do
+not unify on one key. There is no case-folding operator in
+`resolve_placeholder`, and the alternative (ten per-verb rules each carrying a
+literal `"GET"`) trades one rule for ten. Belongs in `00-INDEX.md` as a
+cross-framework decision, not in this file.
+
+**The `Ctx` handler test is still a heuristic, and is the only one in the file.**
+A Fiber handler is `func(c *fiber.Ctx) error`; the fact the overlay sees is
 `type_use.name` named `Ctx` somewhere inside the declaration. It will also fire
-for a helper that takes no `*fiber.Ctx` but mentions one in its body, and it
-would fire for an unrelated `Ctx` type in a file that happens to import a gofiber
-package. Both are narrow, and the alternative — matching
-`definition.parameter_shape_candidate`, whose name is the literal parameter-list
-text `(c *fiber.Ctx)` — needs a substring test the clause vocabulary does not
-have (`field_prefix` cannot skip the parameter name). Judged worth the false
-positives; revisit if `call.method` ever gains argument fields, at which point
-the handler can be identified from the registration instead of from its
-signature.
+for a helper that merely mentions one. The alternative,
+`definition.parameter_shape_candidate` — whose name is the literal parameter-list
+text `(c *fiber.Ctx)`, measured — needs a substring test the clause vocabulary
+does not have. It matters less than it did: the route -> handler edge no longer
+depends on it, because `call.last_arg` names the handler at the registration.
 
-**Byte offsets in Route keys.** `fiber:route:{path}:{source.start}` is stable
-only while the file is unedited. There is no better discriminator without the
-path literal; the alternative, keying on `{path}:{verb}`, would merge every GET
-in a file into one entity, which answers less. Revisit with the Pack field above.
+**`field_present call.arg1` gates the route rules.** A verb call with a single
+argument is not a valid Fiber registration (the handler is required), and
+without the guard `call.last_arg` would fall back to argument 0 and mint a
+`HandlerName` whose name is a quoted URL. The cost is that a malformed
+registration is not reported at all.
 
-**`reference.member` inside a registration is not filtered by position.**
-`app.Get("/x", mw.RequireAuth, h.List)` relates both `RequireAuth` and `List` to
-the route. Fiber genuinely allows several handlers per route, so this is not
-plainly wrong, but middleware and the final handler are not distinguished. Nine
-names that are certainly not handlers (`New`, `Name`, `Next`, and the
-registration verbs themselves) are excluded; nothing more is reachable.
+**`fiber.app.construct` matches `receiver` = `fiber` literally,** so an aliased
+import (`f "github.com/gofiber/fiber/v2"`) hides the constructor. Recorded in
+`coverage.gaps`; the overlay has no access to an import's alias relative to a
+call, and matching any `New` in a gofiber file would pick up `cors.New()`,
+`limiter.New()` and every other middleware constructor.

@@ -36,7 +36,6 @@
       "Handler",
       "Listener",
       "Plugin",
-      "PluginRegistration",
       "Route",
       "Server"
     ],
@@ -107,7 +106,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "import ... from 'fastify' / 'fastify-plugin' / 'fastify-*'; the module name is the import.module fact's own name, so no external resolution is needed (JS/TS facts carry no external.*)."
+      "coverage_note": "import ... from 'fastify' / 'fastify-plugin' / 'fastify-*'; the module name is the import.module fact's own name."
     },
     {
       "id": "fastify.dependency.plugin_package",
@@ -243,7 +242,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "The Fastify() factory call: which module builds the server. The factory options object is the first argument and the JS/TS Packs publish no argument text."
+      "coverage_note": "Fastify({ logger: true }); which module builds the server. The factory options are call.arg0_text, an object literal rather than an identity, so they are not keyed on."
     },
     {
       "id": "fastify.route.verb",
@@ -268,6 +267,19 @@
           ]
         },
         {
+          "kind": "field_prefix",
+          "field": "call.arg0_text",
+          "value": "/"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.last_arg"
+        },
+        {
           "kind": "fact_join_by_field",
           "fact_kind": "import.module",
           "current_field": "path",
@@ -289,12 +301,30 @@
           "entity_kind": "Route",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:route:{path}:{source.start}"
+            "template": "http:{method}:{normalized_route}"
           },
           "attributes": {
             "method": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:handler:{call.last_arg}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
             }
           }
         },
@@ -314,18 +344,31 @@
           "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:handler:{call.last_arg}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
             "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:route:{path}:{source.start}"
+            "template": "http:{method}:{normalized_route}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "fastify.get / post / ...; the HTTP method is the call's own name. The URL is the first argument and is not published by the JS/TS Packs."
+      "confidence": "exact",
+      "coverage_note": "fastify.get('/users/:id', getUser): the HTTP method is the call's own name and the URL is call.arg0_text, so the route is keyed by what it serves and agrees with the same URL declared under any other framework. The handler named as the call's last argument is the other end of handles. field_prefix / on call.arg0_text is what separates a route from Map.prototype.get in the same file."
     },
     {
       "id": "fastify.route.declarative",
@@ -381,7 +424,7 @@
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "handles",
+          "relation_kind": "declares",
           "source": {
             "kind": "by_canonical_key",
             "template": "fastify:app:{path}"
@@ -395,7 +438,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "fastify.route({ method, url, handler }); same key space and same kind as fastify.route.verb. method and url live inside the options object, which is not published."
+      "coverage_note": "fastify.route({ method, url, handler }): call.arg0_text is the whole object literal, so the url is a property inside it and is not separately published. This form alone is still located by file and byte offset."
     },
     {
       "id": "fastify.plugin.register",
@@ -429,12 +472,17 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "PluginRegistration",
+          "entity_kind": "Plugin",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:registration:{path}:{source.start}"
+            "template": "fastify:plugin:{call.arg0_text}"
           },
-          "attributes": {}
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
         },
         {
           "kind": "entity_candidate",
@@ -456,14 +504,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:registration:{path}:{source.start}"
+            "template": "fastify:plugin:{call.arg0_text}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "fastify.register(plugin, { prefix }); which module mounts plugins. The plugin reference and the prefix are arguments and are not published."
+      "coverage_note": "fastify.register(cors, { prefix }): call.arg0_text names the plugin, so the registration addresses the plugin declared elsewhere in the repo under the same key instead of being an anonymous offset. The mount prefix is a property of the second argument's object literal and is not published."
     },
     {
       "id": "fastify.plugin.declaration.function",
@@ -513,7 +561,7 @@
           "entity_kind": "Plugin",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:plugin:{path}:{fn.definition.name}"
+            "template": "fastify:plugin:{fn.definition.name}"
           },
           "attributes": {
             "name": {
@@ -542,14 +590,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:plugin:{path}:{fn.definition.name}"
+            "template": "fastify:plugin:{fn.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "A Fastify plugin, recognised by the FastifyInstance/FastifyPlugin* type it is annotated with (definition.function spelling); same key space and same kind as the other fastify.plugin.declaration rule."
+      "coverage_note": "A Fastify plugin, recognised by the FastifyInstance/FastifyPlugin* type it is annotated with (definition.function spelling). Keyed by the plugin's own name, which is the key fastify.register(thisPlugin) renders."
     },
     {
       "id": "fastify.plugin.declaration.binding",
@@ -599,7 +647,7 @@
           "entity_kind": "Plugin",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:plugin:{path}:{fn.definition.name}"
+            "template": "fastify:plugin:{fn.definition.name}"
           },
           "attributes": {
             "name": {
@@ -628,14 +676,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:plugin:{path}:{fn.definition.name}"
+            "template": "fastify:plugin:{fn.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "A Fastify plugin, recognised by the FastifyInstance/FastifyPlugin* type it is annotated with (definition.variable spelling); same key space and same kind as the other fastify.plugin.declaration rule."
+      "coverage_note": "A Fastify plugin, recognised by the FastifyInstance/FastifyPlugin* type it is annotated with (definition.variable spelling). Keyed by the plugin's own name, which is the key fastify.register(thisPlugin) renders."
     },
     {
       "id": "fastify.handler.function",
@@ -691,7 +739,7 @@
           "entity_kind": "Handler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:handler:{path}:{fn.definition.name}"
+            "template": "fastify:handler:{fn.definition.name}"
           },
           "attributes": {
             "name": {
@@ -720,14 +768,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:handler:{path}:{fn.definition.name}"
+            "template": "fastify:handler:{fn.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.function spelling); one key space and one kind across all three spellings."
+      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.function spelling). Keyed by the handler's own name, which is the key a route's last argument renders, so handles runs route -> handler across files."
     },
     {
       "id": "fastify.handler.binding",
@@ -783,7 +831,7 @@
           "entity_kind": "Handler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:handler:{path}:{fn.definition.name}"
+            "template": "fastify:handler:{fn.definition.name}"
           },
           "attributes": {
             "name": {
@@ -812,14 +860,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:handler:{path}:{fn.definition.name}"
+            "template": "fastify:handler:{fn.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.variable spelling); one key space and one kind across all three spellings."
+      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.variable spelling). Keyed by the handler's own name, which is the key a route's last argument renders, so handles runs route -> handler across files."
     },
     {
       "id": "fastify.handler.method",
@@ -875,7 +923,7 @@
           "entity_kind": "Handler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:handler:{path}:{fn.definition.name}"
+            "template": "fastify:handler:{fn.definition.name}"
           },
           "attributes": {
             "name": {
@@ -904,14 +952,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:handler:{path}:{fn.definition.name}"
+            "template": "fastify:handler:{fn.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.method spelling); one key space and one kind across all three spellings."
+      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.method spelling). Keyed by the handler's own name, which is the key a route's last argument renders, so handles runs route -> handler across files."
     },
     {
       "id": "fastify.hook.add",
@@ -925,6 +973,10 @@
           "kind": "field_equals",
           "field": "definition.name",
           "value": "addHook"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1"
         },
         {
           "kind": "fact_join_by_field",
@@ -950,7 +1002,26 @@
             "kind": "canonical_key",
             "template": "fastify:hook:{path}:{source.start}"
           },
-          "attributes": {}
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:handler:{call.arg1}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg1"
+            }
+          }
         },
         {
           "kind": "entity_candidate",
@@ -975,11 +1046,24 @@
             "template": "fastify:hook:{path}:{source.start}"
           },
           "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:hook:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:handler:{call.arg1}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "fastify.addHook('onRequest', fn); which module installs lifecycle hooks. The hook name is the first argument and is not published."
+      "coverage_note": "fastify.addHook('onRequest', authHook): the lifecycle point is call.arg0_text and the function that runs at it is call.arg1, so which function runs onRequest is answerable."
     },
     {
       "id": "fastify.decorate",
@@ -1020,12 +1104,16 @@
           "entity_kind": "Decoration",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:decoration:{path}:{source.start}"
+            "template": "fastify:decoration:{scope}:{call.arg0_text}"
           },
           "attributes": {
             "scope": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "property": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
             }
           }
         },
@@ -1049,14 +1137,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:decoration:{path}:{source.start}"
+            "template": "fastify:decoration:{scope}:{call.arg0_text}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "decorate / decorateRequest / decorateReply collapsed into one rule; the decorated surface is the call's own name. The decorator's property name is the first argument and is not published."
+      "coverage_note": "decorate / decorateRequest / decorateReply: the decorated surface is the call's own name and the property added is call.arg0_text, so a decoration is keyed by what it adds and the same decoration written in two plugins is one entity."
     },
     {
       "id": "fastify.config.set",
@@ -1112,6 +1200,10 @@
             "operation": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "subject": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
             }
           }
         },
@@ -1142,7 +1234,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "The twelve instance-level configuration calls in one rule; the operation is the call's own name. Ten separate rules previously said this, one per method name."
+      "coverage_note": "The twelve instance-level configuration calls in one rule: the operation is the call's own name and call.arg0_text is what it operates on -- the media type for addContentTypeParser, the handler's name for setErrorHandler, the schema's object literal for addSchema."
     },
     {
       "id": "fastify.listen",
@@ -1210,7 +1302,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate",
-      "coverage_note": "fastify.listen({ port, host }); which module starts the server. The port and host are arguments and are not published."
+      "coverage_note": "fastify.listen({ port, host }); which module starts the server. call.arg0_text is the options object literal, so the port is a property inside it and is not separately published."
     }
   ],
   "coverage": {

@@ -36,6 +36,8 @@
       "RequestModel",
       "Route",
       "Router",
+      "RouterConstructor",
+      "RouterGroup",
       "StaticResource",
       "ValidatedField"
     ],
@@ -51,645 +53,6 @@
     ]
   },
   "rules": [
-    {
-      "id": "gin.handler.function",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.parameter_shape_candidate"
-        },
-        {
-          "kind": "path_glob",
-          "field": "definition.name",
-          "pattern": "**gin.Context*"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.function",
-          "relation": "same",
-          "same_path": true,
-          "bind": "fn"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Handler",
-          "canonical_key": {
-            "template": "gin:handler:{fn.definition.name}"
-          },
-          "attributes": {
-            "handler_name": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "parameter_shape": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "form": "function"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.handler.method",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.parameter_shape_candidate"
-        },
-        {
-          "kind": "path_glob",
-          "field": "definition.name",
-          "pattern": "**gin.Context*"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.method",
-          "relation": "same",
-          "same_path": true,
-          "bind": "fn"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.receiver_candidate",
-          "relation": "same",
-          "same_path": true,
-          "bind": "ctrl"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Handler",
-          "canonical_key": {
-            "template": "gin:handler:{fn.definition.name}"
-          },
-          "attributes": {
-            "handler_name": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "parameter_shape": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "receiver": {
-              "kind": "field_ref",
-              "field": "ctrl.definition.name"
-            },
-            "form": "method"
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Controller",
-          "canonical_key": {
-            "template": "gin:controller:{path}:{ctrl.definition.name}"
-          },
-          "attributes": {
-            "controller_name": {
-              "kind": "field_ref",
-              "field": "ctrl.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "gin:controller:{path}:{ctrl.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.middleware.factory",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.return_type_candidate"
-        },
-        {
-          "kind": "path_glob",
-          "field": "definition.name",
-          "pattern": "**gin.HandlerFunc*"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.function",
-          "relation": "same",
-          "same_path": true,
-          "bind": "fn"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Middleware",
-          "canonical_key": {
-            "template": "gin:middleware:{fn.definition.name}"
-          },
-          "attributes": {
-            "middleware_name": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "return_shape": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.router.engine_builder",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.return_type_candidate"
-        },
-        {
-          "kind": "path_glob",
-          "field": "definition.name",
-          "pattern": "**gin.Engine*"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.function",
-          "relation": "same",
-          "same_path": true,
-          "bind": "fn"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Router",
-          "canonical_key": {
-            "template": "gin:router:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "router_name": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "return_shape": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "engine_builder"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.router.group_builder",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.return_type_candidate"
-        },
-        {
-          "kind": "path_glob",
-          "field": "definition.name",
-          "pattern": "**gin.RouterGroup*"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.function",
-          "relation": "same",
-          "same_path": true,
-          "bind": "fn"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Router",
-          "canonical_key": {
-            "template": "gin:router:{path}:{fn.definition.name}"
-          },
-          "attributes": {
-            "router_name": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "return_shape": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "group_builder"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.route.registration",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.member"
-        },
-        {
-          "kind": "field_not_in",
-          "field": "definition.name",
-          "values": [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "HEAD",
-            "OPTIONS",
-            "Any",
-            "Handle",
-            "Match",
-            "Group",
-            "Use",
-            "Static",
-            "StaticFile",
-            "StaticFileFS",
-            "StaticFS",
-            "NoRoute",
-            "NoMethod"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
-          "relation": "within",
-          "same_path": true,
-          "bind": "route",
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "definition.name",
-              "values": [
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "HEAD",
-                "OPTIONS",
-                "Any",
-                "Handle",
-                "Match"
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "host"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "template": "gin:route:{path}:{route.definition.name}:{definition.name}"
-          },
-          "attributes": {
-            "http_method": {
-              "kind": "field_ref",
-              "field": "route.definition.name"
-            },
-            "handler_name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "registered_in": {
-              "kind": "field_ref",
-              "field": "host.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Handler",
-          "canonical_key": {
-            "template": "gin:handler:{definition.name}"
-          },
-          "attributes": {
-            "handler_name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "form": "route_argument"
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Router",
-          "canonical_key": {
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "attributes": {
-            "router_name": {
-              "kind": "field_ref",
-              "field": "host.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "route_registrar"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "gin:handler:{definition.name}"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "mounts",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.middleware.use_function_result",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.function"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
-          "relation": "within",
-          "same_path": true,
-          "bind": "use",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "Use"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "host"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Middleware",
-          "canonical_key": {
-            "template": "gin:middleware:{definition.name}"
-          },
-          "attributes": {
-            "middleware_name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "source_form": "local_function"
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Router",
-          "canonical_key": {
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "attributes": {
-            "router_name": {
-              "kind": "field_ref",
-              "field": "host.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "route_registrar"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.middleware.use_package_result",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
-          "relation": "within",
-          "same_path": true,
-          "bind": "use",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "Use"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "host"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Middleware",
-          "canonical_key": {
-            "template": "gin:middleware:{definition.name}"
-          },
-          "attributes": {
-            "middleware_name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "source_form": "package_function"
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Router",
-          "canonical_key": {
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "attributes": {
-            "router_name": {
-              "kind": "field_ref",
-              "field": "host.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "route_registrar"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          }
-        }
-      ]
-    },
-    {
-      "id": "gin.static.mount",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Static",
-            "StaticFS",
-            "StaticFile",
-            "StaticFileFS",
-            "LoadHTMLGlob",
-            "LoadHTMLFiles"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.function_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "host"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StaticResource",
-          "canonical_key": {
-            "template": "gin:static:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "mounted_in": {
-              "kind": "field_ref",
-              "field": "host.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Router",
-          "canonical_key": {
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "attributes": {
-            "router_name": {
-              "kind": "field_ref",
-              "field": "host.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "route_registrar"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "gin:router:{path}:{host.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          }
-        }
-      ]
-    },
     {
       "id": "gin.dependency.import",
       "match": [
@@ -741,7 +104,468 @@
             "kind": "current"
           }
         }
-      ]
+      ],
+      "coverage_note": "A Go package that imports github.com/gin-gonic/gin or a gin-contrib module depends on it; the Package end is the directory, which is what a Go package is."
+    },
+    {
+      "id": "gin.handler.function",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.parameter_shape_candidate"
+        },
+        {
+          "kind": "path_glob",
+          "field": "definition.name",
+          "pattern": "**gin.Context*"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "same",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "template": "gin:handler:{fn.definition.name}"
+          },
+          "attributes": {
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "coverage_note": "A free function taking *gin.Context is a gin handler; the parameter-shape carrier is emitted on the declaration's own span, so a same-span join reaches the function with no Pack field."
+    },
+    {
+      "id": "gin.handler.method",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.parameter_shape_candidate"
+        },
+        {
+          "kind": "path_glob",
+          "field": "definition.name",
+          "pattern": "**gin.Context*"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "same",
+          "same_path": true,
+          "bind": "fn"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.receiver_candidate",
+          "relation": "same",
+          "same_path": true,
+          "bind": "ctrl"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "template": "gin:handler:{fn.definition.name}"
+          },
+          "attributes": {
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "template": "gin:controller:{path}:{ctrl.definition.name}"
+          },
+          "attributes": {
+            "controller_name": {
+              "kind": "field_ref",
+              "field": "ctrl.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:controller:{path}:{ctrl.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          }
+        }
+      ],
+      "coverage_note": "A method taking *gin.Context is a gin handler and its receiver type is the controller that declares it."
+    },
+    {
+      "id": "gin.handler.request_binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Bind",
+            "BindJSON",
+            "BindXML",
+            "BindYAML",
+            "BindTOML",
+            "BindQuery",
+            "BindUri",
+            "BindHeader",
+            "BindWith",
+            "MustBindWith",
+            "ShouldBind",
+            "ShouldBindJSON",
+            "ShouldBindXML",
+            "ShouldBindYAML",
+            "ShouldBindTOML",
+            "ShouldBindQuery",
+            "ShouldBindUri",
+            "ShouldBindHeader",
+            "ShouldBindWith",
+            "ShouldBindBodyWith"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RequestBinding",
+          "canonical_key": {
+            "template": "gin:request-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "binder": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "bound_argument": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "template": "gin:handler:{fn.definition.name}"
+          },
+          "attributes": {
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "binds_request",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:handler:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          }
+        }
+      ],
+      "coverage_note": "c.ShouldBindJSON(&req): which handler parses a request body, with which binder, and into which variable -- the first argument as written."
+    },
+    {
+      "id": "gin.middleware.factory",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.return_type_candidate"
+        },
+        {
+          "kind": "path_glob",
+          "field": "definition.name",
+          "pattern": "**gin.HandlerFunc*"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "same",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "gin:middleware:{fn.definition.name}"
+          },
+          "attributes": {
+            "middleware_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "coverage_note": "A function returning gin.HandlerFunc is a middleware factory."
+    },
+    {
+      "id": "gin.middleware.use_function_result",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "call.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "use",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "Use"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "host"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "gin:middleware:{definition.name}"
+          },
+          "attributes": {
+            "middleware_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "installed_as": {
+              "kind": "field_ref",
+              "field": "use.call.arg0_text"
+            },
+            "via_receiver": {
+              "kind": "field_ref",
+              "field": "use.receiver"
+            },
+            "source_form": "local_function"
+          }
+        }
+      ],
+      "coverage_note": "r.Use(Auth()): the middleware installed on a router, named by the constructor called inside Use, with the argument as written carried on the edge."
+    },
+    {
+      "id": "gin.middleware.use_package_result",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "call.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "use",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "Use"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "host"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "gin:middleware:{definition.name}"
+          },
+          "attributes": {
+            "middleware_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "installed_as": {
+              "kind": "field_ref",
+              "field": "use.call.arg0_text"
+            },
+            "via_receiver": {
+              "kind": "field_ref",
+              "field": "use.receiver"
+            },
+            "source_form": "package_function"
+          }
+        }
+      ],
+      "coverage_note": "r.Use(cors.Default()): the middleware installed on a router, named by the constructor called inside Use, with the argument as written carried on the edge."
     },
     {
       "id": "gin.request_model.binding_tag",
@@ -824,10 +648,11 @@
             "kind": "current"
           }
         }
-      ]
+      ],
+      "coverage_note": "A struct field carrying a binding: tag is validated by gin's binder; the struct is the request model."
     },
     {
-      "id": "gin.handler.request_binding",
+      "id": "gin.route.handle_verb",
       "match": [
         {
           "kind": "fact_kind",
@@ -837,26 +662,30 @@
           "kind": "field_in",
           "field": "definition.name",
           "values": [
-            "Bind",
-            "BindJSON",
-            "BindXML",
-            "BindYAML",
-            "BindTOML",
-            "BindQuery",
-            "BindUri",
-            "BindHeader",
-            "BindWith",
-            "MustBindWith",
-            "ShouldBind",
-            "ShouldBindJSON",
-            "ShouldBindXML",
-            "ShouldBindYAML",
-            "ShouldBindTOML",
-            "ShouldBindQuery",
-            "ShouldBindUri",
-            "ShouldBindHeader",
-            "ShouldBindWith",
-            "ShouldBindBodyWith"
+            "Handle",
+            "Match"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.last_arg"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
           ]
         },
         {
@@ -864,22 +693,410 @@
           "fact_kind": "scope.function_body",
           "relation": "within",
           "same_path": true,
+          "bind": "host"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1_text"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "template": "gin:handler:{call.last_arg_name}"
+          },
+          "attributes": {
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "gin:handler:{call.last_arg_name}"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "registered_in": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "via_receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        }
+      ],
+      "coverage_note": "`r.Handle(\"GET\", \"/legacy\", h)` and `r.Match([]string{...}, \"/x\", h)`: the verb is the first argument and the URL the second, so the route joins the same key space as every other registration rather than being located by the offset it was written at."
+    },
+    {
+      "id": "gin.route.handler_reference",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.member"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS",
+            "Any",
+            "Handle",
+            "Match",
+            "Group",
+            "Use",
+            "Static",
+            "StaticFile",
+            "StaticFileFS",
+            "StaticFS",
+            "LoadHTMLGlob",
+            "LoadHTMLFiles",
+            "NoRoute",
+            "NoMethod",
+            "Run",
+            "RunTLS"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "call.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "reg",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "HEAD",
+                "OPTIONS",
+                "Any"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "call.arg0"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "reg.definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "reg.call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "template": "gin:handler:{definition.name}"
+          },
+          "attributes": {
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "gin:handler:{definition.name}"
+          }
+        }
+      ],
+      "coverage_note": "r.GET(\"/users/:id\", ctrl.GetUser): a handler written as a qualified selector is a reference.member inside the call's span, so the edge reaches the bare method name that gin.handler.method declares, in whatever file that declaration lives."
+    },
+    {
+      "id": "gin.route.registration",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS",
+            "Any"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.last_arg"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "host"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "template": "gin:handler:{call.last_arg_name}"
+          },
+          "attributes": {
+            "handler_name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "gin:handler:{call.last_arg_name}"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "registered_in": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "via_receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        }
+      ],
+      "coverage_note": "r.GET(\"/users/:id\", h): the HTTP method is the call's own name and the URL its first argument, so the route is keyed http:{method}:{normalized_route} -- the identity every HTTP framework here mints, under which /users/:id and /users/{id} are one route."
+    },
+    {
+      "id": "gin.router.engine_builder",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.return_type_candidate"
+        },
+        {
+          "kind": "path_glob",
+          "field": "definition.name",
+          "pattern": "**gin.Engine*"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "same",
+          "same_path": true,
           "bind": "fn"
         }
       ],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "RequestBinding",
+          "entity_kind": "RouterConstructor",
           "canonical_key": {
-            "template": "gin:request-binding:{path}:{source.start}"
+            "template": "gin:router-constructor:{path}:{fn.definition.name}"
           },
           "attributes": {
-            "binder": {
+            "constructor_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "return_shape": {
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "bound_in": {
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
               "kind": "field_ref",
               "field": "fn.definition.name"
             },
@@ -890,39 +1107,304 @@
           }
         },
         {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{fn.definition.name}"
+          }
+        }
+      ],
+      "coverage_note": "A function returning *gin.Engine constructs the router. It gets its own key space so the return shape is not lost to whichever rule mints the router hub first."
+    },
+    {
+      "id": "gin.router.group",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Group"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "host"
+        }
+      ],
+      "outputs": [
+        {
           "kind": "entity_candidate",
-          "entity_kind": "Handler",
+          "entity_kind": "RouterGroup",
           "canonical_key": {
-            "template": "gin:handler:{fn.definition.name}"
+            "template": "gin:group:{path}:{normalized_prefix}"
           },
           "attributes": {
-            "handler_name": {
+            "prefix": {
               "kind": "field_ref",
-              "field": "fn.definition.name"
+              "field": "call.arg0_text"
             },
-            "form": "binds_request"
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "binds_request",
+          "relation_kind": "mounts",
           "source": {
             "kind": "by_canonical_key",
-            "template": "gin:handler:{fn.definition.name}"
+            "template": "gin:router:{path}:{host.definition.name}"
           },
           "target": {
             "kind": "current"
+          },
+          "attributes": {
+            "registered_in": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "via_receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
           }
         }
-      ]
+      ],
+      "coverage_note": "r.Group(\"/api/v1\"): which sub-routers a router mounts and at which URL prefix -- the prefix is the call's first argument."
+    },
+    {
+      "id": "gin.router.group_builder",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.return_type_candidate"
+        },
+        {
+          "kind": "path_glob",
+          "field": "definition.name",
+          "pattern": "**gin.RouterGroup*"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "same",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouterConstructor",
+          "canonical_key": {
+            "template": "gin:router-constructor:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "constructor_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "return_shape": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{fn.definition.name}"
+          }
+        }
+      ],
+      "coverage_note": "A function returning *gin.RouterGroup constructs the router. It gets its own key space so the return shape is not lost to whichever rule mints the router hub first."
+    },
+    {
+      "id": "gin.static.mount",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Static",
+            "StaticFS",
+            "StaticFile",
+            "StaticFileFS",
+            "LoadHTMLGlob",
+            "LoadHTMLFiles"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.package",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "github.com/gin-"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "host"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StaticResource",
+          "canonical_key": {
+            "template": "gin:static:{path}:{directive}:{mount}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "mount": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "attributes": {
+            "router_name": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "gin:router:{path}:{host.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "mounted_in": {
+              "kind": "field_ref",
+              "field": "host.definition.name"
+            },
+            "via_receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
+            }
+          }
+        }
+      ],
+      "coverage_note": "r.Static(\"/assets\", \"./public\") / r.LoadHTMLGlob(\"templates/*\"): a static or template mount identified by the URL prefix or glob it serves, which is the first argument. The served directory is the second argument and arrives quoted."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "omega-go publishes no fact for a string literal, so a route's path -- the first argument of r.GET(\"/users/:id\", h) -- is unreachable. Routes are identified by HTTP method plus handler name, not by URL; so are Static/StaticFile mount points and group prefixes.",
-      "a handler passed as a bare identifier (r.GET(\"/x\", Healthz)) produces no reference.member, so only the qualified form (ctrl.GetUser, handlers.List) is linked by gin.route.registration; the handler itself is still declared by gin.handler.function/method.",
-      "call.method carries only the selected member name, not the receiver or its package, so a middleware registered as cors.Default() is keyed on Default alone.",
+      "call.arg1 and call.arg2 arrive with their quote bytes and there is no arg1_text, so the URL of r.Handle(\"GET\", \"/legacy\", h) and the served directory of r.Static(\"/assets\", \"./public\") cannot be an identity; Handle/Match routes are keyed by where they are written, and a static mount records only its URL prefix.",
+      "a group's prefix is recorded on the RouterGroup, but Go's short variable declaration (api := r.Group(\"/api/v1\")) emits no definition.variable, so a route registered on api cannot be composed with its group prefix; every route's key is the URL as written on its own call.",
+      "reference.member is named by the selected member alone, so a middleware registered as cors.Default() is keyed on Default; the expression as written is carried on the configured_by edge as installed_as.",
       "runtime/tool execution, reflection-expanded route state and request execution are outside static scope."
     ]
   },

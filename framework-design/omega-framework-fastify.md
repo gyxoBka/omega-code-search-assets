@@ -6,166 +6,224 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 ## State
 
 **15 overlay rules, 4 detection rules. All 15 match; 0 cannot.**
-It was 20 rules, 0 of which could match.
+
+```text
+before: omega-framework-fastify: 15 overlay rules, 4 detection rules -- 15 live, 0 cannot match
+after:  omega-framework-fastify: 15 overlay rules, 4 detection rules -- 15 live, 0 cannot match
+```
+
+`python pack-design/key_collisions.py fastify` reports
+`0 entity outputs are overwritten by a same-key rule that sorts first`, before
+and after.
 
 Selector: `framework:fastify`. Maturity: `semantic-overlay-full`.
-`host.required_packs`: `omega-javascript`, `omega-typescript` (unchanged;
-`required_capabilities` gains `types`, because `type_use.name` is how a handler
-and a plugin are recognised).
+`host.required_packs`: `omega-javascript`, `omega-typescript`.
+Entity kinds emitted: 10 (was 11 — `PluginRegistration` is gone).
+Relation kinds emitted: 6 (unchanged).
+
+This is the second pass. The first pass fixed the kinds; this one fixes the
+identities, because the argument text the first pass recorded as unreachable is
+now published.
 
 ## What was wrong with it
 
-The audit reported 0 live, 20 dead. Four separate causes, and most rules carried
-more than one of them.
+Every rule matched. Nothing the file said about *what* it matched was wrong.
+What was wrong is that it was written against a Pack that published no call
+arguments, and that stopped being true.
 
-**1. Every one of the 20 rules matched `external_path_matches package: "fastify"`,
-which cannot match in JavaScript or TypeScript at all.** `external_environment`
-registers a binding only when its `target_hint` is set, `target_hint` is
-`occurrence.qualifier`, and `qualifier` is read only from a field or attribute
-literally named `qualifier` — which neither `omega-javascript` (45 templates,
-zero fields) nor `omega-typescript` (58 templates, zero fields) publishes.
-`00-INDEX.md` records this as `OWED.md` item 7a. So all 20 rules were dead on
-that clause alone, independently of their kind. All 20 clauses are gone; a
-module is now recognised by the name of the `import.module` fact itself, which
-is the module string with its quotes stripped.
+**1. The claim the whole "Coverage gaps" section rested on is false.** The file
+said, in bold, that `omega-javascript` and `omega-typescript` "publish **no
+field on any of their 103 templates**". Measured with
+`dump_call_emissions.exe packs/omega-javascript grammars/omega-javascript`
+against a 15-line Fastify module, both Packs publish five fields on
+`call.function` and six on `call.method`:
 
-**2. 18 of the 20 matched `fact_kind: "call.member"`.** That kind is emitted by
-`omega-c`, `omega-cpp` and `omega-c-sharp` and by no JavaScript Pack. JS/TS
-spell the same fact `call.method`, named for the property identifier. This is
-the rule-written-against-the-wrong-language case of brief §3h, not an
-under-declared manifest: Fastify is a Node framework and the two Packs it
-declares are the right ones.
+```text
+214-217  call.method  name=get   call.arg0="'/users/:id'" call.arg0_text="/users/:id"
+                                 call.arg1="getUser" call.arg2=None
+                                 call.last_arg="getUser" receiver="app"
+338-345  call.method  name=addHook  call.arg0_text="onRequest" call.arg1="authHook"
+373-388  call.method  name=decorateRequest  call.arg0_text="user" call.arg1="null"
+175-183  call.method  name=register  call.arg0_text="cors"
+```
 
-**3. The remaining 2 matched carriers the Pack rewrite deleted** —
-`call.target_candidate` (`fastify.generic-api-call.fastify`) and
-`import.target_candidate` (`fastify.generic-dependency.fastify`).
-`fastify.generic-api-call.fastify` was additionally the self-loop shape wave 6
-found in symfony: it ran `uses_api` from `current` to the very key `current` had
-just been minted under. Both rules are deleted; the dependency question they
-gestured at is answered properly by `fastify.dependency.core`.
+Four of the five coverage-gap sentences were therefore untrue, and all four are
+deleted rather than softened.
 
-**4. 18 of the 20 read argument fields that no Pack publishes** —
-`call.arg0` (15 rules), `call.last_arg`, `call.member` as a *field*,
-`call.arg0.method`, `call.arg0.url`, `call.arg1.prefix`, `call.kwarg.host`.
-The audit only flags the four that read them in a `match` clause; the other
-fourteen read them in an entity's `attributes`, which is worse: per brief §3b,
-`evaluate_attributes` returns `None` when any expression is unresolvable, so the
-entity is dropped while the relation is still rendered in the second loop. Had
-the kinds been right, those 18 rules would have produced 18 dangling relations
-and no entities. Every argument-derived attribute is gone; what a Fastify call
-does is now carried by the call's own name, and what it does it *to* is recorded
-as a coverage gap.
+**2. Not one of the 15 rules read an argument, so 13 entities were located by
+byte offset.** Ten of the eleven key spaces were `fastify:<thing>:{path}:{source.start}`
+or `{path}:{name}`. A `Route` was `fastify:route:src/routes/users.ts:214` — a
+coordinate, not an identity. *Which route serves `/users/:id`* was
+unanswerable, and the same URL declared under Express and under Fastify were
+two unrelated entities.
 
-**And the file was ten copies of one rule.** Ten `fastify.config.*` rules were
-byte-identical apart from one string in a `member_in` list of length one
-(`addHook`, `addSchema`, `setValidatorCompiler`, `setSerializerCompiler`,
-`setErrorHandler`, `setNotFoundHandler`, `addContentTypeParser`,
-`addConstraintStrategy`, `setReplySerializer`, `withTypeProvider`,
-`setGenReqId`); three `fastify.decorate.*` rules were the same shape. Those
-thirteen are now two rules — `fastify.config.set` over a twelve-name list and
-`fastify.decorate` over a three-name list — each carrying the method name as an
-attribute, which is strictly more than the old file stated.
+**3. Every one of the 15 rules emitted exactly one relation, and all 15 ran
+from the module hub.** `FastifyApp -> Route`, `FastifyApp -> Handler`,
+`FastifyApp -> FrameworkHook`. No edge ever ran between two framework
+constructs, so the graph was a star: a module with a bag of unrelated things
+hanging off it. The old file said so itself — "`handles` runs from the module to
+the route and from the module to the handler, but **not from the route to its
+handler**".
 
-Nothing in `detection_rules` was untrue, so it is untouched.
+**4. Five entities carried no attribute at all or only their own call name.**
+`FrameworkHook` had no hook name, `Decoration` no property name,
+`PluginRegistration` no plugin, `Listener` nothing whatever. `PluginRegistration`
+existed only to be an anonymous offset where `register` was written; it stated
+nothing that `Route`'s offset did not already state about `get`.
+
+**5. One `emits` entry was dead weight.** `PluginRegistration` is removed: the
+question it gestured at — *which plugins does this app mount* — is now answered
+by a `mounts` edge onto the `Plugin` the register call names.
 
 ## What it states now
 
 Every rule that is not itself about an import carries one shared gate:
 
 ```json
-{"kind":"fact_join_by_field","fact_kind":"import.module",
- "current_field":"path","join_field":"path","same_path":true,
- "where":[{"kind":"field_prefix","field":"definition.name","value":"fastify"}]}
+{"kind": "fact_join_by_field", "fact_kind": "import.module",
+ "current_field": "path", "join_field": "path", "same_path": true,
+ "where": [{"kind": "field_prefix", "field": "definition.name",
+            "value": "fastify"}]}
 ```
 
-*this file imports a module whose name begins `fastify`* — `fastify`,
-`fastify-plugin`, `fastify-*`. It is what keeps `call.method get` from meaning
-`Map.prototype.get`, and it replaces the `external_path_matches` clause that
-could never fire.
+*this file imports a module whose name begins `fastify`*. It is what keeps
+`call.method get` from meaning `Map.prototype.get`, and `fastify.route.verb`
+now adds a second discriminator on top of it: `field_prefix call.arg0_text "/"`,
+because a Fastify route's first argument is a URL and `map.get(key)`'s is not.
 
 Every rule also mints the hub `fastify:app:{path}`, kind `FastifyApp`, with the
 single attribute `framework: "fastify"` — one kind and one attribute set in all
-fifteen rules, so `key_collisions.py` reports nothing and no relation end
-dangles. Every relation addresses a key by explicit template; `current` is not
-used anywhere, so brief §3b's first-output trap cannot bite.
+fifteen rules. Every relation addresses a key by explicit template; `current` is
+used nowhere, so brief §3b's first-output trap cannot bite. No attribute is
+named `path`, `name` or any other built-in (§3k), so `{path}` in a hub key is
+always the artifact path.
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
-| Which modules make up this Fastify app | `import.module` name prefix `fastify` | `FastifyApp` `fastify:app:{path}` — the hub every rule mints |
+| **Which route serves `GET /users/:id`** | `call.method` named `get`/`post`/`put`/`patch`/`delete`/`options`/`head`/`all`, `call.arg0_text` beginning `/` | `Route` at **`http:{method}:{normalized_route}`**, attrs `method`, `route` |
+| **Which handler answers that route** | the same call's `call.last_arg` | `Handler` `fastify:handler:{call.last_arg}`; `handles` route → handler |
+| Which module declares that route | same call, artifact path | `declares` app → route |
+| Which routes are declared as an options object | `call.method` named `route` | `Route` `fastify:route:{path}:{source.start}`, attr `declaration`; `declares` app → route |
+| **Which lifecycle point does this hook run at** | `call.method` `addHook`, `call.arg0_text` | `FrameworkHook` `fastify:hook:{path}:{source.start}`, attr `hook` |
+| **Which function runs at that lifecycle point** | the same call's `call.arg1` | `Handler` `fastify:handler:{call.arg1}`; `handles` hook → handler |
+| **Which plugin is mounted here** | `call.method` `register`, `call.arg0_text` | `Plugin` `fastify:plugin:{call.arg0_text}`; `mounts` app → plugin |
+| Which function in this repo *is* that plugin | `type_use.name` in the five `FastifyInstance`/`FastifyPlugin*` types, joined `within` a `definition.function` or `definition.variable` | `Plugin` `fastify:plugin:{fn.definition.name}` — the **same key space**, so a registered plugin and its declaration are one entity; `declares` app → plugin |
+| Which function answers a request | `type_use.name` in the eleven `FastifyRequest`/`FastifyReply`/`Route*`/`*HookHandler` types, joined `within` a `definition.function`, `definition.variable` or `definition.method` | `Handler` `fastify:handler:{fn.definition.name}` — the **same key space** a route's last argument renders; `handles` app → handler |
+| **What does this app add to the instance, request or reply** | `call.method` in `decorate`/`decorateRequest`/`decorateReply`, `call.arg0_text` | `Decoration` `fastify:decoration:{scope}:{call.arg0_text}`, attrs `scope`, `property`; `configures` app → decoration |
+| **Which media types does this app parse, which function is its error handler** | `call.method` in the twelve `addSchema`…`withTypeProvider` names, `call.arg0_text` | `FrameworkConfig` `fastify:config:{path}:{source.start}`, attrs `operation`, `subject`; `configured_by` app → config |
+| Which module builds the server | `call.function` named `Fastify`/`fastify`/`fastifyFactory` | `Server` `fastify:server:{path}:{source.start}`, attr `factory`; `declares` app → server |
+| Which module starts it | `call.method` named `listen` | `Listener` `fastify:listener:{path}:{source.start}`; `configured_by` app → listener |
 | Which Fastify packages does this module pull in | `import.module` name prefix `fastify` | `Dependency` `fastify:dependency:{name}`; `depends_on` app → dependency |
-| …including the scoped official plugins | `import.module` name prefix `@fastify/` | same `Dependency` key space and kind |
-| Which module builds the server | `call.function` named `Fastify`/`fastify`/`fastifyFactory` + gate | `Server` `fastify:server:{path}:{start}`; `declares` app → server |
-| Which routes does this module declare, and with what HTTP method | `call.method` named `get`/`post`/`put`/`patch`/`delete`/`options`/`head`/`all` + gate | `Route` `fastify:route:{path}:{start}`, attr `method`; `handles` app → route |
-| …and the declarative form | `call.method` named `route` + gate | same `Route` key space and kind, attr `declaration: route-object` |
-| Where does this app mount plugins | `call.method` named `register` + gate | `PluginRegistration` `fastify:registration:{path}:{start}`; `mounts` app → registration |
-| Which function in this repo *is* a Fastify plugin | `type_use.name` in `FastifyInstance`/`FastifyPluginAsync`/`FastifyPluginCallback`/`FastifyPluginOptions`/`FastifyRegisterOptions`, joined `within` a `definition.function` or a `definition.variable` | `Plugin` `fastify:plugin:{path}:{fn}`; `declares` app → plugin |
-| Which function answers a request | `type_use.name` in `FastifyRequest`/`FastifyReply`/`RouteHandlerMethod`/`RouteShorthandMethod`/`RouteOptions`/`RouteGenericInterface`/`FastifyError`/the four `*HookHandler` types, joined `within` a `definition.function`, `definition.variable` or `definition.method` | `Handler` `fastify:handler:{path}:{fn}`; `handles` app → handler |
-| Which module installs lifecycle hooks | `call.method` named `addHook` + gate | `FrameworkHook` `fastify:hook:{path}:{start}`; `configured_by` app → hook |
-| What does this app add to the instance, request or reply | `call.method` in `decorate`/`decorateRequest`/`decorateReply` + gate | `Decoration` `fastify:decoration:{path}:{start}`, attr `scope`; `configures` app → decoration |
-| How is validation, serialization, error handling and content-type parsing configured | `call.method` in the twelve `addSchema`…`withTypeProvider` names + gate | `FrameworkConfig` `fastify:config:{path}:{start}`, attr `operation`; `configured_by` app → config |
-| Which module starts the server | `call.method` named `listen` + gate | `Listener` `fastify:listener:{path}:{start}`; `configured_by` app → listener |
+| …including the scoped official plugins | `import.module` name prefix `@fastify/` | same key space and kind |
 
-Key spaces minted: `fastify:app:{path}`, `fastify:dependency:{name}`,
-`fastify:server:…`, `fastify:route:…`, `fastify:registration:…`,
-`fastify:plugin:…`, `fastify:handler:…`, `fastify:hook:…`,
-`fastify:decoration:…`, `fastify:config:…`, `fastify:listener:…`. Every key any
-relation addresses is minted by the same rule that addresses it, so the
-containment check of brief §3a is trivially satisfied. `key_collisions.py`
-reports nothing: each template carries exactly one entity kind, and the two
-rules sharing `fastify:route:…` and the two sharing `fastify:dependency:…` and
-the five sharing `fastify:plugin:…`/`fastify:handler:…` all agree on it.
+Rows in bold are questions the previous file could not answer at all.
+
+### What changed, rule by rule
+
+| rule | change |
+|---|---|
+| `fastify.route.verb` | key `fastify:route:{path}:{start}` → `http:{method}:{normalized_route}`; gains attr `route`, a `Handler` output and a `handles` route → handler edge; `declares` replaces `handles` for the app edge; confidence `candidate` → `exact` |
+| `fastify.hook.add` | gains attr `hook`, a `Handler` output and a `handles` hook → handler edge |
+| `fastify.plugin.register` | `PluginRegistration` at an offset → `Plugin` at `fastify:plugin:{call.arg0_text}`, which the declaration rules also mint |
+| `fastify.decorate` | key by offset → `fastify:decoration:{scope}:{property}`; gains attr `property` |
+| `fastify.config.set` | gains attr `subject` |
+| `fastify.handler.*` (3), `fastify.plugin.declaration.*` (2) | key `{path}:{fn.definition.name}` → `{fn.definition.name}`, so a route or a register call in another file addresses the same entity |
+| `fastify.route.declarative` | `handles` → `declares` on the app edge |
+| the remaining 4 | unchanged apart from coverage notes |
+
+### Key containment (brief §3a)
+
+Keys minted: `fastify:app:{path}`, `fastify:dependency:{definition.name}`,
+`fastify:server:…`, `http:{method}:{normalized_route}`,
+`fastify:route:{path}:{start}`, `fastify:plugin:{call.arg0_text}`,
+`fastify:plugin:{fn.definition.name}`, `fastify:handler:{call.last_arg}`,
+`fastify:handler:{call.arg1}`, `fastify:handler:{fn.definition.name}`,
+`fastify:hook:…`, `fastify:decoration:{scope}:{property}`, `fastify:config:…`,
+`fastify:listener:…`. Every key any relation addresses is minted by the rule
+that addresses it, so the containment check holds by construction; the
+cross-file joins (`fastify:handler:{…}`, `fastify:plugin:{…}`) are extra
+agreement between rules, not the only source of an end.
+
+### Attribute-drop guards (brief §3b)
+
+`call.arg0_text` is a `default` to the empty string, so it always resolves and
+needs no guard. `call.arg1` and `call.last_arg` are `None` when the call has too
+few arguments, so `fastify.route.verb` carries
+`field_present call.arg1` **and** `field_present call.last_arg`, and
+`fastify.hook.add` carries `field_present call.arg1`. Without them a one-argument
+call would drop the `Handler` entity and still render the `handles` edge.
 
 ## Coverage gaps, restated truthfully
 
-`omega-javascript` and `omega-typescript` publish **no field on any of their 103
-templates**, so no call argument is reachable. That costs Fastify more than it
-costs most frameworks:
+Two remain, and both are the shape of the argument rather than the absence of
+one.
 
-- a `Route` has no URL — `fastify.get('/users/:id', h)` puts the path in a string
-  literal, so a route is located by file and byte offset, and *which route serves
-  `/users/:id`* is unanswerable;
-- a `FrameworkHook` has no hook name, a `Decoration` no property name, a
-  `PluginRegistration` no plugin reference and no `prefix`, a `Listener` no port;
-- `handles` runs from the module to the route and from the module to the
-  handler, but **not from the route to its handler** — the handler is the call's
-  last argument, and with no argument text there is nothing to join on.
+- **An options object is one argument.** `fastify.route({ method, url, handler })`,
+  `Fastify({ logger })` and `fastify.listen({ port, host })` put everything in a
+  single object literal, and `call.arg0_text` is that literal verbatim —
+  `{ method: 'GET', url: '/health', handler: health }`. So the declarative route
+  form has no URL, the server has no options and the listener has no port. These
+  three are still located by file and byte offset. Reaching inside would need the
+  Pack to emit the object's properties as facts, which is a Pack question and not
+  one Fastify should ask alone.
+- **An inline handler has no name.** `fastify.get('/x', async (req, reply) => {})`
+  renders `fastify:handler:async (req, reply) => {}` — a `Handler` whose name is
+  its own source text. The route still resolves, and the edge still lands on
+  something; it just lands on an anonymous function. `omega-framework-express`
+  makes the same trade on `call.last_arg`.
 
-This is the same wall `omega-framework-express`, `omega-framework-fiber` and
-`omega-framework-gin` hit, and it is already recorded in `OWED.md` as the
-argument-text row. Nothing here adds a new claim on a Pack.
-
-The handler and plugin rules are TypeScript-only, because `type_use.name` is a
-TypeScript emission. A plain-JavaScript Fastify project still yields its
-dependencies, server, routes, registrations, hooks, decorations, configuration
-and listener — but no `Handler` and no `Plugin`.
+The handler and plugin *declaration* rules remain TypeScript-only, because
+`type_use.name` is a TypeScript emission. A plain-JavaScript Fastify project now
+gets its routes **with their URLs**, its handlers by name from the route's last
+argument, its hooks by lifecycle point, its decorations by property, its
+registered plugins by name, its dependencies, server, configuration and
+listener — but no type-derived `Handler` or `Plugin` declaration.
 
 ## A field only the Pack can supply
 
 None requested. Everything above is reachable from a fact's kind, its own name,
-its path, its span, and the two joins (`fact_join_by_field` on `path`,
-`fact_join_by_span` `within`). The one thing a Pack field *would* buy is call
-argument text, and that is the existing cross-framework `OWED.md` row rather
-than a Fastify field.
+its path, its span, the published call view, and the two joins
+(`fact_join_by_field` on `path`, `fact_join_by_span` `within`).
 
 ## Still to decide
 
-1. **The gate is a prefix, not a package match.** `field_prefix "fastify"` on
-   `import.module` admits any module name beginning `fastify` and, more
-   importantly, *excludes* a file that imports only `@fastify/cors` and takes its
-   instance as a parameter. A second gate clause cannot be OR-ed with the first
-   in a conjunction, so widening it means duplicating every gated rule. Left
-   narrow deliberately: a Fastify route file in TypeScript almost always imports
-   a type from `'fastify'`, and the express overlay makes exactly the same
-   trade.
-2. **`fastify.app.instance` names its factory binding.** `call.function` is named
-   for the identifier the developer bound the default import to, so the rule
-   lists `Fastify`, `fastify` and `fastifyFactory`. Per brief §3f this is a
-   Framework choice, not a Pack constraint — the list can be widened at any time
-   and nothing else depends on it. A binding-aware join would be better but
-   there is no fact linking `binding.import_default` to its `import.module`:
-   the two spans are disjoint and neither publishes the other's value.
-3. **`Server` and `Listener` are close neighbours.** Both answer "where does this
-   app start". They are kept apart because a Fastify app is often built in one
-   module (`buildApp()` for tests) and listened on in another, and knowing which
-   is which is the difference between the test entry point and the production
-   one.
+1. **The handler and plugin key spaces are no longer path-qualified.**
+   `fastify:handler:{name}` is what makes `handles` reach a handler declared in
+   another file, which is the whole point of the route rule. The cost is that two
+   unrelated functions both called `handler` in two files become one entity. The
+   values are identical apart from origin (both carry only `name`), so the
+   `key_collisions.py` failure mode does not apply, but the merge is real.
+   `omega-framework-express` keeps its type-derived handlers path-qualified and
+   accepts that its route → handler edge never reaches them; this file made the
+   opposite trade deliberately. If cross-framework consistency is wanted, express
+   should move rather than fastify.
+2. **`field_prefix call.arg0_text "/"` on the route verbs excludes a computed
+   route.** ``fastify.get(`${prefix}/users`, h)`` has `call.arg0_text` starting
+   with `$`, so it does not match. Per brief §3f that is a deletion and it is
+   made knowingly: without the clause, every `map.get(k)` and
+   `searchParams.get('q')` in a file that imports `fastify` becomes an HTTP route
+   with an identity like `http:get:k`, which is worse than a missed template
+   literal. The import gate alone is file-scoped and cannot separate them.
+3. **`Decoration` is keyed project-wide, not per module.**
+   `fastify:decoration:decorateRequest:user` is one entity however many plugins
+   write it, which is right — it is one property on one request object — but it
+   means the `configures` edge is many-to-one and *where* a decoration is
+   declared is only recoverable from the edges.
+4. **`Server` and `Listener` are close neighbours.** Both answer "where does this
+   app start". Kept apart because a Fastify app is often built in one module
+   (`buildApp()` for tests) and listened on in another, and knowing which is
+   which is the difference between the test entry point and the production one.
+
+## Not this Framework's problem
+
+`omega-javascript` and `omega-typescript` **do** publish a field literally named
+`qualifier`, on `binding.import_default`, `binding.import_symbol` and
+`binding.import_namespace` — measured:
+`binding.import_default name=Fastify qualifier=String("fastify")`. Per brief
+§3i, `external_environment` builds `OverlayFact.external` from exactly that, so
+the claim in `FRAMEWORK-BRIEF.md` §3i and in `00-INDEX.md`'s `OWED.md` item 7a
+that "JS/TS facts carry no `external` at all" is at least partly stale for
+binding facts. This file does not depend on it — the import join reaches the
+same answer and works on `import.module`, which still publishes no qualifier —
+but the brief's blanket statement is worth remeasuring before another JS
+framework is written against it.
