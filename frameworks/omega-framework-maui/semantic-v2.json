@@ -26,6 +26,7 @@
     "reference.type (omega-c-sharp)",
     "reference.attribute (omega-c-sharp)",
     "call.method with receiver_hint (omega-c-sharp)",
+    "call.method with call.arg0 and call.arg0_text (omega-c-sharp)",
     "definition.config_element (omega-xml)",
     "definition.config_attribute with attribute value (omega-xml)"
   ],
@@ -39,6 +40,7 @@
       "MauiService",
       "MauiShellQueryReceiver",
       "MauiCommand",
+      "MauiRoute",
       "MauiXamlView"
     ],
     "relations": [
@@ -46,6 +48,7 @@
       "bootstraps",
       "provides",
       "resolves_to",
+      "registers",
       "routes_to",
       "navigates_to",
       "exposes",
@@ -456,7 +459,7 @@
       "confidence": "exact"
     },
     {
-      "id": "maui.shell.registered_route_target",
+      "id": "maui.shell.route_registration",
       "match": [
         {
           "kind": "fact_kind",
@@ -472,6 +475,15 @@
               "kind": "field_equals",
               "field": "definition.name",
               "value": "RegisterRoute"
+            },
+            {
+              "kind": "field_present",
+              "field": "call.arg0_text"
+            },
+            {
+              "kind": "field_prefix",
+              "field": "call.arg0",
+              "value": "\""
             }
           ],
           "bind": "reg"
@@ -485,6 +497,20 @@
         }
       ],
       "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MauiRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:route:{route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "normalize_route",
+              "source": "reg.call.arg0_text"
+            }
+          }
+        },
         {
           "kind": "entity_candidate",
           "entity_kind": "MauiType",
@@ -518,7 +544,7 @@
           "relation_kind": "routes_to",
           "source": {
             "kind": "by_canonical_key",
-            "template": "maui:type:{owner.definition.name}"
+            "template": "maui:route:{route}"
           },
           "target": {
             "kind": "by_canonical_key",
@@ -527,6 +553,106 @@
           "attributes": {
             "via": "Routing.RegisterRoute",
             "registered_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "maui:type:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "maui:route:{route}"
+          },
+          "attributes": {
+            "via": "Routing.RegisterRoute",
+            "registered_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "maui.shell.goto_route",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "GoToAsync"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0",
+          "value": "\""
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MauiRoute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:route:{route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "normalize_route",
+              "source": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MauiType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:type:{owner.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "navigates_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "maui:type:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "maui:route:{route}"
+          },
+          "attributes": {
+            "via": "GoToAsync",
+            "declared_in": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -862,13 +988,105 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "heuristic"
+    },
+    {
+      "id": "maui.shell.route_registration.symbolic",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.type"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "call.method",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "RegisterRoute"
+            },
+            {
+              "kind": "field_present",
+              "field": "call.arg0_text"
+            },
+            {
+              "kind": "field_not_prefix",
+              "field": "call.arg0",
+              "value": "\""
+            }
+          ],
+          "bind": "reg"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MauiType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:type:{definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MauiType",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "maui:type:{owner.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers_page",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "maui:type:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "maui:type:{definition.name}"
+          },
+          "attributes": {
+            "via": "Routing.RegisterRoute",
+            "registered_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`Routing.RegisterRoute(nameof(DetailsPage), typeof(DetailsPage))` -- the spelling the .NET MAUI docs and the Visual Studio item template use. The route name is a `nameof` expression rather than a literal, so the route itself is not stated; which page AppShell registers is."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "omega-c-sharp emits no call argument, so the route string of Routing.RegisterRoute(\"details\", typeof(DetailsPage)) and the target of Shell.Current.GoToAsync(\"//details\") are not stated; only the page type a call names, reached as reference.type joined within the call span, is available",
-      "omega-xml publishes a config attribute's value as an attribute, not a field, so Route=, x:Class=, ContentTemplate= and {Binding ...} markup can only be compared to one literal constant and can never be a canonical key or a relation end; the code-behind identity is taken from the file stem instead",
+      "a Shell route written as anything but a string literal is not stated: the rules require call.arg0 to begin with a quote byte, so Routing.RegisterRoute(nameof(DetailsPage), typeof(DetailsPage)) and Shell.Current.GoToAsync($\"details?id={id}\") mint no route -- an interpolated string arrives with its $\" prefix and its braces intact, and nameof(X) arrives as the text nameof(X), neither of which is the route the runtime uses",
+      "a GoToAsync target carrying a query string keeps it in the identity: \"details?id=1\" normalizes to /details?id=1 and does not meet the /details that RegisterRoute(\"details\", ...) mints, because route normalization splits on / and knows nothing about ?",
+      "omega-xml publishes a config attribute's value as an attribute, not a field, so Route=, x:Class=, ContentTemplate= and {Binding ...} markup can only be compared to one literal constant and can never be a canonical key or a relation end; a route declared only by Route= on a ShellContent element is therefore invisible, and the code-behind identity is taken from the file stem instead",
       "[ObservableProperty] cannot be attached to the field it decorates: omega-c-sharp spans definition.field on the variable_declarator while reference.attribute spans the attribute node, which is a sibling of the field declaration and not an ancestor of the declarator",
       "compiled XAML expansion, styles and templates resolved through resource dictionaries, and the runtime visual tree are not executed",
       "which implementation a DI registration binds to which service interface is not ordered: AddSingleton<IFoo, Foo>() emits two reference.type facts in the same call span and the overlay sees no argument order"

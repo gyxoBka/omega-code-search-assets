@@ -3,6 +3,11 @@
 Read `00-CONTRACT.md` first: the overlay matches Pack emissions and nothing
 else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
+Rewritten twice: once for the Pack vocabulary (38 rules -> 17, all live), and
+once again — this pass — now that omega-python publishes a call's arguments
+(17 -> 21, all live, 0 key collisions). The tables below are the *original*
+38-rule state; "What was wrong with it" covers both passes.
+
 ## State before the rewrite
 
 38 overlay rules, 4 detection rules. **3 can match, 35 cannot.**
@@ -112,6 +117,11 @@ Path globs: `**/settings*.py`, `**/migrations/*.py`.
 
 ## What was wrong with it
 
+Two rewrites are recorded here. The first is kept because the counts in the
+tables above are its input; the second is the one this file now describes.
+
+### Pass one: 38 rules, 35 dead
+
 **38 rules; 35 could not match any Pack emission, and the 3 the audit called
 live matched nothing either.**
 
@@ -130,139 +140,222 @@ omega-python Pack no longer emits — or never emitted:
 | `reference.python_class_list_string_tuple_context` | 1 | `Migration.dependencies` |
 | `data.python_class_member_constructor_keyword_context` | 1 | `null=True` on a field |
 
-*One rule per spelling, 15 of them.* `django.model.field.charfield`,
-`.textfield`, `.integerfield` … `.manytomanyfield` were fifteen copies of one
-rule differing only in a one-element `member_in`. omega-python now states every
-one of them as `call.method` with the constructor's name, so `field_in` over a
-list replaces all fifteen with two rules — one for scalar fields, one for
-relational ones, because the two differ in the `field_role` they assert.
+*One rule per spelling, 15 of them.* `django.model.field.charfield` …
+`.manytomanyfield` were fifteen copies of one rule differing only in a
+one-element `member_in`; `field_in` over a list replaced all fifteen with two.
 The four `django.setting.*` rules and the three `django.setting.*_list` rules
-collapse the same way into one `django.setting`.
+collapsed into one `django.setting`.
 
-*Fields no Pack publishes, 9 names.* `setting_name`, `class_name`, `field_name`,
-`item0`, `item1`, `callee_object`, `keyword_name` in match clauses; and in
-canonical keys and relation ends, `definition.qname`, `owner_class`,
-`call.arg0/1/2`, `decorator.arg0`, `item`, `base_name`. omega-python publishes
-**no fields at all** — every template has `"fields": {}` — so a Django rule has
-exactly `definition.name`, `path`, the span and the kind to work with, and
-everything else has to come from a span join. `owner_class` and `field_name`
-are now `cls.definition.name` and `fld.definition.name` off two
-`fact_join_by_span` `within` joins; `class_name` is `cls.definition.name` off
-one.
+*Fields no Pack published, 9 names* — `setting_name`, `class_name`,
+`field_name`, `item0`, `item1`, `callee_object`, `keyword_name`, `owner_class`,
+`base_name`. All were replaced by `fact_join_by_span` `within` bindings.
 
-*The 3 "live" rules were live only to the audit.* `django.model.class`,
-`django.signal.receiver` and `django.admin.register` match kinds that exist
-(`definition.class`, `reference.decorator`) but every one of them gates on
-`external_path_matches`, and `OverlayFact.external` is populated nowhere in the
-host — `OverlayFact` is constructed only in `crates/omega-semantic/tests`.
-`ExternalMatch::matches` returns `false` on `None`, so all three matched zero
-facts. Their keys also read `definition.qname` and `decorator.arg0`, neither of
-which is a built-in name, so `render` would have dropped the output anyway.
-`external_path_matches` appeared in 28 of the 38 rules and is used in none of
-the 17 now.
+*`external_path_matches` in 28 of 38 rules*, and `OverlayFact.external` is empty
+for Python, so all 28 matched zero facts while the audit scored 3 of them live.
 
-*A relation with no source, 17 of them.* The 15 `django.model.field.*` rules
-and `django.admin.register`/`django.signal.receiver` sourced relations at
-`django:model:{owner_class}` and `django:admin:{definition.qname}` — keys no
-rule in the file ever minted under that spelling (`django.model.class` minted
-`django:model:{definition.qname}`). Every rule that emits a relation now mints
-both of its ends.
+*A relation with no source, 17 of them* — `django:model:{owner_class}` and
+`django:admin:{definition.qname}` were keys no rule in the file ever minted.
 
-**38 rules became 17, and all 17 match.**
+**38 rules became 17, and all 17 matched.**
+
+### Pass two: 17 rules, all live, and a route with no URL
+
+Pass one was written when omega-python captured no call argument. It left the
+overlay stating *that* a route exists and never *which* route, and the file said
+so in four `coverage.gaps` sentences and a four-item "A field only the Pack can
+supply". omega-python now publishes `call.arg0`, `call.arg0_text`,
+`call.arg0_name`, `call.arg1`, `call.arg1_text`, `call.arg2`, `call.last_arg`,
+`call.last_arg_name` and `receiver` on `call.function` and `call.method`
+(measured with `dump_call_emissions`, not read off a table), and three of those
+four gaps closed.
+
+Concretely wrong in the 17-rule file, all of it verified against the Pack rather
+than argued:
+
+| what it said | measured | rules affected |
+|---|---|---|
+| a Route is keyed `django:route:{path}:{source.start}` — a file and a byte offset, with no URL anywhere in the graph | `path("orders/<int:pk>/", …)` emits `call.arg0_text = orders/<int:pk>/` | 1 (`django.url.pattern`) |
+| a `RouteMount` is keyed by offset and "points at nothing downstream" | `include("blog.urls")` emits `call.arg0_text = blog.urls` | 1 (`django.url.include`) |
+| a relational `ModelField` "cannot become an edge between two `Model` entities … the single largest thing the overlay cannot say" | `ForeignKey("shop.Customer")` and `ForeignKey(Customer)` both emit `call.arg0_name = Customer` — the same identity `django:model:*` is keyed by | 1 (`django.model.relation-field`) |
+| "which model an admin class serves is not stated" | `admin.site.register(Author, AuthorAdmin)` emits `receiver = admin.site`, `call.arg0_name = Author`, `call.arg1_text = AuthorAdmin` | 0 — the question had no rule at all |
+| `django.signal.receiver` matched `reference.decorator` and minted a handler with nothing on it but a byte offset | the same `@receiver(post_save, …)` also emits `call.function receiver` with `call.arg0_text = post_save` | 1 |
+| model fields were gated on `**/models**.py` because "`forms.CharField(...)` and `models.CharField(...)` are the same `call.method` fact — the qualifier is not captured" | the qualifier *is* captured: `receiver = models` vs `receiver = forms` | 2 |
+
+Six statements in the file were untrue as of the Pack rewrite, four of them
+recorded as permanent limits in `coverage.gaps` or in "A field only the Pack can
+supply".
+
+One thing pass one got right and pass two keeps: **the route-to-handler edge is
+still not emitted.** Django writes `path("orders/", views.order_detail)`, so the
+handler is the *second* argument, and omega-python publishes `call.arg1_text`
+(`views.order_detail`, qualifier and all) but no `call.arg1_name`.
+`call.last_arg_name` is not a substitute — it is `name="order-detail` whenever
+the call carries the usual `name=` keyword, and `as_view()` for a class-based
+view. Keying the edge on either would have produced a relation whose target no
+rule ever mints while `overlay_audit.py`, `key_collisions.py` and
+`validate_external_assets` all reported clean. The view expression is carried as
+an **attribute** on the Route instead, and the missing field is reported below.
+
+*Two deletions.* `SignalModule` (`django:signal-module:{path}`) is gone: the
+signal itself is the better hub now that it can be named, and a module that
+happens to contain a `@receiver` was never an answer to anything. `RouteMount`
+(`django:url-mount:{path}:{offset}`) is gone for the same reason — the mounted
+module has a name, so the entity is keyed by it.
+
+**17 rules became 21, all 21 live, 0 key collisions.** The four extra rules are
+`django.model.registration` (which model the admin exposes),
+`django.signal.connect` (`post_save.connect(handler)` — the one signal spelling
+where both ends are nameable), `django.view.render` (which template a view
+renders) and `django.url.regex`, which is `django.url.pattern` split in two so
+that a regex does not enter the `http:*` key space.
 
 ## What it states now
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
+| **which URL does this route serve** | `call.function` named `path` in `**/urls**.py`, joined `within` the `definition.variable` named `urlpatterns`; URL from `call.arg0_text` | `Route` at `http:{method}:{normalized_route}` — `method` is the literal `ANY`, `route` is the URL as written; `UrlConfiguration` at `django:urlconf:{path}` --declares--> `Route` |
+| which regex routes exist, and what pattern each carries | the same, for `re_path`/`url`; `call.arg0` (raw, quotes and `r` prefix kept — a regex is not an identity) | `RoutePattern` at `django:route-pattern:{path}:{offset}`; `UrlConfiguration` --declares--> `RoutePattern` |
+| which URLconf module does this one mount | `call.function` named `include`, `call.arg0_text` | `UrlConfModule` at `django:urlconf-module:{module}`; `UrlConfiguration` --mounts--> `UrlConfModule` |
 | which classes are Django models | `relation.implements` named `Model`/`AbstractUser`/`AbstractBaseUser`, joined `within` `definition.class` | `Model` at `django:model:{Class}` |
-| which columns a model declares, and of what type | `call.method` named `CharField`…`UUIDField` in `**/models**.py`, joined `within` `definition.field` then `within` `definition.class` | `ModelField` at `django:model-field:{Model}.{field}`; `Model` --contains--> `ModelField` |
-| which of a model's fields are links to other models | the same, for `ForeignKey`, `OneToOneField`, `ManyToManyField`, `GenericForeignKey`, `GenericRelation` | same, with `field_role: relation` |
-| which classes handle requests | `relation.implements` named `View`, `ListView`, `DetailView`, `CreateView` … joined `within` `definition.class` | `View` at `django:view:{Class}` |
-| which functions handle requests | `definition.function` in `**/views**.py`, name not `_`-prefixed | `View` at `django:view:{name}`, `style: function` |
-| which classes are forms | `relation.implements` named `Form`/`ModelForm` | `Form` at `django:form:{Class}` |
+| which columns a model declares, and of what type | `call.method` with `receiver = models` named `CharField`…`UUIDField`, joined `within` `definition.field` then `within` `definition.class` | `ModelField` at `django:model-field:{Model}.{field}`; `Model` --contains--> `ModelField` |
+| **which model does this foreign key point at** | the same for `ForeignKey`/`OneToOneField`/`ManyToManyField`/`GenericForeignKey`/`GenericRelation`, target from `call.arg0_name` | `ModelField` with `field_role: relation` and `target_model`; `Model` --references--> `Model` |
+| **which models are exposed in the admin, and by which admin class** | `call.method` named `register` with `receiver` in `admin.site`/`admin`/`site`; model from `call.arg0_name`, admin class from `call.arg1_text` | `AdminRegistration` at `django:admin-registration:{path}:{offset}` --registers--> `Model` |
 | which classes configure the admin | `relation.implements` named `ModelAdmin`/`TabularInline`/`StackedInline`/`AdminSite` | `AdminComponent` at `django:admin:{Class}` |
+| which classes handle requests | `relation.implements` named `View`, `ListView`, `DetailView`, `CreateView` … | `View` at `django:view:{Class}` |
+| which functions handle requests | `definition.function` in `**/views**.py`, name not `_`-prefixed | `View` at `django:view:{name}`, `style: function` |
+| **which template does this view render** | `call.function` named `render`/`render_to_string`/`render_to_response` in `**/views**.py`, template from `call.arg1_text` globbed `**.html`, joined `within` `definition.function` | `Template` at `django:template:{name}`; `View` --renders--> `Template` |
+| which classes are forms | `relation.implements` named `Form`/`ModelForm` | `Form` at `django:form:{Class}` |
 | which apps this project declares, and where each lives | `relation.implements` named `AppConfig` | `AppConfig` at `django:app:{Class}`, `app_dir` = `path.dir` |
 | which classes are middleware | `relation.implements` named `MiddlewareMixin` | `Middleware` at `django:middleware:{Class}` |
 | what `manage.py <x>` can run | `definition.class` named `Command` under `**/management/commands/*.py` | `ManagementCommand` at `django:command:{path.stem}` |
-| which files are URLconfs, and where each pattern is declared | `call.function` named `path`/`re_path`/`url`, joined `within` the `definition.variable` named `urlpatterns` | `UrlConfiguration` at `django:urlconf:{path}`; `Route` at `django:route:{path}:{offset}`; `UrlConfiguration` --contains--> `Route` |
-| where one URLconf mounts another | the same, for `include` | `RouteMount`; `UrlConfiguration` --mounts--> `RouteMount` |
-| where a setting is configured, and by which settings module | `definition.variable` in `**/settings**.py` | `Setting` at `django:setting:{NAME}`; `SettingsModule` at `django:settings-module:{path}`; `SettingsModule` --configures--> `Setting` |
+| where a setting is configured, and by which settings module | `definition.variable` in `**/settings**.py` | `Setting` at `django:setting:{NAME}`; `SettingsModule` --configures--> `Setting` |
 | what migration history an app has | `definition.class` named `Migration` under `**/migrations/*.py` | `Migration` at `django:migration:{path}`; `MigrationHistory` at `django:migration-set:{path.dir}` --contains--> `Migration` |
-| what a migration does to the schema | `call.method` named `CreateModel`, `AddField`, `AlterField`, `RunPython` … under `**/migrations/*.py`, joined `within` the `Migration` class | `MigrationOperation`; `Migration` --contains--> `MigrationOperation` |
-| which modules wire up signal receivers | `reference.decorator` named `receiver` | `SignalModule` --declares--> `SignalHandler` |
+| what a migration does to the schema | `call.method` with `receiver = migrations` named `CreateModel`, `AddField`, `RunPython` … under `**/migrations/*.py`, joined `within` the `Migration` class | `MigrationOperation`; `Migration` --contains--> `MigrationOperation` |
+| **which signal is this receiver listening for** | `call.function` named `receiver`, signal from `call.arg0_text` | `Signal` at `django:signal:{name}`; `SignalHandler` at `django:signal-receiver:{path}:{offset}` --handles--> `Signal` |
+| **which function is connected to which signal** | `call.method` named `connect` whose `receiver` is one of Django's 18 built-in signals; handler from `call.arg0_name` | `SignalHandler` at `django:signal-handler:{function}` --handles--> `Signal` |
 | where the WSGI/ASGI entry point is | `call.function` named `get_wsgi_application`/`get_asgi_application` | `ApplicationEntry` at `django:application:{path}` |
 
-Every canonical key a relation addresses is minted by the same rule that emits
-the relation, so nothing dangles: `django:model:*` (minted by
-`django.model.class`, `django.model.field`, `django.model.relation-field`),
-`django:urlconf:*` (`django.url.pattern`, `django.url.include`),
-`django:settings-module:*` and `django:setting:*` (`django.setting`),
-`django:migration-set:*` and `django:migration:*` (`django.migration`, and
-`django.migration.operation` only fires when the `Migration` class it joins is
-in the same file, which is exactly the condition `django.migration` mints on),
-`django:signal-module:*` (`django.signal.receiver`).
+Bold rows are what the overlay could not answer before this pass.
+
+**Every key a relation addresses is minted by the rule that emits it**, checked
+by hand: `http:{method}:{normalized_route}` and `django:urlconf:{path}`
+(`django.url.path`), `django:route-pattern:*` and `django:urlconf:*`
+(`django.url.regex`), `django:urlconf-module:*` (`django.url.include`),
+`django:model:{cls…}` and `django:model-field:*` and `django:model:{arg0_name}`
+(`django.model.field`, `django.model.relation-field`,
+`django.model.registration`), `django:migration:{path}` — minted by both
+`django.migration` and `django.migration.operation`, so the operation edge does
+not depend on the other rule having fired — `django:migration-set:*`,
+`django:setting:*` and `django:settings-module:*` (`django.setting`),
+`django:signal:*` with both handler key spaces (`django.signal.receiver`,
+`django.signal.connect`), `django:view:*` and `django:template:*`
+(`django.view.render`).
+
+**Key spaces with more than one minting rule carry one kind each**
+(`key_collisions.py` reports nothing): `django:model:*` is always `Model`,
+minted by four rules whose ids sort so that `django.model.class` — the one with
+the base class and the declaring file — wins the attribute set;
+`django:view:*` is always `View`, with `django.view.class` first;
+`django:urlconf:*` is always `UrlConfiguration`; `django:migration:*` is always
+`Migration`; `django:signal:*` is always `Signal`.
 
 ## A field only the Pack can supply
 
-**omega-python, every `call.*` kind, a field naming the call's first string
-argument.** `queries.scm` captures `(call function: (identifier) @call.name)`
-and `(call function: (attribute attribute: (identifier) @call.method))` — the
-argument list is captured nowhere, and no other template spans it. So
+**omega-python, `call.function` and `call.method`, a field `call.arg1_name`.**
+The Pack publishes `call.arg0_name` — the last `.`-separated segment of the
+first argument, unquoted — and it is what makes the ForeignKey edge and the
+admin registration edge reach a real `django:model:*` key. It publishes no
+equivalent for the second argument, and Django's route signature is
+`path(route, view, kwargs=None, name=None)`: the handler is argument **one**,
+not argument zero and not the last argument.
 
-- `path("orders/<int:pk>/", …)` — the route is not stated. `Route` is keyed by
-  file and byte offset, and *which route serves this path* is unanswerable for
-  Django.
-- `include("blog.urls")` — the mounted URLconf is not stated, so `RouteMount`
-  points at nothing downstream.
-- `ForeignKey("shop.Order", …)` / `ForeignKey(Order, …)` — the target model is
-  not stated, so a relational `ModelField` cannot become an edge between two
-  `Model` entities. This is the single largest thing the overlay cannot say.
-- `admin.site.register(Author, AuthorAdmin)` — which model an admin class
-  serves is not stated.
+- `path("orders/", views.order_detail, name="order-detail")` —
+  `call.arg1_text` is `views.order_detail`; the function's own declaration mints
+  `django:view:order_detail`. The two keys never meet.
+- `call.last_arg_name` is `name="order-detail` here, and `as_view()` for
+  `path("orders/", OrderList.as_view())`. It is right only for the minority
+  spelling `path("x/", views.foo)` with no trailing keyword, and wrong silently.
+- A join cannot reach it: `fact_join_by_field` strips only a fixed literal
+  prefix, and the qualifier is whatever the file imported (`views.`,
+  `myapp.views.`, nothing at all); a canonical key template has no strip at all.
+  `fact_join_by_span` cannot help either — the span of a `call.function` fact is
+  the callee identifier (measured: 5 bytes for `path`), so nothing inside the
+  argument list is contained by it.
 
-Neither a built-in name nor a join reaches it: `definition.name` on a
-`call.method` is the callee's own identifier, and `fact_join_by_span` can only
-bind a fact the Pack already emits over those bytes — there is none inside the
-argument list. It is a Pack `field` (or a `reference.string_argument`-shaped
-emission) or nothing.
+The expression is exposed as the Route's `view` attribute so a reader can still
+see it, but *which handler answers this route* is an edge Django does not get
+until `call.arg1_name` exists. `call.arg1_name` is the same expression shape as
+the `call.arg0_name` already in `packs/omega-python/rules.json`, applied to the
+`select …, 1` argument the Pack already computes for `call.arg1_text`, so it
+costs one more field on the two call templates and nothing new to capture.
 
-**omega-python, `reference.decorator`, the declaration it decorates.** The span
-is `@decorator.name`; `definition.function` spans the `function_definition`,
-and tree-sitter's `decorated_definition` is the parent of *both*, so neither
-span contains the other and `fact_join_by_span` `within` cannot relate them in
-either direction. That leaves *which views require login*
-(`@login_required`), *which function handles `post_save`* (`@receiver`) and
-*which model an admin class registers* (`@admin.register`) unanswerable, and is
-why `django.signal.receiver` attaches its handler to the module rather than to
-a function. Spanning `reference.decorator` on the `decorated_definition` node,
-or emitting a second fact over it, would fix all three at once — this is the
-same shape as the omega-c-sharp `[SerializeField]` finding already recorded in
+**omega-python, `reference.decorator`, the declaration it decorates.** Unchanged
+from pass one, and still the reason `@receiver` attaches to a byte offset rather
+than to a function, `@admin.register` cannot name the class it decorates, and
+`@login_required` cannot say which view requires login. The span is
+`@decorator.name`; `definition.function` spans the `function_definition`; the
+`decorated_definition` is the parent of both, so neither span contains the other
+and `fact_join_by_span` `within` relates them in neither direction. Spanning
+`reference.decorator` on the `decorated_definition` node would fix all three at
+once. Same shape as the omega-c-sharp `[SerializeField]` finding in
 `00-INDEX.md`.
 
 ## Still to decide
 
-- **`django.view.function` is convention-only.** Every non-`_`-prefixed
-  function in `**/views**.py` becomes a `View`. Django has no marker on a
-  function view — the only signal is the `request` first parameter, and
-  omega-python emits `definition.parameter_shape_candidate` as a carrier that
-  the host folds onto the declaration as an attribute, which the overlay cannot
-  read (`00-INDEX.md`: an attribute is write-only). Kept at
-  `confidence: candidate`; the alternative is not answering *which handler
-  answers it* for function views at all.
-- **Model fields are gated on `**/models**.py`.** `forms.CharField(...)` and
-  `models.CharField(...)` are the same `call.method` fact — the qualifier is
-  not captured — so path is the only discriminator. A model declared in
-  `api/schema.py` gets no fields; a form declared in `models.py` would get a
-  spurious `Model`. The path convention holds in practice and is the reason
-  `django.model.class` is deliberately *not* path-gated: a base class is
-  unambiguous evidence, a constructor name is not.
-- **`django.middleware.class` only sees `MiddlewareMixin` subclasses.** Modern
-  Django middleware is a plain callable taking `get_response`, indistinguishable
-  from any other class, and the `MIDDLEWARE` setting lists them as strings the
-  Pack does not capture. The rule answers for the legacy spelling and is silent
-  on the modern one rather than guessing from `**/middleware.py`.
+- **A Django route's `method` is the literal `ANY`.** A URLconf entry serves
+  every HTTP verb; the verb is decided inside the view, by `if request.method`
+  or by which `get`/`post` method a class-based view defines. The shared key
+  shape is `http:{method}:{normalized_route}`, so Django's routes live in the
+  same key space as Express's and ASP.NET's under one reserved method token. The
+  alternative — a private `django:route:*` space — would keep a Django route
+  from ever meeting the same URL declared in another framework's gateway or in
+  an OpenAPI document, which is the case the shared space exists for.
+- **`normalize_http_path` does not fold `<int:pk>`.** It folds `:id`, `{id}` and
+  `[id]`; Django writes `<int:pk>`, which passes through as a literal segment.
+  `/orders/<int:pk>` and `/orders/{id}` are therefore two identities. This is
+  not one Framework's problem — it is a line in `composers.rs` — so it is
+  recorded here and in `coverage.gaps` rather than worked around by rewriting
+  the route in the rule, which the overlay has no operator for anyway.
+- **Model fields are now gated on `receiver = models`, not on
+  `**/models**.py`.** The receiver is captured generically, so the value is
+  whatever was written, and choosing `models` is this Framework's own choice —
+  the same shape `00-INDEX.md` warns about narrowing. The evidence for it:
+  `models.CharField` and `forms.CharField` differ only in the receiver, and the
+  old path gate answered wrongly in both directions (a model in
+  `api/schema.py` got no columns; a form in `models.py` got a spurious `Model`).
+  What it costs: `from django.db.models import CharField` followed by a bare
+  `CharField(...)` is a `call.function` with no receiver and is not matched. A
+  `path_segment` exclusion of `migrations` is still needed, because
+  `operations = [migrations.CreateModel(fields=[("t", models.CharField())])]`
+  puts a `models.*` call inside a `definition.field` inside a `definition.class`
+  and would otherwise mint `django:model-field:Migration.operations`.
+- **`django.view.function` is still convention-only.** Every non-`_`-prefixed
+  function in `**/views**.py` becomes a `View`, including the methods of a
+  class-based view declared there. Django puts no marker on a function view —
+  the only signal is the `request` first parameter, and omega-python emits that
+  as `definition.parameter_shape_candidate`, whose span is *identical* to the
+  function's, so `within` excludes it (equal spans are excluded) and only
+  `relation: "same"` could read it. Kept at `confidence: candidate`.
+- **`definition.container` is unusable in Python.** The host fills it from the
+  innermost `definition.*` fact strictly containing the fact, ties broken by
+  emission order, and omega-python emits `definition.parameter_shape_candidate`
+  named `(request, pk)` on exactly the same span as `definition.function`, after
+  it. So `definition.container` for a call inside `def order_detail(request, pk)`
+  is `(request, pk)`, not `order_detail`. `django.view.render` uses an explicit
+  `fact_join_by_span` `within` `definition.function` instead. This is the
+  carrier-in-the-chain caution in `00-CONTRACT.md` §2, measured.
+- **`ForeignKey(to="Order")` is read as a model named `to="Order`.** The rule
+  takes the first positional argument as the target, which is Django's
+  documented spelling; the keyword form would need a "does not contain `=`"
+  test, and the clause vocabulary has prefix tests only. `"self"` and the empty
+  string are excluded explicitly so the common self-reference does not mint a
+  model called `self`.
 - **`Setting` is keyed by name alone**, not by name and module, so `DEBUG` in
-  `settings/base.py` and `settings/prod.py` are one entity with two
-  `configures` edges. That is the right answer for *where is `DEBUG` set*; it
-  is the wrong one if a reader wants the two values distinguished, and the
-  values are not published in any case.
+  `settings/base.py` and `settings/prod.py` are one entity with two `configures`
+  edges. That is the right answer for *where is `DEBUG` set*; the values are not
+  published in any case.
+- **`django.middleware.class` only sees `MiddlewareMixin` subclasses.** Modern
+  Django middleware is a plain callable taking `get_response`, and the
+  `MIDDLEWARE` setting lists them as strings inside a list literal that
+  omega-python does not emit facts for. The rule answers for the legacy spelling
+  and is silent on the modern one rather than guessing from `**/middleware.py`.

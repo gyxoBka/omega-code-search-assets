@@ -27,6 +27,7 @@
   "emits": {
     "entities": [
       "AdminComponent",
+      "AdminRegistration",
       "AppConfig",
       "ApplicationEntry",
       "Form",
@@ -38,11 +39,13 @@
       "Model",
       "ModelField",
       "Route",
-      "RouteMount",
+      "RoutePattern",
       "Setting",
       "SettingsModule",
+      "Signal",
       "SignalHandler",
-      "SignalModule",
+      "Template",
+      "UrlConfModule",
       "UrlConfiguration",
       "View"
     ],
@@ -50,10 +53,534 @@
       "configures",
       "contains",
       "declares",
-      "mounts"
+      "handles",
+      "mounts",
+      "references",
+      "registers",
+      "renders"
     ]
   },
   "rules": [
+    {
+      "id": "django.admin.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "ModelAdmin",
+            "TabularInline",
+            "StackedInline",
+            "AdminSite"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AdminComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:admin:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A class deriving from ModelAdmin or an inline is the admin presentation of a model."
+    },
+    {
+      "id": "django.app-config.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "AppConfig"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AppConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:app:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "app_dir": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The AppConfig subclass names an installed app and the directory it lives in."
+    },
+    {
+      "id": "django.application.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get_wsgi_application",
+            "get_asgi_application"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApplicationEntry",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:application:{path}"
+          },
+          "attributes": {
+            "server": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "get_wsgi_application()/get_asgi_application(): the module a server process loads."
+    },
+    {
+      "id": "django.form.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Form",
+            "ModelForm"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Form",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:form:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A Form or ModelForm subclass is a bound input surface."
+    },
+    {
+      "id": "django.management-command",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/management/commands/*.py"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Command"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ManagementCommand",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:command:{path.stem}"
+          },
+          "attributes": {
+            "command": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "manage.py <stem>: the file name under management/commands is the command name."
+    },
+    {
+      "id": "django.middleware.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "MiddlewareMixin"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:middleware:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "base": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A MiddlewareMixin subclass is request/response middleware; the modern callable spelling carries no marker and is not classified."
+    },
+    {
+      "id": "django.migration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/migrations/*.py"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Migration"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MigrationHistory",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:migration-set:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Migration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:migration:{path}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:migration-set:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:migration:{path}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Each migrations/NNNN_*.py declaring class Migration is one step of an app's schema history."
+    },
+    {
+      "id": "django.migration.operation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/migrations/*.py"
+        },
+        {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "migrations"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "CreateModel",
+            "DeleteModel",
+            "RenameModel",
+            "AlterModelTable",
+            "AlterModelOptions",
+            "AlterModelManagers",
+            "AlterUniqueTogether",
+            "AlterIndexTogether",
+            "AlterOrderWithRespectTo",
+            "AddField",
+            "RemoveField",
+            "AlterField",
+            "RenameField",
+            "AddIndex",
+            "RemoveIndex",
+            "RenameIndex",
+            "AddConstraint",
+            "RemoveConstraint",
+            "RunPython",
+            "RunSQL",
+            "SeparateDatabaseAndState"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "mig",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "Migration"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MigrationOperation",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:migration-op:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Migration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:migration:{path}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:migration:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:migration-op:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "migrations.CreateModel/AddField/RunPython ...: what one migration does to the schema. The receiver gate keeps a models.* call in the same file out, and the Migration end is minted here as well as by django.migration."
+    },
     {
       "id": "django.model.class",
       "snapshot": true,
@@ -109,7 +636,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "exact",
+      "coverage_note": "A class deriving from models.Model (or the shipped user bases) is a persisted model. Its id sorts first among the rules minting django:model:*, so these are the attributes that survive."
     },
     {
       "id": "django.model.field",
@@ -120,8 +648,15 @@
           "value": "call.method"
         },
         {
-          "kind": "path_glob",
-          "pattern": "**/models**.py"
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "models"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "migrations"
+          ]
         },
         {
           "kind": "field_in",
@@ -240,7 +775,108 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "candidate",
+      "coverage_note": "models.CharField(...) assigned in a class body: one column and its type. The receiver is what separates models.CharField from forms.CharField, so no models*.py path convention is needed."
+    },
+    {
+      "id": "django.model.registration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "register"
+        },
+        {
+          "kind": "field_in",
+          "field": "receiver",
+          "values": [
+            "admin.site",
+            "admin",
+            "site"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "call.arg0_name",
+          "values": [
+            "",
+            "self"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AdminRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:admin-registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "model": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            },
+            "admin_class": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model:{call.arg0_name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:admin-registration:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:model:{call.arg0_name}"
+          },
+          "attributes": {
+            "model": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "admin.site.register(Author, AuthorAdmin) and @admin.register(Author): which model is exposed in the admin. The first argument's last segment is the model class, so the edge reaches the same django:model:* key the model's declaration mints."
     },
     {
       "id": "django.model.relation-field",
@@ -251,8 +887,15 @@
           "value": "call.method"
         },
         {
-          "kind": "path_glob",
-          "pattern": "**/models**.py"
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "models"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "migrations"
+          ]
         },
         {
           "kind": "field_in",
@@ -263,6 +906,18 @@
             "ManyToManyField",
             "GenericForeignKey",
             "GenericRelation"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "call.arg0_name",
+          "values": [
+            "",
+            "self"
           ]
         },
         {
@@ -321,9 +976,27 @@
               "field": "definition.name"
             },
             "field_role": "relation",
+            "target_model": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:model:{call.arg0_name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
             }
           }
         },
@@ -345,481 +1018,24 @@
             },
             "field_role": "relation"
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.view.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "View",
-            "TemplateView",
-            "RedirectView",
-            "ListView",
-            "DetailView",
-            "FormView",
-            "CreateView",
-            "UpdateView",
-            "DeleteView",
-            "ArchiveIndexView",
-            "YearArchiveView",
-            "MonthArchiveView",
-            "WeekArchiveView",
-            "DayArchiveView",
-            "TodayArchiveView",
-            "DateDetailView"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "View",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:view:{cls.definition.name}"
-          },
-          "attributes": {
-            "class": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "base": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.view.function",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.function"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/views**.py"
-        },
-        {
-          "kind": "field_not_prefix",
-          "field": "definition.name",
-          "value": "_"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "View",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:view:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "style": "function",
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "django.form.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "Form",
-            "ModelForm"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Form",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:form:{cls.definition.name}"
-          },
-          "attributes": {
-            "class": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "base": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.admin.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "ModelAdmin",
-            "TabularInline",
-            "StackedInline",
-            "AdminSite"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AdminComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:admin:{cls.definition.name}"
-          },
-          "attributes": {
-            "class": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "base": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.app-config.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "AppConfig"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AppConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:app:{cls.definition.name}"
-          },
-          "attributes": {
-            "class": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "base": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "app_dir": {
-              "kind": "field_ref",
-              "field": "path.dir"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.middleware.class",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "MiddlewareMixin"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Middleware",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:middleware:{cls.definition.name}"
-          },
-          "attributes": {
-            "class": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "base": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.management-command",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/management/commands/*.py"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "Command"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ManagementCommand",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:command:{path.stem}"
-          },
-          "attributes": {
-            "command": {
-              "kind": "field_ref",
-              "field": "path.stem"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.url.pattern",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.function"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/urls**.py"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "path",
-            "re_path",
-            "url"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.variable",
-          "relation": "within",
-          "same_path": true,
-          "bind": "conf",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "urlpatterns"
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "UrlConfiguration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:urlconf:{path}"
-          },
-          "attributes": {
-            "module": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "variable": {
-              "kind": "field_ref",
-              "field": "conf.definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:route:{path}:{source.start}"
-          },
-          "attributes": {
-            "form": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            }
-          }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "contains",
+          "relation_kind": "references",
           "source": {
             "kind": "by_canonical_key",
-            "template": "django:urlconf:{path}"
+            "template": "django:model:{cls.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "django:route:{path}:{source.start}"
+            "template": "django:model:{call.arg0_name}"
           },
           "attributes": {
-            "form": {
+            "through": {
+              "kind": "field_ref",
+              "field": "fld.definition.name"
+            },
+            "field_type": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -827,94 +1043,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.url.include",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.function"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/urls**.py"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "include"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.variable",
-          "relation": "within",
-          "same_path": true,
-          "bind": "conf",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "urlpatterns"
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "UrlConfiguration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:urlconf:{path}"
-          },
-          "attributes": {
-            "module": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "variable": {
-              "kind": "field_ref",
-              "field": "conf.definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteMount",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:url-mount:{path}:{source.start}"
-          },
-          "attributes": {
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "mounts",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "django:urlconf:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "django:url-mount:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "candidate",
+      "coverage_note": "models.ForeignKey(\"shop.Customer\") / ForeignKey(Customer): the link between two models. call.arg0_name is the last dotted segment, so the \"app.Model\" string and the bare class name land on the same django:model:* key."
     },
     {
       "id": "django.setting",
@@ -988,84 +1118,11 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "candidate",
+      "coverage_note": "A module-level name in settings*.py is a Django setting; the edge says which settings module sets it. The value is not published by omega-python."
     },
     {
-      "id": "django.migration",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/migrations/*.py"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "Migration"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "MigrationHistory",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:migration-set:{path.dir}"
-          },
-          "attributes": {
-            "directory": {
-              "kind": "field_ref",
-              "field": "path.dir"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Migration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:migration:{path}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "path.stem"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "django:migration-set:{path.dir}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "django:migration:{path}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "path.stem"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
-    },
-    {
-      "id": "django.migration.operation",
+      "id": "django.signal.connect",
       "snapshot": true,
       "match": [
         {
@@ -1073,48 +1130,43 @@
           "value": "call.method"
         },
         {
-          "kind": "path_glob",
-          "pattern": "**/migrations/*.py"
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "connect"
         },
         {
           "kind": "field_in",
-          "field": "definition.name",
+          "field": "receiver",
           "values": [
-            "CreateModel",
-            "DeleteModel",
-            "RenameModel",
-            "AlterModelTable",
-            "AlterModelOptions",
-            "AlterModelManagers",
-            "AlterUniqueTogether",
-            "AlterIndexTogether",
-            "AlterOrderWithRespectTo",
-            "AddField",
-            "RemoveField",
-            "AlterField",
-            "RenameField",
-            "AddIndex",
-            "RemoveIndex",
-            "RenameIndex",
-            "AddConstraint",
-            "RemoveConstraint",
-            "RunPython",
-            "RunSQL",
-            "SeparateDatabaseAndState"
+            "pre_init",
+            "post_init",
+            "pre_save",
+            "post_save",
+            "pre_delete",
+            "post_delete",
+            "m2m_changed",
+            "pre_migrate",
+            "post_migrate",
+            "class_prepared",
+            "request_started",
+            "request_finished",
+            "got_request_exception",
+            "setting_changed",
+            "connection_created",
+            "user_logged_in",
+            "user_logged_out",
+            "user_login_failed"
           ]
         },
         {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "mig",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "Migration"
-            }
+          "kind": "field_present",
+          "field": "call.arg0_name"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "call.arg0_name",
+          "values": [
+            ""
           ]
         }
       ],
@@ -1122,47 +1174,62 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "MigrationOperation",
+          "entity_kind": "SignalHandler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "django:migration-op:{path}:{source.start}"
+            "template": "django:signal-handler:{call.arg0_name}"
           },
           "attributes": {
-            "operation": {
+            "name": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "call.arg0_name"
+            },
+            "signal": {
+              "kind": "field_ref",
+              "field": "receiver"
             },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "offset": {
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Signal",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:signal:{receiver}"
+          },
+          "attributes": {
+            "signal": {
               "kind": "field_ref",
-              "field": "source.start"
+              "field": "receiver"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "contains",
+          "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
-            "template": "django:migration:{path}"
+            "template": "django:signal-handler:{call.arg0_name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "django:migration-op:{path}:{source.start}"
+            "template": "django:signal:{receiver}"
           },
           "attributes": {
-            "operation": {
+            "signal": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "receiver"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "candidate",
+      "coverage_note": "post_save.connect(on_author_saved, ...): the receiver names the signal and the first argument names the function, so both ends of handles are real names."
     },
     {
       "id": "django.signal.receiver",
@@ -1170,34 +1237,27 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
+          "value": "call.function"
         },
         {
           "kind": "field_equals",
           "field": "definition.name",
           "value": "receiver"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "call.arg0_text",
+          "values": [
+            ""
+          ]
         }
       ],
       "guards": [],
       "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SignalModule",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "django:signal-module:{path}"
-          },
-          "attributes": {
-            "module": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
         {
           "kind": "entity_candidate",
           "entity_kind": "SignalHandler",
@@ -1206,6 +1266,10 @@
             "template": "django:signal-receiver:{path}:{source.start}"
           },
           "attributes": {
+            "signal": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
@@ -1217,29 +1281,353 @@
           }
         },
         {
-          "kind": "relation_candidate",
-          "relation_kind": "declares",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "django:signal-module:{path}"
+          "kind": "entity_candidate",
+          "entity_kind": "Signal",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:signal:{call.arg0_text}"
           },
-          "target": {
+          "attributes": {
+            "signal": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
             "kind": "by_canonical_key",
             "template": "django:signal-receiver:{path}:{source.start}"
           },
-          "attributes": {}
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:signal:{call.arg0_text}"
+          },
+          "attributes": {
+            "signal": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "candidate",
+      "coverage_note": "@receiver(post_save, sender=Author): which signal is listened for. The decorated function cannot be joined -- omega-python spans the decorator and the function as siblings -- so the handler is keyed by where it was written."
     },
     {
-      "id": "django.application.entry",
+      "id": "django.url.include",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
           "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/urls**.py"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "include"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "conf",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "urlpatterns"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "UrlConfModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:urlconf-module:{call.arg0_text}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "UrlConfiguration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:urlconf:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "variable": {
+              "kind": "field_ref",
+              "field": "conf.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:urlconf:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:urlconf-module:{call.arg0_text}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "include(\"blog.urls\"): which URLconf module this one mounts, named by its dotted module path."
+    },
+    {
+      "id": "django.url.path",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/urls**.py"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "path"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "conf",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "urlpatterns"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": "ANY",
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "view": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            },
+            "framework": "django",
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "UrlConfiguration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:urlconf:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "variable": {
+              "kind": "field_ref",
+              "field": "conf.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:urlconf:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "path(\"orders/<int:pk>/\", views.order_detail): the URL is the first argument, so the route is keyed by what it serves rather than by where it was written. A Django URLconf entry carries no HTTP method, so the method component is ANY. The view expression is an attribute, not an edge: see the .md."
+    },
+    {
+      "id": "django.url.regex",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/urls**.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "re_path",
+            "url"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "conf",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "urlpatterns"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RoutePattern",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:route-pattern:{path}:{source.start}"
+          },
+          "attributes": {
+            "pattern": {
+              "kind": "field_ref",
+              "field": "call.arg0"
+            },
+            "form": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "view": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "UrlConfiguration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:urlconf:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "variable": {
+              "kind": "field_ref",
+              "field": "conf.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:urlconf:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:route-pattern:{path}:{source.start}"
+          },
+          "attributes": {
+            "form": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "re_path(r\"^legacy/(?P<pk>\\\\d+)/$\", ...): a regex is not a URL, so it stays out of the http:* key space and is keyed where it was written, carrying its pattern."
+    },
+    {
+      "id": "django.view.class",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
         },
         {
           "kind": "path_glob",
@@ -1249,26 +1637,51 @@
           "kind": "field_in",
           "field": "definition.name",
           "values": [
-            "get_wsgi_application",
-            "get_asgi_application"
+            "View",
+            "TemplateView",
+            "RedirectView",
+            "ListView",
+            "DetailView",
+            "FormView",
+            "CreateView",
+            "UpdateView",
+            "DeleteView",
+            "ArchiveIndexView",
+            "YearArchiveView",
+            "MonthArchiveView",
+            "WeekArchiveView",
+            "DayArchiveView",
+            "TodayArchiveView",
+            "DateDetailView"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ApplicationEntry",
+          "entity_kind": "View",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "django:application:{path}"
+            "template": "django:view:{cls.definition.name}"
           },
           "attributes": {
-            "server": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "base": {
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "module": {
+            "declared_in": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -1276,16 +1689,155 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "exact",
+      "coverage_note": "A class deriving from one of Django's generic views answers requests."
+    },
+    {
+      "id": "django.view.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/views**.py"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "_"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:view:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "style": "function",
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A non-underscore function in views*.py is a function view. Django puts no marker on one, so this is a path convention."
+    },
+    {
+      "id": "django.view.render",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/views**.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "render",
+            "render_to_string",
+            "render_to_response"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**.html",
+          "field": "call.arg1_text"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:template:{call.arg1_text}"
+          },
+          "attributes": {
+            "template": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "django:view:{fn.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "django:view:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "django:template:{call.arg1_text}"
+          },
+          "attributes": {
+            "template": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "render(request, \"orders/detail.html\"): which template a view renders. The template name is the second argument; the glob on it keeps a non-literal argument out."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "Python sources: the Django role of a declared class (model, view, form, admin, app config, middleware), the fields a model declares and whether each is scalar or relational, the URLconfs and the patterns inside urlpatterns, the settings a settings module defines, the migrations of an app and the operations each runs, the management commands, the signal-receiver modules and the WSGI/ASGI entry points are materialized.",
-      "omega-python captures no call argument, so the route string of path()/re_path(), the target of include(), the model a ForeignKey points at, the model an admin class registers and the signal a @receiver listens for are not stated and are reported as not found.",
-      "omega-python spans reference.decorator on the decorator name and definition.function on the function_definition, which a decorated_definition encloses separately, so a decorator cannot be joined to the declaration it decorates; @receiver is attached to its module, not to its handler.",
-      "Which class is a model is decided by its base and by the models*.py path convention; a model declared elsewhere behind an indirect abstract base is not classified."
+      "Python sources: the Django role of a declared class (model, view, form, admin, app config, middleware), the columns a model declares and whether each is scalar or relational and which model it points at, the URLconfs with the URL each path() serves and the module each include() mounts, the settings a settings module defines, the migrations of an app and the operations each runs, the management commands, the signals that are listened for, the templates a view renders and the WSGI/ASGI entry points are materialized.",
+      "omega-python publishes the first argument of a call (call.arg0, call.arg0_text, call.arg0_name) and the second as written (call.arg1_text) but no call.arg1_name, so Django's path(route, view) cannot name its view the way the view's own declaration does: the route carries the view expression as an attribute and no route->handler edge is emitted. See the .md, 'A field only the Pack can supply'.",
+      "omega-python spans reference.decorator on the decorator name and definition.function on the function_definition, which a decorated_definition encloses separately, so a decorator cannot be joined to the declaration it decorates; @receiver names its signal but not its handler, and @login_required and @admin.register cannot be attached to what they decorate.",
+      "A route's URL is the one written at its own path() call; Django composes the absolute URL from the prefixes of every include() above it, and include() spans no enclosing path() call, so a mounted route's absolute URL is not stated.",
+      "normalize_http_path folds :id, {id} and [id] but not Django's <int:pk>, so a Django route parameter is a distinct identity from the same parameter written in an Express or ASP.NET route.",
+      "The value of a setting is not published: definition.variable names INSTALLED_APPS, MIDDLEWARE, ROOT_URLCONF and ALLOWED_HOSTS but not their contents, so which apps are installed and which middleware is enabled remain not found.",
+      "Which class is a model, view, form, admin or app config is decided by its declared base; a class behind an indirect abstract base of the project's own is not classified."
     ]
   },
   "provenance": [

@@ -38,8 +38,10 @@
       "BunFileAccess",
       "BunModule",
       "BunNativeBinding",
+      "BunNativeLibrary",
       "BunProcess",
       "BunQuery",
+      "BunResource",
       "BunServer",
       "BunTest",
       "BunTestHook"
@@ -139,6 +141,11 @@
           "value": "serve"
         },
         {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "Bun"
+        },
+        {
           "kind": "path_glob",
           "pattern": "**/*.*s*"
         }
@@ -152,9 +159,9 @@
           },
           "attributes": {
             "api": "Bun.serve",
-            "member": {
+            "receiver": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "receiver"
             },
             "runtime": "bun"
           }
@@ -187,8 +194,89 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Where an HTTP server is declared. The JS/TS Packs name only the member of a member call, so the receiver Bun is not stated and any .serve(...) in the project matches; the port, hostname and routes are argument values no Pack publishes."
+      "confidence": "exact",
+      "coverage_note": "Where an HTTP server is declared: Bun.serve(...), proven by the receiver field the JS/TS Packs now publish on call.method, so app.serve(...) no longer matches. The port and the routes table are inside the one object-literal argument, which arrives whole as call.arg0_text and whose properties no Pack states."
+    },
+    {
+      "id": "bun.server.serve-import",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "serve"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.*s*"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "module",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "bun"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BunServer",
+          "canonical_key": {
+            "template": "bun:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "serve",
+            "module": {
+              "kind": "field_ref",
+              "field": "module.definition.name"
+            },
+            "runtime": "bun"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BunFile",
+          "canonical_key": {
+            "template": "bun:file:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "runtime": "bun"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "creates_server",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "bun:file:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The other spelling of the same declaration: a named import of serve from bun, called bare. The bare call carries no receiver, so the import in the same file is the evidence. Same key space and the same entity kind as bun.server.serve, so the two spellings are one answer."
     },
     {
       "id": "bun.process.spawn",
@@ -206,6 +294,11 @@
           ]
         },
         {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "Bun"
+        },
+        {
           "kind": "path_glob",
           "pattern": "**/*.*s*"
         }
@@ -221,6 +314,14 @@
             "api": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "command": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
             },
             "runtime": "bun"
           }
@@ -253,8 +354,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Where the project starts a child process through Bun's spawn API. The receiver is not stated by the Pack, so a node:child_process spawn in the same project matches too; the command line is an argument value no Pack publishes."
+      "confidence": "exact",
+      "coverage_note": "Where the project starts a child process, and what it starts: the receiver field proves it is Bun.spawn rather than node:child_process, and call.arg0_text carries the argv as written."
     },
     {
       "id": "bun.filesystem.access",
@@ -272,6 +373,15 @@
           ]
         },
         {
+          "kind": "field_equals",
+          "field": "receiver",
+          "value": "Bun"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
           "kind": "path_glob",
           "pattern": "**/*.*s*"
         }
@@ -287,6 +397,14 @@
             "api": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "resource": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "receiver": {
+              "kind": "field_ref",
+              "field": "receiver"
             },
             "runtime": "bun"
           }
@@ -306,6 +424,20 @@
           }
         },
         {
+          "kind": "entity_candidate",
+          "entity_kind": "BunResource",
+          "canonical_key": {
+            "template": "bun:resource:{call.arg0_text}"
+          },
+          "attributes": {
+            "resource": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "runtime": "bun"
+          }
+        },
+        {
           "kind": "relation_candidate",
           "relation_kind": "uses_resource",
           "source": {
@@ -316,11 +448,23 @@
             "kind": "current"
           },
           "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "bun:resource:{call.arg0_text}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Where the project reads or writes a file through Bun.file/Bun.write. file and write are ordinary member names and the Pack does not state the receiver, so this is a candidate; the path operated on is an argument value no Pack publishes."
+      "confidence": "exact",
+      "coverage_note": "Which file on disk the project reads or writes through Bun.file/Bun.write. The receiver field proves the call is Bun's, and call.arg0_text gives the operand without its quote bytes, so the same resource named in two source files is one BunResource. A non-literal operand yields the expression text instead of a path; field_present drops the zero-argument case rather than minting an empty key."
     },
     {
       "id": "bun.sqlite.database",
@@ -465,7 +609,11 @@
               "kind": "field_ref",
               "field": "module.definition.name"
             },
-            "runtime": "bun"
+            "runtime": "bun",
+            "sql": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
           }
         },
         {
@@ -497,7 +645,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "high",
-      "coverage_note": "Where the project runs SQL through bun:sqlite, in a file that imports it. The SQL text is an argument value no Pack publishes, and which Database instance a statement belongs to is a value flow no Pack states."
+      "coverage_note": "Where the project runs SQL through bun:sqlite, in a file that imports it, and the SQL text itself from call.arg0_text. Zero-argument forms like stmt.all() keep an empty sql attribute rather than being dropped. Which Database instance a statement belongs to is a value flow no Pack states."
     },
     {
       "id": "bun.test.registration",
@@ -553,7 +701,11 @@
               "kind": "field_ref",
               "field": "module.definition.name"
             },
-            "runtime": "bun"
+            "runtime": "bun",
+            "title": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
           }
         },
         {
@@ -585,7 +737,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Every suite and case the Bun test runner will collect, in a file that imports bun:test. The test's title is a string argument no Pack publishes, so a registration is addressed by its position."
+      "coverage_note": "Every suite and case the Bun test runner will collect, in a file that imports bun:test, under the title it was registered with -- call.arg0_text carries the first argument unquoted, so a registration is now named as well as positioned."
     },
     {
       "id": "bun.test.lifecycle-hook",
@@ -674,7 +826,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "The setup and teardown a test file installs -- what runs around a case that the case body does not show. Which suite a hook is scoped to is callback nesting no Pack states."
+      "coverage_note": "The setup and teardown a test file installs -- what runs around a case that the case body does not show. A hook takes only a callback, so it has no title; which suite it is scoped to is callback nesting no Pack states."
     },
     {
       "id": "bun.ffi.load",
@@ -733,6 +885,97 @@
               "kind": "field_ref",
               "field": "module.definition.name"
             },
+            "runtime": "bun",
+            "operand": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BunFile",
+          "canonical_key": {
+            "template": "bun:file:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "runtime": "bun"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "bun:file:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Where the project crosses into native code through bun:ffi, in a file that imports it, with the first argument as written -- the library path for dlopen, the pointer or buffer for the rest."
+    },
+    {
+      "id": "bun.ffi.library",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "dlopen",
+            "linkSymbols"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.*s*"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "module",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "bun:ffi"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BunNativeLibrary",
+          "canonical_key": {
+            "template": "bun:native-library:{call.arg0_text}"
+          },
+          "attributes": {
+            "library": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
             "runtime": "bun"
           }
         },
@@ -765,7 +1008,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Where the project crosses into native code through bun:ffi, in a file that imports it. The library path and the symbol table are argument values no Pack publishes."
+      "coverage_note": "Which native library the project loads, by name: dlopen's first argument, unquoted, is a cross-file identity, so every source file that opens libsqlite3.so reaches the same BunNativeLibrary."
     },
     {
       "id": "bun.config.table",
@@ -891,10 +1134,11 @@
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "The JS/TS Packs name only the member of a member call, never its receiver, so Bun.serve, Bun.spawn, Bun.file and Bun.write are matched by member name alone and any same-named method call in the project matches with them.",
-      "Bun.serve's handler table -- fetch, websocket, error -- is an object literal property whose value is an identifier. omega-typescript emits no fact for an object literal property and the call.method span covers only the member name, so no join reaches it; which function answers a request is not stated.",
+      "Bun.serve's routes table is an object literal whose keys are quoted route strings. Measured with dump_call_emissions: omega-javascript and omega-typescript emit no fact at all for a string-keyed property, whether its value is an identifier, an arrow function or a method body, so neither the route URL nor the handler it names is stated. Bun therefore has no http:{method}:{route} key space -- the server is addressed by its declaration site and nothing below it is in the graph.",
+      "Bun.serve's fetch/websocket/error handlers are object-literal properties. omega-javascript emits definition.method for an identifier-keyed property, omega-typescript only for the shorthand method form, and in neither case does any span or field relate that property to the serve call, whose span is the six bytes of the member name. Which function answers a request is not stated.",
+      "call.constructor carries no fields in any JS/TS Pack -- the canonical call view is published on call.function and call.method only -- so new Database(\"app.sqlite\") names no database file and a SQLite database is addressed by the position of its constructor.",
       "Bun.env and process.env are member references, not calls, and no JS/TS Pack emits a fact for a bare member reference, so which environment variables a Bun project reads cannot be answered.",
-      "Argument values -- ports, file paths, SQL text, test titles, bunfig.toml setting values -- are published as fields by no Pack, so a site is addressed by its position and named by its API rather than by what it operates on."
+      "bunfig.toml setting values are published by omega-toml as attributes, which the overlay cannot read, so a BunConfigSetting names install.registry but cannot say what registry."
     ]
   },
   "provenance": [

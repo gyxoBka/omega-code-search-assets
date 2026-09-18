@@ -560,3 +560,34 @@ handler named by `call.last_arg` -- and the engine test that asserts it passes.
 omega-framework-astro's file routes are back in their own `astro:page:` key
 space, which is what the other engine test asserts. The other twelve are the
 pass that remains.
+
+---
+
+## 18. No JS/TS Pack states a string-keyed object-literal property
+
+Measured by the bun reviewer against omega-javascript and omega-typescript on
+
+```js
+Bun.serve({ routes: { "/api/users": listUsers, "/health"(req) { … } } })
+```
+
+Neither Pack emits **any** fact for a quoted-key property. An identifier key
+does emit `definition.method` in omega-javascript, so it is the quoting that
+breaks it: omega-javascript's pair query requires a `property_identifier` key
+and omega-typescript only emits for the shorthand method form.
+
+That is Bun's entire route table, and it is not Bun's alone: Vite's
+`resolve.alias`, Webpack's loader and alias maps, Jest's `moduleNameMapper`,
+every `exports` map in a `package.json`-shaped literal. Any framework `.md` that
+claims to read one of these is claiming a fact no Pack states.
+
+No join reaches it either. The route table lies outside the `call.method serve`
+span, which is the six bytes of the `serve` token, and the only fact containing
+the whole thing -- `definition.variable server` over `server = Bun.serve({…})` --
+covers every route in the table equally, which is the stated limit of the
+span-wide grouping idiom.
+
+**Done looks like:** a `definition.config_key`-shaped emission for
+`(pair key: (string) value: _)` in omega-javascript, omega-typescript and
+omega-tsx, with the key unquoted and the value's last identifier segment
+published the way `call.last_arg_name` is.

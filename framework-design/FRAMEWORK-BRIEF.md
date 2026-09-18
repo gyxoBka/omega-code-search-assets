@@ -362,6 +362,18 @@ Nine Packs publish the canonical call view on their call templates:
 
 | `call.arg0_name`, `call.last_arg_name` | `GetUser` -- the last segment of a qualified name |
 
+Every argument slot carries all three: `call.arg1_text` and `call.arg1_name`,
+`call.last_arg_text` and `call.last_arg_name`, and so on. Django's route puts
+the view in argument one, gin's `Handle` puts the URL there.
+
+**A guard that a spelling fails is a deletion, and inside a join's `where` it
+kills the whole binding.** vapor and maui each lost a real answer to
+`field_prefix call.arg0 = "\""`: `todos.get(use: index)` and
+`Routing.RegisterRoute(nameof(DetailsPage), typeof(DetailsPage))` have no quote
+byte, and both are the spelling their own documentation uses. Where a construct
+has two spellings and only one carries a literal, write two rules -- the literal
+one stating the value, the other stating what it can.
+
 **Key a handler on `*_name`, never on the argument as written.** A handler is
 written `ctrl.GetUser`, `handlers.ListUsers`, `handlers::show_user` at the
 registration and declared as `GetUser`, `ListUsers`, `show_user`. Four
@@ -374,14 +386,15 @@ own: omega-rust splits on `::` before `.`.
 no strip, so a value that carries its quote bytes cannot be an identity and can
 never meet the unquoted form of the same string.
 
-`call.arg0_text` is a `default` to the empty string wrapped in one
-`strip_prefix`/`strip_suffix` pair per quote style the language has -- two for
-Rust, four for Python, six for the JavaScript family, where a template literal
-is a real spelling of an argument. There is no one op for it: `expr.rs` has
-`strip_prefix` and `strip_suffix`, each taking a single literal, and `trim` is
-whitespace only. The `default` is load-bearing: a call with no arguments has no
-first argument, and a strip over a None is a type error that skips the whole
-template -- which quietly stopped `app.listen()` being a call at all.
+`call.arg0_text` is one `unquote` over a `default` to the empty string.
+`unquote` returns a string literal's text without its delimiters and anything
+else unchanged. It exists because the pair of independent strips that came
+before it turned a Python keyword argument `alias="userId"` into `alias="userId`
+-- `strip_prefix` and `strip_suffix` do not know about each other, so the
+trailing quote came off although the leading one was never there. The `default`
+is load-bearing too: a call with no arguments has no first argument, and an op
+over a None is a type error that skips the whole template, which quietly stopped
+`app.listen()` being a call at all.
 
 In omega-ruby, omega-kotlin and omega-swift the arguments are a separate
 emission, `call.arguments`, on the **same span** as the call -- a Ruby call

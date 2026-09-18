@@ -5,23 +5,28 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-8 overlay rules, 12 detection rules. **8 live, 0 cannot match.**
+11 overlay rules, 12 detection rules. **11 live, 0 cannot match.**
+`key_collisions.py` reports `0 entity outputs are overwritten by a same-key rule
+that sorts first`.
 
 Selector: `framework:pytorch-extensions`. Maturity: `semantic-overlay-full`.
 Scope: the Python build script (`setup.py`, `build.py`, anything that imports
 `torch.utils.cpp_extension`) and the C++ translation units it compiles. The two
-Packs are **omega-python** and **omega-cpp**, and **neither publishes a single
-field on a single template** — every rule below is built from kind, name, path,
-span and the host's built-ins.
+Packs are **omega-python** and **omega-cpp**. omega-python now publishes the
+canonical call view — `call.arg0`, `call.arg0_text`, `call.arg0_name`,
+`call.arg1`, `call.arg1_text`, `call.arg2`, `call.last_arg`,
+`call.last_arg_name` on `call.function`, and those plus `receiver` on
+`call.method`. **omega-cpp still publishes no field on any template**, so every
+C++ rule below is built from kind, name, path, span and the host's built-ins.
 
 ### Entities it declares
 
 | entity_kind | key space | minted by |
 |---|---|---|
-| `ExtensionBuildScript` | `pytorch-ext:build-script:{path}` | 3 rules (Python hub) |
-| `ExtensionModule` | `pytorch-ext:module:{path}:{source.start}` | `…py.extension-module` |
-| `ExtensionBinding` | `pytorch-ext:binding:{path}:{var}` | `…py.extension-binding` |
-| `JitExtension` | `pytorch-ext:jit-load:{path}:{source.start}` | `…py.jit-load` |
+| `ExtensionBuildScript` | `pytorch-ext:build-script:{path}` | 5 rules (Python hub) |
+| `ExtensionModule` | `pytorch-ext:module:{path}:{call.arg0_text}` | `…py.extension-module`, `…py.qualified-extension-module` |
+| `ExtensionBinding` | `pytorch-ext:binding:{path}:{var}` | `…py.extension-binding`, `…py.qualified-extension-binding` |
+| `JitExtension` | `pytorch-ext:jit-load:{path}:{call.arg0_text}` | `…py.jit-load`, `…py.qualified-jit-load` |
 | `BuildTool` | `pytorch-ext:build-tool:{path}` | `…py.build-extension` |
 | `ExtensionSource` | `pytorch-ext:source:{path}` | `…cpp.translation-unit` (C++ hub) |
 | `TorchHeader` | `pytorch-ext:header:{header}` | `…cpp.translation-unit` |
@@ -29,10 +34,11 @@ span and the host's built-ins.
 | `ExtensionRegistry` | `pytorch-ext:registry:{path}:{macro}:{start}` | `…cpp.registry` |
 | `BuildToolchain` | `pytorch-ext:toolchain:cuda` | `…cpp.cuda-source` |
 
-One kind per key space, so `key_collisions.py` reports nothing. The two hubs are
-each minted by the rules that address them, with identical kind and identical
-attributes, and every rule that addresses a hub key carries a superset of the
-clauses of the rule that mints it — so no relation end dangles.
+One kind per key space, so `key_collisions.py` reports nothing. Where two rules
+mint the same key they mint it with the **same** `entity_kind` and the **same**
+attribute expressions, so it does not matter which of the two sorts first. Every
+rule that addresses a hub key carries a superset of the clauses of a rule that
+mints it, so no relation end dangles.
 
 ### Relations it declares
 
@@ -40,123 +46,171 @@ clauses of the rule that mints it — so no relation end dangles.
 
 ## What was wrong with it
 
-**All 8 rules were dead**, 7 of them because they named a fact kind of the
-pre-rewrite generator vocabulary and the eighth because it named another
-language's kind:
+This is the second pass. The first pass fixed the dead kinds; this one fixes
+what was written while a call's arguments were unreachable.
 
-| kind the rule matched | rules | emitted by |
-|---|---|---|
-| `definition.python_from_import_constructor_keyword_identifier_list_context` | 4 | nobody |
-| `definition.python_from_import_constructor_binding_context` | 1 | nobody |
-| `definition.python_from_import_constructor_keyword_identifier_context` | 1 | nobody |
-| `call.direct` | 1 | nobody |
-| `call.member` | 1 | omega-c only — not in `host.required_packs` |
+**Before this pass: 8 rules, 8 live, 0 dead.** The defects were not dead rules,
+they were unreachable answers and one false claim.
 
-Three further defects, which is why this is a rewrite and not a translation.
+1. **The two things a PyTorch extension is named by were not stated, and the
+   `coverage.gaps` said so.** One of the six gap sentences read *"omega-python
+   captures no call argument, so `sources=[...]`, `include_dirs=[...]`,
+   `extra_compile_args=[...]`, `extra_link_args=[...]` and the `name=` of an
+   extension are not stated."* That sentence is now **false in its first half**:
+   omega-python publishes 8 call fields on `call.function` and 9 on
+   `call.method`. Measured with `dump_call_emissions` on a hand-written
+   `setup.py`:
 
-1. **The whole design rested on call-argument text that no Pack has ever
-   published.** Six of the eight rules read `module_name`, `imported_name`,
-   `callee_name`, `binding_name`, `keyword_name`, `list_item` or
-   `keyword_identifier` — **7 distinct field names, none of them published by omega-python, which
-   publishes no field at all on any of its 30 templates.** The four
-   `…-item` rules existed solely to turn one element of `sources=[...]`,
-   `include_dirs=[...]`, `extra_compile_args=[...]` or `extra_link_args=[...]`
-   into a `BuildInput`/`BuildOption` entity. omega-python emits `call.function`
-   spanning **only the callee name** (`124-136` for
-   `ext = CppExtension(name=…, sources=[…])`), so the arguments are not merely
-   unfielded, they are not facts. Those four rules are deleted, not ported.
+   ```
+   137-149  call.function  name=CppExtension
+            call.arg0="'my_ops'"  call.arg0_text=my_ops  call.arg0_name=my_ops
+            call.arg1="['src/ops.cpp', 'src/kernel.cu']"
+            call.arg1_text=['src/ops.cpp', 'src/kernel.cu']
+   ```
 
-2. **Both of the two relation-emitting rules pointed the relation at the entity
-   they had just minted.** `pytorch.ext.load` and `pytorch.ext.buildextension`
-   each emitted `source: current` and `target: by_canonical_key` rendering the
-   very key `current` was minted under — the self-loop shape wave 2 and wave 6
-   found in gitlab-ci and symfony. Even had their kinds been live, each would
-   have added one edge from a node to itself and nothing else.
+2. **Both named entities were keyed by a byte offset.** `ExtensionModule` was
+   `pytorch-ext:module:{path}:{source.start}` and `JitExtension` was
+   `pytorch-ext:jit-load:{path}:{source.start}` — 2 of the 10 key spaces
+   identified a construct by where it happened to sit in the file, so the
+   identity moved on every edit above it and no question could name the thing:
+   *where is the extension `my_ops` built* had no key to ask about. Both are now
+   keyed on `call.arg0_text`, which is the extension's own Python module name in
+   the spelling PyTorch's documentation uses (`CppExtension('lltm_cpp',
+   ['lltm.cpp'])`). This is the same move brief §3k describes for a route, with
+   the extension name in place of the URL; there is no route to normalize, so
+   the raw text is the identity.
 
-3. **Two rules used `external_path_matches` against `torch.utils.cpp_extension`,
-   which cannot resolve for Python.** `external` is filled from
-   `external_environment`, which registers only a binding whose `target_hint` is
-   set; `target_hint` is `occurrence.qualifier`; and `qualifier` is read only
-   from a field or attribute literally named `qualifier`, which omega-python does
-   not publish (its only attributes are `module` and `target` on
-   `binding.import_alias`, and an attribute is write-only anyway). This is the
-   same mechanism `00-INDEX.md` item 7a records for JS/TS; it applies to Python
-   too. Both clauses are replaced by a `fact_join_by_field` on `path` against
-   `import.from_module` named `torch.utils.cpp_extension`, which is the
-   statement the rule actually wanted: *this file imports torch's C++ extension
-   builder*.
+3. **The qualified spelling of every Python construct was invisible — 0 of the
+   4 Python rules could match it.** All four matched `call.function` only, which
+   omega-python emits for a bare callee. `torch.utils.cpp_extension.load(name=…)`
+   and `cpp_extension.CppExtension(…)` are `call.method` with `receiver` set,
+   and `receiver` is a field that did not exist when the file was written.
+   Measured:
 
-**Measured, not assumed.** Every fact named below was produced by
-`dump_call_emissions` on a hand-written `setup.py`, `ops.cpp` and `kern.cu`, and
-the eight rules were then replayed over those emissions: all 8 match, 18
-entities and 16 relations materialize, no attribute is unresolvable and no
-relation end is unminted.
+   ```
+   115-119  call.method  name=load        receiver=torch.utils.cpp_extension
+   227-239  call.method  name=CppExtension  receiver=cpp_extension
+   ```
+
+   That is the spelling the PyTorch JIT docs use, and it was matching nothing.
+   Three rules were added for it — `…py.qualified-extension-module`,
+   `…py.qualified-extension-binding`, `…py.qualified-jit-load` — taking the file
+   from 8 rules to 11. The three extra rules are what §6 of the brief asks to be
+   justified: they answer the same three questions as their `call.function`
+   twins, for the module-qualified way of writing the call, and they cannot be
+   collapsed into the twins because `fact_kind` is an exact match and
+   `call.function` and `call.method` are two kinds.
+
+   They also do not need the `import.from_module` join the unqualified rules
+   carry: the receiver **is** the import evidence. The gate is one clause,
+   `path_glob` over the field `receiver` with pattern `*cpp_extension`, which
+   covers both `torch.utils.cpp_extension` and the `from torch.utils import
+   cpp_extension` alias in a single clause (brief §3i: the import join in place
+   of `external_path_matches`; here the receiver is stronger and cheaper).
+
+4. **Two attributes were named for a built-in.** `ExtensionBuildScript` carried
+   an attribute `path` and `ExtensionSource` carried an attribute `path`, and
+   both rules then rendered `{path}` in a later output. Both resolved to the
+   same value so nothing broke, but it is exactly the shape brief §3k names as
+   the express bug; renamed to `script` and `source_file`.
+
+5. **A zero-argument call would have collapsed two entities into one.**
+   `call.arg0_text` is a `default`-to-empty wrapped in strip pairs, so
+   `CppExtension()` yields `call.arg0_text=""` (measured) and two such calls in
+   one file would render one key. Every rule that keys on it now carries
+   `path_glob` on `call.arg0_text` with pattern `?*` — at least one character —
+   and the two binding rules carry it too, because they address a key the module
+   rules mint (brief §3b: a rule that addresses a key carries the conditions of
+   the rule that mints it).
 
 ## What it states now
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
-| which files in this repo configure a torch C++ extension build | `import.from_module` named `torch.utils.cpp_extension`, joined on `path` from each Python rule | `ExtensionBuildScript` at `pytorch-ext:build-script:{path}` |
-| which extension modules does this project build, and is it CPU, CUDA or SYCL | omega-python `call.function` named `CppExtension` / `CUDAExtension` / `SyclExtension` | `ExtensionModule`; `ExtensionBuildScript --builds--> ExtensionModule`, `extension_kind` on both |
-| what is the Python name for that extension | the same call, `fact_join_by_span` `within` `definition.variable` (the assignment spans the call) | `ExtensionBinding` (the variable); `ExtensionBinding --binds--> ExtensionModule` |
-| where does this project JIT-compile an extension at import time | omega-python `call.function` named `load` / `load_inline`, plus an `import.symbol` of that name in the same file | `JitExtension`; `ExtensionBuildScript --builds--> JitExtension`, `loader` naming which of the two |
+| which files configure a torch C++ extension build | `import.from_module` named `torch.utils.cpp_extension`, joined on `path`; or a `call.method` whose `receiver` ends in `cpp_extension` | `ExtensionBuildScript` at `pytorch-ext:build-script:{path}` |
+| which extension modules does this project build, under what Python import name, and is it CPU, CUDA or SYCL | omega-python `call.function` named `CppExtension`/`CUDAExtension`/`SyclExtension`, with `call.arg0_text` | `ExtensionModule` at `pytorch-ext:module:{path}:{call.arg0_text}`; `ExtensionBuildScript --builds--> ExtensionModule`; attributes `module_name`, `extension_kind`, `sources` |
+| …the same, written `cpp_extension.CppExtension(…)` | omega-python `call.method`, same names, `receiver` matching `*cpp_extension` | the same entity and edge, same kind and same attributes, so the two rules agree on the key |
+| what C++ files does an extension compile | `call.arg1_text` — the **argument as written**, `['src/ops.cpp', 'src/kernel.cu']` | attribute `sources` on `ExtensionModule` / `JitExtension`. Not an edge: a list's elements are not facts (see below) |
+| what is the Python variable that holds that extension | the same call, `fact_join_by_span` `within` `definition.variable` (omega-python spans the assignment) | `ExtensionBinding`; `ExtensionBinding --binds--> ExtensionModule` |
+| where does this project JIT-compile an extension at import time, and under what name | omega-python `call.function` named `load`/`load_inline` plus an `import.symbol` of that name; or the `call.method` spelling with the `cpp_extension` receiver | `JitExtension` at `pytorch-ext:jit-load:{path}:{call.arg0_text}`; `ExtensionBuildScript --builds--> JitExtension`, `loader` naming which of the two |
 | which build scripts drive the build through torch's own `build_ext` | omega-python `import.symbol` named `BuildExtension` | `BuildTool`; `ExtensionBuildScript --configured_by--> BuildTool` |
 | which C++ translation units are part of the extension, and which torch headers they pull in | omega-cpp `import.include` named one of 18 torch / ATen / c10 / CUDA / pybind11 headers | `ExtensionSource` and `TorchHeader`; `ExtensionSource --depends--> TorchHeader` |
-| which C++ functions are the operators the extension exposes | omega-cpp `reference.type` named `Tensor` (`torch::Tensor` and `at::Tensor` both reduce to it), `fact_join_by_span` `within` `definition.function` | `ExtensionOp` keyed by the function; `ExtensionSource --declares--> ExtensionOp` |
+| which C++ functions are the operators the extension exposes | omega-cpp `reference.type` named `Tensor` (`torch::Tensor` and `at::Tensor` both reduce to it), `fact_join_by_span` `within` `definition.function` | `ExtensionOp`; `ExtensionSource --declares--> ExtensionOp` |
 | where is the Python entry point registered, and under what name | omega-cpp `definition.function` named `PYBIND11_MODULE`, `PYBIND11_EMBEDDED_MODULE`, `TORCH_LIBRARY`, `TORCH_LIBRARY_IMPL` or `TORCH_LIBRARY_FRAGMENT`, plus the same-span `definition.parameter_shape_candidate` | `ExtensionRegistry` with `macro` and `signature` (`(TORCH_EXTENSION_NAME, m)`, `(my_ops, m)`); `ExtensionSource --declares--> ExtensionRegistry` |
 | does this extension need the CUDA toolkit | omega-cpp `import.include` named one of six CUDA headers | `BuildToolchain` `pytorch-ext:toolchain:cuda`; `ExtensionSource --compiled_by--> BuildToolchain` |
 
-Two shapes are worth copying. The **macro-as-declaration** read: tree-sitter-cpp
+Three shapes are worth copying. The **macro-as-declaration** read: tree-sitter-cpp
 parses `PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) { … }` as a function
 definition, so the macro arrives as `definition.function` named for the macro and
 the whole argument list arrives as `definition.parameter_shape_candidate` on a
-byte-identical span — the same same-span carrier trick omega-kotlin-multiplatform
-used for `expect`/`actual`, and the only way to read an Unreal- or pybind-style
-macro's operands out of a fieldless Pack. And the **assignment-spans-the-call**
-read: omega-python spans `definition.variable` over the entire statement, so a
-`call.function` inside it reaches its binding with `fact_join_by_span` /
-`within` and no field on either side.
+byte-identical span — the only way to read a pybind-style macro's operands out
+of a fieldless Pack. The **assignment-spans-the-call** read: omega-python spans
+`definition.variable` over the entire statement, so a `call.function` inside it
+reaches its binding with `fact_join_by_span` / `within` and no field on either
+side. And **`receiver` as the import gate**: one `path_glob` over `receiver`
+replaces both an `external_path_matches` that can never be true for Python
+(brief §3i) and the two-clause import join, for the qualified call spelling.
 
 ## A field only the Pack can supply
 
-**omega-python, `call.function`, the call's argument text.** The one question
-this framework exists for that it still cannot answer is *which C++ files does
-this extension compile* — `CppExtension(name='my_ops', sources=['src/ops.cpp',
-'src/kernel.cu'])`. The same absence hides `include_dirs`, `extra_compile_args`,
-`extra_link_args`, and the `name=` under which the module is imported from
-Python.
+**omega-python, `call.function` / `call.method`, the elements of a list
+argument.** The call view answers the extension's *name*; it does not answer
+*which C++ files this extension compiles*. `CppExtension('my_ops',
+['src/ops.cpp', 'src/kernel.cu'])` yields `call.arg1_text` as the single string
+`['src/ops.cpp', 'src/kernel.cu']`, which is publishable as an attribute for a
+reader but can never be a relation end: `src/ops.cpp` and `src/kernel.cu` would
+each have to render `pytorch-ext:source:{path}` to meet the `ExtensionSource`
+the C++ side mints, and there is no operation that splits a value.
 
 Neither of the first two options in the brief reaches it:
 
 - **No built-in derives it.** `definition.name` is `CppExtension`; `path` and
   its derivatives describe the build script, not the sources.
-- **No join reaches it.** `fact_join_by_span` relates facts the Pack emitted.
-  omega-python emits **no fact at all** for a string literal, a keyword
-  argument, a list, or an argument list — its 30 templates cover classes,
-  functions, type aliases, module and class variables, decorators, calls, type
-  uses, imports, globals and tests, and nothing below the call's callee name.
-  There is no fact inside the `CppExtension(...)` span to join to.
+- **No join reaches it.** `fact_join_by_span` relates facts the Pack emitted,
+  and omega-python emits no fact for a string literal inside a list. There is
+  nothing inside the `['src/ops.cpp', …]` span to join to.
 
-So this needs an omega-python change, and it is the same change `00-INDEX.md`
-already records for omega-go under wave 8 (`app.Get("/users/:id", h)`): **a Pack
-fact for a call's literal string arguments.** It is not a pytorch-extensions
-field and should not be added as one — `sources=`/`include_dirs=` are
-`setuptools` keywords, and a generic `call.argument` / `call.string_argument`
-emission, or a `string_arguments` field on `call.function`, would answer this,
-Go's routes, Ruby's `render`, and every framework whose configuration lives in a
-call. Recorded in `OWED.md` as the Go row; this is the second framework blocked
-on it.
+What would answer it is a per-element emission — `call.string_argument`, one
+fact per literal string anywhere in the argument list, on the call's span — not
+a `sources` field, which would be a setuptools keyword baked into a Pack. It
+would also answer `include_dirs`, `extra_compile_args` and `extra_link_args`
+here, and every framework whose configuration is a list of strings in a call.
+This is the surviving half of the `OWED.md` call-argument item; the first half
+(the scalar arguments) has landed and is used above.
 
-A second, smaller one: **omega-cpp spans a callable on its declarator, not its
-body.** `PYBIND11_MODULE(…)` spans `167-207` while `m.def("forward", &forward)`
-sits at `212-254`, so the individual op registrations — the list of names the
-extension actually exports to Python — arrive as `call.method` named `def` with
-no reachable owner and no argument text. A `scope.function_body` template of the
-kind omega-python already has would make the owner reachable; the argument text
-is the same Pack change as above.
+A second one, unchanged from the first pass: **omega-cpp publishes no call
+fields at all and spans a callable on its declarator, not its body.**
+`PYBIND11_MODULE(…)` spans `167-207` while `m.def("forward", &forward)` sits at
+`212-254`, so the individual op registrations — the list of names the extension
+actually exports to Python — arrive as `call.method` named `def` with no
+reachable owner and no argument text. Two changes are needed and neither is a
+Framework's to make: the canonical call view on omega-cpp's `call.function` and
+`call.method` templates (which ten Packs now carry and omega-cpp does not), and
+a `scope.function_body` template of the kind omega-python already has, to make
+the owner reachable.
 
 ## Still to decide
 
+- **The keyword spelling of the extension name is stated as written.**
+  `CUDAExtension(name='my_cuda_ops', sources=[…])` yields
+  `call.arg0_text=name='my_cuda_ops` — the Pack's strip pairs remove the
+  trailing quote of a keyword argument but nothing removes the `name='` prefix,
+  because the whole `keyword_argument` node is the first ordered child. The key
+  is still unique, stable and human-readable, and both spellings of the *same*
+  extension in the *same* file would be the same construct written twice, so no
+  identity is split in practice — but `my_ops` and `name='my_ops` are two nodes
+  if a project writes the constructor both ways in two scripts. A clause could
+  discriminate (`field_prefix` on `call.arg0` with a quote byte), but it would
+  take one rule per quote style and would state *nothing* for the keyword
+  spelling instead of stating it imperfectly. Stating it as written was judged
+  better; splitting the keyword argument at its `=` is a Pack question.
+- **`*cpp_extension` as the receiver gate is deliberately loose.** It matches
+  `cpp_extension`, `torch.utils.cpp_extension` and any alias ending in that
+  segment, and it is the only gate the three qualified rules carry. A module
+  named `cpp_extension` that is not torch's would be a false positive; the call
+  names (`CppExtension`, `CUDAExtension`, `SyclExtension`, `load_inline`) make
+  that near-impossible, and the loosest of the four, bare `load`, is still
+  `something.cpp_extension.load(…)`.
 - **`.cu` and `.cuh` are not parsed at all.** `grammars/omega-cpp/manifest.toml`
   registers `cc, cxx, hpp, hxx, hh, ipp, tpp` (plus `cpp` via the language
   alias) and `grammars/omega-c` registers `h`; no bundle claims `cu` or `cuh`.
@@ -178,4 +232,6 @@ is the same Pack change as above.
 - **`pytorch-ext:header:{header}` is deliberately path-free**, so
   `torch/extension.h` is one node across the repository and *which translation
   units use the torch C++ API* is one hop. `pytorch-ext:toolchain:cuda` is a
-  single global node for the same reason.
+  single global node for the same reason. `pytorch-ext:module:` keeps `{path}`
+  in front of the name because two build scripts each declaring an extension
+  called `_C` are two extensions.

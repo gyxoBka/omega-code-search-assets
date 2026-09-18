@@ -153,6 +153,77 @@ Net: 14 declared entity kinds became 9, 6 relations became 8, the rule count is
 unchanged at 9, every canonical key template is minted under exactly one kind
 with one attribute set, and `key_collisions.py maui` reports nothing.
 
+### Wave 3: nine live, collision-free rules that could not name a single route
+
+The 9 rules audited clean and collided on nothing, and the file still could not
+answer the one question a MAUI Shell app is organised around: **which route
+reaches this page.** `coverage.gaps[0]` said so in as many words -- "omega-c-sharp
+emits no call argument, so the route string of
+`Routing.RegisterRoute("details", typeof(DetailsPage))` and the target of
+`Shell.Current.GoToAsync("//details")` are not stated" -- and
+"A field only the Pack can supply" asked omega-c-sharp for the field.
+
+That is no longer true. omega-c-sharp's `call.member` and `call.plain` templates
+now publish `call.arg0`, `call.arg0_text`, `call.arg0_name`, `call.arg1`,
+`call.arg1_text`, `call.arg2`, `call.last_arg`, `call.last_arg_name` and
+`receiver`. Measured with `dump_call_emissions.exe` over a hand-written
+`AppShell.cs`:
+
+```
+157-210  call.method  RegisterRoute  call.arg0="details"  call.arg0_text=details
+                                     call.arg1=typeof(DetailsPage)  receiver_hint=Routing
+197-208  reference.type  DetailsPage
+341-377  call.method  GoToAsync      call.arg0="//details"  call.arg0_text=//details
+                                     receiver_hint=Shell.Current
+393-436  call.method  GoToAsync      call.arg0=$"details?id={Id}"
+                                     call.arg0_text=$"details?id={Id}
+126-147  call.method  InitializeComponent  call.arg0=None  call.arg0_text=""
+```
+
+Concretely wrong, with counts:
+
+- **Two of nine rules named a route construct and threw the route away.**
+  `maui.shell.registered_route_target` matched `Routing.RegisterRoute` and emitted
+  `MauiType(AppShell) -routes_to-> MauiType(DetailsPage)` -- a page-to-page edge
+  with the route string, the only thing that makes it a *route*, dropped. There
+  was no rule for `GoToAsync` at all, so **0 of the 3 navigation calls in the
+  measured file** produced anything.
+- **`GoToAsync` was 1 of 2 navigation spellings and the file covered the other
+  one only.** `maui.navigation.push` covered `PushAsync`/`PushModalAsync`, which
+  is the pre-Shell API; Shell navigation, which is what a .NET MAUI 6+ app
+  actually uses, was uncovered.
+- **1 stale coverage gap and 1 stale Pack request.** `coverage.gaps[0]` and the
+  omega-c-sharp half of "A field only the Pack can supply" both asserted the
+  absence of a field that exists; both are deleted here.
+
+What changed: `maui.shell.registered_route_target` became
+`maui.shell.route_registration` and now mints the route itself; a tenth rule,
+`maui.shell.goto_route`, states the navigation side. 9 rules became 10, 9 entity
+kinds became 10 (`MauiRoute`), 8 relations became 9 (`registers`).
+
+**The two sides do meet.** This is the check the brief warns about -- both keys
+being minted proves nothing if they are different keys. `maui:route:{route}` is
+keyed on the `route` attribute, and that attribute is
+`{"kind": "normalize_route", "source": "...call.arg0_text"}` in **both** rules,
+so the host's `normalize_http_path` runs on both sides: it does
+`trim_matches('/')` before splitting, so the registration's `"details"` and the
+navigation's `"//details"` both render `/details`, one entity. The route's page
+end meets the declaration side the same way: `routes_to` targets
+`maui:type:{definition.name}` where `definition.name` is the `reference.type`
+`DetailsPage` emitted inside the call span, and `maui.page` mints
+`maui:type:{cls.definition.name}` for the class `DetailsPage` in
+`DetailsPage.xaml.cs`. Same simple name, same path-free hub key.
+
+**Both rules require a string literal**, `field_prefix call.arg0 = "\""`. That
+one clause does the work of three guards: a call with no arguments has
+`call.arg0` absent (measured above on `InitializeComponent()`), a variable
+argument has no quote byte, and an interpolated string starts with `$` -- and
+the measurement shows exactly why the last one matters, since
+`$"details?id={Id}"` survives `call.arg0_text`'s single strip pair as
+`$"details?id={Id}` and would have minted the route `/$"details?id={Id}`.
+`call.arg0_text` is keyed on rather than `call.arg0`, because `call.arg0` keeps
+its quote bytes and a canonical-key template has no strip.
+
 ## What it states now
 
 The hub is `maui:type:{ClassName}` — a C# type by its simple name, deliberately
@@ -169,8 +240,9 @@ dangles.
 | Which classes are view models | `relation.implements` named `ObservableObject`, `ObservableRecipient`, `ObservableValidator`, `INotifyPropertyChanged`, joined `within` its class | `MauiViewModel` at `maui:viewmodel:{class}` with `base`; `MauiType`; relation `classifies` (`as` = view_model) |
 | Which class is the application root, and where the host is built | `reference.type` (the `<App>` type argument) joined `within` `call.method UseMauiApp` | `MauiApplication` at `maui:application:{class}`, `MauiApp` at `maui:app:{path}`, `MauiType`; relations `classifies` and `bootstraps` |
 | What is in the DI container, with what lifetime, and which type it resolves to | `reference.type` (each generic argument) joined `within` `call.method` named `Add*`/`TryAdd*` with a `receiver_hint` | `MauiService` at `maui:service:{path}:{type}` with `lifetime` and `container`; relations `provides` from `maui:app:{path}` and `resolves_to` to `maui:type:{type}` |
-| Which pages are registered for Shell routing, and from which class | `reference.type` (the `typeof(Page)`) joined `within` `call.method RegisterRoute` and `within` `definition.class` | two `MauiType`s; relation `routes_to` with `via` and `registered_in` |
-| Which page navigates to which page | `reference.type` (the `new Page()`) joined `within` `call.method PushAsync`/`PushModalAsync` and `within` `definition.class` | two `MauiType`s; relation `navigates_to` with `via` and `declared_in` |
+| Which route reaches this page, and which class registered it | `reference.type` (the `typeof(Page)`) joined `within` `call.method RegisterRoute` whose `call.arg0` is a string literal, and `within` `definition.class` | `MauiRoute` at `maui:route:{route}`, route = `normalize_route(reg.call.arg0_text)`; two `MauiType`s; relation `routes_to` from the route to the page, relation `registers` from the registrar class to the route |
+| Which class navigates to which Shell route | `call.method GoToAsync` with a string-literal `call.arg0`, joined `within` `definition.class` | `MauiRoute` at `maui:route:{route}` (same normalization, so it is the entity the registration minted); `MauiType`; relation `navigates_to` with `via` and `declared_in` |
+| Which page pushes which page on the pre-Shell navigation stack | `reference.type` (the `new Page()`) joined `within` `call.method PushAsync`/`PushModalAsync` and `within` `definition.class` | two `MauiType`s; relation `navigates_to` with `via` and `declared_in` |
 | Which pages receive Shell query parameters | `reference.attribute QueryProperty` joined `within` `definition.class` | `MauiShellQueryReceiver` at `maui:query_receiver:{class}`; `MauiType`; relation `classifies` (`as` = shell_query_receiver) |
 | Which commands a view model exposes to XAML `Command="{Binding …}"` | `reference.attribute RelayCommand` joined `within` `definition.method` and `within` `definition.class` | `MauiCommand` at `maui:command:{class}.{method}`; `MauiType`; relation `exposes` from `maui:type:{class}` |
 | Which XAML file declares a page's visual tree | `definition.config_attribute` named `xmlns` whose `value` attribute equals the MAUI 2021 schema URI, joined `within` `definition.config_element` (the root tag) | `MauiXamlView` at `maui:xaml:{path}`; `MauiType` at `maui:type:{path.stem}`; relation `renders` |
@@ -184,35 +256,46 @@ depends on were confirmed there: `reference.type App` at 218–221 lies inside
 `reference.attribute RelayCommand` at 1153–1165 lies inside
 `definition.method LoadAsync` at 1152–1205.
 
-All 9 rules are live; none is kept against a fact no Pack emits.
+There is a second hub, `maui:route:{route}`, kind `MauiRoute`, one attribute
+`route` holding the route-normalized string. It is minted by the two route rules
+above and by nothing else, with the same kind and the same attribute computed the
+same way, so a route registered in `AppShell.xaml.cs` and navigated to from
+`MainPage.xaml.cs` is one entity. MAUI Shell routes have no HTTP method, so the
+key is `maui:route:{route}` rather than the `http:{method}:{normalized_route}`
+the HTTP frameworks here use; the normalization is the same function.
+
+An agent can now walk `MainPage -navigates_to-> /details -routes_to-> DetailsPage`
+and `AppShell -registers-> /details`, and from `DetailsPage` on to its `MauiPage`
+facet (base class, code-behind file), its `MauiXamlView`, its `[QueryProperty]`
+classification and its `[RelayCommand]`s -- none of which the file could reach
+from a route before, because it had no route.
+
+All 10 rules are live; none is kept against a fact no Pack emits.
 
 ## A field only the Pack can supply
 
-**omega-c-sharp, `call.method`: the call's first string-literal argument.**
-
-MAUI's two route statements are
-`Routing.RegisterRoute("details", typeof(DetailsPage))` and
-`Shell.Current.GoToAsync("//details")`. The overlay can reach the *page type*
-of the first, because `typeof(DetailsPage)` produces a `reference.type` inside
-the call's span. It can reach nothing of the route *name*, which is the thing a
-person asks about — *which URL reaches this page*. `definition.name` on the
-call is `RegisterRoute`; `receiver_hint` is `Routing`; `fact_join_by_span` has
-nothing to join to, because omega-c-sharp emits no fact at all for a
-`string_literal` argument. There is no derivation and no join that reaches it;
-only a Pack field can.
-
-This is the same field omega-framework-django asked omega-python for in wave 2
-(`OWED.md` item 1, "the call's first string-or-identifier argument"), so it is
-one row on an existing request, not a new mechanism.
+**None outstanding for omega-c-sharp.** The request this file carried in wave 2
+-- `call.method`'s first string-literal argument -- has landed as
+`call.arg0` / `call.arg0_text` on the `call.member` and `call.plain` templates,
+and is what the two route rules key on. The request is withdrawn.
 
 **omega-xml, `definition.config_attribute`: move `value` from `attributes` to
 `fields`.** Already recorded in `OWED.md` item 1 for omega-yaml and omega-json
-on `definition.config_key`; omega-xml has the identical shape. Until it moves,
-`Route="home"`, `x:Class="MyApp.AppShell"`, `ContentTemplate="{DataTemplate
-local:MainPage}"` and every `{Binding …}` can be compared to one literal
-constant and used for nothing else. The one rule this file keeps against XAML
-exploits exactly that single comparison — `xmlns` equals the MAUI schema URI —
-and takes the code-behind identity from `path.stem` instead of from `x:Class`.
+on `definition.config_key`; omega-xml has the identical shape. No built-in fact
+name reaches it -- `definition.name` is the attribute's *name* -- and no
+`fact_join_by_span` reaches it either, because the value is carried on the
+attribute fact itself, so there is no second fact to join to; `attribute_equals`
+is the only clause that reads an attribute at all, and it compares against one
+literal constant. Until it moves, `Route="home"` on a `ShellContent`,
+`x:Class="MyApp.AppShell"`, `ContentTemplate="{DataTemplate local:MainPage}"`
+and every `{Binding ...}` can be tested for equality with one constant and used
+for nothing else. The cost is specific now that routes exist: a route declared
+**only** in XAML, by `Route=` on a `ShellContent` element, is the one MAUI route
+spelling this file still cannot mint, and it would meet `maui:route:{route}`
+exactly if the value were a field. The one rule this file keeps against XAML
+exploits the single available comparison -- `xmlns` equals the MAUI schema URI
+-- and takes the code-behind identity from `path.stem` instead of from
+`x:Class`.
 
 ## Still to decide
 
@@ -222,29 +305,49 @@ and takes the code-behind identity from `path.stem` instead of from `x:Class`.
    only. So `by_language("xaml")`, `by_language("xml")` and `by_language("cs")`
    all miss, and no MAUI file is parsed at all today. omega-ruby has the same
    empty list. This is a grammar-manifest gap, not a Pack or Framework one, and
-   it is outside this file's scope — but every rule here, and every
+   it is outside this file's scope -- but every rule here, and every
    omega-framework-asp-net-core and omega-framework-ruby-on-rails rule, is inert
    until `extensions` is filled in. omega-xml's `language = "msbuild"` suggests
    the intended list is `["xml", "xaml", "csproj", "props", "targets", "axml",
    "resx"]`.
-2. **`maui.xaml.view` is `heuristic`, not `exact`.** It equates the code-behind
+2. **`RegisterRoute(nameof(DetailsPage), typeof(DetailsPage))` mints no route,
+   deliberately.** It is a common MAUI spelling, and `call.arg0_text` delivers it
+   as the literal text `nameof(DetailsPage)` -- which is not the route the
+   runtime uses, so keying on it would mint a wrong identity that the `GoToAsync`
+   side would nonetheless agree with, producing a confidently wrong answer rather
+   than no answer. The `nameof` call does emit its own `call.method nameof` fact
+   with `call.arg0_text=DetailsPage` inside the outer call's span (measured at
+   517-527 inside 502-534 for the `[QueryProperty]` case), so a
+   `fact_join_by_span` / `within` could unwrap it -- but that join cannot tell the
+   route argument's `nameof` from the type argument's, and a `RegisterRoute`
+   written this way has one of each. Excluding it is the honest answer until the
+   Pack states argument position on the inner call.
+3. **A query string stays in the route identity.** `GoToAsync("details?id=1")`
+   normalizes to `/details?id=1` and does not meet the `/details` that
+   `RegisterRoute("details", ...)` mints. Splitting the query off is
+   route-normalization behaviour, not this file's, and `normalize_http_path` is
+   shared by every HTTP framework in the repository; it is not worth diverging
+   for here.
+4. **`maui.xaml.view` is `heuristic`, not `exact`.** It equates the code-behind
    class with the XAML file stem, which is the MAUI project template's
-   convention and what `x:Class` normally says — but `x:Class` is what actually
+   convention and what `x:Class` normally says -- but `x:Class` is what actually
    decides it, and that value is unreachable (above). If the omega-xml `value`
    field lands, the rule should key on `x:Class`'s last dot-segment instead and
    be promoted to `exact`.
-3. **`[ObservableProperty]` is unreachable and stays that way.** Measured here:
-   the attribute spans 1101–1119 while `definition.field title` spans
-   1140–1145, because omega-c-sharp spans a field on the `variable_declarator`
+5. **`[ObservableProperty]` is unreachable and stays that way.** Measured here:
+   the attribute spans 1101-1119 while `definition.field title` spans
+   1140-1145, because omega-c-sharp spans a field on the `variable_declarator`
    and the attribute node is a sibling of the enclosing `field_declaration`. So
    *which properties does this view model publish* cannot be answered from the
    attribute. This is the same span mismatch wave 1 recorded for
    `[SerializeField]` in omega-framework-unity; one fix serves both, and it is a
    Pack span change rather than a field.
-4. **`AddSingleton<IFoo, Foo>()` yields two `reference.type` facts in one call
+6. **`AddSingleton<IFoo, Foo>()` yields two `reference.type` facts in one call
    span with no order.** Both become a `MauiService` and both get a `provides`
    edge, so the graph says the container provides `IFoo` and `Foo` without
    saying that `Foo` implements `IFoo` for this container. Argument order is
    exactly the "shape belongs in the Pack as a named fact" case of
-   `00-CONTRACT.md` §5; it is not worth a Pack field on its own and is left
-   stated as two registrations.
+   `00-CONTRACT.md` section 5; it is not worth a Pack field on its own and is
+   left stated as two registrations. The new `call.arg0` / `call.arg1` fields do
+   not help: these are *generic type* arguments, not value arguments, and
+   `call.args` captures the `argument_list` only.

@@ -291,7 +291,8 @@
 
 (new_expression
   constructor: [(identifier) @call.constructor
-                (member_expression property: (property_identifier) @call.constructor)])
+                (member_expression property: (property_identifier) @call.constructor)]
+  arguments: (arguments) @call.args)
 
 ; --- what is applied to a declaration ---
 ;

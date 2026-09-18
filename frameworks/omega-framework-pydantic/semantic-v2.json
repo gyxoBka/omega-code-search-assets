@@ -30,13 +30,16 @@
       "PydanticFieldDeclaration",
       "PydanticModel",
       "PydanticModelConfig",
-      "PydanticModelHook"
+      "PydanticModelHook",
+      "PydanticModelUse"
     ],
     "relations": [
       "configures",
       "extends",
       "has_field",
-      "references_model"
+      "references_model",
+      "uses_model",
+      "validates"
     ]
   },
   "rules": [
@@ -680,16 +683,187 @@
       "evidence_class": "structurally_derived",
       "confidence": "exact",
       "coverage_note": "A decorator's span precedes the function it decorates and neither contains the other, so no join relates a hook to the method it names; the hook is keyed by its own position and related to the model that owns it. The field it validates is a string argument, which omega-python does not emit."
+    },
+    {
+      "id": "pydantic.model.hook.validates",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "field_validator",
+            "field_serializer",
+            "validator"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.container"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "relation.implements",
+          "current_field": "definition.container",
+          "join_field": "definition.container",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "BaseModel",
+                "RootModel",
+                "BaseSettings",
+                "GenericModel"
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "validates",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:model-hook:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:field:{path}:{enclosing.qname}.{call.arg0_text}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "field_name": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which field a validator or serializer applies to. omega-python emits a call.function for a decorator written with arguments, on the same span as the reference.decorator, so call.arg0_text is the quoted field name and the hook minted by pydantic.model.hook at the same offset is the source end. Only the first field name is stated: a second positional name is call.arg1_text, which cannot be told apart from a keyword argument."
+    },
+    {
+      "id": "pydantic.model.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "model_validate",
+            "model_validate_json",
+            "model_validate_strings",
+            "model_construct",
+            "model_dump",
+            "model_dump_json",
+            "model_copy",
+            "model_json_schema",
+            "model_rebuild",
+            "parse_obj",
+            "parse_raw",
+            "parse_file",
+            "from_orm",
+            "construct",
+            "schema",
+            "schema_json"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "receiver"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "relation.implements",
+          "current_field": "receiver",
+          "join_field": "definition.container",
+          "same_path": false,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "BaseModel",
+                "RootModel",
+                "BaseSettings",
+                "GenericModel"
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PydanticModelUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pydantic:model-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "model_name": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:model:{receiver}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Where a model is parsed, dumped or schema'd. omega-python publishes receiver on call.method, and the receiver is required to be a class that some file declares with a pydantic root base, so User.model_validate(...) is attributed and u.model_dump() on an instance is not."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
       "a base written as a subscript -- class Ids(RootModel[list[int]]) -- emits no relation.implements in omega-python, so a parameterized RootModel is not recognized as a model",
-      "Field(alias=...), field_validator(\"name\") and ConfigDict(frozen=True) carry their answer in a call argument; omega-python emits no fact over a string literal or a keyword argument, so aliases, validated field names and config settings are not stated",
+      "a keyword argument is not readable: omega-python's call.arg0_text strips one leading and one trailing quote byte, so Field(alias=\"userId\") arrives as alias=\"userId and ConfigDict(frozen=True) as frozen=True. Aliases, field constraints, model_validator(mode=...) and every ConfigDict setting are therefore not stated, although the positional field name of a validator or serializer now is",
+      "only the first field name of a multi-field @field_validator(\"a\", \"b\") is stated; call.arg1_text carries the second but is indistinguishable from a keyword argument, which would render an edge to a field that does not exist",
+      "a decorator written as an attribute -- @pydantic.field_validator(\"x\") -- emits call.method rather than call.function, so its validated field is not stated",
       "a decorator's span neither contains nor is contained by the span of the function it decorates, so which method implements a validator or serializer is not statable",
       "dynamic validators/serializers created by metaprogramming, model_rebuild effects and runtime validation are runtime semantics",
-      "generated JSON Schema is not executed; authored model classes, fields, Field declarations, validators/serializers and ConfigDict declarations are materialized",
+      "generated JSON Schema is not executed; authored model classes, fields, Field declarations, validators/serializers, ConfigDict declarations and model parse/dump call sites are materialized",
       "forward-reference target resolution and complex Annotated metadata require generic type/value resolution, not Framework guessing"
     ]
   },

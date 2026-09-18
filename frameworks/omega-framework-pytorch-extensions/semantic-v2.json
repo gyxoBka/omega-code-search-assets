@@ -106,7 +106,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "A translation unit that includes a CUDA runtime or c10/ATen CUDA header needs the CUDA toolkit; the toolchain is one global node."
     },
     {
       "id": "pytorch-ext.cpp.operator",
@@ -198,7 +199,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "A C++ function that takes or returns a torch::Tensor / at::Tensor is an operator the extension exposes."
     },
     {
       "id": "pytorch-ext.cpp.registry",
@@ -298,7 +300,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "tree-sitter-cpp parses PYBIND11_MODULE(...)/TORCH_LIBRARY(...) as a function definition, so the macro is definition.function and its operand list is the same-span parameter-shape carrier."
     },
     {
       "id": "pytorch-ext.cpp.translation-unit",
@@ -342,7 +345,7 @@
             "template": "pytorch-ext:source:{path}"
           },
           "attributes": {
-            "path": {
+            "source_file": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -376,7 +379,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "A C++ translation unit that includes a torch / ATen / c10 / CUDA / pybind11 header is part of the extension; the header node is path-free so one header is one node repository-wide."
     },
     {
       "id": "pytorch-ext.py.build-extension",
@@ -434,7 +438,7 @@
             "template": "pytorch-ext:build-script:{path}"
           },
           "attributes": {
-            "path": {
+            "script": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -455,7 +459,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "This build script drives the build through torch's own build_ext command class."
     },
     {
       "id": "pytorch-ext.py.extension-binding",
@@ -473,6 +478,11 @@
             "CUDAExtension",
             "SyclExtension"
           ]
+        },
+        {
+          "kind": "path_glob",
+          "field": "call.arg0_text",
+          "pattern": "?*"
         },
         {
           "kind": "fact_join_by_field",
@@ -524,13 +534,14 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pytorch-ext:module:{path}:{source.start}"
+            "template": "pytorch-ext:module:{path}:{call.arg0_text}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "omega-python spans definition.variable over the whole assignment, so the constructor call reaches the module-level name it is bound to with a within join and no field on either side."
     },
     {
       "id": "pytorch-ext.py.extension-module",
@@ -548,6 +559,11 @@
             "CUDAExtension",
             "SyclExtension"
           ]
+        },
+        {
+          "kind": "path_glob",
+          "field": "call.arg0_text",
+          "pattern": "?*"
         },
         {
           "kind": "fact_join_by_field",
@@ -570,12 +586,20 @@
           "kind": "entity_candidate",
           "entity_kind": "ExtensionModule",
           "canonical_key": {
-            "template": "pytorch-ext:module:{path}:{source.start}"
+            "template": "pytorch-ext:module:{path}:{call.arg0_text}"
           },
           "attributes": {
             "extension_kind": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "module_name": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "sources": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
             },
             "declared_in": {
               "kind": "field_ref",
@@ -590,7 +614,7 @@
             "template": "pytorch-ext:build-script:{path}"
           },
           "attributes": {
-            "path": {
+            "script": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -605,7 +629,7 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pytorch-ext:module:{path}:{source.start}"
+            "template": "pytorch-ext:module:{path}:{call.arg0_text}"
           },
           "attributes": {
             "extension_kind": {
@@ -616,7 +640,8 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "CppExtension/CUDAExtension/SyclExtension: the extension this script builds, identified by the Python module name given as its first argument, with the sources argument as written."
     },
     {
       "id": "pytorch-ext.py.jit-load",
@@ -633,6 +658,11 @@
             "load",
             "load_inline"
           ]
+        },
+        {
+          "kind": "path_glob",
+          "field": "call.arg0_text",
+          "pattern": "?*"
         },
         {
           "kind": "fact_join_by_field",
@@ -662,12 +692,20 @@
           "kind": "entity_candidate",
           "entity_kind": "JitExtension",
           "canonical_key": {
-            "template": "pytorch-ext:jit-load:{path}:{source.start}"
+            "template": "pytorch-ext:jit-load:{path}:{call.arg0_text}"
           },
           "attributes": {
             "loader": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "extension_name": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "sources": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
             },
             "declared_in": {
               "kind": "field_ref",
@@ -682,7 +720,7 @@
             "template": "pytorch-ext:build-script:{path}"
           },
           "attributes": {
-            "path": {
+            "script": {
               "kind": "field_ref",
               "field": "path"
             }
@@ -697,7 +735,7 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pytorch-ext:jit-load:{path}:{source.start}"
+            "template": "pytorch-ext:jit-load:{path}:{call.arg0_text}"
           },
           "attributes": {
             "loader": {
@@ -708,16 +746,271 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "high"
+      "confidence": "high",
+      "coverage_note": "load()/load_inline(): an extension compiled at import time, identified by the name it is loaded under."
+    },
+    {
+      "id": "pytorch-ext.py.qualified-extension-binding",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension",
+            "SyclExtension"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "field": "receiver",
+          "pattern": "*cpp_extension"
+        },
+        {
+          "kind": "path_glob",
+          "field": "call.arg0_text",
+          "pattern": "?*"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "var"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionBinding",
+          "canonical_key": {
+            "template": "pytorch-ext:binding:{path}:{var.definition.name}"
+          },
+          "attributes": {
+            "variable": {
+              "kind": "field_ref",
+              "field": "var.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "binds",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:binding:{path}:{var.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{call.arg0_text}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "The same binding, for cpp_extension.CppExtension(...) written as a method call on the module."
+    },
+    {
+      "id": "pytorch-ext.py.qualified-extension-module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "CppExtension",
+            "CUDAExtension",
+            "SyclExtension"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "field": "receiver",
+          "pattern": "*cpp_extension"
+        },
+        {
+          "kind": "path_glob",
+          "field": "call.arg0_text",
+          "pattern": "?*"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionModule",
+          "canonical_key": {
+            "template": "pytorch-ext:module:{path}:{call.arg0_text}"
+          },
+          "attributes": {
+            "extension_kind": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "module_name": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "sources": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionBuildScript",
+          "canonical_key": {
+            "template": "pytorch-ext:build-script:{path}"
+          },
+          "attributes": {
+            "script": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "builds",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:build-script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:module:{path}:{call.arg0_text}"
+          },
+          "attributes": {
+            "extension_kind": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "cpp_extension.CppExtension(...) / torch.utils.cpp_extension.CUDAExtension(...): the receiver names the module, which is the import gate."
+    },
+    {
+      "id": "pytorch-ext.py.qualified-jit-load",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "load",
+            "load_inline"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "field": "receiver",
+          "pattern": "*cpp_extension"
+        },
+        {
+          "kind": "path_glob",
+          "field": "call.arg0_text",
+          "pattern": "?*"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JitExtension",
+          "canonical_key": {
+            "template": "pytorch-ext:jit-load:{path}:{call.arg0_text}"
+          },
+          "attributes": {
+            "loader": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "extension_name": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "sources": {
+              "kind": "field_ref",
+              "field": "call.arg1_text"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionBuildScript",
+          "canonical_key": {
+            "template": "pytorch-ext:build-script:{path}"
+          },
+          "attributes": {
+            "script": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "builds",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:build-script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch-ext:jit-load:{path}:{call.arg0_text}"
+          },
+          "attributes": {
+            "loader": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "torch.utils.cpp_extension.load(...) written qualified, the spelling PyTorch's own JIT documentation uses."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "Python sources: a CppExtension/CUDAExtension/SyclExtension construction, the module-level name it is bound to, a torch.utils.cpp_extension.load/load_inline JIT build, and the use of torch's BuildExtension command class are materialized, each gated on the file importing from torch.utils.cpp_extension.",
+      "Python sources: a CppExtension/CUDAExtension/SyclExtension construction, written plain or qualified on the cpp_extension module, the Python module name it is given as its first argument, the module-level variable it is bound to, a torch.utils.cpp_extension load/load_inline JIT build with the name it is loaded under, and the use of torch's BuildExtension command class are materialized.",
       "C++ sources: a translation unit that includes a torch, ATen, c10, CUDA or pybind11 header, the torch headers it depends on, the functions in it that take or return a Tensor, the PYBIND11_MODULE/TORCH_LIBRARY registry blocks it declares with their argument text, and whether it compiles against the CUDA toolkit, are materialized.",
-      "omega-python captures no call argument, so sources=[...], include_dirs=[...], extra_compile_args=[...], extra_link_args=[...] and the name= of an extension are not stated. The edge from a Python extension module to the C++ files it compiles is therefore not statable and is reported as not found.",
-      "omega-cpp spans a callable on its declarator, not its body, so nothing written inside a function body or inside a PYBIND11_MODULE/TORCH_LIBRARY block can be joined to it: the individual m.def(\"forward\", &forward) registrations arrive only as call.method named def with no reachable owner and are not stated.",
+      "omega-python publishes a call's first three arguments and its last as text, so an extension's name and its sources argument as written are stated; it does not publish the elements of a list argument, so the individual C++ files in sources=['a.cpp', 'b.cu'] are not separate facts and the edge from an extension module to each C++ file it compiles is reported as not found. The same limit hides include_dirs, extra_compile_args and extra_link_args element by element.",
+      "an argument written as a keyword, name='my_ops', is published as the whole keyword-argument text and no operation splits it, so for the keyword spelling the extension name is stated as written rather than as a bare identifier.",
+      "omega-cpp publishes no call arguments at all and spans a callable on its declarator, not its body, so nothing written inside a function body or inside a PYBIND11_MODULE/TORCH_LIBRARY block can be joined to it: the individual m.def(\"forward\", &forward) registrations arrive only as call.method named def with no reachable owner and no argument text, and are not stated.",
       "the grammar bundle registers no cu or cuh extension, so CUDA kernel files are not parsed at all; a CUDA extension is recognised through the CUDA headers a parsed .cpp/.cc/.cxx/.hpp translation unit includes.",
       "actual compiler invocation, nvcc flags, generated binding code, CUDA toolkit state, filesystem existence and loaded module runtime state are external/runtime semantics and are intentionally not inferred from static source."
     ]

@@ -894,3 +894,64 @@ written, and honest that its URL is not derivable there.
 
 762 overlay rules, 0 that cannot match, 0 collisions, 3 dangling candidates (all
 pydantic, all read). Engine suite green.
+
+---
+
+# Second pass, wave B (bun, maui, django, pydantic, pytorch-extensions)
+
+| Framework | rules | what it can now say |
+|---|---|---|
+| omega-framework-django | 17 -> 21 | `path("admin/", admin.site.urls)` -- the URL and the view behind it |
+| omega-framework-bun | 11 -> 13 | `Bun.serve` vs anything's `.serve`, a data file by name, a native library by name |
+| omega-framework-pytorch-extensions | 8 -> 11 | which sources an extension compiles |
+| omega-framework-maui | 9 -> 11 | `Routing.RegisterRoute("details", typeof(P))`, both spellings |
+| omega-framework-pydantic | 7 -> 9 | a validator's target field |
+
+bun is the honest negative result of the wave. It has no route-registration
+call: a Bun route is a **quoted key in an object literal**,
+`Bun.serve({ routes: { "/api/users": listUsers } })`, and the reviewer measured
+that no JS/TS Pack emits any fact for a string-keyed property -- not for
+`"/api/users": listUsers`, not for `"/health"(req) {...}`. An identifier key
+does emit. So bun states no routes, says so in `coverage.gaps`, and did not
+invent them. The same blindness covers Vite's `resolve.alias`, Webpack's loader
+maps and Jest's `moduleNameMapper`; recorded as `OWED.md` item 18.
+
+What bun could do instead is worth copying: four of its rules were `candidate`
+because they matched `serve`, `spawn`, `file`, `write` **by member name alone**,
+so `stream.write()` matched too. `field_equals receiver Bun` makes them `exact`.
+
+## `call.arg0_text` was wrong, and a Pack could not fix it
+
+pydantic measured the defect: `strip_prefix` and `strip_suffix` do not know
+about each other, so a Python keyword argument in argument zero --
+`Field(alias="userId")`, `ConfigDict(env_prefix="APP_")`,
+`model_validator(mode="after")` -- lost its **trailing** quote although the
+leading one was never there. `alias="userId` is neither the source text nor the
+string, and no Pack could repair it: a key template has no strip,
+`fact_join_by_field` offers no strip_suffix, and no clause compares two fields.
+
+Fixed in the engine with one op. `unquote` returns a string literal's text
+without its delimiters and anything else unchanged, and it replaced the nested
+pairs in all ten Packs -- `call.arg0_text` in omega-python went from 76 lines of
+nesting to 32. `expr.rs` is a frozen design-set file, so the six behavioural
+obligations were re-run and `freeze.json` re-stamped with a dated note.
+
+`call.constructor` carried no fields in any JS/TS Pack while `call.function` and
+`call.method` carried the whole view, so `new Database("app.sqlite")` named no
+file. It carries it now.
+
+## A guard that skips a spelling is a deletion
+
+maui repeated wave A's vapor defect exactly: a `field_prefix call.arg0 = "\""`
+inside a join's `where`, which kills the **whole binding**, not just the output
+that wanted a literal. `Routing.RegisterRoute(nameof(DetailsPage),
+typeof(DetailsPage))` -- the spelling in the .NET MAUI docs and the Visual
+Studio item template -- has no quote byte, so *which page does AppShell
+register* went from stated to absent. Both spellings are rules now: the literal
+one states the route, the `nameof` one states the registration without
+pretending to a route name.
+
+775 overlay rules, 0 that cannot match, 0 collisions, 5 dangling candidates --
+all pydantic, all read: `{enclosing.qname}.{call.arg0_text}` and
+`{definition.qname}` render the same string, as do `{receiver}` and
+`{definition.name}` for a model used by its own class name.
