@@ -107,17 +107,13 @@ ceiling a Pack has reached, so nobody re-opens a closed question.
 
 ---
 
-## 5. README is stale
+## 5. README is stale — fixed
 
-`README.md:18` says "Pack query sections retain their former logical names as
-comments in `main.scm`; query patterns, captures, output kinds, and rule
-identities are unchanged." No Pack has a `main.scm` — they have `queries.scm` —
-and after this work the patterns, captures, output kinds and rule identities are
-all different by design.
-
-**Done looks like:** that line replaced by what is true now, and the layering
-paragraph above it kept, because it is the statement the whole framework
-contract rests on.
+`README.md:18` claimed Pack query sections keep their former logical names in
+`main.scm` and that patterns, captures, output kinds and rule identities are
+unchanged. No Pack has a `main.scm`, and after this work all four are different
+by design. Replaced by what is true now, with the layering paragraph above it
+kept, because that is the statement the whole framework contract rests on.
 
 ---
 

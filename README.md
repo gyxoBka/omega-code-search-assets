@@ -15,7 +15,12 @@ Dependency direction is strict: `Framework -> Pack -> Grammar`. Grammars provide
 - `frameworks/<slug>/`: `manifest.toml` and one canonical rule JSON: `semantic-v2.json` for v2 or `rules.json` for detector-only.
 - `tools/`: compact structural validators and build tooling.
 
-Pack query sections retain their former logical names as comments in `main.scm`; query patterns, captures, output kinds, and rule identities are unchanged.
+Every Pack was rewritten against this layering in 2026: a Pack states what the
+language says and nothing more, and a rule that restated its own match was
+deleted rather than ported. `pack-design/` carries the contract, the per-pack
+design note and `audit.py`; `framework-design/` does the same for the overlays,
+with `overlay_audit.py` for what a rule can still match and `key_collisions.py`
+for entities that overwrite one another. A Pack's queries live in `queries.scm`.
 
 ## Validation
 
