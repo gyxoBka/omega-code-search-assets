@@ -4,14 +4,60 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 12. Numbers come from
+Last updated after framework wave 12 and the qualifier change. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
 
-## 1. Pack fields the Frameworks need — one deliberate change, not five
+## 1. Pack fields the Frameworks need
 
-**Status: collecting. Do not edit a Pack until the framework waves are done.**
+**`qualifier` is done for JavaScript, TypeScript and TSX.** It was the gate on
+everything else: `OverlayFact.external` is built from bindings whose
+`target_hint` is set, `target_hint` is `occurrence.qualifier`, and the host reads
+a qualifier only from a field or attribute literally named `qualifier`. Two Packs
+published one. Now five.
+
+The obstacle was not the name but the query. `@import.module` was captured on the
+`import_statement`'s source in one pattern and `@import.default` /
+`@import.namespace` / `@import.symbol` in separate patterns, and a template can
+only reference captures from its own match -- so no template could see both the
+local name and the module it came from. The three Packs now carry patterns that
+capture them together, and three bindings that carry the specifier:
+
+| binding | from | `qualifier` |
+|---|---|---|
+| `binding.import_default` | `import express from "express"` | `express` |
+| `binding.import_namespace` | `import * as path from "node:path"`, `import fs = require("fs")`, `const fs = require("fs")` | `node:path`, `fs`, `fs` |
+| `binding.import_symbol` | `import { Router } from "express"` | `express` |
+
+`binding.import_alias` is unchanged and still carries `target`: for `import
+{ json as parseJson }` the alias resolves `parseJson -> json` and
+`binding.import_symbol` resolves `json -> express`, which is the chain
+`ExternalEnvironment::resolve` walks. The kinds matter: `external_environment`
+sends anything whose kind contains `alias` to `env.alias` and only the rest to
+`env.import`, so a binding that names a package must not be spelled as an alias.
+That is why `import fs = require("fs")` moved from `binding.import_alias` to
+`binding.import_namespace` -- it binds a whole module to one name, which is what
+a namespace import does. No Framework matched any `binding.import_*` kind, so
+nothing downstream broke.
+
+Measured with `dump_call_emissions` on all three Packs; the three versions are
+bumped to 2.1.0, because the store rejects a changed asset under an unchanged
+version.
+
+**What is not yet shown end to end:** that `qualifier` arrives as
+`surface_bindings.target_hint` in a built index. The engine's own test
+(`omega-ingest/tests/ai15_static_test_entities.rs:307`) asserts that a template
+field named `qualifier` becomes `occurrence.qualifier`, and `surface.rs:376`
+copies that into `target_hint`, so the chain is sound by construction -- but a
+local index kept reusing its cached analysis component after the Pack was
+re-selected, and the rows still read `target_hint = NULL`. The deferred
+framework wave is the real consumer and will settle it.
+
+### Still collecting
+
+**Status: the rest is still collecting. Do not edit a Pack until the framework
+waves are done.**
 
 `OverlayFact::field` (`omega-semantic/src/framework/overlay.rs:56`) resolves the
 `fields` map and a fixed list of built-in names. It **never consults
@@ -20,16 +66,13 @@ Last updated after framework wave 12. Numbers come from
 an *attribute* can be tested for equality and used for nothing else: not as a
 canonical key, a relation end, an entity attribute, or a join key.
 
-Four frameworks hit this in wave 1 and all named the same remedy — move the
-value from `attributes` to `fields` in the Pack template. **Same bytes, a
-different map.**
+**Same bytes, a different map** is the whole of most rows below.
 
 | Pack | kind | move to `fields` | asked by |
 |---|---|---|---|
 | omega-yaml, omega-json | `definition.config_key` | `value` | kubernetes-config, openapi-v3, gitlab-ci, github-action |
 | omega-hcl | `definition.config_block` | `block_type`, `type_label` | terraform |
 | omega-hcl | `reference.traversal` | `root` | terraform |
-| omega-javascript, omega-typescript, omega-tsx | `binding.import_alias`, `import.symbol` | `qualifier` | node-js |
 | omega-javascript, omega-typescript, omega-tsx | `import.symbol` | `module` — the specifier the symbol came from | react |
 | omega-python | `call.function`, `call.method` | the call's first string-or-identifier argument | django |
 | omega-caddyfile | `definition.config_matcher_condition` | `operand` — what the condition tests for | caddyfile |

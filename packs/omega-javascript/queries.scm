@@ -175,6 +175,26 @@
 
 (import_statement source: (string) @import.module)
 
+; A local name bound by an import, together with the module it came from.
+; The module specifier has to be captured in the same pattern as the name:
+; the host reads an external package only from a binding carrying a field
+; literally called `qualifier`, and a template can only reference captures
+; from its own match.
+
+(import_statement
+  (import_clause (identifier) @import.local.default)
+  source: (string) @import.qualifier)
+
+(import_statement
+  (import_clause (namespace_import (identifier) @import.local.namespace))
+  source: (string) @import.qualifier)
+
+(import_statement
+  (import_clause
+    (named_imports
+      (import_specifier name: (identifier) @import.local.symbol)))
+  source: (string) @import.qualifier)
+
 (import_clause (identifier) @import.default)
 
 (namespace_import (identifier) @import.namespace)
@@ -196,6 +216,17 @@
   function: (identifier) @import.require.function
   arguments: (arguments (string) @import.require.module)
   (#eq? @import.require.function "require"))
+
+; `const fs = require("fs")` binds a whole module to one name, which is what a
+; namespace import does; CommonJS is how every Node file written before ESM
+; names its dependencies, so the binding has to carry its qualifier too.
+
+(variable_declarator
+  name: (identifier) @import.local.require
+  value: (call_expression
+    function: (identifier) @_require.fn
+    arguments: (arguments (string) @import.qualifier))
+  (#eq? @_require.fn "require"))
 
 ; --- what a file exports ---
 
