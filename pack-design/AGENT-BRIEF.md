@@ -548,12 +548,25 @@ with "Отказано в доступе" on `omega-daemon.exe`.
 
 ## 12a. Two things the waves keep proving
 
-**tree-sitter's static analysis is an oracle. Use it.** `node-types.json`
-records that a node has a field; it does not record the field's order, and a
-field's name can be misleading. Write the anchored pattern you believe is true
-and run the validator: `Impossible pattern` is it telling you the tree is not
-that shape. That is how omega-sql found that an index's own name is the field
-spelled `column:` on `create_index`.
+**tree-sitter's static analysis is an oracle. Use it -- but only while every
+node in the pattern is named.** `node-types.json` records that a node has a
+field; it does not record the field's order, and a field's name can be
+misleading. Write the anchored pattern you believe is true and run the
+validator: `Impossible pattern` is it telling you the tree is not that shape.
+That is how omega-sql found that an index's own name is the field spelled
+`column:` on `create_index`.
+
+Two limits on it. **A refusal tells you the tree is not that shape, not what
+shape it is** -- omega-svelte's author read `Impossible pattern` on the
+`binding:` field of `await_branch` and concluded the binding was reachable
+through `branch:`; it was reachable as a plain child with no field at all, and
+the wrong conclusion cost a dead template. And **a `(_)` wildcard switches the
+analysis off**: on tree-sitter-csv, `(csv . (row (third) @c))` is correctly
+refused, while `(csv . (row (_ [(row) (second)] @c)))` -- which can never match
+-- compiles in silence. If your grammar wraps its payload in a meaningless
+container and you must reach through `(_)`, verify the shape with the named form
+first and substitute the wildcard afterwards. Silence from the validator on a
+wildcard pattern is not confirmation.
 
 **Anchor when one node type plays two roles under one parent.** This has
 produced a confidently wrong answer every time it has appeared, never a missing

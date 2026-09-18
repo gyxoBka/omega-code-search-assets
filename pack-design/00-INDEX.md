@@ -1004,3 +1004,95 @@ states something; leave it removed when it only restates where something sits.**
 
 Totals: **1 436 templates, 304 guards** (from 3 673 and 1 348 at the start).
 Fifty-one Packs rewritten, 10 to go -- one wave and a tail.
+
+---
+
+# Wave 12 (csv, astro, vue, dockerfile, editorconfig) — the last
+
+*(The wave-11 section above says "10 to go"; five remained. This is the count
+being corrected, not a wave that went missing.)*
+
+| Pack | templates | patterns | guards |
+|---|---|---|---|
+| omega-dockerfile | 13 -> 16 | 16 -> 18 | 5 -> 5 |
+| omega-vue | 16 -> 14 | 21 -> 17 | 1 -> 3 |
+| omega-astro | 7 -> 9 | 12 -> 13 | 1 -> 6 |
+| omega-editorconfig | 2 -> 3 | 2 -> 3 | 2 -> 3 |
+| omega-csv | 5 -> 1 | 5 -> 1 | 1 -> 4 |
+
+No blocking defects: the first wave to come through review clean. Three of the
+five came out larger than they went in.
+
+**omega-csv is the whole programme in one Pack.** Five templates to one. Not one
+of the five old kinds passed `is_definition_kind`, so every emission it ever
+made was a mention with no declaration anywhere in the Pack to resolve against.
+It named the whole file from `(csv)` once per file and the whole line from
+`(row)` once per line; three `structured.entry` templates stored the raw text of
+cells 1, 2 and 3 of every row of every file; and three arity patterns stated
+containment per row width, so an ordinary four-column file matched none of them.
+
+What replaced it: one pattern, one template, `definition.column` over the cells
+of the first row. A column name is the one string in a CSV that code elsewhere
+refers to -- `row["user_id"]`, `df.user_id`, `SELECT user_id`, a migration -- so
+it is the one string a resolver can meet. Whether row 1 is a header is not
+expressible in CSV, so that judgement is one `#match?`, and a headerless file of
+numbers declares nothing, which is the correct answer.
+
+## The oracle has two limits, and the brief now says both
+
+Wave 9 told agents to write the anchored pattern they believe is true and let
+`Impossible pattern` refute it. Two waves have since shown where that stops:
+
+- **A refusal says the tree is not that shape, not what shape it is.**
+  omega-svelte's author read the refusal of `binding:` on `await_branch` as
+  evidence that the binding was reachable through `branch:`. It was reachable as
+  a plain child with no field at all.
+- **A `(_)` wildcard switches the analysis off.** On tree-sitter-csv,
+  `(csv . (row (third) @c))` is correctly refused, while
+  `(csv . (row (_ [(row) (second)] @c)))` -- which can never match -- compiles
+  in silence. Verify the shape with the named form first, substitute the
+  wildcard afterwards.
+
+---
+
+# Done: 61 of 61
+
+**3 673 templates -> 1 436. 1 348 coverage guards -> 315.** Every Pack compiles
+against its pinned grammar; `staged_skipped: 0`.
+
+Seven Packs came out **larger** than they went in -- php, solidity, powershell,
+make, godot-resource, blade, dockerfile, astro, editorconfig -- and that is the
+result worth reading twice. The work was never "delete two thirds of the
+templates". It was: find what each Pack states that answers nothing, and what
+the language declares that the Pack never noticed. Those seven were not carrying
+noise so much as failing to answer.
+
+## What the audit still reports, and what those numbers mean
+
+| flag | count | what it is |
+|---|---|---|
+| carrier that may overwrite itself | 57 | **mostly a false positive.** `node-types.json` cannot say "at most one of this child", so a grammar that puts every child of a statement into one repeat group -- tree-sitter-sql, tree-sitter-batch, and the modifier groups in tree-sitter-typescript -- reports every correct carrier written over it |
+| carrier under a name nothing assembles | 27 | real, but unfixable as stated: a carrier is the only way to attach an *optional* attribute to a declaration, and only five carried names build the signature line. The flag needs a notion of "deliberately not a signature component" |
+| the name is the span itself | 9 | real, and each is a judgement its Pack's `.md` argues for |
+| same span and name, two kinds | 6 | real |
+| a name that is a constant | 2 | both are a language's single spelling for a construct that has no name of its own (`_init` in GDScript) |
+| the name is a whole node | 2 | real |
+
+## Two pieces of work this sweep created and did not do
+
+1. **The framework overlays that read `structured.entry` from omega-json.**
+   `omega-framework-openapi-specification-v3` (36 JSON-reachable rules),
+   `omega-framework-tauri` (5) and part of `omega-framework-kubernetes-config`
+   match on `role = json_depth3_pair` and read fields `a0` … `a6` -- the
+   ancestor key path, which the old Pack supplied with one pattern per nesting
+   depth. That is Defect E written into a cross-asset contract, so it stayed
+   removed and those rules match nothing until the overlays are rewritten
+   against the new declarations, which carry their containers through `within:`.
+2. **A `frameworks/omega-framework-nixpkgs-stdenv` overlay.** omega-nix's 22
+   injections keyed on `writeShellApplication`, `runCommand*`, `nixosTest`,
+   `^pre[A-Za-z]+$` and the rest are gone from the language Pack, where they did
+   not belong. Parsing the bash inside `buildPhase` is worth having and now has
+   nowhere to live.
+
+Both are recorded here rather than papered over, and neither is a language
+Pack's problem.

@@ -4,64 +4,74 @@
  "templates": [
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.document",
-   "span_capture": "csv.document",
+   "capability": "definitions",
+   "output_kind": "definition.column",
+   "span_capture": "header.column",
    "name": {
-    "kind": "capture_ref",
-    "name": "csv.document"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "value.csv_row",
-   "span_capture": "csv.row",
-   "name": {
-    "kind": "capture_ref",
-    "name": "csv.row"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.entry",
-   "span_capture": "csv.row.with_field",
-   "name": {
-    "kind": "capture_ref",
-    "name": "csv.field.1"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.entry",
-   "span_capture": "csv.row.with_field",
-   "name": {
-    "kind": "capture_ref",
-    "name": "csv.field.2"
-   },
-   "attributes": {},
-   "fields": {},
-   "decoder": null
-  },
-  {
-   "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.entry",
-   "span_capture": "csv.row.with_field",
-   "name": {
-    "kind": "capture_ref",
-    "name": "csv.field.3"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "call",
+      "op": "strip_suffix",
+      "args": [
+       {
+        "kind": "call",
+        "op": "strip_prefix",
+        "args": [
+         {
+          "kind": "call",
+          "op": "strip_suffix",
+          "args": [
+           {
+            "kind": "call",
+            "op": "strip_prefix",
+            "args": [
+             {
+              "kind": "call",
+              "op": "strip_prefix",
+              "args": [
+               {
+                "kind": "call",
+                "op": "trim",
+                "args": [
+                 {
+                  "kind": "capture_ref",
+                  "name": "header.column"
+                 }
+                ]
+               },
+               {
+                "kind": "literal",
+                "value": "﻿"
+               }
+              ]
+             },
+             {
+              "kind": "literal",
+              "value": "\""
+             }
+            ]
+           },
+           {
+            "kind": "literal",
+            "value": "\""
+           }
+          ]
+         },
+         {
+          "kind": "literal",
+          "value": "'"
+         }
+        ]
+       },
+       {
+        "kind": "literal",
+        "value": "'"
+       }
+      ]
+     }
+    ]
    },
    "attributes": {},
    "fields": {},
@@ -74,9 +84,30 @@
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "definitions"
    ],
-   "reason": "CSV rows and positional fields are syntactic data only. Header/schema/type inference and delimiter dialect interpretation beyond the pinned grammar are not claimed."
+   "reason": "CSV has no syntax for saying that its first row is a header. The Pack reads the first row's cells as column names only where a cell begins with a letter or an underscore, so a file whose first row is numbers, dates or empty declares no columns at all, and a headerless file whose first data row is textual declares that row as its columns."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "Cell values in data rows are not stated. The grammar gives a cell its position in the row and nothing else -- no role, no type and no link back to the header cell above it -- so a value carries no name that could resolve to anything, and stating one fact per cell would put one index row in the index for every cell of the file."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "A column's ordinal is not stated. tree-sitter-csv names the first seven cells of a row first..seventh and then restarts the numbering inside remainder, so the node type of a cell does not identify its column beyond the seventh."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "The delimiter in use is not stated. The grammar accepts comma, semicolon and pipe as anonymous tokens between cells; which one a file uses is visible in the tree but has no span that names anything, and quoted cells containing a delimiter are not re-split by this grammar."
   }
  ],
  "legacy_rules": []

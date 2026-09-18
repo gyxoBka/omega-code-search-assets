@@ -4,50 +4,82 @@
  "templates": [
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.editorconfig_global_setting",
-   "span_capture": "editorconfig.global.context",
+   "capability": "definitions",
+   "output_kind": "definition.config_section",
+   "span_capture": "section",
    "name": {
-    "kind": "capture_ref",
-    "name": "editorconfig.global.key"
+    "kind": "call",
+    "op": "trim",
+    "args": [
+     {
+      "kind": "capture_ref",
+      "name": "section.glob"
+     }
+    ]
    },
    "attributes": {},
-   "fields": {
-    "key": {
-     "kind": "capture_ref",
-     "name": "editorconfig.global.key"
-    },
-    "value": {
-     "kind": "capture_ref",
-     "name": "editorconfig.global.value"
-    }
-   },
+   "fields": {},
    "decoder": null
   },
   {
    "query": "queries.scm",
-   "capability": "data",
-   "output_kind": "structured.editorconfig_section_setting",
-   "span_capture": "editorconfig.setting.context",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "setting",
    "name": {
-    "kind": "capture_ref",
-    "name": "editorconfig.setting.key"
+    "kind": "call",
+    "op": "lower",
+    "args": [
+     {
+      "kind": "call",
+      "op": "trim",
+      "args": [
+       {
+        "kind": "capture_ref",
+        "name": "setting.key"
+       }
+      ]
+     }
+    ]
    },
-   "attributes": {},
-   "fields": {
-    "pattern": {
-     "kind": "capture_ref",
-     "name": "editorconfig.section.pattern"
-    },
-    "key": {
-     "kind": "capture_ref",
-     "name": "editorconfig.setting.key"
-    },
+   "attributes": {
     "value": {
-     "kind": "capture_ref",
-     "name": "editorconfig.setting.value"
+     "kind": "call",
+     "op": "trim",
+     "args": [
+      {
+       "kind": "capture_ref",
+       "name": "setting.value"
+      }
+     ]
     }
    },
+   "fields": {},
+   "decoder": null
+  },
+  {
+   "query": "queries.scm",
+   "capability": "definitions",
+   "output_kind": "definition.config_key",
+   "span_capture": "empty",
+   "name": {
+    "kind": "call",
+    "op": "lower",
+    "args": [
+     {
+      "kind": "call",
+      "op": "trim",
+      "args": [
+       {
+        "kind": "capture_ref",
+        "name": "empty.key"
+       }
+      ]
+     }
+    ]
+   },
+   "attributes": {},
+   "fields": {},
    "decoder": null
   }
  ],
@@ -57,16 +89,23 @@
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "definitions"
    ],
-   "reason": "EditorConfig preamble and section key/value syntax is exact; glob matching, inheritance, unset semantics and effective configuration evaluation are external evaluation concerns outside this Pack static source contract"
+   "reason": "A section is named by the glob exactly as it was written. The glob is not expanded and not matched against anything, so [*.{js,ts}], [lib/**.py] and [[0-9]*.txt] are each one declaration under one name; which files a section actually governs must be asked of a glob evaluator, not of this index."
   },
   {
    "query": "queries.scm",
    "capabilities": [
-    "data"
+    "definitions"
    ],
-   "reason": "Universal named-node capture provides syntax-aware indexing only. Language-specific definitions/references/types/calls are intentionally outside this Pack static source contract."
+   "reason": "EditorConfig is resolved as a cascade: a tool walks up from the edited file applying every .editorconfig it meets until one says root = true, and within a file a later matching section overrides an earlier one. This Pack states what one file declares. The effective settings for a given path are the result of that cascade and are not computed here."
+  },
+  {
+   "query": "queries.scm",
+   "capabilities": [
+    "definitions"
+   ],
+   "reason": "A key is stored lowercased, as the specification defines keys to be case-insensitive, so Indent_Style and indent_style are one declaration. The value is stored trimmed and otherwise as authored: it is not lowercased, unset is stored as the word unset rather than as a removal, and a value the reading tool does not understand is stored all the same."
   }
  ],
  "legacy_rules": []

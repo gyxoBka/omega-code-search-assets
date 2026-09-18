@@ -1,114 +1,159 @@
-; --- directive ---
+; omega-vue
+;
+; A `.vue` file is one single-file component: a `<template>` of markup, a
+; `<script>` block in JavaScript or TypeScript, and a `<style>` block. The
+; questions asked of it are: which components does this template render, which
+; slots does it offer and fill, which props and events does it wire, and which
+; symbols of the script does the template reach for.
+;
+; The script's own declarations are not this Pack's business -- they are
+; reached through the injections at the bottom of this file and parsed by the
+; JavaScript or TypeScript Pack. What is left is what Vue's own template
+; syntax names, and that is what is stated here.
+;
+; Containment is deliberately not stated. The tree already holds it; the three
+; blocks of the file are emitted as regions and no pattern says that one node
+; is inside another for its own sake.
 
-(directive_attribute (directive_name) @vue.directive.name) @vue.directive
+; --- a component this template renders ---
+;
+; A tag that starts with a capital or contains a hyphen is a component, not an
+; HTML element: those are the two spellings Vue resolves against an import or
+; a registered component, and the two the Vue overlay joins against a `.vue`
+; file stem and against an ECMAScript import binding. `<div>` and `<span>`
+; resolve to nothing and name nothing anyone asks about, so they are not
+; emitted.
 
-; --- element_tag ---
+([(start_tag (tag_name) @component.use)
+  (self_closing_tag (tag_name) @component.use)]
+ (#match? @component.use "^[A-Z]|-"))
 
-[(start_tag (tag_name) @vue.tag.name) @vue.tag (self_closing_tag (tag_name) @vue.tag.name) @vue.tag]
+; --- a slot this component offers ---
+;
+; `<slot name="header"/>` is the one declaration Vue's template syntax makes
+; that a different file resolves against: a parent's `#header` fills it.
 
-; --- interpolation ---
+([(start_tag (tag_name) @slot.tag
+    (attribute (attribute_name) @slot.key
+      (quoted_attribute_value (attribute_value) @slot.name)))
+  (self_closing_tag (tag_name) @slot.tag
+    (attribute (attribute_name) @slot.key
+      (quoted_attribute_value (attribute_value) @slot.name)))] @slot
+ (#eq? @slot.tag "slot")
+ (#eq? @slot.key "name"))
 
-(interpolation) @vue.interpolation
+; --- a template ref ---
+;
+; `ref="input"` names a node that the script reaches for by that name.
 
-; --- sfc_component ---
+((attribute (attribute_name) @ref.key
+   (quoted_attribute_value (attribute_value) @ref.name)) @ref
+ (#eq? @ref.key "ref"))
 
-(component) @vue.component
+; --- the event a listener handles ---
+;
+; `@click` and `v-on:click`. The argument is the event name: for a component
+; it is the custom event the child emits, so the name is the link between the
+; two files.
 
-; --- sfc_script ---
+((directive_attribute (directive_name) @on.directive
+   (directive_argument) @on.event)
+ (#any-of? @on.directive "v-on" "@"))
 
-(script_element) @vue.script
+; --- the prop or attribute a binding sets ---
+;
+; `:title` and `v-bind:title`.
 
-; --- sfc_style ---
+((directive_attribute (directive_name) @bind.directive
+   (directive_argument) @bind.prop)
+ (#any-of? @bind.directive "v-bind" ":"))
 
-(style_element) @vue.style
+; --- the slot a template fills ---
+;
+; `#footer` and `v-slot:footer`, resolving against the `<slot name="footer"/>`
+; declared above.
 
-; --- sfc_template ---
+((directive_attribute (directive_name) @slot.use.directive
+   (directive_argument) @slot.use.name)
+ (#any-of? @slot.use.directive "v-slot" "#"))
 
-(template_element) @vue.template
+; --- what `v-for` binds, and what it iterates ---
+;
+; `v-for="item in items"` introduces `item` into the template, so that the
+; `{{ item.id }}` below it has something to resolve to, and reads `items` from
+; the script. Restricted to the plain form: an alias list `(item, i)` or a
+; destructuring pattern binds names this Pack does not take apart, and the
+; coverage guard says so.
 
-; --- structural-fallback ---
+((directive_attribute (directive_name) @for.directive
+   (quoted_attribute_value (attribute_value) @for.expression)) @for
+ (#eq? @for.directive "v-for")
+ (#match? @for.expression "^[A-Za-z_$][A-Za-z0-9_$]*[ \t]+(in|of)[ \t]+[A-Za-z_$][A-Za-z0-9_$.]*$"))
 
-; Supplemental structural fallback. Matches every named syntax node without claiming additional semantic capability.
-; This is structural indexing only, not semantic completeness.
-
-; --- template_attribute_scope ---
-
-(attribute
-  (attribute_name) @vue.attribute.name) @vue.attribute
-
-; --- authored_attribute_value ---
-
-(attribute
-  (attribute_name) @vue.attribute.value.name
-  [
-    (attribute_value)
-    (quoted_attribute_value)
-  ] @vue.attribute.value) @vue.attribute.with_value
-
-; --- directive_value ---
+; --- what a directive is bound to ---
+;
+; The value of a directive is a JavaScript expression evaluated against the
+; component. Its head identifier is the script symbol it reaches for, and the
+; expression itself is carried in a field for the overlay that builds a
+; template binding out of it.
 
 (directive_attribute
-  (directive_name) @vue.directive.value.name
-  [
-    (attribute_value)
-    (quoted_attribute_value)
-  ] @vue.directive.value) @vue.directive.with_value
+  (directive_name) @directive.name
+  (quoted_attribute_value (attribute_value) @directive.value))
 
-; --- directive_argument ---
-
-(directive_attribute
-  (directive_name) @vue.directive.argument.name
-  [
-    (directive_argument)
-    (directive_dynamic_argument)
-  ] @vue.directive.argument) @vue.directive.with_argument
-
-; --- directive_modifier ---
+; --- a script symbol a dynamic argument reaches for ---
+;
+; `:[attributeName]="value"` computes the argument from a script symbol.
 
 (directive_attribute
-  (directive_name) @vue.directive.modifier.name
-  (directive_modifiers
-    (directive_modifier) @vue.directive.modifier)) @vue.directive.with_modifier
-
-; --- terminal_dynamic_directive_argument_v1 ---
-(directive_attribute
-  (directive_name) @vue.directive.dynamic.name
   (directive_dynamic_argument
-    (directive_dynamic_argument_value) @vue.directive.dynamic_argument.value)) @vue.directive.dynamic_argument.owner
+    (directive_dynamic_argument_value) @dynamic.value))
 
-; --- omega_injection_runtime_v1:vue ---
+; --- what an interpolation renders ---
+;
+; `{{ message }}`. Same rule as a directive value: the head of the path is the
+; script symbol, and it is the name so that it resolves.
+
+(interpolation (raw_text) @interpolation.value)
+
+; --- the three blocks of the file ---
+;
+; A `.vue` file is three languages in one file, so which block a span falls in
+; is a question of its own. Rooted at `component` so that a `<template #slot>`
+; inside the markup is not mistaken for the file's own template block.
+
+(component (template_element (start_tag (tag_name) @block.template.name)) @block.template)
+
+(component (script_element (start_tag (tag_name) @block.script.name)) @block.script)
+
+(component (style_element (start_tag (tag_name) @block.style.name)) @block.style)
+
+; --- the script and the style are other languages ---
 
 ((script_element
-  (start_tag) @_start
-  (raw_text) @injection.content)
-  (#not-match? @_start "(?i)\\blang\\s*=")
-  (#set! injection.language "javascript"))
+   (start_tag) @_start
+   (raw_text) @injection.content)
+ (#not-match? @_start "(?i)\\blang\\s*=")
+ (#set! injection.language "javascript"))
 
-(script_element
-  (start_tag
-    (attribute
-      (attribute_name) @_lang
-      (quoted_attribute_value (attribute_value) @injection.language)))
-  (raw_text) @injection.content
-  (#eq? @_lang "lang"))
+((script_element
+   (start_tag
+     (attribute
+       (attribute_name) @_lang
+       (quoted_attribute_value (attribute_value) @injection.language)))
+   (raw_text) @injection.content)
+ (#eq? @_lang "lang"))
 
 ((style_element
-  (start_tag) @_start
-  (raw_text) @injection.content)
-  (#not-match? @_start "(?i)\\blang\\s*=")
-  (#set! injection.language "css"))
+   (start_tag) @_start
+   (raw_text) @injection.content)
+ (#not-match? @_start "(?i)\\blang\\s*=")
+ (#set! injection.language "css"))
 
-(style_element
-  (start_tag
-    (attribute
-      (attribute_name) @_lang
-      (quoted_attribute_value (attribute_value) @injection.language)))
-  (raw_text) @injection.content
-  (#eq? @_lang "lang"))
-
-; --- semantic_closure_v3_146_batch2 ---
-
-(directive_attribute (directive_argument) @vue.directive.argument) @vue.directive.argument.owner
-(directive_dynamic_argument (directive_dynamic_argument_value) @vue.directive.dynamic.value) @vue.directive.dynamic
-(directive_modifier) @vue.directive.modifier
-(interpolation (raw_text) @vue.interpolation.expression) @vue.interpolation.semantic
+((style_element
+   (start_tag
+     (attribute
+       (attribute_name) @_lang
+       (quoted_attribute_value (attribute_value) @injection.language)))
+   (raw_text) @injection.content)
+ (#eq? @_lang "lang"))
