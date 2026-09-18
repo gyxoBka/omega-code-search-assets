@@ -332,6 +332,45 @@ never meet the unquoted form of the same string — which is how the old godot
 overlay's one live sub-graph ended up joining nothing. If the value you want as
 an identity is quoted, that is a Pack fix, not something to work around.
 
+## 3k. A rule's attributes accumulate across its outputs, in order
+
+`{path}` in a canonical key does not always mean the artifact path.
+`resolve_placeholder` looks in the rule's attributes **before** it looks at the
+fact, and the attribute bag carries forward from one output to the next in
+output order. omega-framework-express minted a Route with an attribute `path`
+set to the route's URL, and the `express:app:{path}` entity two outputs later
+came out as `express:app:/users/:id`.
+
+Name an attribute for what it is -- `route`, `module`, `class` -- and keep
+`path`, `name` and the other built-in names for the built-ins. If you do want the
+normalized form of your own attribute, that is what `{normalized_<attribute>}`
+is for: `{normalized_route}` is the route-normalized value of the attribute
+`route`, so `/users/:id`, `/users/{id}` and `/users/[id]` are one identity.
+
+## 3l. The first argument of a call is published, in two forms
+
+Nine Packs publish the canonical call view on their call templates:
+
+| field | value for `app.get("/users/:id", mw, getUser)` |
+|---|---|
+| `call.arg0` | `"/users/:id"` -- as written, quote bytes and all |
+| `call.arg0_text` | `/users/:id` -- without the quotes |
+| `call.arg1`, `call.arg2` | `mw`, `getUser` |
+| `call.last_arg` | `getUser` |
+| `receiver` | `app` |
+
+**Key on `call.arg0_text`, never on `call.arg0`**: a canonical key template has
+no strip, so a value that carries its quote bytes cannot be an identity and can
+never meet the unquoted form of the same string.
+
+In omega-ruby and omega-kotlin the arguments are a separate emission,
+`call.arguments`, on the same span as the call -- a Ruby call needs no
+parentheses and a Kotlin call can be all trailing lambda, so there is no
+argument node to capture and an unbound capture would skip the whole call
+template. Read it with `fact_join_by_span` `relation: "same"`.
+
+omega-swift does not have it yet.
+
 ## 4. Verification
 
 ```bash

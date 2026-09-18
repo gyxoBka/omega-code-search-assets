@@ -546,9 +546,16 @@ ruby-on-rails all wrote "a Route has no URL" into their `coverage.gaps` and
 keyed routes by byte offset. They can now say it. Items 1 and 11 close with that
 pass.
 
-**The quote bytes.** `call.arg0` is the argument as written, so a string
-argument arrives as `"\"/users/:id\""`. That is the shape the engine test
-asserts, and it is item 14's rule seen from the other side: a Framework must not
-key on it directly. Either the Packs publish a stripped variant beside it, or
-every Framework strips in its own join -- which it cannot, because a key
-template has no strip. **Decide before the second pass.**
+**The quote bytes -- decided.** `call.arg0` is the argument as written, quote
+bytes and all, which is what the engine test asserts. Beside it the nine Packs
+now publish `call.arg0_text`, the same value without its quotes, because a
+canonical key template has no strip and a value that carries its quotes can
+never meet the unquoted form of the same string. Frameworks key on
+`call.arg0_text`.
+
+**Done so far:** omega-framework-express keys its routes by URL again --
+`http:{method}:{normalized_route}` from `call.arg0_text`, with `handles` to the
+handler named by `call.last_arg` -- and the engine test that asserts it passes.
+omega-framework-astro's file routes are back in their own `astro:page:` key
+space, which is what the other engine test asserts. The other twelve are the
+pass that remains.

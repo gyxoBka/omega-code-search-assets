@@ -584,12 +584,30 @@
           "entity_kind": "Route",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "express:route:{path}:{source.start}"
+            "template": "http:{method}:{normalized_route}"
           },
           "attributes": {
             "method": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "express:handler:{call.last_arg}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.last_arg"
             }
           }
         },
@@ -609,18 +627,31 @@
           "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "express:handler:{call.last_arg}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
             "template": "express:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "express:route:{path}:{source.start}"
+            "template": "http:{method}:{normalized_route}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "app.get / post / ...; the HTTP method is the call's own name, the URL is its first argument and is not published."
+      "confidence": "exact",
+      "coverage_note": "app.get / post / ...: the HTTP method is the call's own name and the URL is its first argument, so the route is keyed by what it serves rather than by where it was written, and the handler named as its last argument is the other end of `handles`."
     },
     {
       "id": "express.router.construct",
