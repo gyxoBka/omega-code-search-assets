@@ -136,18 +136,54 @@ Dockerfile `RUN`. Nothing depends on it today.
 
 ---
 
-## 3. Defect classes still open in the Packs
+## 3. Defect classes in the Packs -- resolved
 
-From `python pack-design/audit.py`, after all 61 rewrites:
+`python pack-design/audit.py` after the second pass:
 
-| class | count | what it needs |
+```
+   carried name only a Framework reads   27
+D2 the name is the span itself            9
+J  name is a constant                     3
+   carrier that may overwrite itself      2
+```
+
+`D` and `K2` are gone, and the two large classes turned out to be the check
+being wrong rather than 84 Packs being wrong.
+
+**`carrier that may overwrite itself`: 57 -> 2.** The check read
+`children.multiple` from `node-types.json`, and a grammar that puts every child
+of a statement in one undifferentiated bag marks that bag multiple -- which says
+nothing about any particular child type. It reported every correct carrier in
+tree-sitter-sql, tree-sitter-batch and the modifier groups of
+tree-sitter-typescript. It now counts a repeat only through a **named field**
+declared multiple, which is the only form a Pack could do anything about. The
+two that remain are real and accepted:
+
+| Pack | carrier | why it is left |
 |---|---|---|
-| carrier that may overwrite itself | 57 | **mostly a false positive.** `node-types.json` cannot express "at most one of this child", so a grammar that puts every child of a statement in one repeat group — tree-sitter-sql, tree-sitter-batch, the modifier groups in tree-sitter-typescript — reports every correct carrier. Either the check learns to tell a genuine repeat from an undifferentiated group, or this list records the known-ungroupable grammars so each agent does not rediscover it |
-| carrier under a name nothing assembles | 27 | real, and not fixable as stated: a carrier is the only way to attach an *optional* attribute to a declaration, and only five carried names build the signature line. The check needs a notion of "deliberately not a signature component", or `expr.rs` needs an unbound capture to yield an empty string instead of skipping the template — `default` cannot help, because `CaptureRef` errors before `default` sees it |
-| D2 the name is the span itself | 9 | each is argued for in its Pack's `.md`; re-read them once rather than trusting the count |
-| K2 same span and name, two kinds | 6 | decide which spelling is right and delete the other |
-| J a name that is a constant | 2 | both are a language's single spelling for a construct with no name of its own (`_init` in GDScript). Worth a sentence in the J row of `pack-design/00-INDEX.md` distinguishing that from a J that collapses distinct constructs onto one string |
-| D the name is a whole node | 2 | real |
+| omega-scala | `parameter_shape` over `(class_parameters)` in `(class_definition)` | Scala allows several parameter lists -- `class A(x: Int)(y: Int)` -- and the signature line wants one shape. The last list wins, which is the shape a caller writes last. |
+| omega-solidity | `visibility` over `(visibility)` in `(state_variable_declaration)` | the grammar permits several visibility keywords on one declaration; Solidity does not. Over-permissive grammar, no legal source reaches it. |
+
+**`carrier under a name nothing assembles`: not a defect, renamed.** The class
+rested on the premise that a carried name nothing assembles into a card is
+wasted. That premise is false: **the overlay sees a carrier as an ordinary fact
+under its own kind** -- `overlay_facts_of` builds the overlay's facts from the
+raw emissions, before the `omega.pack.<name>` folding -- so a carrier is how a
+Pack offers a Framework an optional value, read with `fact_join_by_span`
+`relation: "same"`. omega-kotlin's `expect`/`actual` and blazor's injected
+service type are both exactly this. The count is kept as *carried name only a
+Framework reads*, so an author knows which side consumes it.
+
+**`J name is a constant`: all three are correct.** A construct with no name of
+its own takes the language's single spelling for it -- `_init` in GDScript,
+`preservewhitespace` in Razor, `document` in YAML. The defect this class is for
+is a constant that collapses **distinct** constructs onto one string; a
+singleton construct naming itself is not that. Each fact still carries its own
+span, which is its identity.
+
+**`D2 the name is the span itself`: 9, each argued in its Pack's `.md`.** Read
+them there rather than trusting the count; a name that is its own span is right
+whenever the construct is its name, as a YAML key or an HCL label is.
 
 ---
 
@@ -415,30 +451,17 @@ an extension or a distinctive stem.
 
 ---
 
-## 14. A Pack value that keeps its quote bytes cannot be an identity
+## 14. A Pack value that keeps its quote bytes -- fixed
 
-omega-godot-resource has three templates written for the overlay —
-`structured.godot_section_attribute_context`,
-`structured.godot_ext_resource_id_path_context`,
-`structured.godot_node_script_ext_resource_context` — and all three capture the
-`(string)` node raw. So `attribute_value`, `resource_path`, `node_name` and
-`resource_id` arrive as `"res://player.gd"`, quotes included, while the same
-Pack's `definition.scene_node`, `definition.resource` and `relation.depends`
-strip them.
+omega-godot-resource's three overlay-specific templates captured `(string)`
+nodes raw, so `attribute_value`, `resource_path`, `node_name` and `resource_id`
+arrived as `"res://player.gd"` with the quote bytes while the rest of the Pack
+stripped them -- and a canonical key template has no strip, so such a value can
+never meet the unquoted form of the same string. That is why the old godot
+overlay's one live sub-graph joined nothing.
 
-The overlay cannot repair it. `fact_join_by_field` takes `current_strip_prefix`
-and `join_strip_prefix`, there is no strip_suffix, and a canonical key template
-has no strip at all. A quoted value therefore cannot be an identity and cannot
-meet the unquoted form of the same string — which is why the old godot overlay's
-one live sub-graph never joined anything.
-
-**The general rule, now in the Pack contract's terms:** a value a Framework will
-key on must be normalized by the Pack that publishes it. The rewrite left those
-three templates read for one thing only (the `[connection]` section's span), so
-four of their five fields are now read by nobody.
-
-**Done looks like:** those templates stripping their strings like the rest of
-the Pack, and the fields nothing reads removed.
+All ten values go through `unquote` now. The general rule is in the brief: a
+value a Framework will key on must be normalized by the Pack that publishes it.
 
 ---
 

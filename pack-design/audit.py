@@ -127,14 +127,22 @@ GENERIC_NAME = {'identifier', 'word', 'name', 'simple_identifier', 'variable_nam
 
 
 def repeats_in(pack):
-    """For each node type, the child types it may hold more than one of."""
+    """For each node type, the child types it may hold more than one of.
+
+    Only through a NAMED FIELD declared `multiple`. A grammar that puts every
+    child of a statement in one undifferentiated `children` bag marks that bag
+    multiple, which says nothing about any particular child type -- and reading
+    it as a repeat reported every correct carrier in tree-sitter-sql,
+    tree-sitter-batch and the modifier groups of tree-sitter-typescript. Where
+    the grammar cannot express "at most one of this", neither can the Pack, and
+    the finding is not something an author can act on.
+    """
     path = 'grammars/%s/node-types.json' % pack
     if not os.path.exists(path):
         return {}
     out = {}
     for n in json.load(open(path, encoding='utf-8')):
-        kids = n.get('children') or {}
-        types = {x['type'] for x in kids.get('types', [])} if kids.get('multiple') else set()
+        types = set()
         for f in (n.get('fields') or {}).values():
             if f.get('multiple'):
                 types |= {x['type'] for x in f.get('types', [])}
@@ -248,6 +256,17 @@ def audit(pack):
     for t in templates:
         bysig[(t['span_capture'], json.dumps(t.get('name'), sort_keys=True))].add(t['output_kind'])
     for sig, kinds in bysig.items():
+        # A declaration and the region it opens are selected by two independent
+        # filters in content_builder -- `is_definition_kind` and `is_scope_kind`
+        # -- so one capture serving `definition.class` and `scope.class_body` is
+        # the documented way to state both, not the same fact twice.
+        if {k.split('.')[0] for k in kinds} == {'definition', 'scope'}:
+            continue
+        # A carrier is folded onto the declaration at its own span, so a
+        # declaration and its `*_candidate` on one capture is the carrier
+        # idiom, not one fact stated twice.
+        if any(k.endswith('_candidate') for k in kinds) and            any(not k.endswith('_candidate') for k in kinds):
+            continue
         if len(kinds) > 1:
             f['K2'] += len(kinds) - 1
             detail['K2'].append('@%s -> %s' % (sig[0], ' / '.join(sorted(kinds))))
@@ -293,7 +312,12 @@ def audit(pack):
             detail['carrier_owner'].append('%s: (%s) repeats inside (%s)'
                                            % (t['output_kind'], nm_node, sp_node))
 
-    # A carrier under a name nothing assembles.
+    # A carried name no card assembles. NOT a defect: the overlay sees a carrier
+    # as an ordinary fact under its own kind -- `overlay_facts_of` builds from
+    # the raw emissions, before the `omega.pack.<name>` folding -- so a carrier
+    # at the declaration's span is how a Pack offers a Framework an optional
+    # value, and a carrier at the SAME span is read with `fact_join_by_span`
+    # `relation: "same"`. Counted so an author knows which side reads it.
     for t in templates:
         k = t['output_kind']
         if not k.endswith('_candidate'):
@@ -301,8 +325,8 @@ def audit(pack):
         carried = k.rsplit('.', 1)[-1][:-len('_candidate')]
         if carried in SIGNATURE_NAMES or carried in READ_CARRIED:
             continue
-        f['carrier_unread'] += 1
-        detail['carrier_unread'].append('omega.pack.%s (%s)' % (carried, k))
+        f['carrier_framework_only'] += 1
+        detail['carrier_framework_only'].append('omega.pack.%s (%s)' % (carried, k))
 
     # a literal marker with nothing to suppress
     kinds_all = {t['output_kind'] for t in templates}
@@ -365,12 +389,12 @@ LABEL = {
     'scope_is_def': '   scope that is also a declaration',
     'unread': '   pattern nothing reads',
     'cap_mismatch': '   manifest vs templates',
+    'carrier_framework_only': '   carried name only a Framework reads',
     'D2': 'D2 the name is the span itself',
     'K2': 'K2 same span and name, two kinds',
     'I2': 'I2 a bare leaf capture, every one in the file',
     'carrier_owner': '   carrier that may overwrite itself (check: grammars group modifiers)',
     'dead_marker': '   literal marker with no reference_context to suppress',
-    'carrier_unread': '   carrier under a name nothing assembles',
 }
 
 
