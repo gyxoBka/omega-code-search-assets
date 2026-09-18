@@ -20,146 +20,246 @@
     ]
   },
   "evidence_inputs": [
-    "package_manifests",
     "decorators_annotations",
-    "imports_bindings",
-    "calls_members",
     "existing_language_ir",
-    "project_level_evidence",
-    "reference.kotlin_annotated_class_context",
-    "reference.kotlin_primary_constructor_parameter_context"
+    "imports_bindings",
+    "package_manifests",
+    "project_level_evidence"
   ],
   "emits": {
     "entities": [
-      "Bean",
-      "BeanType",
-      "Component",
+      "BeanMethod",
       "ConfigProperties",
-      "Configuration",
-      "Controller",
-      "Dependency",
-      "Handler",
+      "HttpHandler",
+      "MethodRole",
       "Model",
-      "ModelReference",
-      "OrmRelation",
       "Repository",
-      "Route",
-      "RoutePrefix",
       "SecuredMethod",
-      "SecurityRule",
-      "Service",
+      "SpringApplication",
       "SpringBean"
     ],
     "relations": [
       "configured_by",
-      "depends_on",
+      "declares",
       "guards",
       "handles",
-      "injects",
-      "uses_model"
+      "injects"
     ]
   },
   "rules": [
     {
-      "id": "spring.controller",
+      "id": "spring.stereotype",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
+          "value": "reference.annotation"
         },
         {
-          "kind": "external_path_matches",
-          "package_prefix": "org.springframework",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Component",
+            "Service",
+            "Repository",
+            "Controller",
             "RestController",
-            "Controller"
+            "Configuration",
+            "ControllerAdvice",
+            "RestControllerAdvice"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Controller",
+          "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:controller:{enclosing.qname}"
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "stereotype": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
+    },
+    {
+      "id": "spring.application",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.annotation"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "SpringBootApplication"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SpringApplication",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:application:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SpringBean",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "stereotype": "SpringBootApplication"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "spring:application:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "spring.route.mapping",
+      "id": "spring.http.handler",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.java_package_method_direct_string_annotation_context"
+          "value": "reference.annotation"
         },
         {
-          "package": "org.springframework.web.bind.annotation",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
             "RequestMapping",
             "GetMapping",
             "PostMapping",
             "PutMapping",
             "PatchMapping",
             "DeleteMapping"
-          ],
-          "kind": "external_path_matches"
+          ]
         },
         {
-          "kind": "field_present",
-          "field": "package_name"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "m"
         },
         {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Route",
+          "entity_kind": "HttpHandler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:route:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
+            "template": "spring:handler:{cls.definition.name}.{m.definition.name}"
           },
           "attributes": {
-            "method": {
+            "handler": {
               "kind": "field_ref",
-              "field": "annotation_name"
+              "field": "m.definition.name"
             },
-            "path": {
+            "controller": {
               "kind": "field_ref",
-              "field": "argument_string"
+              "field": "cls.definition.name"
+            },
+            "http_method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "Handler",
+          "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:handler:{package_name}.{class_name}.{method_name}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {
-            "name": {
+            "class": {
               "kind": "field_ref",
-              "field": "method_name"
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -168,109 +268,48 @@
           "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
-            "template": "spring:route:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "spring:handler:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.service.repo",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_prefix": "org.springframework.stereotype",
-          "member_in": [
-            "Service"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Service",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:role:{enclosing.qname}"
+            "template": "spring:handler:{cls.definition.name}.{m.definition.name}"
           },
           "attributes": {
-            "role": {
+            "http_method": {
               "kind": "field_ref",
-              "field": "annotation.member"
+              "field": "definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "spring.repository",
+      "id": "spring.persistent.model",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
+          "value": "reference.annotation"
         },
         {
-          "kind": "external_path_matches",
-          "package_prefix": "org.springframework.stereotype",
-          "member_in": [
-            "Repository"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Repository",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:repository:{enclosing.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "enclosing.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "spring.jpa.entity",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "jakarta.persistence",
-            "javax.persistence"
-          ],
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
             "Entity",
+            "MappedSuperclass",
             "Embeddable",
-            "MappedSuperclass"
+            "Document",
+            "RedisHash"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
@@ -280,155 +319,62 @@
           "entity_kind": "Model",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:model:{enclosing.qname}"
+            "template": "spring:model:{cls.definition.name}"
           },
           "attributes": {
-            "role": {
+            "class": {
               "kind": "field_ref",
-              "field": "annotation.member"
+              "field": "cls.definition.name"
             },
-            "name": {
+            "mapping": {
               "kind": "field_ref",
-              "field": "enclosing.name"
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high"
     },
     {
-      "id": "spring.service.injected-repository",
+      "id": "spring.data.repository",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.java_package_annotated_field_import_bound_type_context"
+          "value": "relation.implements"
         },
         {
           "kind": "field_in",
-          "field": "annotation_import_path",
+          "field": "definition.name",
           "values": [
-            "org.springframework.beans.factory.annotation.Autowired",
-            "jakarta.inject.Inject",
-            "javax.inject.Inject"
+            "Repository",
+            "CrudRepository",
+            "ListCrudRepository",
+            "PagingAndSortingRepository",
+            "ListPagingAndSortingRepository",
+            "JpaRepository",
+            "JpaSpecificationExecutor",
+            "MongoRepository",
+            "ReactiveCrudRepository",
+            "ReactiveMongoRepository",
+            "R2dbcRepository",
+            "ElasticsearchRepository",
+            "CassandraRepository",
+            "Neo4jRepository",
+            "QuerydslPredicateExecutor"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_class"
-        },
-        {
-          "kind": "field_present",
-          "field": "target_type_import_path"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "annotations.annotation_normal",
-          "current_field": "owner_class",
-          "join_field": "enclosing.name",
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.interface",
+          "relation": "within",
           "same_path": true,
-          "where": [
-            {
-              "kind": "external_path_matches",
-              "package": "org.springframework.stereotype",
-              "member_in": [
-                "Service"
-              ]
-            },
-            {
-              "kind": "field_present",
-              "field": "enclosing.qname"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "annotations.annotation_normal",
-          "current_field": "target_type_import_path",
-          "join_field": "enclosing.qname",
-          "where": [
-            {
-              "kind": "external_path_matches",
-              "package": "org.springframework.stereotype",
-              "member_in": [
-                "Repository"
-              ]
-            },
-            {
-              "kind": "field_present",
-              "field": "enclosing.qname"
-            }
-          ],
-          "bind": "target_repository"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:role:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "target_repository",
-            "field": "enclosing.qname",
-            "template": "spring:repository:{value}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-injected-field-to-proven-repository"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "injects",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:role:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "target_repository",
-            "field": "enclosing.qname",
-            "template": "spring:repository:{value}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-injected-field-to-proven-repository"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.data.repository.interface",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_interface_import_bound_generic_supertype_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "supertype_import_path",
-          "value": "org.springframework.data.jpa.repository.JpaRepository"
-        },
-        {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "interface_name"
+          "bind": "iface"
         }
       ],
       "guards": [],
@@ -438,408 +384,365 @@
           "entity_kind": "Repository",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:repository:{package_name}.{interface_name}"
+            "template": "spring:repository:{iface.definition.name}"
           },
           "attributes": {
-            "name": {
+            "interface": {
               "kind": "field_ref",
-              "field": "interface_name"
+              "field": "iface.definition.name"
             },
-            "repository_base": "JpaRepository",
-            "declaration_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.data.repository.model",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_interface_import_bound_generic_supertype_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "supertype_import_path",
-          "value": "org.springframework.data.jpa.repository.JpaRepository"
-        },
-        {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "interface_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "first_type_argument_import_path"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "annotations.annotation_normal",
-          "current_field": "first_type_argument_import_path",
-          "join_field": "enclosing.qname",
-          "where": [
-            {
-              "kind": "external_path_matches",
-              "package_in": [
-                "jakarta.persistence",
-                "javax.persistence"
-              ],
-              "member_in": [
-                "Entity"
-              ]
-            },
-            {
-              "kind": "field_present",
-              "field": "enclosing.qname"
-            }
-          ],
-          "bind": "target_model"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_model",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:repository:{package_name}.{interface_name}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "target_model",
-            "field": "enclosing.qname",
-            "template": "spring:model:{value}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-jpa-repository-first-model-argument-to-proven-entity"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.route.mapping.named",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_method_named_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.web.bind.annotation",
-          "member_in": [
-            "RequestMapping",
-            "GetMapping",
-            "PostMapping",
-            "PutMapping",
-            "PatchMapping",
-            "DeleteMapping"
-          ]
-        },
-        {
-          "kind": "field_in",
-          "field": "argument_name",
-          "values": [
-            "path",
-            "value"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:route:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
-          },
-          "attributes": {
-            "method": {
+            "base": {
               "kind": "field_ref",
-              "field": "annotation_name"
+              "field": "definition.name"
             },
-            "path": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "argument_string"
-            },
-            "argument": {
-              "kind": "field_ref",
-              "field": "argument_name"
+              "field": "path"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "Handler",
+          "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:handler:{package_name}.{class_name}.{method_name}"
+            "template": "spring:bean:{iface.definition.name}"
           },
           "attributes": {
-            "name": {
+            "class": {
               "kind": "field_ref",
-              "field": "method_name"
-            }
+              "field": "iface.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "stereotype": "Repository"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "handles",
+          "relation_kind": "declares",
           "source": {
             "kind": "by_canonical_key",
-            "template": "spring:route:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
+            "template": "spring:bean:{iface.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "spring:handler:{package_name}.{class_name}.{method_name}"
+            "template": "spring:repository:{iface.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "spring.bean-owner.stereotype",
+      "id": "spring.bean.factory-method",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
+          "value": "reference.annotation"
         },
         {
-          "kind": "external_path_matches",
-          "package": "org.springframework.stereotype",
-          "member_in": [
-            "Component",
-            "Service",
-            "Repository"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Bean"
         },
         {
-          "kind": "field_present",
-          "field": "enclosing.qname"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "m"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BeanMethod",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:bean-method:{cls.definition.name}.{m.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "m.definition.name"
+            },
+            "declared_by": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
         {
           "kind": "entity_candidate",
           "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:bean-owner:{enclosing.qname}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {
-            "role": {
+            "class": {
               "kind": "field_ref",
-              "field": "annotation.member"
+              "field": "cls.definition.name"
             },
-            "name": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "enclosing.name"
+              "field": "path"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean-method:{cls.definition.name}.{m.definition.name}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "spring.bean-owner.controller",
+      "id": "spring.security.method",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
+          "value": "reference.annotation"
         },
         {
-          "kind": "external_path_matches",
-          "package": "org.springframework.web.bind.annotation",
-          "member_in": [
-            "Controller",
-            "RestController"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "PreAuthorize",
+            "PostAuthorize",
+            "PreFilter",
+            "PostFilter",
+            "Secured",
+            "RolesAllowed",
+            "DenyAll",
+            "PermitAll"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "enclosing.qname"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "m"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SecuredMethod",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:secured:{cls.definition.name}.{m.definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "m.definition.name"
+            },
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "guard": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
         {
           "kind": "entity_candidate",
           "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:bean-owner:{enclosing.qname}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {
-            "role": {
+            "class": {
               "kind": "field_ref",
-              "field": "annotation.member"
+              "field": "cls.definition.name"
             },
-            "name": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "enclosing.name"
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "guards",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "spring:secured:{cls.definition.name}.{m.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "attributes": {
+            "guard": {
+              "kind": "field_ref",
+              "field": "definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "spring.bean-owner.configuration",
+      "id": "spring.method.role",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
+          "value": "reference.annotation"
         },
         {
-          "kind": "external_path_matches",
-          "package": "org.springframework.context.annotation",
-          "member_in": [
-            "Configuration"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Transactional",
+            "Scheduled",
+            "Async",
+            "EventListener",
+            "TransactionalEventListener",
+            "KafkaListener",
+            "RabbitListener",
+            "JmsListener",
+            "Cacheable",
+            "CacheEvict",
+            "CachePut",
+            "PostConstruct",
+            "PreDestroy",
+            "ExceptionHandler",
+            "InitBinder",
+            "ModelAttribute",
+            "MessageMapping",
+            "SubscribeMapping"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "enclosing.qname"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "m"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MethodRole",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:method-role:{cls.definition.name}.{m.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "m.definition.name"
+            },
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
         {
           "kind": "entity_candidate",
           "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:bean-owner:{enclosing.qname}"
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "spring:method-role:{cls.definition.name}.{m.definition.name}:{definition.name}"
           },
           "attributes": {
             "role": {
               "kind": "field_ref",
-              "field": "annotation.member"
-            },
-            "name": {
-              "kind": "field_ref",
-              "field": "enclosing.name"
+              "field": "definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.component",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.stereotype",
-          "member_in": [
-            "Component"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "enclosing.qname"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Component",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:component:{enclosing.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "enclosing.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.configuration",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "annotations.annotation_normal"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.context.annotation",
-          "member_in": [
-            "Configuration"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "enclosing.qname"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Configuration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:configuration:{enclosing.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "enclosing.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
       "id": "spring.configuration-properties",
@@ -847,26 +750,19 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.java_package_class_named_string_annotation_context"
+          "value": "reference.annotation"
         },
         {
-          "kind": "external_path_matches",
-          "package": "org.springframework.boot.context.properties",
-          "member_in": [
-            "ConfigurationProperties"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ConfigurationProperties"
         },
         {
-          "kind": "field_in",
-          "field": "argument_name",
-          "values": [
-            "prefix",
-            "value"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
@@ -876,786 +772,166 @@
           "entity_kind": "ConfigProperties",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:config-properties:{package_name}.{class_name}:{argument_string}"
+            "template": "spring:config-properties:{cls.definition.name}"
           },
           "attributes": {
-            "prefix": {
+            "class": {
               "kind": "field_ref",
-              "field": "argument_string"
+              "field": "cls.definition.name"
             },
-            "class_name": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "class_name"
+              "field": "path"
             }
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.bean.marker",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_method_marker_annotation_context"
         },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.context.annotation",
-          "member_in": [
-            "Bean"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Bean",
+          "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:bean:{package_name}.{class_name}.{method_name}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {
-            "method_name": {
+            "class": {
               "kind": "field_ref",
-              "field": "method_name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.bean.direct",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_method_direct_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.context.annotation",
-          "member_in": [
-            "Bean"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Bean",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:bean:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {
-            "method_name": {
-              "kind": "field_ref",
-              "field": "method_name"
+              "field": "cls.definition.name"
             },
-            "declared_name": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "argument_string"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.bean.named",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_method_named_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.context.annotation",
-          "member_in": [
-            "Bean"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "package_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        },
-        {
-          "kind": "field_in",
-          "field": "argument_name",
-          "values": [
-            "name",
-            "value"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Bean",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:bean:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {
-            "method_name": {
-              "kind": "field_ref",
-              "field": "method_name"
+              "field": "path"
             },
-            "declared_name": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            }
+            "stereotype": "ConfigurationProperties"
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "spring:config-properties:{cls.definition.name}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "spring.constructor-di",
+      "id": "spring.di.constructor-parameter",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.java_package_constructor_parameter_import_bound_type_context"
+          "value": "reference.type"
         },
         {
-          "kind": "field_present",
-          "field": "target_type_import_path"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.parameter",
+          "relation": "within",
+          "same_path": true,
+          "bind": "p"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.constructor",
+          "relation": "within",
+          "same_path": true,
+          "bind": "ctor"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         },
         {
           "kind": "fact_join_by_field",
-          "fact_kind": "annotations.annotation_normal",
-          "current_field": "owner_class",
-          "join_field": "enclosing.name",
+          "fact_kind": "reference.annotation",
+          "current_field": "path",
+          "join_field": "path",
           "same_path": true,
           "where": [
             {
-              "kind": "field_present",
-              "field": "enclosing.qname"
-            },
-            {
-              "kind": "external_path_matches",
-              "package_in": [
-                "org.springframework.stereotype",
-                "org.springframework.web.bind.annotation",
-                "org.springframework.context.annotation"
-              ],
-              "member_in": [
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
                 "Component",
                 "Service",
                 "Repository",
                 "Controller",
                 "RestController",
-                "Configuration"
+                "Configuration",
+                "ControllerAdvice",
+                "RestControllerAdvice",
+                "SpringBootApplication"
               ]
             }
-          ]
+          ],
+          "bind": "stereo"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Dependency",
+          "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:dependency:{target_type_import_path}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {
-            "type_path": {
+            "class": {
               "kind": "field_ref",
-              "field": "target_type_import_path"
+              "field": "cls.definition.name"
             },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SpringBean",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:bean:{definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "stereotype": "injected"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "spring:bean:{definition.name}"
+          },
+          "attributes": {
             "parameter": {
               "kind": "field_ref",
-              "field": "parameter_name"
-            },
-            "injection_kind": "constructor"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:bean-owner:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:dependency:{target_type_import_path}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-constructor-parameter"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "injects",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:bean-owner:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:dependency:{target_type_import_path}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-constructor-parameter"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.field-di",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_annotated_field_import_bound_type_context"
-        },
-        {
-          "kind": "field_in",
-          "field": "annotation_import_path",
-          "values": [
-            "org.springframework.beans.factory.annotation.Autowired",
-            "jakarta.inject.Inject",
-            "javax.inject.Inject"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "target_type_import_path"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "annotations.annotation_normal",
-          "current_field": "owner_class",
-          "join_field": "enclosing.name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_present",
-              "field": "enclosing.qname"
-            },
-            {
-              "kind": "external_path_matches",
-              "package_in": [
-                "org.springframework.stereotype",
-                "org.springframework.web.bind.annotation",
-                "org.springframework.context.annotation"
-              ],
-              "member_in": [
-                "Component",
-                "Service",
-                "Repository",
-                "Controller",
-                "RestController",
-                "Configuration"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Dependency",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:dependency:{target_type_import_path}"
-          },
-          "attributes": {
-            "type_path": {
-              "kind": "field_ref",
-              "field": "target_type_import_path"
-            },
-            "field_name": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "injection_kind": "field"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:bean-owner:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:dependency:{target_type_import_path}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-annotated-field"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "injects",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:bean-owner:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:dependency:{target_type_import_path}"
-          },
-          "attributes": {
-            "declaration_only": true,
-            "resolution": "explicit-import-bound-annotated-field"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.jpa.relation-field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_annotated_field_import_bound_type_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "jakarta.persistence",
-            "javax.persistence"
-          ],
-          "member_in": [
-            "OneToOne",
-            "OneToMany",
-            "ManyToOne",
-            "ManyToMany",
-            "Embedded",
-            "EmbeddedId",
-            "ElementCollection"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "target_type_import_path"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "annotations.annotation_normal",
-          "current_field": "owner_class",
-          "join_field": "enclosing.name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "external_path_matches",
-              "package_in": [
-                "jakarta.persistence",
-                "javax.persistence"
-              ],
-              "member_in": [
-                "Entity",
-                "Embeddable",
-                "MappedSuperclass"
-              ]
-            },
-            {
-              "kind": "field_present",
-              "field": "enclosing.qname"
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "OrmRelation",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:orm-relation:{package_name}.{owner_class}.{field_name}:{annotation_name}"
-          },
-          "attributes": {
-            "relation_kind": {
-              "kind": "field_ref",
-              "field": "annotation_name"
-            },
-            "field_name": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "target_type": {
-              "kind": "field_ref",
-              "field": "target_type_import_path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ModelReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:model-ref:{target_type_import_path}"
-          },
-          "attributes": {
-            "type_path": {
-              "kind": "field_ref",
-              "field": "target_type_import_path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_model",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:model:{package_name}.{owner_class}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:model-ref:{target_type_import_path}"
-          },
-          "attributes": {
-            "field": {
-              "kind": "field_ref",
-              "field": "field_name"
-            },
-            "relation_kind": {
-              "kind": "field_ref",
-              "field": "annotation_name"
-            },
-            "declaration_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.security.direct",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_method_direct_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "org.springframework.security.access.prepost",
-            "org.springframework.security.access.annotation",
-            "jakarta.annotation.security",
-            "javax.annotation.security"
-          ],
-          "member_in": [
-            "PreAuthorize",
-            "PostAuthorize",
-            "PreFilter",
-            "PostFilter",
-            "Secured",
-            "RolesAllowed"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SecuredMethod",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:secured-method:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "method_name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SecurityRule",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:security:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
-          },
-          "attributes": {
-            "annotation": {
-              "kind": "field_ref",
-              "field": "annotation_name"
-            },
-            "expression": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "guards",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:security:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:secured-method:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {
-            "declaration_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.security.named",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_method_named_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "org.springframework.security.access.prepost",
-            "org.springframework.security.access.annotation",
-            "jakarta.annotation.security",
-            "javax.annotation.security"
-          ],
-          "member_in": [
-            "PreAuthorize",
-            "PostAuthorize",
-            "PreFilter",
-            "PostFilter",
-            "Secured",
-            "RolesAllowed"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
-        },
-        {
-          "kind": "field_present",
-          "field": "method_name"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SecuredMethod",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:secured-method:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "method_name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SecurityRule",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:security:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
-          },
-          "attributes": {
-            "annotation": {
-              "kind": "field_ref",
-              "field": "annotation_name"
-            },
-            "expression": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "guards",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "spring:security:{package_name}.{class_name}.{method_name}:{annotation_name}:{argument_string}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:secured-method:{package_name}.{class_name}.{method_name}"
-          },
-          "attributes": {
-            "declaration_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.route.class-prefix.direct",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_class_direct_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.web.bind.annotation",
-          "member_in": [
-            "RequestMapping"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RoutePrefix",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:route-prefix:{package_name}.{class_name}:{argument_string}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            },
-            "owner_class": {
-              "kind": "field_ref",
-              "field": "class_name"
+              "field": "p.definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "spring.route.class-prefix.named",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.java_package_class_named_string_annotation_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "org.springframework.web.bind.annotation",
-          "member_in": [
-            "RequestMapping"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "argument_string"
-        },
-        {
-          "kind": "field_in",
-          "field": "argument_name",
-          "values": [
-            "path",
-            "value"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RoutePrefix",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "spring:route-prefix:{package_name}.{class_name}:{argument_string}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "argument_string"
-            },
-            "owner_class": {
-              "kind": "field_ref",
-              "field": "class_name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
       "id": "spring.kotlin.stereotype",
@@ -1663,150 +939,179 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.kotlin_annotated_class_context"
+          "value": "reference.type"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.kt"
         },
         {
           "kind": "field_in",
-          "field": "annotation_name",
+          "field": "definition.name",
           "values": [
-            "RestController",
-            "Controller",
-            "Service",
             "Component",
+            "Service",
             "Repository",
-            "Configuration"
+            "Controller",
+            "RestController",
+            "Configuration",
+            "ControllerAdvice",
+            "RestControllerAdvice",
+            "SpringBootApplication"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "owner_class"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "BeanType",
+          "entity_kind": "SpringBean",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:kotlin-bean:{owner_class}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "attributes": {
             "class": {
               "kind": "field_ref",
-              "field": "owner_class"
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             },
             "stereotype": {
               "kind": "field_ref",
-              "field": "annotation_name"
-            },
-            "language": "kotlin"
+              "field": "definition.name"
+            }
           }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "spring:kotlin-bean:{owner_class}"
-          },
-          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate"
     },
     {
-      "id": "spring.kotlin.constructor-di",
+      "id": "spring.kotlin.http.handler",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.kotlin_primary_constructor_parameter_context"
+          "value": "reference.type"
         },
         {
-          "kind": "field_present",
-          "field": "owner_class"
+          "kind": "path_glob",
+          "pattern": "**/*.kt"
         },
         {
-          "kind": "field_present",
-          "field": "parameter_type"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "RequestMapping",
+            "GetMapping",
+            "PostMapping",
+            "PutMapping",
+            "PatchMapping",
+            "DeleteMapping"
+          ]
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "reference.kotlin_annotated_class_context",
-          "current_field": "owner_class",
-          "join_field": "owner_class",
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
           "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "annotation_name",
-              "values": [
-                "RestController",
-                "Controller",
-                "Service",
-                "Component",
-                "Repository",
-                "Configuration"
-              ]
-            }
-          ],
-          "bind": "spring_owner"
+          "bind": "m"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Dependency",
+          "entity_kind": "HttpHandler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "spring:kotlin-di:{owner_class}:{parameter_name}:{source.start}"
+            "template": "spring:handler:{cls.definition.name}.{m.definition.name}"
           },
           "attributes": {
-            "owner": {
+            "handler": {
               "kind": "field_ref",
-              "field": "owner_class"
+              "field": "m.definition.name"
             },
-            "parameter": {
+            "controller": {
               "kind": "field_ref",
-              "field": "parameter_name"
+              "field": "cls.definition.name"
             },
-            "type": {
+            "http_method": {
               "kind": "field_ref",
-              "field": "parameter_type"
+              "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SpringBean",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "spring:bean:{cls.definition.name}"
+          },
+          "attributes": {
+            "class": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "depends_on",
+          "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
-            "template": "spring:kotlin-bean:{owner_class}"
+            "template": "spring:bean:{cls.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "spring:kotlin-di:{owner_class}:{parameter_name}:{source.start}"
+            "template": "spring:handler:{cls.definition.name}.{m.definition.name}"
           },
-          "attributes": {}
+          "attributes": {
+            "http_method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high"
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "direct Spring stereotypes/controllers/routes/route prefixes, Java and Kotlin constructor parameter dependencies, @Bean/@ConfigurationProperties, JPA relation fields and method-security annotations are materialized as authored source evidence",
-      "meta/composed annotations, same-package/wildcard/generic target resolution, Spring Data generated repository behavior and functional WebFlux nested DSL targets require generic resolver/external semantic evidence",
-      "runtime bean conditions/profiles/autoconfiguration/proxy/container selection, SpEL evaluation and actual authorization decisions are runtime state; computed route constants require bounded value resolution",
-      "JPA fetch/cascade/mappedBy annotation options are preserved as generic annotation evidence where available; runtime ORM metadata is not executed"
+      "Annotation element values are not read by omega-java or omega-kotlin, so a route path, a @ConfigurationProperties prefix, a @Bean name and a @PreAuthorize expression are not stated and no Route entity is emitted; only the HTTP verb, the handler and its controller are.",
+      "omega-java spans definition.field on the variable_declarator while reference.annotation spans the whole annotation, a sibling under field_declaration, so a field annotation cannot be joined to the field it decorates; field injection and JPA association fields are not stated.",
+      "Type arguments are not stated, so the domain type of JpaRepository<User, Long> is not reachable and no repository-to-model relation is emitted.",
+      "omega-kotlin emits an annotation as reference.type, indistinguishable from a supertype or a declared type, so the Kotlin stereotype rule is confidence candidate and Kotlin primary-constructor injection is not stated.",
+      "Meta-annotations and composed stereotypes, profiles, conditions, autoconfiguration, proxying and any runtime authorization decision are runtime state and are not derivable from source facts."
     ]
   },
   "provenance": [

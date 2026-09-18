@@ -5,17 +5,21 @@
  "maturity_target": "semantic-overlay-full",
  "host": {
   "languages": [
-   "javascript"
+   "javascript",
+   "typescript",
+   "tsx"
   ],
   "required_packs": [
-   "omega-javascript"
+   "omega-javascript",
+   "omega-typescript",
+   "omega-tsx"
   ],
   "required_capabilities": [
    "calls",
-   "data",
    "definitions",
    "imports",
-   "references"
+   "references",
+   "scopes"
   ]
  },
  "evidence_inputs": [
@@ -26,77 +30,60 @@
  ],
  "emits": {
   "entities": [
-   "ApiUse",
-   "BuildContext",
-   "BuildMode",
-   "BuildOutput",
-   "BuildProject",
+   "BuildConfig",
    "BuildSetting",
-   "BuildTarget",
+   "ConfigModule",
    "Dependency",
-   "OutputSetting",
-   "Alias",
-   "ModuleRuleSetting",
-   "LoaderConfig"
+   "Loader",
+   "Plugin",
+   "PluginPackage",
+   "WebpackApi",
+   "WebpackFile",
+   "WebpackPlugin"
   ],
   "relations": [
    "configured_by",
-   "contains",
    "depends_on",
-   "produces",
+   "extends",
+   "implements",
    "uses_api",
+   "uses_loader",
    "uses_plugin"
   ]
  },
  "rules": [
   {
-   "id": "webpack.config.direct-plugin-constructor",
-   "snapshot": true,
+   "id": "webpack.config.file",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_array_new_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "field_key",
-     "value": "plugins"
-    },
-    {
-     "kind": "field_present",
-     "field": "constructor_name"
+     "value": "import.module"
     },
     {
      "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
+     "pattern": "**/webpack.*"
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "BuildProject",
+     "entity_kind": "BuildConfig",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:config:{path}"
      },
      "attributes": {
-      "path": {
+      "file": {
        "kind": "field_ref",
        "field": "path"
       },
-      "declaration_only": true,
-      "source": "webpack_config_plugins"
+      "framework": "webpack"
      }
     },
     {
@@ -104,15 +91,238 @@
      "entity_kind": "Dependency",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:plugin-declaration:{path}:{constructor_name}"
+      "template": "webpack:package:{definition.name}"
      },
      "attributes": {
-      "name": {
+      "package": {
        "kind": "field_ref",
-       "field": "constructor_name"
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends_on",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "webpack:config:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "webpack:package:{definition.name}"
+     },
+     "attributes": {
+      "package": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact",
+   "coverage_note": "Which files are the webpack build configuration, and what each one pulls in. The Pack states require(\"html-webpack-plugin\") and an ESM import under the same import.module kind, so both module systems are covered once; the overlay is what says a file named webpack.* is a build configuration rather than application code."
+  },
+  {
+   "id": "webpack.config.loader",
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "import.module"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "@svgr/webpack",
+      "awesome-typescript-loader",
+      "babel-loader",
+      "cache-loader",
+      "coffee-loader",
+      "css-loader",
+      "ejs-loader",
+      "esbuild-loader",
+      "expose-loader",
+      "exports-loader",
+      "file-loader",
+      "handlebars-loader",
+      "html-loader",
+      "ignore-loader",
+      "image-webpack-loader",
+      "imports-loader",
+      "json-loader",
+      "less-loader",
+      "markdown-loader",
+      "null-loader",
+      "postcss-loader",
+      "pug-loader",
+      "raw-loader",
+      "sass-loader",
+      "script-loader",
+      "source-map-loader",
+      "style-loader",
+      "stylus-loader",
+      "svelte-loader",
+      "svg-inline-loader",
+      "swc-loader",
+      "thread-loader",
+      "ts-loader",
+      "url-loader",
+      "val-loader",
+      "vue-loader",
+      "worker-loader",
+      "yaml-loader"
+     ]
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/webpack.*"
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "BuildConfig",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:config:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
       },
-      "declaration_only": true,
-      "resolved_package": false
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Loader",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:loader:{definition.name}"
+     },
+     "attributes": {
+      "loader": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_loader",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "webpack:config:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "webpack:loader:{definition.name}"
+     },
+     "attributes": {
+      "loader": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "high",
+   "coverage_note": "Which loaders transform source in this build - babel-loader, ts-loader, sass-loader, vue-loader. The loader name inside module.rules[].use is a bare string in an object literal and no Pack emits it, so the import of the loader package is the one statement of the same fact that survives."
+  },
+  {
+   "id": "webpack.config.plugin-package",
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "import.module"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "@pmmmwh/react-refresh-webpack-plugin",
+      "@sentry/webpack-plugin",
+      "@vue/preload-webpack-plugin",
+      "case-sensitive-paths-webpack-plugin",
+      "circular-dependency-plugin",
+      "clean-webpack-plugin",
+      "compression-webpack-plugin",
+      "copy-webpack-plugin",
+      "css-minimizer-webpack-plugin",
+      "dotenv-webpack",
+      "duplicate-package-checker-webpack-plugin",
+      "eslint-webpack-plugin",
+      "fork-ts-checker-webpack-plugin",
+      "friendly-errors-webpack-plugin",
+      "html-webpack-harddisk-plugin",
+      "html-webpack-plugin",
+      "image-minimizer-webpack-plugin",
+      "mini-css-extract-plugin",
+      "moment-locales-webpack-plugin",
+      "node-polyfill-webpack-plugin",
+      "optimize-css-assets-webpack-plugin",
+      "preload-webpack-plugin",
+      "speed-measure-webpack-plugin",
+      "stylelint-webpack-plugin",
+      "terser-webpack-plugin",
+      "tsconfig-paths-webpack-plugin",
+      "webpack-bundle-analyzer",
+      "webpack-manifest-plugin",
+      "webpack-pwa-manifest",
+      "webpack-subresource-integrity",
+      "workbox-webpack-plugin"
+     ]
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/webpack.*"
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "BuildConfig",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:config:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "PluginPackage",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:plugin-package:{definition.name}"
+     },
+     "attributes": {
+      "package": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "framework": "webpack"
      }
     },
     {
@@ -120,1337 +330,665 @@
      "relation_kind": "uses_plugin",
      "source": {
       "kind": "by_canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:config:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:plugin-declaration:{path}:{constructor_name}"
+      "template": "webpack:plugin-package:{definition.name}"
      },
      "attributes": {
-      "declaration_only": true,
-      "execution_not_claimed": true,
-      "resolved_package_not_claimed": true
+      "package": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     }
    ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate",
-   "coverage_note": "Only direct new Identifier() plugin declarations authored in module.exports.plugins inside webpack.config.js/cjs; variables, spreads, member constructors, loaders, plugin execution and package resolution remain outside this rule."
+   "evidence_class": "observed",
+   "confidence": "high",
+   "coverage_note": "Which published webpack plugins this build depends on, named by their package rather than by their exported class. This is the half of the plugin question that answers 'what do I have to install'; webpack.config.plugin-instance answers 'what is actually constructed'."
   },
   {
-   "id": "webpack.config.entry-string",
-   "snapshot": true,
+   "id": "webpack.config.plugin-instance",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "entry"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
+     "value": "call.constructor"
     },
     {
      "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
+     "pattern": "**/webpack.*"
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "BuildProject",
+     "entity_kind": "BuildConfig",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:config:{path}"
      },
      "attributes": {
-      "path": {
+      "file": {
        "kind": "field_ref",
        "field": "path"
-      }
+      },
+      "framework": "webpack"
      }
     },
     {
      "kind": "entity_candidate",
-     "entity_kind": "BuildTarget",
+     "entity_kind": "Plugin",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:build-target:{path}:{value}"
+      "template": "webpack:plugin:{definition.name}"
      },
      "attributes": {
-      "entry": {
+      "plugin": {
        "kind": "field_ref",
-       "field": "value"
-      }
+       "field": "definition.name"
+      },
+      "framework": "webpack"
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "contains",
+     "relation_kind": "uses_plugin",
      "source": {
       "kind": "by_canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:config:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:build-target:{path}:{value}"
+      "template": "webpack:plugin:{definition.name}"
      },
-     "attributes": {}
+     "attributes": {
+      "plugin": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
     }
    ],
    "evidence_class": "observed",
-   "confidence": "exact"
+   "confidence": "exact",
+   "coverage_note": "Which plugins this build actually constructs. Every entry of webpack's plugins array is a `new X(...)`, and the Pack names the constructor of a member expression by its property, so `new webpack.DefinePlugin({...})` is stated as DefinePlugin exactly like `new HtmlWebpackPlugin({...})`. This is the single most asked question about a webpack config and it is answerable without any object-literal fact."
   },
   {
-   "id": "webpack.config.output-filename",
-   "snapshot": true,
+   "id": "webpack.config.extends",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
+     "value": "import.module"
     },
     {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
+     "kind": "field_prefix",
+     "field": "definition.name",
+     "value": "./webpack."
     },
     {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
+     "kind": "path_glob",
+     "pattern": "**/webpack.*"
     },
     {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "BuildConfig",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:config:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ConfigModule",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:config-module:{definition.name}"
+     },
+     "attributes": {
+      "specifier": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "extends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "webpack:config:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "webpack:config-module:{definition.name}"
+     },
+     "attributes": {
+      "specifier": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "high",
+   "coverage_note": "Which base configuration a per-environment config is built on: webpack.dev.js requiring ./webpack.common.js is the webpack-merge convention. The target is keyed by the specifier as written because the Pack states the specifier and not the file it resolves to, so this edge names the base config module rather than its artifact."
+  },
+  {
+   "id": "webpack.config.computed-setting",
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.method"
     },
     {
      "kind": "field_in",
-     "field": "key",
+     "field": "definition.name",
      "values": [
+      "assetModuleFilename",
+      "cache",
+      "cacheGroups",
+      "chunkFilename",
+      "chunkIds",
+      "context",
+      "devServer",
+      "devtool",
+      "devtoolModuleFilenameTemplate",
+      "entry",
+      "experiments",
+      "exclude",
+      "externals",
       "filename",
-      "path"
+      "include",
+      "infrastructureLogging",
+      "library",
+      "loader",
+      "mode",
+      "module",
+      "moduleIds",
+      "onAfterSetupMiddleware",
+      "onBeforeSetupMiddleware",
+      "onListening",
+      "optimization",
+      "output",
+      "performance",
+      "plugins",
+      "proxy",
+      "publicPath",
+      "resolve",
+      "resolveLoader",
+      "runtimeChunk",
+      "setupMiddlewares",
+      "snapshot",
+      "splitChunks",
+      "stats",
+      "target",
+      "test",
+      "watchOptions"
      ]
     },
     {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
      "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
+     "pattern": "**/webpack.*"
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "BuildOutput",
+     "entity_kind": "BuildConfig",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:build-output:{path}:{key}:{value}"
+      "template": "webpack:config:{path}"
      },
      "attributes": {
-      "kind": {
+      "file": {
        "kind": "field_ref",
-       "field": "key"
+       "field": "path"
       },
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
+      "framework": "webpack"
      }
     },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "produces",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "webpack:build-project:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:build-output:{path}:{key}:{value}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.generic-api-call.webpack",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.target_candidate"
-    },
-    {
-     "kind": "external_path_matches",
-     "package": "webpack"
-    },
-    {
-     "kind": "field_present",
-     "field": "source.start"
-    }
-   ],
-   "guards": [],
-   "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ApiUse",
+     "entity_kind": "BuildSetting",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:api-use:{path}:{source.start}"
+      "template": "webpack:setting:{path}:{definition.name}"
      },
      "attributes": {
-      "package": "webpack",
-      "source_only": true
+      "option": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "webpack"
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "uses_api",
+     "relation_kind": "configured_by",
      "source": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "webpack:config:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:api-use:{path}:{source.start}"
+      "template": "webpack:setting:{path}:{definition.name}"
      },
      "attributes": {
-      "package": "webpack",
-      "source_only": true
+      "option": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+   "confidence": "medium",
+   "coverage_note": "Which build options this configuration computes at build time rather than stating as a constant - `entry() {...}`, `filename: (pathData) => ...`, `setupMiddlewares(middlewares, server) {...}`. The Pack emits definition.method for a function-valued property of an object literal, so a function-valued webpack option is reachable where a string-valued one is not; this is where an agent looks when the value of an option is not in the file."
   },
   {
-   "id": "webpack.generic-dependency.webpack",
-   "snapshot": true,
+   "id": "webpack.toolchain.dependency",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "import.target_candidate"
+     "value": "import.module"
     },
     {
-     "kind": "external_path_matches",
-     "package": "webpack"
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "webpack",
+      "webpack-chain",
+      "webpack-cli",
+      "webpack-dev-middleware",
+      "webpack-dev-server",
+      "webpack-hot-middleware",
+      "webpack-merge",
+      "webpack-sources",
+      "webpack-virtual-modules"
+     ]
     },
     {
-     "kind": "field_present",
-     "field": "source.start"
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "WebpackFile",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:file:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "webpack"
+     }
+    },
     {
      "kind": "entity_candidate",
      "entity_kind": "Dependency",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:dependency:webpack"
+      "template": "webpack:package:{definition.name}"
      },
      "attributes": {
-      "package": "webpack",
-      "source_only": true
+      "package": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     },
     {
      "kind": "relation_candidate",
      "relation_kind": "depends_on",
      "source": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "webpack:file:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:dependency:webpack"
+      "template": "webpack:package:{definition.name}"
      },
      "attributes": {
-      "package": "webpack",
-      "source_only": true
+      "package": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     }
    ],
-   "evidence_class": "structurally_derived",
+   "evidence_class": "observed",
    "confidence": "exact",
-   "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+   "coverage_note": "Which files use webpack as a library rather than as a command - a programmatic build script, a dev-server wrapper, a custom plugin importing webpack-sources, a config composed with webpack-merge. Deliberately not restricted to webpack.* paths, because that is exactly the set this rule is for."
   },
   {
-   "id": "webpack.config.mode",
-   "snapshot": true,
+   "id": "webpack.runtime.hot",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
+     "value": "import.module"
     },
     {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
+     "kind": "field_prefix",
+     "field": "definition.name",
+     "value": "webpack/hot"
     },
     {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "mode"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "BuildMode",
+     "entity_kind": "WebpackFile",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:mode:{value}:{path}"
+      "template": "webpack:file:{path}"
      },
      "attributes": {
-      "value": {
+      "file": {
        "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:mode:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.config.devtool",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "devtool"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:devtool:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:devtool:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.config.target",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "target"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildTarget",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:target:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:target:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.config.context",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "context"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildContext",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:context:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:context:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.filename",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "filename"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output:filename:{value}:{path}"
-     },
-     "attributes": {
-      "key": "filename",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:output:filename:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.path",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "path"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output:path:{value}:{path}"
-     },
-     "attributes": {
-      "key": "path",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:output:path:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.publicpath",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "publicPath"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output:publicPath:{value}:{path}"
-     },
-     "attributes": {
-      "key": "publicPath",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:output:publicPath:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.chunkfilename",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "chunkFilename"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output:chunkFilename:{value}:{path}"
-     },
-     "attributes": {
-      "key": "chunkFilename",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "webpack:output:chunkFilename:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.config.name",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "name"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:name:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "name",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
+       "field": "path"
       },
-      "source_only": true
+      "framework": "webpack"
      }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.config.externalstype",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_object_string_context"
     },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "externalsType"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
+     "entity_kind": "WebpackApi",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:externalstype:{path}:{source.start}"
+      "template": "webpack:api:hot-module-replacement"
      },
      "attributes": {
-      "key": "externalsType",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.assetmodulefilename",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "assetModuleFilename"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output-assetmodulefilename:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "assetModuleFilename",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.librarytarget",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "libraryTarget"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output-librarytarget:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "libraryTarget",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.output.globalobject",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "output"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "globalObject"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "OutputSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:output-globalobject:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "globalObject",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "webpack.config.resolve.alias",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_three_level_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "resolve"
-    },
-    {
-     "kind": "field_equals",
-     "field": "middle_key",
-     "value": "alias"
-    },
-    {
-     "kind": "field_present",
-     "field": "key"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Alias",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "webpack:alias:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "key"
-      },
-      "target": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
+      "api": "hot-module-replacement",
+      "framework": "webpack"
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "configured_by",
+     "relation_kind": "uses_api",
      "source": {
       "kind": "by_canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:file:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:alias:{path}:{key}:{value}"
+      "template": "webpack:api:hot-module-replacement"
      },
      "attributes": {
-      "source_only": true
+      "specifier": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     }
    ],
-   "evidence_class": "structurally_derived",
+   "evidence_class": "observed",
    "confidence": "exact",
-   "coverage_note": "Authored module.exports.resolve.alias literal string entry; filesystem/package resolution is not inferred."
+   "coverage_note": "Which entry points opt into hot module replacement, from the webpack/hot/dev-server and webpack/hot/only-dev-server runtime entries a config or entry file pulls in. `module.hot.accept()` itself is not reachable - the Pack names a method call by its property, and `accept` alone is too common to key on."
   },
   {
-   "id": "webpack.config.module-rule.loader",
-   "snapshot": true,
+   "id": "webpack.plugin.class",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_array_object_field_context"
+     "value": "definition.method"
     },
     {
      "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
+     "field": "definition.name",
+     "value": "apply"
     },
     {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "array_key",
-     "value": "rules"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "item_key",
-     "values": [
-      "loader",
-      "use"
+     "kind": "fact_join_by_span",
+     "fact_kind": "scope.class_body",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls",
+     "where": [
+      {
+       "kind": "field_present",
+       "field": "definition.name"
+      }
      ]
     },
     {
-     "kind": "field_present",
-     "field": "item_value"
+     "kind": "fact_join_by_field",
+     "fact_kind": "call.method",
+     "current_field": "path",
+     "join_field": "path",
+     "same_path": true,
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "tap",
+        "tapAsync",
+        "tapPromise"
+       ]
+      }
+     ],
+     "bind": "tap"
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "LoaderConfig",
+     "entity_kind": "WebpackPlugin",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:loader-config:{path}:{source.start}:{item_key}"
+      "template": "webpack:plugin-class:{cls.definition.name}"
      },
      "attributes": {
-      "key": {
+      "plugin": {
        "kind": "field_ref",
-       "field": "item_key"
+       "field": "cls.definition.name"
       },
-      "value_expression": {
+      "file": {
        "kind": "field_ref",
-       "field": "item_value"
-      }
+       "field": "path"
+      },
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "WebpackApi",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:api:plugin-interface"
+     },
+     "attributes": {
+      "api": "plugin-interface",
+      "framework": "webpack"
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "configured_by",
+     "relation_kind": "implements",
      "source": {
       "kind": "by_canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:plugin-class:{cls.definition.name}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:loader-config:{path}:{source.start}:{item_key}"
+      "template": "webpack:api:plugin-interface"
      },
      "attributes": {
-      "evidence": "module_rules_authored_loader_config"
+      "method": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored module.rules[] loader/use expression; loader package resolution and execution remain external/build semantics."
+   "confidence": "high",
+   "coverage_note": "Which classes in this repository are webpack plugins. A webpack plugin is a class with an `apply(compiler)` method that taps a hook; the span join to the enclosing class body names the class without any Pack field, and the same-file tap/tapAsync/tapPromise call is what separates a real plugin from any other class that happens to define `apply`."
   },
   {
-   "id": "webpack.config.module-rule.setting",
-   "snapshot": true,
+   "id": "webpack.plugin.hook",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_assignment_export_nested_object_array_object_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_identifier",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_property",
-     "value": "exports"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "array_key",
-     "value": "rules"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/webpack.config.*"
+     "value": "call.method"
     },
     {
      "kind": "field_in",
-     "field": "item_key",
+     "field": "definition.name",
      "values": [
-      "test",
-      "include",
-      "exclude",
-      "type",
-      "issuer",
-      "enforce",
-      "sideEffects",
-      "resource",
-      "resourceQuery",
-      "resourceFragment",
-      "dependency"
+      "tap",
+      "tapAsync",
+      "tapPromise"
      ]
     },
     {
-     "kind": "field_present",
-     "field": "item_value"
+     "kind": "fact_join_by_span",
+     "fact_kind": "scope.function_body",
+     "relation": "within",
+     "same_path": true,
+     "bind": "applyfn",
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "apply"
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "scope.class_body",
+     "relation": "within",
+     "same_path": true,
+     "bind": "cls",
+     "where": [
+      {
+       "kind": "field_present",
+       "field": "definition.name"
+      }
+     ]
+    },
+    {
+     "kind": "path_segment",
+     "exclude": [
+      "node_modules"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ModuleRuleSetting",
+     "entity_kind": "WebpackPlugin",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "webpack:module-rule-setting:{path}:{source.start}:{item_key}"
+      "template": "webpack:plugin-class:{cls.definition.name}"
      },
      "attributes": {
-      "key": {
+      "plugin": {
        "kind": "field_ref",
-       "field": "item_key"
+       "field": "cls.definition.name"
       },
-      "value_expression": {
+      "file": {
        "kind": "field_ref",
-       "field": "item_value"
-      }
+       "field": "path"
+      },
+      "framework": "webpack"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "WebpackApi",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "webpack:api:compiler-hooks"
+     },
+     "attributes": {
+      "api": "compiler-hooks",
+      "framework": "webpack"
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "configured_by",
+     "relation_kind": "uses_api",
      "source": {
       "kind": "by_canonical_key",
-      "template": "webpack:build-project:{path}"
+      "template": "webpack:plugin-class:{cls.definition.name}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "webpack:module-rule-setting:{path}:{source.start}:{item_key}"
+      "template": "webpack:api:compiler-hooks"
      },
      "attributes": {
-      "evidence": "module_rules_authored_setting"
+      "tap": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
      }
     }
    ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored module.rules[] field expression; regex/value semantics and build matching are not evaluated."
+   "evidence_class": "observed",
+   "confidence": "high",
+   "coverage_note": "Where a plugin registers itself on the compiler, and how - tap, tapAsync or tapPromise. Both span joins are required so the key this rule mints carries the same conditions as webpack.plugin.class: a tap inside an apply() inside a named class. The hook name itself (compiler.hooks.emit) is not reachable, because hooks.emit is a member expression and not a call, so no Pack emits it."
   }
  ],
  "coverage": {
   "mode": "explicit-classified",
   "gaps": [
-   "plugin constructor/package resolution, nested loader option graphs, spreads/functions and computed config require generic import/value provenance; authored module.rules[] loader/use/common rule fields, resolve aliases and direct entry/output/scalar settings are materialized",
-   "runtime plugin/loader execution and emitted module graph are build/runtime semantics"
+   "Scalar webpack options - mode, devtool, target, entry strings, output.filename, resolve.alias, module.rules[].test and the loader strings inside use[] - are properties of an object literal with a string value, and no JavaScript or TypeScript Pack emits a fact for one. Only function-valued options are reachable, through definition.method.",
+   "webpack.config.extends names the base config by its specifier as written; the Pack does not resolve an import specifier to an artifact path, so the edge stops at the module rather than the file.",
+   "Runtime build behaviour - the emitted module graph, chunk splitting, hook execution order - is build/runtime semantics and outside a static source contract."
   ]
  },
  "provenance": [

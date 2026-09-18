@@ -280,3 +280,51 @@ the largest language family Omega has.
 
 Totals: **1 059 -> 982 overlay rules; 757 -> 630 that cannot match.** Fifteen
 frameworks are clean.
+
+---
+
+# Framework wave 4 (caddyfile, tokio, spring-boot, unreal-engine, webpack)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-caddyfile | 28 -> 16 | 0 | 16 |
+| omega-framework-tokio | 27 -> 14 | 0 | 14 |
+| omega-framework-spring-boot | 27 -> 12 | 0 | 12 |
+| omega-framework-unreal-engine | 24 -> 19 | 0 | 19* |
+| omega-framework-webpack | 21 -> 10 | 0 | 10 |
+
+127 rules became 71. omega-caddyfile is the clean case: 21 per-directive rules,
+each declaring an entity kind that only named its own directive, became one
+generic Directive rule plus four operand-bearing ones that each answer a
+distinct question -- where does this site proxy to, which directory is served,
+how is TLS provisioned, which path does this handler serve.
+
+## *unreal-engine is not done, and the reason is a Pack limitation
+
+Its review found two things, both measured with `dump_call_emissions` rather
+than argued:
+
+**The file's own `coverage.gaps` was false.** It asserted that `UCLASS`,
+`UPROPERTY` and `GENERATED_BODY` are bare macro invocations that omega-cpp
+emits no fact for. They arrive as `call.function` named exactly that, which is
+the one thing in an Unreal header the Pack does see.
+
+**And the canonical Unreal class emits nothing.** For
+
+```cpp
+class MYGAME_API AHero : public ACharacter { GENERATED_BODY() int Health; };
+```
+
+the Pack emits `reference.type MYGAME_API` and `call.function GENERATED_BODY`,
+and no `definition.class`, no `definition.struct`, no `relation.implements`. The
+export macro between `class` and the name defeats tree-sitter-cpp. 13 of the 19
+rules join a class, so they match nothing in real Unreal code while the audit
+reports them live.
+
+That is `OWED.md` item 8, and it is not an Unreal peculiarity: `class
+EXPORT_MACRO Name` is how every C++ library that ships a DLL declares a public
+class. omega-framework-unreal-engine goes back through a wave, to be written
+against the macros that do emit.
+
+Totals: **982 -> 926 overlay rules; 630 -> 503 that cannot match.** Twenty
+frameworks are clean.

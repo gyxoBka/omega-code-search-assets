@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 3. Numbers come from
+Last updated after framework wave 4. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -32,6 +32,7 @@ different map.**
 | omega-javascript, omega-typescript, omega-tsx | `binding.import_alias`, `import.symbol` | `qualifier` | node-js |
 | omega-javascript, omega-typescript, omega-tsx | `import.symbol` | `module` — the specifier the symbol came from | react |
 | omega-python | `call.function`, `call.method` | the call's first string-or-identifier argument | django |
+| omega-caddyfile | `definition.config_matcher_condition` | `operand` — what the condition tests for | caddyfile |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
@@ -119,7 +120,7 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-40 of 55 frameworks still hold rules that cannot match: **630 of 982**. The
+35 of 55 frameworks still hold rules that cannot match: **503 of 926**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -159,3 +160,30 @@ fails regardless of scoping.
 
 This is the same `qualifier` row already in item 1, now known to be load-bearing
 for the whole `external.*` mechanism in the largest language family Omega has.
+
+---
+
+## 8. omega-cpp does not see a class declared with a module API macro
+
+Measured with `dump_call_emissions` over `packs/omega-cpp` on a canonical
+Unreal header:
+
+```cpp
+class MYGAME_API AHero : public ACharacter { GENERATED_BODY() int Health; };
+struct MYGAME_API FRow : public FTableRowBase { GENERATED_BODY() int V; };
+```
+
+Total emissions for both declarations: `reference.type MYGAME_API` twice and
+`call.function GENERATED_BODY` twice. **No `definition.class`, no
+`definition.struct`, no `relation.implements`.** The export macro between
+`class` and the name defeats tree-sitter-cpp, and with it every rule that joins
+a class — 13 of omega-framework-unreal-engine's 19.
+
+`class EXPORT_MACRO Name` is not an Unreal peculiarity: it is how every C++
+library that ships a DLL declares a public class (`MYLIB_API`, `CORE_EXPORT`,
+`__declspec(dllexport)` behind a macro).
+
+**Done looks like:** omega-cpp declaring the class in that shape, or a guard
+saying it cannot and why. Until then the Unreal overlay is written against the
+macros that do emit — `UCLASS`, `UPROPERTY`, `GENERATED_BODY` arrive as
+`call.function` — rather than against the class.

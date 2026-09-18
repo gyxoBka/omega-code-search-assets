@@ -11,11 +11,8 @@
       "omega-caddyfile"
     ],
     "required_capabilities": [
-      "calls",
-      "data",
       "definitions",
-      "references",
-      "scopes"
+      "references"
     ]
   },
   "evidence_inputs": [
@@ -26,23 +23,17 @@
   ],
   "emits": {
     "entities": [
-      "AuthPolicy",
-      "Encoding",
-      "HandlerBlock",
-      "HeaderPolicy",
-      "Import",
-      "LogConfig",
-      "Mapping",
+      "CaddyConfig",
+      "Directive",
+      "EnvVar",
+      "MatchCondition",
       "Matcher",
-      "MetricsConfig",
-      "Redirect",
-      "RequestBodyPolicy",
-      "Response",
+      "PathMatcher",
       "Rewrite",
       "Route",
       "ServerBlock",
+      "Snippet",
       "StaticRoot",
-      "StaticService",
       "TlsConfig",
       "Upstream"
     ],
@@ -57,52 +48,183 @@
   },
   "rules": [
     {
-      "id": "caddy.server_block",
-      "snapshot": true,
+      "id": "caddy.site",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.site"
-        },
-        {
-          "kind": "field_present",
-          "value": "definition.name"
+          "value": "definition.config_site"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "ServerBlock",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:server:{definition.name}"
+            "template": "caddy:site:{path}:{definition.name}"
           },
           "attributes": {
             "address": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:site:{path}:{definition.name}"
+          },
+          "attributes": {}
         }
       ],
-      "evidence_class": "observed",
+      "evidence_class": "structurally_derived",
       "confidence": "exact"
     },
     {
-      "id": "caddy.route",
-      "snapshot": true,
+      "id": "caddy.snippet",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.route"
-        },
-        {
-          "kind": "field_present",
-          "value": "definition.name"
+          "value": "definition.config_snippet"
         }
       ],
-      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Snippet",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:snippet:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:snippet:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.import",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_directive",
+          "current_field": "path",
+          "join_field": "path",
+          "bind": "caddyfile"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:snippet:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.named_route",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_route"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_directive",
+          "current_field": "path",
+          "join_field": "path",
+          "bind": "caddyfile"
+        }
+      ],
       "outputs": [
         {
           "kind": "entity_candidate",
@@ -115,80 +237,128 @@
             "name": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:route:{definition.name}"
+          },
+          "attributes": {}
         }
       ],
-      "evidence_class": "observed",
-      "confidence": "candidate"
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
     },
     {
-      "id": "caddy.matcher",
-      "snapshot": true,
+      "id": "caddy.route_invoke",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.matcher"
+          "value": "reference.route"
         },
         {
-          "kind": "field_present",
-          "value": "definition.name"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_site",
+          "relation": "within",
+          "same_path": true,
+          "bind": "site"
         }
       ],
-      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:site:{path}:{site.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:route:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.matcher",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_matcher"
+        }
+      ],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Matcher",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:matcher:{definition.name}"
+            "template": "caddy:matcher:{path}:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.site_contains_matcher",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "caddy_site_matcher"
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
         },
-        {
-          "kind": "field_present",
-          "field": "site"
-        },
-        {
-          "kind": "field_present",
-          "field": "matcher"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "relation_candidate",
           "relation_kind": "contains",
           "source": {
             "kind": "by_canonical_key",
-            "template": "caddy:server:{site}"
+            "template": "caddy:config:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "caddy:matcher:{matcher}"
+            "template": "caddy:matcher:{path}:{definition.name}"
           },
           "attributes": {}
         }
@@ -197,45 +367,211 @@
       "confidence": "exact"
     },
     {
-      "id": "caddy.site_reverse_proxy",
-      "snapshot": true,
+      "id": "caddy.matcher_condition",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
+          "value": "definition.config_matcher_condition"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "caddy_site_directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "reverse_proxy"
-        },
-        {
-          "kind": "field_present",
-          "field": "site"
-        },
-        {
-          "kind": "field_present",
-          "field": "upstream"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_matcher",
+          "relation": "within",
+          "same_path": true,
+          "bind": "matcher"
         }
       ],
-      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MatchCondition",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:match_condition:{path}:{source.start}"
+          },
+          "attributes": {
+            "test": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:matcher:{path}:{matcher.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:match_condition:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.matcher_use",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.matcher"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_directive",
+          "relation": "within",
+          "same_path": true,
+          "bind": "handler"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_resource",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{handler.source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:matcher:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.directive",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_directive"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Directive",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:directive:{path}:{source.start}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.site_directive",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_directive"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_site",
+          "relation": "within",
+          "same_path": true,
+          "bind": "site"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "caddy:site:{path}:{site.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "caddy.upstream",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_directive"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "php_fastcgi",
+            "reverse_proxy"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.parameter_shape_candidate",
+          "relation": "same",
+          "same_path": true,
+          "bind": "arg"
+        }
+      ],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Upstream",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:upstream:{upstream}"
+            "template": "caddy:upstream:{arg.definition.name}"
           },
           "attributes": {
-            "target": {
+            "address": {
               "kind": "field_ref",
-              "field": "upstream"
+              "field": "arg.definition.name"
             }
           }
         },
@@ -244,11 +580,11 @@
           "relation_kind": "proxies_to",
           "source": {
             "kind": "by_canonical_key",
-            "template": "caddy:server:{site}"
+            "template": "caddy:directive:{path}:{source.start}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "caddy:upstream:{upstream}"
+            "template": "caddy:upstream:{arg.definition.name}"
           },
           "attributes": {}
         }
@@ -257,228 +593,41 @@
       "confidence": "exact"
     },
     {
-      "id": "caddy.route_reverse_proxy",
-      "snapshot": true,
+      "id": "caddy.static_root",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "caddy_route_directive"
+          "value": "definition.config_directive"
         },
         {
           "kind": "field_equals",
-          "field": "directive_name",
-          "value": "reverse_proxy"
-        },
-        {
-          "kind": "field_present",
-          "field": "route"
-        },
-        {
-          "kind": "field_present",
-          "field": "upstream"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Upstream",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:upstream:{upstream}"
-          },
-          "attributes": {
-            "target": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "proxies_to",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "caddy:route:{route}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:upstream:{upstream}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "caddy.route_handles_matcher",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "caddy_route_matcher"
-        },
-        {
-          "kind": "field_present",
-          "field": "route"
-        },
-        {
-          "kind": "field_present",
-          "field": "matcher"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "caddy:route:{route}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:matcher:{matcher}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "caddy.directive.import",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "import"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Import",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:import:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "import",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:import:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.include",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "include"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Import",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:import:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "include",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:import:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
+          "field": "definition.name",
           "value": "root"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.parameter_shape_candidate",
+          "relation": "same",
+          "same_path": true,
+          "bind": "arg"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "StaticRoot",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:staticroot:{path}:{source.start}"
+            "template": "caddy:static_root:{path}:{source.start}"
           },
           "attributes": {
-            "directive": "root",
-            "argument": {
+            "directory": {
               "kind": "field_ref",
-              "field": "upstream"
+              "field": "arg.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -486,93 +635,55 @@
           "kind": "relation_candidate",
           "relation_kind": "uses_resource",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{source.start}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "caddy:staticroot:{path}:{source.start}"
+            "template": "caddy:static_root:{path}:{source.start}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     },
     {
-      "id": "caddy.directive.file-server",
-      "snapshot": true,
+      "id": "caddy.tls",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.directive"
+          "value": "definition.config_directive"
         },
         {
           "kind": "field_equals",
-          "field": "directive_name",
-          "value": "file_server"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StaticService",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:staticservice:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "file_server",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:staticservice:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.tls",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
+          "field": "definition.name",
           "value": "tls"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.parameter_shape_candidate",
+          "relation": "same",
+          "same_path": true,
+          "bind": "arg"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "TlsConfig",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:tlsconfig:{path}:{source.start}"
+            "template": "caddy:tls:{path}:{source.start}"
           },
           "attributes": {
-            "directive": "tls",
-            "argument": {
+            "subject": {
               "kind": "field_ref",
-              "field": "upstream"
+              "field": "arg.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -580,80 +691,42 @@
           "kind": "relation_candidate",
           "relation_kind": "configured_by",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{source.start}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "caddy:tlsconfig:{path}:{source.start}"
+            "template": "caddy:tls:{path}:{source.start}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     },
     {
-      "id": "caddy.directive.redir",
-      "snapshot": true,
+      "id": "caddy.url_rewrite",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.directive"
+          "value": "definition.config_directive"
         },
         {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "redir"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Redirect",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:redirect:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "redir",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "redir",
+            "rewrite"
+          ]
         },
         {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:redirect:{path}:{source.start}"
-          },
-          "attributes": {}
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.parameter_shape_candidate",
+          "relation": "same",
+          "same_path": true,
+          "bind": "arg"
         }
       ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.rewrite",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "rewrite"
-        }
-      ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
@@ -663,18 +736,26 @@
             "template": "caddy:rewrite:{path}:{source.start}"
           },
           "attributes": {
-            "directive": "rewrite",
-            "argument": {
+            "directive": {
               "kind": "field_ref",
-              "field": "upstream"
+              "field": "definition.name"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "arg.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "handles",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{source.start}"
           },
           "target": {
             "kind": "by_canonical_key",
@@ -684,665 +765,112 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     },
     {
-      "id": "caddy.directive.respond",
-      "snapshot": true,
+      "id": "caddy.handler_path",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.directive"
+          "value": "definition.config_path"
         },
         {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "respond"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_directive",
+          "relation": "within",
+          "same_path": true,
+          "bind": "handler"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Response",
+          "entity_kind": "PathMatcher",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:response:{path}:{source.start}"
+            "template": "caddy:path:{path}:{definition.name}"
           },
           "attributes": {
-            "directive": "respond",
-            "argument": {
+            "pattern": {
               "kind": "field_ref",
-              "field": "upstream"
+              "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "handles",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "caddy:directive:{path}:{handler.source.start}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "caddy:response:{path}:{source.start}"
+            "template": "caddy:path:{path}:{definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     },
     {
-      "id": "caddy.directive.encode",
-      "snapshot": true,
+      "id": "caddy.environment",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "encode"
+          "value": "reference.environment"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Encoding",
+          "entity_kind": "EnvVar",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "caddy:encoding:{path}:{source.start}"
+            "template": "caddy:env:{definition.name}"
           },
           "attributes": {
-            "directive": "encode",
-            "argument": {
+            "name": {
               "kind": "field_ref",
-              "field": "upstream"
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CaddyConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "caddy:config:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "uses_resource",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "caddy:config:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "caddy:encoding:{path}:{source.start}"
+            "template": "caddy:env:{definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.log",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "log"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LogConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:logconfig:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "log",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:logconfig:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.header",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "header"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HeaderPolicy",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:headerpolicy:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "header",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:headerpolicy:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.basicauth",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "basicauth"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AuthPolicy",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:authpolicy:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "basicauth",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:authpolicy:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.handle",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "handle"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerBlock",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:handlerblock:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "handle",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:handlerblock:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.handle-path",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "handle_path"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerBlock",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:handlerblock:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "handle_path",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:handlerblock:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.map",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "map"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Mapping",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:mapping:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "map",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:mapping:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.php-fastcgi",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "php_fastcgi"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Upstream",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:upstream:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "php_fastcgi",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "proxies_to",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:upstream:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.handle-errors",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "handle_errors"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerBlock",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:handlerblock:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "handle_errors",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:handlerblock:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.request-body",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "request_body"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RequestBodyPolicy",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:requestbodypolicy:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "request_body",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:requestbodypolicy:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.metrics",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "metrics"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "MetricsConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:metricsconfig:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "metrics",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:metricsconfig:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.vars",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "vars"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Mapping",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:mapping:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "vars",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:mapping:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "caddy.directive.acme-server",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.directive"
-        },
-        {
-          "kind": "field_equals",
-          "field": "directive_name",
-          "value": "acme_server"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "TlsConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "caddy:tlsconfig:{path}:{source.start}"
-          },
-          "attributes": {
-            "directive": "acme_server",
-            "argument": {
-              "kind": "field_ref",
-              "field": "upstream"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "caddy:tlsconfig:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     }
   ],
   "coverage": {
