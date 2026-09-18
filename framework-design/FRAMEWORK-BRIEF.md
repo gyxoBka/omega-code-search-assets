@@ -306,6 +306,32 @@ Use the import join instead. It reaches the same answer in any language:
 keeps `call.method get` from meaning `Map.prototype.get`, and it is the gate
 every rule in a package-scoped Framework should carry.
 
+## 3j. Two idioms for a Pack that publishes nothing, and one thing to check first
+
+**`definition.container` tells you which property a value was written under.**
+Where a Pack spans a container declaration over its members — a `[node …]`
+section over its properties, a class over its fields — the host's synthesized
+container is a free discriminator: `field_equals definition.container script`
+is the whole test for *this reference is the node's script*, and it separates a
+node header's `type=` from a `Vector2(…)` written inside a property value. No
+join, no Pack field.
+
+**A section that declares nothing is grouped by a fact that spans it.** Where a
+Pack emits per-attribute facts with no per-record declaration — Godot's
+`[connection]` has `signal=`, `method=`, `from=` and `to=` as four siblings with
+nothing between them — join `within` whatever fact covers the whole section and
+key on its start offset. Its limit: the span-wide fact covers every sibling
+equally, so the join cannot tell which sibling you are on, and `from=` and `to=`
+stay indistinguishable.
+
+**Check the quotes before you key on a value.** `fact_join_by_field` takes
+`current_strip_prefix` and `join_strip_prefix`; there is no strip_suffix, and a
+canonical key template has no strip at all. A Pack field captured from a raw
+`(string)` node arrives as `"res://player.gd"` with its quote bytes and can
+never meet the unquoted form of the same string — which is how the old godot
+overlay's one live sub-graph ended up joining nothing. If the value you want as
+an identity is quoted, that is a Pack fix, not something to work around.
+
 ## 4. Verification
 
 ```bash

@@ -35,12 +35,14 @@
    "LifecycleHook",
    "ResourceLoad",
    "SceneTransition",
-   "SerializedType"
+   "SerializedType",
+   "UnityType"
   ],
   "relations": [
    "configured_by",
    "depends",
-   "handles"
+   "handles",
+   "implements"
   ]
  },
  "rules": [
@@ -73,21 +75,50 @@
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "GameComponent",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GameComponent",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:component:{cls.definition.name}"
      },
      "attributes": {
       "class": {
        "kind": "field_ref",
        "field": "cls.definition.name"
       },
-      "base": "MonoBehaviour",
       "declared_in": {
        "kind": "field_ref",
        "field": "path"
-      }
+      },
+      "base": "MonoBehaviour"
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "implements",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "unity:component:{cls.definition.name}"
+     },
+     "attributes": {
+      "role": "GameComponent"
      }
     }
    ],
@@ -123,21 +154,50 @@
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "Asset",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Asset",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:scriptable-object:{cls.definition.name}"
      },
      "attributes": {
       "class": {
        "kind": "field_ref",
        "field": "cls.definition.name"
       },
-      "base": "ScriptableObject",
       "declared_in": {
        "kind": "field_ref",
        "field": "path"
-      }
+      },
+      "base": "ScriptableObject"
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "implements",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "unity:scriptable-object:{cls.definition.name}"
+     },
+     "attributes": {
+      "role": "Asset"
      }
     }
    ],
@@ -183,24 +243,53 @@
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "EditorExtension",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "EditorExtension",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:editor-extension:{cls.definition.name}"
      },
      "attributes": {
       "class": {
        "kind": "field_ref",
        "field": "cls.definition.name"
       },
-      "base": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
       "declared_in": {
        "kind": "field_ref",
        "field": "path"
+      },
+      "base": {
+       "kind": "field_ref",
+       "field": "definition.name"
       }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "implements",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "unity:editor-extension:{cls.definition.name}"
+     },
+     "attributes": {
+      "role": "EditorExtension"
      }
     }
    ],
@@ -236,10 +325,24 @@
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "SerializedType",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{cls.definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "cls.definition.name"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "SerializedType",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "unity:serializable-type:{cls.definition.name}"
      },
      "attributes": {
       "class": {
@@ -250,6 +353,21 @@
        "kind": "field_ref",
        "field": "path"
       }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "implements",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "unity:type:{cls.definition.name}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "unity:serializable-type:{cls.definition.name}"
+     },
+     "attributes": {
+      "role": "SerializedType"
      }
     }
    ],
@@ -372,7 +490,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:lifecycle:{cls.definition.name}:{definition.name}"
      },
      "attributes": {
       "phase": {
@@ -463,7 +582,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:coroutine:{cls.definition.name}:{m.definition.name}"
      },
      "attributes": {
       "mode": "coroutine"
@@ -525,13 +645,13 @@
     },
     {
      "kind": "entity_candidate",
-     "entity_kind": "GameComponent",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{definition.name}"
      },
      "attributes": {
-      "class": {
+      "name": {
        "kind": "field_ref",
        "field": "definition.name"
       }
@@ -545,7 +665,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:type:{definition.name}"
      },
      "attributes": {
       "reason": "RequireComponent"
@@ -610,13 +731,13 @@
     },
     {
      "kind": "entity_candidate",
-     "entity_kind": "GameComponent",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{definition.name}"
      },
      "attributes": {
-      "class": {
+      "name": {
        "kind": "field_ref",
        "field": "definition.name"
       }
@@ -630,7 +751,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:type:{definition.name}"
      },
      "attributes": {
       "role": "inspector"
@@ -692,13 +814,13 @@
     },
     {
      "kind": "entity_candidate",
-     "entity_kind": "SerializedType",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{definition.name}"
      },
      "attributes": {
-      "class": {
+      "name": {
        "kind": "field_ref",
        "field": "definition.name"
       }
@@ -712,7 +834,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:type:{definition.name}"
      },
      "attributes": {
       "role": "property_drawer"
@@ -789,7 +912,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:asset-menu:{cls.definition.name}"
      },
      "attributes": {
       "via": "CreateAssetMenu"
@@ -880,7 +1004,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:policy:{cls.definition.name}:{definition.name}"
      },
      "attributes": {
       "via": {
@@ -978,7 +1103,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:inspector-field:{path}:{source.start}"
      },
      "attributes": {
       "via": {
@@ -1055,13 +1181,13 @@
     },
     {
      "kind": "entity_candidate",
-     "entity_kind": "GameComponent",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{definition.name}"
      },
      "attributes": {
-      "class": {
+      "name": {
        "kind": "field_ref",
        "field": "definition.name"
       }
@@ -1075,7 +1201,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:type:{definition.name}"
      },
      "attributes": {
       "via": {
@@ -1144,13 +1271,13 @@
     },
     {
      "kind": "entity_candidate",
-     "entity_kind": "GameComponent",
+     "entity_kind": "UnityType",
      "canonical_key": {
       "kind": "canonical_key",
       "template": "unity:type:{definition.name}"
      },
      "attributes": {
-      "class": {
+      "name": {
        "kind": "field_ref",
        "field": "definition.name"
       }
@@ -1164,7 +1291,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:type:{definition.name}"
      },
      "attributes": {
       "via": {
@@ -1260,7 +1388,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:resources-load:{path}:{source.start}"
      },
      "attributes": {
       "via": "Resources"
@@ -1352,7 +1481,8 @@
       "template": "unity:type:{cls.definition.name}"
      },
      "target": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "unity:scene-transition:{path}:{source.start}"
      },
      "attributes": {
       "via": "SceneManager"

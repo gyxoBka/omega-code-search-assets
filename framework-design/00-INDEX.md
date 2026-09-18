@@ -650,3 +650,72 @@ Folded into the collision wave.
 
 Totals: **785 overlay rules; 168 -> 104 that cannot match.** Only godot (6) and
 pytorch-inductor (5) are left outside the four deferred behind item 7.
+
+---
+
+# Framework wave 11 (godot, pytorch-inductor, unity, unreal-engine, ruby-on-rails)
+
+| Framework | rules | live before | live after | dropped outputs before | after |
+|---|---|---|---|---|---|
+| omega-framework-godot | 9 -> 18 | 3 | 18 | 0 | 0 |
+| omega-framework-ruby-on-rails | 19 -> 19 | 19 | 19 | 10 | 0 |
+| omega-framework-unity | 17 -> 17 | 17 | 17 | 17 | 0 |
+| omega-framework-unreal-engine | 19 -> 19 | 19 | 19 | 12 | 0 |
+| omega-framework-pytorch-inductor | 5 -> 8 | 0 | 8 | 0 | 0 |
+
+The last two frameworks with dead rules outside the deferred four, and the three
+worst key collisions, in one wave. **Zero non-deferred frameworks now hold a rule
+that cannot match**, and dropped entity outputs fall 62 -> 26.
+
+The collision fix came out the same way in all three: the match clauses are
+byte-identical before and after — no rule was deleted and none was narrowed —
+and the change is entirely on the output side. unreal-engine went from 24
+outputs to 50: one neutral kind on the shared `unreal:type:{class}` hub, and
+each classification moved to its own key space (`unreal:actor:`, `unreal:pawn:`,
+`unreal:subsystem:`) with a relation back to the hub. That is brief 3g's second
+remedy, and it keeps both kinds and both attribute sets where the first remedy
+would have kept one.
+
+godot is the wave's real gain: 9 rules to 18, and for the first time a GDScript
+file and the `.tscn` that runs it share keys. `godot:signal:{name}` is minted
+both by a GDScript `signal` statement and by a scene's `[connection signal=…]`;
+`godot:method:{name}` both by a `func` and by a connection's `method=`;
+`godot:class:{name}` by `class_name`, by `extends`, by a node's `type=` and by an
+exported property's declared type. *Which script is attached to this node*,
+*which method runs when this signal fires* and *which scenes place a
+`CharacterBody2D`* are each one or two hops, and no language Pack can state any
+of them.
+
+## Two idioms worth copying, both from godot
+
+**`definition.container` as a discriminator.** Where a Pack spans a container
+declaration over its members, the host's synthesized container names *which
+property a value was written under* with no join and no Pack field:
+`field_equals definition.container script` is the whole test for "this
+`ExtResource` reference is the node's script", and the same field separates a
+node header's `type=` from a `Vector2(…)` written inside a property value. Any
+config-shaped Framework can use it the same way.
+
+**A section that declares nothing is grouped by a fact that spans it.** Godot's
+`[connection]` has `signal=`, `method=`, `from=` and `to=` as four siblings with
+no definition between them, so the grouping comes from joining `within` the
+span-wide `structured.godot_section_attribute_context` and keying on its start
+offset. The limit is worth recording with the idiom: because the span-wide fact
+covers every sibling equally, the join cannot tell which sibling the current
+fact is, so `from=` and `to=` stay indistinguishable.
+
+## A value that carries its quotes cannot be an identity
+
+omega-godot-resource's three overlay-specific templates capture `(string)` nodes
+raw, so `attribute_value`, `resource_path`, `node_name` and `resource_id` all
+arrive as `"res://player.gd"` **with the quote bytes**, while the same Pack's
+`definition.scene_node`, `definition.resource` and `relation.depends` strip
+them. The old godot overlay's one live sub-graph was keyed on the quoted form
+and could therefore never meet any other fact. `fact_join_by_field` takes
+`current_strip_prefix` and `join_strip_prefix`, but there is no strip_suffix and
+no strip at all in a key template — **a Pack value destined for a key has to be
+normalized by the Pack.** Recorded as `OWED.md` item 14.
+
+Totals: **797 overlay rules; 104 -> 93 that cannot match, all 93 in the four
+deferred frameworks.** Key collisions 62 -> 26: vapor 8, swiftui 7, maui 7,
+angular 3, nuxt 1.

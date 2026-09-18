@@ -17,19 +17,24 @@
     ]
   },
   "evidence_inputs": [
+    "existing_language_ir",
+    "imports",
     "calls_members",
-    "existing_language_ir"
+    "references"
   ],
   "emits": {
     "entities": [
-      "CompileConfig",
-      "CompiledFunction",
-      "CompilerModule",
-      "CompileOption"
+      "DynamoDirective",
+      "TorchCompileSite",
+      "TorchCompiledSymbol",
+      "TorchModule",
+      "TorchPackage"
     ],
     "relations": [
-      "configured_by",
-      "configures"
+      "compiles",
+      "configures",
+      "contains",
+      "depends"
     ]
   },
   "rules": [
@@ -39,42 +44,27 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.direct"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package": "torch",
-          "member_prefix": "compile"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "CompilerModule",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "inductor:compile:{source.path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "candidate"
-    },
-    {
-      "id": "inductor.torch-compile",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "torch",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
             "compile"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "torch"
+            }
           ]
         }
       ],
@@ -82,23 +72,419 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "CompiledFunction",
+          "entity_kind": "TorchCompileSite",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pytorch:compiled:{path}:{source.start}"
+            "template": "pytorch:compile-site:{path}:{source.start}"
           },
           "attributes": {
-            "target": {
+            "api": "torch.compile",
+            "applied_in": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "definition.qname"
             },
-            "backend": {
+            "module": {
               "kind": "field_ref",
-              "field": "call.kwarg.backend"
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "torch.compile",
+            "spelling": "attribute-call"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
+    },
+    {
+      "id": "inductor.compile.decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "compile"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "torch"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchCompileSite",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "torch.compile",
+            "applied_in": {
+              "kind": "field_ref",
+              "field": "definition.qname"
             },
-            "mode": {
+            "module": {
               "kind": "field_ref",
-              "field": "call.kwarg.mode"
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "torch.compile",
+            "spelling": "decorator"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "A bare @torch.compile emits only reference.decorator; the parenthesised form emits call.method at the same span, which inductor.compile.call mints under the same key with the same kind and the same attributes."
+    },
+    {
+      "id": "inductor.compile.imported-call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "compile"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.symbol",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "compile"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.from_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "torch"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchCompileSite",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "torch.compile",
+            "applied_in": {
+              "kind": "field_ref",
+              "field": "definition.qname"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "torch.compile",
+            "spelling": "bare-call"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "compile is also a Python builtin, so this requires the same file to carry both an import.symbol named compile and a from-module under torch."
+    },
+    {
+      "id": "inductor.compile.target",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "compile"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "torch"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "holder"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchCompileSite",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": "torch.compile",
+            "applied_in": {
+              "kind": "field_ref",
+              "field": "definition.qname"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchCompiledSymbol",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:symbol:{path}:{holder.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "holder.definition.name"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "compiles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:compile-site:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:symbol:{path}:{holder.definition.name}"
+          },
+          "attributes": {
+            "api": "torch.compile"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "omega-python emits definition.variable for module-level assignments only, so the bound name is stated for `model = torch.compile(...)` at module scope and for nothing inside a function body."
+    },
+    {
+      "id": "inductor.dynamo.call",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "optimize",
+            "optimize_assert",
+            "allow_in_graph",
+            "disallow_in_graph",
+            "mark_dynamic",
+            "mark_static",
+            "mark_static_address",
+            "maybe_mark_dynamic",
+            "graph_break",
+            "assume_constant_result",
+            "list_backends",
+            "register_backend",
+            "is_compiling",
+            "compiled_autograd",
+            "cudagraph_mark_step_begin",
+            "set_stance"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "torch"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DynamoDirective",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:dynamo:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "applied_in": {
+              "kind": "field_ref",
+              "field": "definition.qname"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -106,33 +492,67 @@
           "kind": "relation_candidate",
           "relation_kind": "configures",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "pytorch:dynamo:{path}:{source.start}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pytorch:compiled:{path}:{source.start}"
+            "template": "pytorch:module:{path}"
           },
           "attributes": {
-            "kind": "torch.compile"
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "spelling": "attribute-call"
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high"
     },
     {
-      "id": "inductor.dynamo-optimize",
+      "id": "inductor.dynamo.imported-call",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package": "torch._dynamo",
-          "member_in": [
-            "optimize"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "optimize",
+            "optimize_assert",
+            "allow_in_graph",
+            "disallow_in_graph",
+            "mark_dynamic",
+            "mark_static",
+            "mark_static_address",
+            "maybe_mark_dynamic",
+            "graph_break",
+            "assume_constant_result",
+            "list_backends",
+            "register_backend",
+            "is_compiling",
+            "compiled_autograd",
+            "cudagraph_mark_step_begin",
+            "set_stance"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.from_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "torch._"
+            }
           ]
         }
       ],
@@ -140,225 +560,199 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "CompileConfig",
+          "entity_kind": "DynamoDirective",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "pytorch:dynamo:{path}:{source.start}"
           },
           "attributes": {
-            "backend": {
+            "api": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "definition.name"
+            },
+            "applied_in": {
+              "kind": "field_ref",
+              "field": "definition.qname"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TorchModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "configures",
           "source": {
-            "kind": "current"
-          },
-          "target": {
             "kind": "by_canonical_key",
             "template": "pytorch:dynamo:{path}:{source.start}"
           },
-          "attributes": {}
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pytorch:module:{path}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "spelling": "bare-call"
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high",
+      "coverage_note": "`from torch._dynamo import optimize` then `optimize(...)`; the gate is a from-module under `torch._`, which is where the Dynamo and Inductor entry points live."
     },
     {
-      "id": "inductor.torch-compile.literal-option",
+      "id": "inductor.torch.import",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.python_import_bound_member_call_literal_keyword_context"
+          "value": "import.module"
         },
         {
-          "kind": "field_equals",
-          "field": "module_name",
+          "kind": "field_prefix",
+          "field": "definition.name",
           "value": "torch"
-        },
-        {
-          "kind": "field_equals",
-          "field": "callee_member",
-          "value": "compile"
-        },
-        {
-          "kind": "field_in",
-          "field": "keyword_name",
-          "values": [
-            "backend",
-            "mode"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "binding_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "keyword_string"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "CompiledFunction",
+          "entity_kind": "TorchModule",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+            "template": "pytorch:module:{path}"
           },
           "attributes": {
-            "binding": {
+            "path": {
               "kind": "field_ref",
-              "field": "binding_name"
-            },
-            "source_only": true
+              "field": "path"
+            }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "CompileOption",
+          "entity_kind": "TorchPackage",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pytorch:compile-option:{path}:{binding_name}:{keyword_name}:{source.start}"
+            "template": "pytorch:package:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "keyword_name"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "keyword_string"
-            },
-            "literal": true
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "depends",
           "source": {
             "kind": "by_canonical_key",
-            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+            "template": "pytorch:module:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pytorch:compile-option:{path}:{binding_name}:{keyword_name}:{source.start}"
+            "template": "pytorch:package:{definition.name}"
           },
           "attributes": {
-            "source_only": true
+            "spelling": "import"
           }
         }
       ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Literal backend/mode on an import-proven torch.compile binding is source-exact; backend execution is not inferred."
+      "evidence_class": "observed",
+      "confidence": "high",
+      "coverage_note": "The package entity is named as written, so torch._inductor.config and torch._dynamo are separately addressable: the modules that reach into the Inductor backend are the depends edges into pytorch:package:torch._inductor*."
     },
     {
-      "id": "inductor.torch-compile.identifier-options",
+      "id": "inductor.torch.from-import",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.python_import_bound_member_two_keyword_identifiers_context"
+          "value": "import.from_module"
         },
         {
-          "kind": "field_equals",
-          "field": "module_name",
+          "kind": "field_prefix",
+          "field": "definition.name",
           "value": "torch"
-        },
-        {
-          "kind": "field_equals",
-          "field": "callee_member",
-          "value": "compile"
-        },
-        {
-          "kind": "field_present",
-          "field": "binding_name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.py"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "CompiledFunction",
+          "entity_kind": "TorchModule",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+            "template": "pytorch:module:{path}"
           },
           "attributes": {
-            "binding": {
+            "path": {
               "kind": "field_ref",
-              "field": "binding_name"
-            },
-            "source_only": true
+              "field": "path"
+            }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "CompileConfig",
+          "entity_kind": "TorchPackage",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pytorch:compile-config:{path}:{binding_name}:{source.start}"
+            "template": "pytorch:package:{definition.name}"
           },
           "attributes": {
-            "keyword1": {
+            "name": {
               "kind": "field_ref",
-              "field": "keyword1"
-            },
-            "value1_identifier": {
-              "kind": "field_ref",
-              "field": "value1"
-            },
-            "keyword2": {
-              "kind": "field_ref",
-              "field": "keyword2"
-            },
-            "value2_identifier": {
-              "kind": "field_ref",
-              "field": "value2"
-            },
-            "resolved_values": false
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "depends",
           "source": {
             "kind": "by_canonical_key",
-            "template": "pytorch:compiled-binding:{path}:{binding_name}"
+            "template": "pytorch:module:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pytorch:compile-config:{path}:{binding_name}:{source.start}"
+            "template": "pytorch:package:{definition.name}"
           },
           "attributes": {
-            "source_only": true
+            "spelling": "from-import"
           }
         }
       ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "Identifier-valued torch.compile keyword configuration is preserved as authored configuration without resolving identifier values."
+      "evidence_class": "observed",
+      "confidence": "high"
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "authored torch.compile/torch._dynamo configuration, including literal backend/mode and identifier-valued keyword configuration where host facts preserve it, is materialized; deeper computed option values remain bounded value-flow candidates",
+      "backend= and mode= keyword values on torch.compile are not stated: omega-python emits call.method for the callee name only and publishes no argument fields, so no join reaches a string literal",
+      "a decorator is not linked to the declaration it decorates: tree-sitter-python puts the decorator outside the function_definition node, so neither span direction of fact_join_by_span relates reference.decorator to definition.function",
+      "torch._inductor.config assignments (ind_cfg.max_autotune = True) are not stated: omega-python emits definition.variable only for an identifier left-hand side at module scope",
+      "an aliased compile binding (from torch import compile as tcompile) is matched only where the alias is spelled compile; binding.import_alias carries its target as an attribute, which the overlay cannot read",
       "Inductor IR, graph breaks, lowering, generated kernels and backend-specific runtime compilation are runtime-generated and are not executed"
     ]
   },

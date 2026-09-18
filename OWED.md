@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 10. Numbers come from
+Last updated after framework wave 11. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -125,7 +125,7 @@ kept, because that is the statement the whole framework contract rests on.
 
 ## 6. The framework waves themselves
 
-6 of 55 frameworks still hold rules that cannot match: **104 of 785**, measured with the surface scoped to each framework's own `host.required_packs`. Four of the six are deferred behind item 7; the other two are godot and pytorch-inductor. The
+4 of 55 frameworks still hold rules that cannot match: **93 of 797**, measured with the surface scoped to each framework's own `host.required_packs` — and all four are the ones deferred behind item 7. Every other Framework matches everything it names. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -221,9 +221,9 @@ never sees the descriptor, and `apply_overlay_runs` interns with `or_insert`
 `rule_id` string (`overlay.rs:566`). First rule wins, with its kind **and** its
 attributes; every other rule's output for that key is discarded in silence.
 
-`python pack-design/key_collisions.py` counts **62 dropped entity outputs in 8
-frameworks**: unity 17, unreal-engine 12, ruby-on-rails 10, maui 9, vapor 8,
-swiftui 7, angular 3, nuxt 1.
+`python pack-design/key_collisions.py` counted **62 dropped entity outputs in 8
+frameworks**. Wave 11 closed unity, unreal-engine and ruby-on-rails; **26 remain**,
+listed in item 15.
 
 A shared key with **one** kind is the hub pattern and is correct — it is how a
 relation from another file lands on a type. Several kinds on one key is the
@@ -389,3 +389,53 @@ The audit is fixed. **Done looks like:** one pass over those seven, restoring a
 file-shaped rule wherever the question is about the file and not about a
 declaration in it, with `normalized_file_route` / `normalized_pages_route` used
 in the key as before.
+
+---
+
+## 14. A Pack value that keeps its quote bytes cannot be an identity
+
+omega-godot-resource has three templates written for the overlay —
+`structured.godot_section_attribute_context`,
+`structured.godot_ext_resource_id_path_context`,
+`structured.godot_node_script_ext_resource_context` — and all three capture the
+`(string)` node raw. So `attribute_value`, `resource_path`, `node_name` and
+`resource_id` arrive as `"res://player.gd"`, quotes included, while the same
+Pack's `definition.scene_node`, `definition.resource` and `relation.depends`
+strip them.
+
+The overlay cannot repair it. `fact_join_by_field` takes `current_strip_prefix`
+and `join_strip_prefix`, there is no strip_suffix, and a canonical key template
+has no strip at all. A quoted value therefore cannot be an identity and cannot
+meet the unquoted form of the same string — which is why the old godot overlay's
+one live sub-graph never joined anything.
+
+**The general rule, now in the Pack contract's terms:** a value a Framework will
+key on must be normalized by the Pack that publishes it. The rewrite left those
+three templates read for one thing only (the `[connection]` section's span), so
+four of their five fields are now read by nobody.
+
+**Done looks like:** those templates stripping their strings like the rest of
+the Pack, and the fields nothing reads removed.
+
+---
+
+## 15. Key collisions still open
+
+`python pack-design/key_collisions.py`, after wave 11:
+
+| framework | dropped outputs |
+|---|---|
+| omega-framework-vapor | 8 |
+| omega-framework-swiftui | 7 |
+| omega-framework-maui | 7 |
+| omega-framework-angular | 3 |
+| omega-framework-nuxt | 1 |
+
+And one across Frameworks, which interning treats identically:
+`http:*:{normalized_file_route}` is minted as `Route` by astro, next-js and
+nuxt — a shared key space is the point — and as `ServerRoute` by
+`nuxt.server.route`, which is the defect. Either a Nitro server route is a
+`Route` with an attribute saying so, or it needs its own key space.
+
+**Done looks like:** `key_collisions.py` silent on both counts. angular is
+behind item 7; the other four are the next wave.

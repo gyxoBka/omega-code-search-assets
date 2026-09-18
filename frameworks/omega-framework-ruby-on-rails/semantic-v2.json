@@ -29,15 +29,10 @@
     "entities": [
       "Action",
       "Association",
-      "Channel",
-      "Controller",
       "ControllerFilter",
-      "Job",
-      "Mailer",
-      "Migration",
-      "Model",
       "ModelRule",
       "RailsClass",
+      "RailsLayer",
       "RailsModule",
       "RouteDefinition",
       "RouteTable",
@@ -46,164 +41,13 @@
     "relations": [
       "configured_by",
       "configures",
+      "declares",
       "depends_on",
       "handles",
       "uses_model"
     ]
   },
   "rules": [
-    {
-      "id": "rails.controller",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/controllers/**/*.rb"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Controller",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "layer": "controller",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.model",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/models/**/*.rb"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Model",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "layer": "model",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.job",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/jobs/**/*.rb"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Job",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "layer": "job",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.mailer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/mailers/**/*.rb"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Mailer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "layer": "mailer",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
     {
       "id": "rails.channel",
       "snapshot": true,
@@ -221,7 +65,7 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Channel",
+          "entity_kind": "RailsClass",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "rails:class:{path}:{definition.name}"
@@ -231,11 +75,122 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "layer": "channel",
             "source_file": {
               "kind": "field_ref",
               "field": "path"
             }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:channel"
+          },
+          "attributes": {
+            "layer": "channel"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:channel"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.class.mixes_in",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.rb"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.module",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/app/**/*.rb"
+            }
+          ],
+          "bind": "mod"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:module:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "mod.path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:module:{definition.name}"
+          },
+          "attributes": {
+            "via": "include/extend/prepend or superclass"
           }
         }
       ],
@@ -243,7 +198,67 @@
       "confidence": "exact"
     },
     {
-      "id": "rails.migration",
+      "id": "rails.concern",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.module"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/concerns/**/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:module:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:concern"
+          },
+          "attributes": {
+            "layer": "concern"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:concern"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.controller",
       "snapshot": true,
       "match": [
         {
@@ -252,14 +267,14 @@
         },
         {
           "kind": "path_glob",
-          "pattern": "**/db/migrate/*.rb"
+          "pattern": "**/app/controllers/**/*.rb"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Migration",
+          "entity_kind": "RailsClass",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "rails:class:{path}:{definition.name}"
@@ -269,204 +284,34 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "layer": "migration",
-            "version": {
-              "kind": "field_ref",
-              "field": "path.stem"
-            },
             "source_file": {
               "kind": "field_ref",
               "field": "path"
             }
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.model.by_superclass",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
         },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "ApplicationRecord"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Model",
+          "entity_kind": "RailsLayer",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
+            "template": "rails:layer:controller"
           },
           "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "layer": "model",
-            "base_class": "ApplicationRecord",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
+            "layer": "controller"
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.controller.by_superclass",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "ApplicationController"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Controller",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:controller"
           },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "layer": "controller",
-            "base_class": "ApplicationController",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.job.by_superclass",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "ApplicationJob"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Job",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
+          "target": {
+            "kind": "current"
           },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "layer": "job",
-            "base_class": "ApplicationJob",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.mailer.by_superclass",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "ApplicationMailer"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Mailer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "layer": "mailer",
-            "base_class": "ApplicationMailer",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
@@ -527,10 +372,99 @@
             "kind": "current"
           },
           "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate"
+    },
+    {
+      "id": "rails.controller.by_superclass",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.superclass_candidate"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ApplicationController"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "same",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:controller"
+          },
+          "attributes": {
+            "layer": "controller"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:controller"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "base_class": "ApplicationController",
+            "via": "superclass"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
     },
     {
       "id": "rails.controller.filter",
@@ -588,7 +522,444 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
             "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.job",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/jobs/**/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:job"
+          },
+          "attributes": {
+            "layer": "job"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:job"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.job.by_superclass",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.superclass_candidate"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ApplicationJob"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "same",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:job"
+          },
+          "attributes": {
+            "layer": "job"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:job"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "base_class": "ApplicationJob",
+            "via": "superclass"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.mailer",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/mailers/**/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:mailer"
+          },
+          "attributes": {
+            "layer": "mailer"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:mailer"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.mailer.by_superclass",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.superclass_candidate"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ApplicationMailer"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "same",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:mailer"
+          },
+          "attributes": {
+            "layer": "mailer"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:mailer"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "base_class": "ApplicationMailer",
+            "via": "superclass"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.migration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:migration"
+          },
+          "attributes": {
+            "layer": "migration"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:migration"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "version": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.migration.schema_change",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "create_table",
+            "change_table",
+            "drop_table",
+            "rename_table",
+            "create_join_table",
+            "drop_join_table",
+            "add_column",
+            "remove_column",
+            "remove_columns",
+            "rename_column",
+            "change_column",
+            "change_column_null",
+            "change_column_default",
+            "add_index",
+            "remove_index",
+            "rename_index",
+            "add_reference",
+            "remove_reference",
+            "add_belongs_to",
+            "add_foreign_key",
+            "remove_foreign_key",
+            "add_timestamps",
+            "remove_timestamps",
+            "enable_extension",
+            "disable_extension",
+            "add_check_constraint"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaChange",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schema-change:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "migration": {
               "kind": "field_ref",
               "field": "cls.definition.name"
             },
@@ -600,10 +971,88 @@
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "configures",
           "source": {
             "kind": "by_canonical_key",
             "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.model",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/models/**/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:model"
+          },
+          "attributes": {
+            "layer": "model"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:model"
           },
           "target": {
             "kind": "current"
@@ -661,13 +1110,13 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "owner": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
             "source_file": {
               "kind": "field_ref",
               "field": "path"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
             }
           }
         },
@@ -684,10 +1133,99 @@
           "attributes": {
             "target_name_not_published_by_pack": true
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate"
+    },
+    {
+      "id": "rails.model.by_superclass",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.superclass_candidate"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ApplicationRecord"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "same",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:model"
+          },
+          "attributes": {
+            "layer": "model"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:model"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "base_class": "ApplicationRecord",
+            "via": "superclass"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
     },
     {
       "id": "rails.model.rule",
@@ -764,13 +1302,13 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "owner": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
             "source_file": {
               "kind": "field_ref",
               "field": "path"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
             }
           }
         },
@@ -785,10 +1323,99 @@
             "kind": "current"
           },
           "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact"
+    },
+    {
+      "id": "rails.model.usage",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.constant"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.rb"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.class",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/app/models/**/*.rb"
+            }
+          ],
+          "bind": "model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "model",
+            "field": "path",
+            "template": "rails:class:{value}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
     },
     {
       "id": "rails.route.declaration",
@@ -884,298 +1511,13 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "candidate"
-    },
-    {
-      "id": "rails.migration.schema_change",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.method"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/db/migrate/*.rb"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "create_table",
-            "change_table",
-            "drop_table",
-            "rename_table",
-            "create_join_table",
-            "drop_join_table",
-            "add_column",
-            "remove_column",
-            "remove_columns",
-            "rename_column",
-            "change_column",
-            "change_column_null",
-            "change_column_default",
-            "add_index",
-            "remove_index",
-            "rename_index",
-            "add_reference",
-            "remove_reference",
-            "add_belongs_to",
-            "add_foreign_key",
-            "remove_foreign_key",
-            "add_timestamps",
-            "remove_timestamps",
-            "enable_extension",
-            "disable_extension",
-            "add_check_constraint"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.class_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SchemaChange",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:schema-change:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "migration": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.concern",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.module"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/**/concerns/**/*.rb"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsModule",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:module:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "role": "concern",
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.class.mixes_in",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/**/*.rb"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.class_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.module",
-          "current_field": "definition.name",
-          "join_field": "definition.name",
-          "where": [
-            {
-              "kind": "path_glob",
-              "pattern": "**/app/**/*.rb"
-            }
-          ],
-          "bind": "mod"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsClass",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsModule",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:module:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "rails:module:{definition.name}"
-          },
-          "attributes": {
-            "via": "include/extend/prepend or superclass"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.model.usage",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.constant"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/**/*.rb"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.class_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.class",
-          "current_field": "definition.name",
-          "join_field": "definition.name",
-          "where": [
-            {
-              "kind": "path_glob",
-              "pattern": "**/app/models/**/*.rb"
-            }
-          ],
-          "bind": "model"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsClass",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_model",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "model",
-            "field": "path",
-            "template": "rails:class:{value}:{definition.name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
       "omega-ruby publishes a call's name and span but not its arguments, so the path a route serves, the table a migration touches and the model an association points at are not stated by any Pack and are not invented here",
+      "every Rails class is one entity under rails:class:{path}:{name}; its Rails layer is stated by a declares edge from a RailsLayer, because a canonical key holds exactly one entity kind and the first rule by id wins",
       "class, module and method declarations, their containment, their superclass and mixin edges and the Rails directory conventions are materialized",
       "Ruby visibility (private/protected) is a call, not a declaration attribute, so a controller's private helpers cannot be told apart from its actions",
       "runtime Rails metaprogramming, dynamically loaded engines and ActiveSupport callback ordering are runtime semantics"

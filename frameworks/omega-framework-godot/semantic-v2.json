@@ -20,136 +20,228 @@
     ]
   },
   "evidence_inputs": [
-    "calls_members",
     "existing_language_ir",
     "structured_documents",
-    "definition.category_candidate",
-    "call.gdscript_direct_candidate"
+    "definitions",
+    "references",
+    "types",
+    "data"
   ],
   "emits": {
     "entities": [
-      "Asset",
-      "GameComponent",
-      "GameEntity",
-      "GameType",
-      "Scene",
-      "Signal"
+      "GodotAnnotation",
+      "GodotClass",
+      "GodotExportedProperty",
+      "GodotMethod",
+      "GodotProjectSetting",
+      "GodotResource",
+      "GodotResourceRef",
+      "GodotScene",
+      "GodotSceneNode",
+      "GodotScript",
+      "GodotSignal",
+      "GodotSignalConnection"
     ],
     "relations": [
-      "asset_references",
-      "configured_by",
-      "contains",
-      "script_attached_to",
-      "uses_resource"
+      "annotated_with",
+      "connection_node",
+      "connects_signal",
+      "contains_connection",
+      "contains_node",
+      "declared_in",
+      "declares_signal",
+      "defines_method",
+      "depends_on",
+      "exports_property",
+      "extends",
+      "handled_by",
+      "has_script",
+      "loads",
+      "node_of_class",
+      "parent_of",
+      "resolves_to",
+      "setting_points_to",
+      "typed_as"
     ]
   },
   "rules": [
     {
-      "id": "godot.node.class",
+      "id": "godot.project.setting",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.category_candidate"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "symbol_category",
-          "value": "class"
-        },
-        {
-          "kind": "field_present",
-          "field": "name"
+          "value": "definition.config_key"
         },
         {
           "kind": "path_glob",
-          "pattern": "**/*.gd"
+          "pattern": "**/project.godot"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "GameComponent",
+          "entity_kind": "GodotProjectSetting",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "godot:script:{path}:{name}"
+            "template": "godot:setting:{path}:{definition.qname}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A key written in project.godot, addressed by its section-qualified name. .godot/*.cfg and *.import are generated and are not stated."
+    },
+    {
+      "id": "godot.project.setting.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/project.godot"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "setting"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotProjectSetting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:setting:{path}:{setting.definition.qname}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "setting.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {
+            "uri": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "setting_points_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:setting:{path}:{setting.definition.qname}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The res:// or user:// file a project setting names -- run/main_scene, a gdextension entry. An autoload written *res://x.gd carries a leading * and is not stated as a dependency by omega-godot-resource."
+    },
+    {
+      "id": "godot.scene.connection",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.signal"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "structured.godot_section_attribute_context",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "section_kind",
+              "value": "connection"
+            },
+            {
+              "kind": "field_equals",
+              "field": "attribute_name",
+              "value": "signal"
+            }
+          ],
+          "bind": "sec"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSignalConnection",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "attributes": {
+            "signal": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSignal",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:signal:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "name"
-            },
-            "source_only": true
+              "field": "definition.name"
+            }
           }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Only a syntactic GDScript class declaration category emitted by omega-gdscript; arbitrary generic class definitions are not promoted."
-    },
-    {
-      "id": "godot.asset.load.call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.gdscript_direct_candidate"
         },
-        {
-          "kind": "field_in",
-          "field": "name",
-          "values": [
-            "preload",
-            "load"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.gd"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Asset",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "godot:asset-call:{path}:{source.start}"
-          },
-          "attributes": {
-            "call": {
-              "kind": "field_ref",
-              "field": "name"
-            },
-            "source_only": true,
-            "target_resolution_not_claimed": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "candidate",
-      "coverage_note": "Only direct GDScript load/preload syntax. The referenced resource path is not resolved by this rule."
-    },
-    {
-      "id": "godot.scene.document",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "value.document"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.tscn"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Scene",
+          "entity_kind": "GodotScene",
           "canonical_key": {
             "kind": "canonical_key",
             "template": "godot:scene:{path}"
@@ -158,13 +250,189 @@
             "path": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "declaration_only": true
+            }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains_connection",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:scene:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "connects_signal",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:signal:{definition.name}"
+          },
+          "attributes": {}
         }
       ],
-      "evidence_class": "observed",
-      "confidence": "exact"
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A [connection signal=...] header. The connection is keyed by the byte offset of its own section, which is the span omega-godot-resource gives every attribute of that section."
+    },
+    {
+      "id": "godot.scene.connection.endpoint",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.scene_node"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "structured.godot_section_attribute_context",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "section_kind",
+              "value": "connection"
+            },
+            {
+              "kind": "field_equals",
+              "field": "attribute_name",
+              "value": "signal"
+            }
+          ],
+          "bind": "sec"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSignalConnection",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSceneNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:node:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "connection_node",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:node:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A node a connection names in from= or to=. The two are sibling attributes of one section with no declaration between them, so the overlay can say which nodes a connection wires and not which end is which; to=\".\" is the scene root and is not named by the Pack at all."
+    },
+    {
+      "id": "godot.scene.connection.handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.signal_handler"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "structured.godot_section_attribute_context",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "section_kind",
+              "value": "connection"
+            },
+            {
+              "kind": "field_equals",
+              "field": "attribute_name",
+              "value": "signal"
+            }
+          ],
+          "bind": "sec"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSignalConnection",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotMethod",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:method:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handled_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:connection:{path}:{sec.source.start}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:method:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The method= a connection runs. Godot resolves it by name at run time against whatever script the to node carries, so the method hub is keyed by name; godot.script.method says which GDScript files declare one."
     },
     {
       "id": "godot.scene.node",
@@ -172,309 +440,901 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.godot_section_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "section_kind",
-          "value": "node"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "name"
+          "value": "definition.scene_node"
         },
         {
           "kind": "field_present",
-          "field": "attribute_value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.tscn"
+          "field": "definition.name"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "GameEntity",
+          "entity_kind": "GodotSceneNode",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "godot:node:{path}:{attribute_value}"
+            "template": "godot:node:{path}:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "attribute_value"
-            },
-            "declaration_only": true
+              "field": "definition.name"
+            }
           }
         },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "godot:scene:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "godot:node:{path}:{attribute_value}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "godot.scene.ext-resource",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.godot_section_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "section_kind",
-          "value": "ext_resource"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "path"
-        },
-        {
-          "kind": "field_present",
-          "field": "attribute_value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.tscn"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Asset",
+          "entity_kind": "GodotScene",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "godot:asset:{attribute_value}"
+            "template": "godot:scene:{path}"
           },
           "attributes": {
-            "source_path": {
+            "path": {
               "kind": "field_ref",
-              "field": "attribute_value"
-            },
-            "declaration_only": true
+              "field": "path"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "asset_references",
+          "relation_kind": "contains_node",
           "source": {
             "kind": "by_canonical_key",
             "template": "godot:scene:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "godot:asset:{attribute_value}"
+            "template": "godot:node:{path}:{definition.name}"
           },
           "attributes": {}
         }
       ],
-      "evidence_class": "observed",
-      "confidence": "exact"
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A [node name=...] header. Node identity is file-local because omega-godot-resource reduces a node path to its last segment, so two same-named nodes under different parents are one name."
     },
     {
-      "id": "godot.scene.script-attachment",
+      "id": "godot.scene.node.parent",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.godot_node_script_ext_resource_context"
+          "value": "reference.scene_node"
         },
         {
           "kind": "field_present",
-          "field": "node_name"
+          "field": "definition.name"
         },
         {
-          "kind": "field_present",
-          "field": "resource_id"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.tscn"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "structured.godot_ext_resource_id_path_context",
-          "current_field": "resource_id",
-          "join_field": "resource_id",
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.scene_node",
+          "relation": "within",
           "same_path": true,
           "where": [
             {
               "kind": "field_present",
-              "field": "resource_path"
+              "field": "definition.name"
             }
           ],
-          "bind": "script_resource"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "script_attached_to",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "godot:node:{path}:{node_name}"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "script_resource",
-            "field": "resource_path",
-            "template": "godot:asset:{value}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "godot.signal",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.gdscript_signal"
+          "bind": "child"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Signal",
+          "entity_kind": "GodotSceneNode",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "godot:signal:{path}:{name}"
+            "template": "godot:node:{path}:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "name"
+              "field": "definition.name"
             }
           }
         },
         {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "godot:signal:{path}:{name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "godot.class-name",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.gdscript_class_name"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
           "kind": "entity_candidate",
-          "entity_kind": "GameType",
+          "entity_kind": "GodotSceneNode",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "godot:class:{path}:{name}"
+            "template": "godot:node:{path}:{child.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "name"
+              "field": "child.definition.name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "parent_of",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "godot:node:{path}:{definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "godot:class:{path}:{name}"
+            "template": "godot:node:{path}:{child.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "The scene tree: parent= inside a node section names the node this one hangs under. A reference.scene_node in a [connection] section has no enclosing definition.scene_node and does not reach this rule."
     },
     {
-      "id": "godot.resource-load",
+      "id": "godot.scene.node.script",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.gdscript_resource_load"
+          "value": "reference.resource"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "script"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.scene_node",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "node"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Asset",
+          "entity_kind": "GodotSceneNode",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "godot:resource:{path}:{source.start}"
+            "template": "godot:node:{path}:{node.definition.name}"
           },
           "attributes": {
-            "target": {
+            "name": {
               "kind": "field_ref",
-              "field": "name"
+              "field": "node.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotResourceRef",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:res-id:{path}:{definition.name}"
+          },
+          "attributes": {
+            "id": {
+              "kind": "field_ref",
+              "field": "definition.name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
+          "relation_kind": "has_script",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "godot:node:{path}:{node.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "godot:resource:{path}:{source.start}"
+            "template": "godot:res-id:{path}:{definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "script = ExtResource(\"1_abc\") under a node header. The host's definition.container is the script property key, so no Pack field is needed to tell a script reference from any other ExtResource(...) in the section; godot.scene.resource turns the id into the res:// path."
+    },
+    {
+      "id": "godot.scene.node.type",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "type_use.godot_class"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.scene_node",
+          "current_field": "definition.container",
+          "join_field": "definition.name",
+          "same_path": true,
+          "where": [],
+          "bind": "node"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:class:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSceneNode",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:node:{path}:{node.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "node.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "node_of_class",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:node:{path}:{node.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:class:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "type= on a node header. A Vector2(...) or Color(...) written in a property value is also a type_use.godot_class, but its container is that property's key rather than the node, so only the header type reaches the node."
+    },
+    {
+      "id": "godot.scene.resource",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.resource",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "res"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotResourceRef",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:res-id:{path}:{res.definition.name}"
+          },
+          "attributes": {
+            "id": {
+              "kind": "field_ref",
+              "field": "res.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {
+            "uri": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScene",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:scene:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "resolves_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:res-id:{path}:{res.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:scene:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "An [ext_resource path=... id=...] header: the file-local id and the res:// file it stands for. A uid:// alias is deliberately not stated by the Pack, and a [sub_resource] declares an id with no path and mints no edge here."
+    },
+    {
+      "id": "godot.script.annotation",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.annotation"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotAnnotation",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:annotation:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "annotated_with",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:annotation:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "@tool, @rpc, @icon, @export_group: which scripts run in the editor, which take part in multiplayer. omega-gdscript spans the annotation alone and names no target, so the edge is from the file."
+    },
+    {
+      "id": "godot.script.class-name",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:class:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declared_in",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:class:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "class_name Player registers a global type and class Inner: declares a nested one; omega-gdscript emits definition.class for both."
+    },
+    {
+      "id": "godot.script.depends",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {
+            "uri": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "loads",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:res:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "preload(\"res://enemy.tscn\"), load(\"res://x.tres\") and extends \"res://actor.gd\". A load() whose argument is a variable names nothing and is not stated."
+    },
+    {
+      "id": "godot.script.exported-property",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.exported_field"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotExportedProperty",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:export:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "exports_property",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:export:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The inspector surface of a script: every @export var. The value the editor stored for it lives in the scene's property and is not stated."
+    },
+    {
+      "id": "godot.script.exported-property.type",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.exported_field"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.declared_type_candidate",
+          "relation": "same",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.name"
+            }
+          ],
+          "bind": "ty"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotExportedProperty",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:export:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:class:{ty.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "ty.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "typed_as",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:export:{path}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:class:{ty.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The declared type of an exported property, read off the carrier omega-gdscript emits on the same span as the declaration. An untyped @export var x has no carrier name and mints no edge."
+    },
+    {
+      "id": "godot.script.extends",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:class:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "extends",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:class:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "extends CharacterBody2D. The base may be an engine class or another script's class_name; both land on the same class key, so the two halves join."
+    },
+    {
+      "id": "godot.script.method",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.gd"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotMethod",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:method:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "defines_method",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:method:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Every GDScript func, under the name a scene's method= string would name. The hub is path-free on purpose: the connection in the .tscn knows only the name."
+    },
+    {
+      "id": "godot.script.signal",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.signal"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotSignal",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:signal:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "GodotScript",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_signal",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "godot:script:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "godot:signal:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "signal damaged(amount). The same key is minted from a scene's [connection signal=...], which is the one edge neither Pack can state on its own."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "authored GDScript class_name/signals/load/preload and .tscn node/resource/script attachments are materialized",
-      "runtime scene tree mutations, autoload singleton state, UID remapping and generated/imported resource state remain runtime/editor semantics"
+      "GDScript declarations (class_name, inner class, func, signal, @export, extends, preload/load, annotations) and the text resource format (.tscn/.tres nodes, node types, parents, ext_resource ids, signal connections, project.godot settings) are materialized.",
+      "A node path written in GDScript -- $Sprite/Label, %Unique, ^\"res://x\" -- is not stated by omega-gdscript, so a script's own reference to a node in its scene is not an edge.",
+      "uid:// aliases, the value of a scene property, runtime scene-tree mutation, autoload singleton state and generated .import output remain editor and runtime semantics."
     ]
   },
   "provenance": [

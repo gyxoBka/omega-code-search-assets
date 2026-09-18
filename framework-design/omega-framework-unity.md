@@ -5,196 +5,179 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-56 overlay rules, 12 detection rules. **2 can match, 54 cannot.**
+17 overlay rules, 12 detection rules. **17 live, 0 cannot match.**
+`key_collisions.py` reports nothing.
 
 Selector: `framework:unity`. Maturity: `semantic-overlay-full`.
-
-### Entities it declares
-
-| entity_kind | rules |
-|---|---|
-| `SerializedObject` | 18 |
-| `SerializedField` | 13 |
-| `LifecycleHook` | 12 |
-| `AssetReference` | 2 |
-| `GameComponent` | 1 |
-| `Asset` | 1 |
-| `AssetMenu` | 1 |
-| `ComponentRequirement` | 1 |
-| `SerializedName` | 1 |
-| `ScriptAssetReference` | 1 |
-| `GameObjectReference` | 1 |
-| `PrefabReference` | 1 |
-| `SourceObjectReference` | 1 |
-| `SerializedChildren` | 1 |
-| `SerializedParent` | 1 |
-
-### Relations it declares
-
-| relation_kind | rules |
-|---|---|
-| `handles` | 12 |
-| `configured_by` | 8 |
-| `references` | 7 |
-| `contains` | 5 |
-| `uses_resource` | 2 |
+Language: C# only (`host.required_packs = ["omega-c-sharp"]`), every rule gated
+on `path_glob **/*.cs`.
 
 ### Fact kinds it matches
 
-| kind | rules | a Pack emits it |
+| kind | rules | omega-c-sharp emits it |
 |---|---|---|
-| `structured.entry` | 33 | **no** |
-| `definition.csharp_lifecycle_method_context` | 12 | **no** |
-| `definition.csharp_class_base_context` | 12 | **no** |
-| `reference.csharp_attributed_field_context` | 5 | **no** |
-| `definition.class` | 2 | yes |
-| `reference.csharp_attributed_class_string_context` | 2 | **no** |
-| `call.csharp_class_member_string_context` | 2 | **no** |
+| `reference.type` | 6 | yes |
+| `reference.attribute` | 4 | yes |
+| `relation.implements` | 3 | yes |
+| `call.method` | 2 | yes |
+| `definition.method` | 1 | yes |
+| `import.namespace` | 1 | yes |
 
-Clause vocabulary in use: `fact_kind` x56, `field_equals` x56, `attribute_equals` x33, `path_glob` x33, `field_present` x30, `fact_join_by_field` x12, `field_in` x12, `(join)` x12, `external_path_matches` x2.
+Joined kinds: `definition.class` (16 rules, `fact_join_by_span` `within`),
+`definition.method` (1), `reference.attribute` (3), `call.method` (2).
+The only Pack-published field read anywhere is `receiver_hint`, which
+`omega-c-sharp` already publishes on `call.method`. Everything else is a
+built-in name (`definition.name`, `path`, `source.start`).
 
-Fields read: `key`, `parent_key`, `value`, `method_name`, `base_name`, `attribute_name`, `receiver`, `member`.
+### Key spaces it mints
 
-Path globs: `**/*.{unity,prefab,asset}`.
+| key template | entity kind | minted by |
+|---|---|---|
+| `unity:type:{Class}` | `UnityType` | all 16 class-scoped rules (the hub) |
+| `unity:component:{Class}` | `GameComponent` | `unity.component` |
+| `unity:scriptable-object:{Class}` | `Asset` | `unity.scriptable-object` |
+| `unity:editor-extension:{Class}` | `EditorExtension` | `unity.editor-extension` |
+| `unity:serializable-type:{Class}` | `SerializedType` | `unity.serializable-type` |
+| `unity:lifecycle:{Class}:{Method}` | `LifecycleHook` | `unity.lifecycle` |
+| `unity:coroutine:{Class}:{Method}` | `Coroutine` | `unity.coroutine` |
+| `unity:asset-menu:{Class}` | `AssetMenu` | `unity.create-asset-menu` |
+| `unity:policy:{Class}:{Attribute}` | `ComponentPolicy` | `unity.component-policy` |
+| `unity:inspector-field:{path}:{start}` | `InspectorField` | `unity.inspector-field` |
+| `unity:resources-load:{path}:{start}` | `ResourceLoad` | `unity.resources-load` |
+| `unity:scene-transition:{path}:{start}` | `SceneTransition` | `unity.scene-load` |
+| `unity:editor-script:{path}` | `EditorOnlyScript` | `unity.editor-only-script` |
 
-## Why a rule cannot match
+Every key template is minted under exactly one entity kind, with one attribute
+set. Every relation end in the file addresses a template in this table.
 
-| rule | what no Pack emits |
-|---|---|
-| `unity.lifecycle.awake` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.onenable` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.start` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.fixedupdate` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.update` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.lateupdate` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.ondisable` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.ondestroy` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.ontriggerenter` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.ontriggerexit` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.oncollisionenter` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.lifecycle.oncollisionexit` | kind `definition.csharp_class_base_context`, `definition.csharp_lifecycle_method_context`; field `base_name`, `method_name` |
-| `unity.field.serializefield` | kind `reference.csharp_attributed_field_context`; field `attribute_name` |
-| `unity.field.hideininspector` | kind `reference.csharp_attributed_field_context`; field `attribute_name` |
-| `unity.field.header` | kind `reference.csharp_attributed_field_context`; field `attribute_name` |
-| `unity.field.tooltip` | kind `reference.csharp_attributed_field_context`; field `attribute_name` |
-| `unity.field.range` | kind `reference.csharp_attributed_field_context`; field `attribute_name` |
-| `unity.class-attr.createassetmenu` | kind `reference.csharp_attributed_class_string_context`; field `attribute_name` |
-| `unity.class-attr.requirecomponent` | kind `reference.csharp_attributed_class_string_context`; field `attribute_name` |
-| `unity.resources.load` | kind `call.csharp_class_member_string_context`; field `member`, `receiver` |
-| `unity.resources.loadasync` | kind `call.csharp_class_member_string_context`; field `member`, `receiver` |
-| `unity.serialized-object.gameobject` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.transform` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.recttransform` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.monobehaviour` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.prefabinstance` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.prefab` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.scriptableobject` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.meshrenderer` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.skinnedmeshrenderer` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.camera` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.light` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.rigidbody` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.collider` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.boxcollider` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.spherecollider` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.capsulecollider` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.audiosource` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-object.animator` | kind `structured.entry`; field `key`; attribute `role` |
-| `unity.serialized-field.m_name` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-field.m_script` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-field.m_gameobject` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-field.m_prefabinstance` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-field.m_correspondingsourceobject` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-field.m_children` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-field.m_father` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-custom-field.monobehaviour` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-custom-field.scriptableobject` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-config.m-tagstring` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-config.m-layer` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-config.m-isactive` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-config.m-staticeditorflags` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-config.m-enabled` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
-| `unity.serialized-config.m-editorclassidentifier` | kind `structured.entry`; field `key`, `parent_key`, `value`; attribute `role` |
 ## What was wrong with it
 
-The file shipped 56 overlay rules. **54 could not match any Pack emission**, and
-the 2 that the audit called live were live only on paper.
+### Wave 1: the kinds (56 rules -> 17)
+
+The file shipped 56 overlay rules and **54 could not match any Pack emission**.
 
 | what was wrong | rules |
 |---|---|
 | keyed to a `structured.entry` kind no Pack emits, on `.unity`/`.prefab`/`.asset` paths no grammar claims | 33 |
 | keyed to C#-private `*_context` kinds the Pack rewrite removed (`definition.csharp_lifecycle_method_context`, `definition.csharp_class_base_context`, `reference.csharp_attributed_field_context`, `reference.csharp_attributed_class_string_context`, `call.csharp_class_member_string_context`) | 21 |
-| matched a live kind but through `external_path_matches` on `definition.class`, which carries no `external` -- a `definition.class` fact never resolves to a package, so the clause could not be true | 2 |
+| matched a live kind but through `external_path_matches` on `definition.class`, which carries no `external` | 2 |
 
-Underneath the dead kinds, three habits:
+Underneath, three habits: **one rule per literal** (12 lifecycle rules differing
+only in a method name, 18 `SerializedObject` rules differing only in a YAML key,
+5 field-attribute rules differing only in an attribute name -- 48 of the 56 were
+one rule written out by hand N times); **restating the input**
+(`unity.serialized-object.camera` emitted an entity named `Camera` for a line
+that said `Camera:`, with no relation -- 18 of the 33 YAML rules produced an
+entity and nothing else); and **reaching the enclosing class by a published
+field** (`fact_join_by_field` on `owner_class`, a field the Pack would have had
+to carry on every C# method in every repository, where `fact_join_by_span`
+`within` reaches the class with no field on either side).
 
-1. **One rule per literal.** 12 lifecycle rules differing only in a method name,
-   18 `SerializedObject` rules differing only in a YAML key, 5 field-attribute
-   rules differing only in an attribute name, 7 `serialized-field` rules and 6
-   `serialized-config` rules the same way. 48 of the 56 rules were one rule
-   written out by hand N times.
-2. **Restating the input.** `unity.serialized-object.camera` emitted an entity
-   named `Camera` for a line that said `Camera:`, with no relation to anything.
-   18 of the 33 YAML rules produced an entity and nothing else.
-3. **Reaching the enclosing class by a published field.** Every lifecycle rule
-   did `fact_join_by_field` on `owner_class`, a field the Pack had to publish on
-   every C# method in every repository. A lifecycle method lies inside its class
-   declaration's span, so `fact_join_by_span` with `within` reaches the class
-   with no field on either side.
-
-The 33 YAML rules are not portable at all, and not because of the kind. **No
+The 33 YAML rules were not portable at all, and not because of the kind. **No
 grammar registers `.unity`, `.prefab`, `.asset` or `.meta`**
-(`grammars/omega-yaml/manifest.toml` declares `extensions = ["yml"]` and
-`language = "yaml"`), so a Unity scene, prefab or ScriptableObject instance is
-never parsed and no Pack emits a single fact about one. Porting them to
-`definition.config_key` would have made the audit green while every rule stayed
-silent on every repository. They are deleted, and the reason is recorded under
-"Still to decide".
+(`grammars/omega-yaml/manifest.toml` declares `extensions = ["yml"]`), so a
+Unity scene, prefab or ScriptableObject instance is never parsed. Porting them
+to `definition.config_key` would have made the audit green while every rule
+stayed silent on every repository. They were deleted; see "Still to decide" 1.
 
-**56 rules -> 17.** All 17 live.
+### Wave 2: the 17 live rules did not reach the graph
+
+The audit reported 17 live, and it was still wrong about what the file
+produced. Two defects the audit cannot see, both fixed here.
+
+**1. Five entity kinds on one canonical key -- 16 of the 29 entity outputs
+discarded.** `key_collisions.py unity` reported:
+
+```
+   unity:type:{cls.definition.name}
+      kept    GameComponent   unity.component
+      DROPPED UnityType x12, EditorExtension, Asset, SerializedType   (15 rules)
+   unity:type:{definition.name}
+      kept    GameComponent   unity.component-lookup
+      DROPPED SerializedType  unity.custom-property-drawer
+```
+
+`Entity::named` builds the id from the canonical key alone and
+`entities.entry(id).or_insert(entity)` keeps the first candidate in `rule_id`
+order, **with its kind and its attributes**. `unity.component` sorts before
+everything else, so any type that happened to derive from `MonoBehaviour` fixed
+the whole `unity:type:` space as `GameComponent` with a `base: MonoBehaviour`
+attribute -- and a `ScriptableObject` asset type, an `Editor`, a `[Serializable]`
+plain class, and the neutral hub the other 12 rules minted for their relation
+source, were all computed and thrown away. In a project with no MonoBehaviour at
+all, the kind on the hub was whichever rule happened to fire.
+
+Fixed by brief 3g remedy 1 + 2 together: `unity:type:{Class}` now carries the
+single neutral kind `UnityType` with the single attribute `name` in **all 16**
+rules that mint it, so the merge is a no-op rather than a race; and each of the
+four role classifications moved to its own key space
+(`unity:component:`, `unity:scriptable-object:`, `unity:editor-extension:`,
+`unity:serializable-type:`), attached to the hub by an `implements` relation.
+Both kinds and both attribute sets survive, and each is separately addressable.
+
+**2. All twelve relations were self-loops.** `emit()` sets `own_key` from a rule's
+**first** entity output (`overlay.rs:885-912`), and every multi-output rule here
+emitted the hub first and the thing it was about second, then wrote its relation
+as `source: by_canonical_key unity:type:{cls}` / `target: current`. `current`
+therefore resolved to the hub, and the graph got
+
+    unity:type:PlayerMover  handles  unity:type:PlayerMover
+
+for every lifecycle hook, every coroutine, every `[CreateAssetMenu]`, every
+inspector attribute, every `Resources.Load`, every `SceneManager.LoadScene` --
+and for the five type-to-type rules the edge pointed back at the source instead
+of at the required/looked-up/spawned/inspected type, so
+`[RequireComponent(typeof(Rigidbody))]` said *PlayerMover depends on
+PlayerMover*. Every `LifecycleHook`, `Coroutine`, `AssetMenu`,
+`ComponentPolicy`, `InspectorField`, `ResourceLoad` and `SceneTransition`
+entity in the graph was reachable by search and connected to nothing.
+
+Fixed by removing `current` from the file entirely: all 32 ends of the now 16 relations are
+explicit `by_canonical_key` templates, checked mechanically against the set of
+templates the file mints.
+
+No rule was added or removed in wave 2. **17 rules before, 17 after**; only the
+`outputs` arrays changed, and `emits` was corrected to list the 13 entity kinds
+and 4 relation kinds actually produced.
 
 ## What it states now
 
-The overlay is C# only. Every rule gates on `path_glob **/*.cs`, and every rule
-that needs the declaring type reaches it with `fact_join_by_span` `within` --
-no Pack field is asked for anywhere except `receiver_hint`, which
-`omega-c-sharp` already publishes on `call.method`.
-
-One key namespace holds every Unity-derived type: `unity:type:{ClassName}`.
-It is path-free on purpose, so `[RequireComponent(typeof(PlayerMover))]` in one
-file lands on the `PlayerMover` entity declared in another, which is the whole
-point of a rendered canonical key.
+One key namespace holds every Unity-derived type: `unity:type:{ClassName}`,
+kind `UnityType`. It is path-free on purpose, so
+`[RequireComponent(typeof(PlayerMover))]` in one file lands on the same entity
+as `class PlayerMover : MonoBehaviour` in another -- that is the whole point of
+a rendered canonical key, and it is why the hub must have one kind.
 
 | what it states | which Pack fact | entity / relation |
 |---|---|---|
-| this class is a component | `relation.implements` named `MonoBehaviour` + `within` `definition.class` | entity `GameComponent` at `unity:type:{Class}` |
-| this class is a ScriptableObject asset type | `relation.implements` named `ScriptableObject` + `within` `definition.class` | entity `Asset` at `unity:type:{Class}` |
-| this class extends the editor | `relation.implements` in {Editor, EditorWindow, PropertyDrawer, DecoratorDrawer, ScriptableWizard, AssetPostprocessor, AssetModificationProcessor, EditorTool, MaterialEditor} + `within` `definition.class` | entity `EditorExtension` at `unity:type:{Class}` |
-| this plain class is inspector-serializable | `reference.attribute` named `Serializable` + `within` `definition.class` | entity `SerializedType` at `unity:type:{Class}` |
-| which engine callbacks this component answers | `definition.method` whose `definition.name` is one of 44 Unity messages + `within` `definition.class` | entity `LifecycleHook`, relation `handles` from `unity:type:{Class}` |
-| which coroutines it runs | `reference.type` named `IEnumerator` + `within` `definition.method` + `within` `definition.class` | entity `Coroutine`, relation `handles` from `unity:type:{Class}` |
-| which components this component requires on the same GameObject | `reference.type` (the `typeof` argument) + `within` `reference.attribute` named `RequireComponent` + `within` `definition.class` | entity `GameComponent` for the required type, relation `depends` from `unity:type:{Class}` |
-| which type this custom inspector draws | `reference.type` + `within` `reference.attribute` named `CustomEditor` | entity `GameComponent` for the target, relation `handles` from `unity:type:{Editor}` |
-| which type this property drawer draws | `reference.type` + `within` `reference.attribute` named `CustomPropertyDrawer` | entity `SerializedType` for the target, relation `handles` from `unity:type:{Drawer}` |
-| which ScriptableObjects a designer can create from the Assets menu | `reference.attribute` named `CreateAssetMenu` + `within` `definition.class` | entity `AssetMenu`, relation `configured_by` from `unity:type:{Class}` |
-| which components run in edit mode, forbid duplicates or set an execution order | `reference.attribute` in {ExecuteAlways, ExecuteInEditMode, DisallowMultipleComponent, SelectionBase, DefaultExecutionOrder, AddComponentMenu, HelpURL, ContextMenu, ImageEffectAllowedInSceneView} + `within` `definition.class` | entity `ComponentPolicy`, relation `configured_by` from `unity:type:{Class}` |
-| which components are tuned from the inspector, and with what constraint | `reference.attribute` in {SerializeField, SerializeReference, HideInInspector, Header, Tooltip, Range, Min, Space, TextArea, Multiline, ColorUsage, FormerlySerializedAs, NonSerialized} + `within` `definition.class` | entity `InspectorField`, relation `configured_by` from `unity:type:{Class}` |
-| which component this component looks up at runtime | `reference.type` (the generic argument) + `within` `call.method` in {GetComponent(s), …InChildren, …InParent, TryGetComponent, FindObjectOfType, FindObjectsByType, …} + `within` `definition.class` | entity `GameComponent` for the looked-up type, relation `depends` from `unity:type:{Class}` |
-| what this component spawns | `reference.type` + `within` `call.method` in {Instantiate, AddComponent, CreateInstance} + `within` `definition.class` | entity `GameComponent` for the spawned type, relation `depends` (`mode: instantiate`) |
-| which scripts load from `Resources/` -- the build-size and stripping question | `call.method` named Load/LoadAsync/LoadAll/LoadAllAsync/UnloadAsset with `receiver_hint = Resources` + `within` `definition.class` | entity `ResourceLoad`, relation `depends` from `unity:type:{Class}` |
-| which scripts change the scene | `call.method` named LoadScene/LoadSceneAsync/UnloadSceneAsync/GetSceneByName/SetActiveScene with `receiver_hint = SceneManager` + `within` `definition.class` | entity `SceneTransition`, relation `depends` from `unity:type:{Class}` |
+| this class exists as a Unity type | any of the 16 rules below | entity `UnityType` at `unity:type:{Class}` |
+| it is a component | `relation.implements` `MonoBehaviour` + `within` `definition.class` | entity `GameComponent` at `unity:component:{Class}`; `UnityType implements` it |
+| it is a ScriptableObject asset type | `relation.implements` `ScriptableObject` + `within` `definition.class` | entity `Asset` at `unity:scriptable-object:{Class}`; `implements` |
+| it extends the editor | `relation.implements` in {Editor, EditorWindow, PropertyDrawer, DecoratorDrawer, ScriptableWizard, AssetPostprocessor, AssetModificationProcessor, EditorTool, MaterialEditor} + `within` `definition.class` | entity `EditorExtension` at `unity:editor-extension:{Class}` (attribute `base` = which one); `implements` |
+| this plain class is inspector-serializable | `reference.attribute` `Serializable` + `within` `definition.class` | entity `SerializedType` at `unity:serializable-type:{Class}`; `implements` |
+| which engine callbacks this component answers | `definition.method` whose `definition.name` is one of 44 Unity messages + `within` `definition.class` | entity `LifecycleHook`; relation `handles` `unity:type:{Class}` -> `unity:lifecycle:{Class}:{Method}` |
+| which coroutines it runs | `reference.type` `IEnumerator` + `within` `definition.method` + `within` `definition.class` | entity `Coroutine`; `handles` -> `unity:coroutine:{Class}:{Method}` |
+| which components it requires on the same GameObject | `reference.type` (the `typeof` argument) + `within` `reference.attribute` `RequireComponent` + `within` `definition.class` | `depends` `unity:type:{Class}` -> `unity:type:{Required}`, both hubs minted |
+| which type this custom inspector draws | `reference.type` + `within` `reference.attribute` in {CustomEditor, CustomEditorForRenderPipeline} + `within` `definition.class` | `handles` (`role: inspector`) `unity:type:{Editor}` -> `unity:type:{Target}` |
+| which type this property drawer draws | `reference.type` + `within` `reference.attribute` `CustomPropertyDrawer` + `within` `definition.class` | `handles` (`role: property_drawer`) `unity:type:{Drawer}` -> `unity:type:{Target}` |
+| which ScriptableObjects a designer can create from the Assets menu | `reference.attribute` `CreateAssetMenu` + `within` `definition.class` | entity `AssetMenu`; `configured_by` -> `unity:asset-menu:{Class}` |
+| which components run in edit mode, forbid duplicates or set an execution order | `reference.attribute` in {ExecuteAlways, ExecuteInEditMode, DisallowMultipleComponent, SelectionBase, DefaultExecutionOrder, AddComponentMenu, HelpURL, ContextMenu, ImageEffectAllowedInSceneView} + `within` `definition.class` | entity `ComponentPolicy`; `configured_by` -> `unity:policy:{Class}:{Attribute}` |
+| which components are tuned from the inspector, and with what constraint | `reference.attribute` in {SerializeField, SerializeReference, HideInInspector, Header, Tooltip, Range, Min, Space, TextArea, Multiline, ColorUsage, FormerlySerializedAs, NonSerialized} + `within` `definition.class` | entity `InspectorField`; `configured_by` -> `unity:inspector-field:{path}:{start}` |
+| which component this component looks up at runtime | `reference.type` (the generic argument) + `within` `call.method` in {GetComponent(s), ...InChildren, ...InParent, TryGetComponent, FindObjectOfType, FindObjectsByType, ...} + `within` `definition.class` | `depends` (`via` = the call) `unity:type:{Class}` -> `unity:type:{Looked-up}` |
+| what this component spawns | `reference.type` + `within` `call.method` in {Instantiate, AddComponent, CreateInstance} + `within` `definition.class` | `depends` (`via`, `mode: instantiate`) -> `unity:type:{Spawned}` |
+| which scripts load from `Resources/` -- the build-size and stripping question | `call.method` in {Load, LoadAsync, LoadAll, LoadAllAsync, UnloadAsset} with `receiver_hint = Resources` + `within` `definition.class` | entity `ResourceLoad`; `depends` -> `unity:resources-load:{path}:{start}` |
+| which scripts change the scene | `call.method` in {LoadScene, LoadSceneAsync, UnloadSceneAsync, GetSceneByName, SetActiveScene} with `receiver_hint = SceneManager` + `within` `definition.class` | entity `SceneTransition`; `depends` -> `unity:scene-transition:{path}:{start}` |
 | which scripts are editor-only and must not reach a player build | `import.namespace` whose name starts with `UnityEditor` | entity `EditorOnlyScript` at `unity:editor-script:{path}` |
 
-Every relation end is a key some rule in this file materializes: the member
-rules point their source at `unity:type:{Class}`, which the four role rules
-emit, and the three `typeof`/generic-argument rules emit the referenced type
-themselves before pointing at it, so nothing dangles even when the referenced
-type is an engine type like `Rigidbody`.
+`unity.editor-only-script` is the one rule with no relation: it is a property of
+a file, not of a type, and there is no class to join a file-level `using` to. It
+is kept because "which scripts are editor-only" is a real question and the
+entity carries the path that answers it.
 
-The collapse: 12 lifecycle rules -> 1 `field_in` over 44 message names;
-5 field-attribute rules -> 1 over 13 attribute names; 2 class-attribute rules ->
-`unity.create-asset-menu` plus `unity.requires-component`; 2 `Resources.Load`
-rules -> 1.
+Because the hub is minted by the reference rules as well as the declaration
+rules, a relation to an engine type the project never declares -- `Rigidbody`,
+`Animator` -- still has both ends: the `UnityType` for `Rigidbody` is minted by
+the `GetComponent<Rigidbody>()` rule itself. Nothing dangles.
 
 ## A field only the Pack can supply
 
@@ -203,24 +186,23 @@ rules -> 1.
 `[SerializeField] private float speed;` is the single most-asked Unity question
 -- *which fields of this component are authored in the inspector* -- and the
 overlay cannot name the field. `omega-c-sharp` spans `definition.field` on
-`@member.field`, which `queries.scm` binds to the `variable_declarator`
-(`packs/omega-c-sharp/queries.scm`, the `field_declaration` pattern), while
+`@member.field`, which `queries.scm` binds to the `variable_declarator`, while
 `reference.attribute` spans the `attribute` node. The attribute is a child of
 the `field_declaration`; the declarator is a grandchild through
 `variable_declaration`. Neither span contains the other, so
 `fact_join_by_span` with `within` cannot relate them in either direction, and
-there is no owner or name they share for `fact_join_by_field`. The only other
-span that contains both is `definition.class`, which is what this overlay uses
--- so it can say *this component has an inspector-authored `[Range]` field* but
-not *`speed` is that field*.
+they share no name or owner for `fact_join_by_field`. The only span containing
+both is `definition.class`, which is what this overlay uses -- so it can say
+*this component has an inspector-authored `[Range]` field* but not *`speed` is
+that field*.
 
 Two ways out, both the Pack's: span `definition.field` on the
-`field_declaration` rather than the declarator (which would cost nothing and
-also fix the same join for every other framework reading C# field attributes),
-or publish an `owner_span`/`declaration_span` field on `definition.field`. The
-first is a span change, not a new field, and is the cheaper of the two.
-`unity.inspector-field` is written to work today without it: it keys the entity
-by attribute span and attaches it to the enclosing type.
+`field_declaration` rather than on the declarator (which costs nothing and fixes
+the same join for every framework reading C# field attributes), or publish an
+`owner_span`/`declaration_span` field on `definition.field`. The first is a span
+change, not a new field, and is the cheaper. `unity.inspector-field` works today
+without it: it keys the entity by attribute span and attaches it to the
+enclosing type.
 
 ## Still to decide
 
@@ -228,16 +210,14 @@ by attribute span and attaches it to the enclosing type.
    `.unity`, `.prefab`, `.asset` and `.meta` are YAML, but
    `grammars/omega-yaml/manifest.toml` registers `extensions = ["yml"]` and no
    grammar registers those four. Until one does, no Pack emits a fact about a
-   scene or a prefab and the whole `fileID`/`guid` half of Unity -- *which
+   scene or a prefab, and the whole `fileID`/`guid` half of Unity -- *which
    prefab uses this script*, *which scene contains this object* -- is "not
-   found". This is a grammar-manifest decision with the same shape for
-   `omega-godot-resource` (`extensions = []`, so `.tres`/`.tscn` are equally
-   unreachable), so it belongs in `00-INDEX.md` rather than here. When the
-   extensions are registered, the port is
+   found". Same shape as `omega-godot-resource` (`extensions = []`, so
+   `.tres`/`.tscn` are equally unreachable), so it belongs in `00-INDEX.md`
+   rather than here. When the extensions are registered the port is
    `structured.entry` -> `definition.config_key` plus `fact_join_by_span`
-   `within` for the parent key, exactly as `00-INDEX.md` describes -- and the
-   `guid:` inside an `m_Script:` mapping is reachable that way with no new
-   field.
+   `within` for the parent key, and the `guid:` inside an `m_Script:` mapping is
+   reachable that way with no new field.
 2. **`unity.coroutine` keys on `IEnumerator`, which is not Unity's.** A
    `reference.type` named `IEnumerator` in a method body, rather than in the
    return position, produces the same fact -- the Pack spans `@return_use` and
@@ -251,3 +231,10 @@ by attribute span and attaches it to the enclosing type.
    component, one allocates a ScriptableObject -- and the rule records which in
    its `via` attribute rather than splitting into three rules. If a question
    ever needs to separate them, the attribute is already there.
+4. **The four role entities duplicate the hub's name.** `unity:component:Player`
+   holds only `class`, `base` and `declared_in`; it exists because brief 3g
+   forbids a second kind on `unity:type:Player`. The alternative -- dropping the
+   role entities and classifying purely by the presence of an outgoing edge --
+   would make "list every MonoBehaviour in this project" a two-hop query instead
+   of one entity-kind lookup. The duplication is the cheaper of the two and is
+   the reason the file emits 13 entity kinds for 17 rules.
