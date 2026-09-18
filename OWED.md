@@ -56,8 +56,10 @@ framework wave is the real consumer and will settle it.
 
 ### Still collecting
 
-**Status: the rest is still collecting. Do not edit a Pack until the framework
-waves are done.**
+**Status: the call rows are done** — item 17 restored the canonical call view in
+nine Packs, which closed every row that asked for a call's first argument or its
+receiver. What is left is the config-shaped rows, and they are all the same
+one-word move.
 
 `OverlayFact::field` (`omega-semantic/src/framework/overlay.rs:56`) resolves the
 `fields` map and a fixed list of built-in names. It **never consults
@@ -74,17 +76,14 @@ canonical key, a relation end, an entity attribute, or a join key.
 | omega-hcl | `definition.config_block` | `block_type`, `type_label` | terraform |
 | omega-hcl | `reference.traversal` | `root` | terraform |
 | omega-javascript, omega-typescript, omega-tsx | `import.symbol` | `module` — the specifier the symbol came from | react |
-| omega-python | `call.function`, `call.method` | the call's first string-or-identifier argument | django |
 | omega-caddyfile | `definition.config_matcher_condition` | `operand` — what the condition tests for | caddyfile |
 | omega-php | `reference.attribute` | the attribute's argument text — `#[Route('/orders/{id}')]` is where a Symfony URL is stated | symfony |
 | omega-xml | `definition.config_attribute` | `value` | maui — `Route="home"`, `x:Class="MyApp.DetailsPage"` |
 | omega-prisma | `definition.config_setting` | `value` | prisma — `provider = "postgresql"` is the most-asked fact about a schema |
 | omega-razor | `reference.attribute_value` | `attribute` — which event a handler is bound to | blazor |
-| omega-javascript, omega-typescript, omega-tsx | `call.method`, `call.function` | `arg0` (first string-literal argument), `receiver` | express, bun, fastify |
-| omega-kotlin | `call.function`, `call.method` | first string-literal argument — a Navigation Compose destination | jetpack-compose |
 | omega-hcl | `definition.config_block` | `type_label` — the resource type, which is what attributes a resource to a provider | terraform-providers |
 | omega-python | `reference.decorator` | `target` — the declaration the decorator is attached to; in tree-sitter-python they are siblings, so no span join reaches it | flask |
-| omega-python | `call.function`, `call.method`, `reference.decorator` | the first string-literal or keyword argument | pydantic, pytorch-extensions, django |
+| omega-python | `reference.decorator` | the decorator's first argument — the call templates have it now, a decorator is a separate pattern with no argument capture | pydantic, pytorch-extensions, django |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
