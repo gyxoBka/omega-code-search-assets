@@ -277,64 +277,66 @@ omega-ruby. Those overlays have kind, name, path and span and nothing else.
 
 ---
 
-## 12. Twenty-seven grammars cannot be reached by their own file extensions
+## 12. Grammars that could not be reached by their own file extensions — fixed
 
 `ParserRegistry::detect_path` (`omega-ingest/src/parser_registry.rs:377`) tries
-`filenames`, then `shebang_regexes`, then the extension through `by_language`.
-`by_language` looks the string up in the alias map, which `register_identity`
-fills from `language` plus `aliases`, and `extensions` adds to separately. So a
-grammar declaring `extensions = []` is reachable by extension **only when the
-extension happens to spell its language name** — `.go` finds `go`, `.rb` does
-not find `ruby`.
+`filenames`, then `shebang_regexes`, then the extension through `by_language`,
+whose alias map is `language` + `aliases` + `extensions`. A grammar declaring
+`extensions = []` was therefore reachable by extension **only when the extension
+happened to spell its language name** — `.go` found `go`, `.rb` did not find
+`ruby`.
 
-**51 of 59 grammar manifests declare `extensions = []`**; only omega-c,
-omega-dockerfile, omega-javascript, omega-json, omega-python, omega-rust,
-omega-typescript and omega-yaml declare any. Those eight are exactly the packs
-the control index had installed, which is why this was never seen.
+**51 of 59 grammar manifests declared `extensions = []`**, and the eight that did
+not are exactly the packs the control index had installed, which is why this was
+never seen. 27 grammars had at least one unreachable extension, `.xml`/`.xaml`,
+`.rb`, `.cs`, `.kt`, `.md`, `.tf`, `.hpp`, `.sh`, `.ps1`, `.gd` among them —
+every framework overlay over one of those languages was inert on a real
+repository whatever its rules said.
 
-27 grammars have at least one unreachable extension:
+**Done.** 31 manifests now declare the extensions their language uses, plus
+filenames for `Makefile`, `GNUmakefile`, `CMakeLists.txt`, `nginx.conf`,
+`.editorconfig`, the shell rc files and Ruby's `Gemfile`/`Rakefile`/`Guardfile`/
+`Podfile`/`Brewfile`, and shebang regexes for bash, python, ruby and php. Every
+detection key is globally unique — `check_identity_available` drops a whole
+bundle on a duplicate — so the three contested extensions were decided:
+`.h` stays with omega-c, `.conf` is too generic to belong to nginx (which is
+reached by the filename `nginx.conf` instead), and `.sc` goes to scala.
 
-| grammar | not reachable |
+Proved end to end rather than by reading: a ten-file polyglot fixture indexed
+with those grammars and packs installed gives
+
+| file | definitions |
 |---|---|
-| omega-xml | xml, xaml, csproj, props, targets, resx, plist (its `language` is `msbuild`) |
-| omega-cpp | cc, cxx, hpp, hh, h |
-| omega-ruby | rb, rake, gemspec |
-| omega-c-sharp | cs, csx |
-| omega-powershell | ps1, psm1, psd1 |
-| omega-godot-resource | tres, tscn, godot |
-| omega-kotlin | kt, kts |
-| omega-hcl | tf, tfvars |
-| omega-elixir | ex, exs |
-| omega-erlang | erl, hrl |
-| omega-bash | sh, zsh |
-| omega-batch | bat, cmd |
-| omega-markdown | md |
-| omega-gdscript | gd |
-| omega-solidity | sol |
-| omega-julia | jl |
-| omega-nginx | conf |
-| omega-make | mk |
-| omega-razor | cshtml |
-| omega-scala | sc |
-| omega-groovy | gradle |
-| omega-vbscript | vbs |
-| omega-blade | blade.php |
-| omega-graphql | gql |
-| omega-html | htm |
-| omega-ini | cfg |
-| omega-pug | jade |
+| `repo.kt` | Repo, find, name, id, app |
+| `main.tf` | aws_s3_bucket, bucket, b |
+| `app.csproj` | Project, PropertyGroup, TargetFramework, Sdk |
+| `Service.cs` | Service, Add, App |
+| `widget.hpp` | Widget, size |
+| `readme.md` | Title |
+| `greeter.rb` | Greeter, hello |
+| `thing.ps1` | Get-Thing, Name |
+| `player.gd` | _ready |
+| `Gemfile` | none — but two reference intents and six coverage rows, so the Ruby pack ran on it |
 
-`filenames` is empty in 57 of 59, so `Makefile`, `Dockerfile` (which has it),
-`Gemfile`, `Rakefile`, `Caddyfile`, `nginx.conf`, `.editorconfig`,
-`CMakeLists.txt` and the rest reach a parser only if their name happens to carry
-one of these extensions.
+Two things learned doing it, both worth keeping:
 
-Every framework overlay over one of these languages is inert today, whatever its
-rules say. maui is the clearest case: `.xaml` and `.cs` both miss, so not one of
-its nine live rules can fire on a real repository.
+**A changed manifest under an unchanged version is rejected by the store** —
+`Store(AssetLogicalRebind { kind: "GRAMMAR_BUNDLE", logical_id:
+"tree-sitter-markdown", version: "0.1.0-source-staged" })`. Every touched bundle
+got a patch bump, suffix preserved.
 
-**Done looks like:** every grammar manifest declaring the extensions and
-filenames its language actually uses, with the ownership conflicts decided
-deliberately (`.h` between omega-c and omega-cpp; `.conf` between omega-nginx
-and omega-ini; `.sc` between omega-scala and omega-r), and a control index over
-a polyglot repository showing each of them ingesting files.
+**A grammar cannot declare a filename that spells its own language.**
+`validate_manifest` lowercases `language`, `aliases`, `extensions` and
+`filenames` into one set and rejects a repeat, so omega-dockerfile cannot list
+`Dockerfile` and omega-caddyfile cannot list `Caddyfile`. Both files have no
+extension, so **a file literally named `Dockerfile` or `Caddyfile` reaches no
+parser today.** That is a host rule to relax — the identity check should compare
+filenames against filenames, not against the language name — and until then
+those two languages are reachable only through `Containerfile` and `.caddyfile`.
+
+### 12a. Still unreachable by extension: `.blade.php`
+
+`Path::extension` of `home.blade.php` is `php`, so a Blade template goes to
+omega-php and omega-blade can never claim it. It needs a suffix rule — matching
+the tail of the filename rather than the extension — which `detect_path` does
+not have.
