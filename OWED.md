@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 12 and the qualifier change. Numbers come from
+Last updated after framework wave 13, the last one. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -166,34 +166,26 @@ kept, because that is the statement the whole framework contract rests on.
 
 ---
 
-## 6. The framework waves themselves
+## 6. The framework waves themselves -- done
 
-4 of 55 frameworks still hold rules that cannot match: **93 of 796**, measured with the surface scoped to each framework's own `host.required_packs` — and all four are the ones deferred behind item 7. Every other Framework matches everything it names. The
-loop is running in waves of five, worst first, and this file is updated when it
-finishes.
+**754 overlay rules across 55 frameworks; 0 cannot match any Pack emission.**
+`key_collisions.py` reports 0, `dangling_ends.py` 3 candidates, all pydantic and
+all read. From 1525 rules of which 1217 could not match, in thirteen waves.
 
 ---
 
-## 7. A scoped npm package can never be matched — a host fix, decided
+## 7. A scoped npm package can never be matched -- fixed
 
-`parse_external_path` (`omega-semantic/src/framework/materialize.rs:560`) splits
-the target on `/` and takes the **first** part as the package. So
-`@sveltejs/kit` becomes package `@sveltejs` with segments `["kit"]`, and an
-`external_path_matches` clause naming `@sveltejs/kit` is unreachable for every
-possible input.
+`parse_external_path` (`omega-semantic/src/framework/materialize.rs`) split the
+target on `/` and took the first part, so `@sveltejs/kit` became package
+`@sveltejs` with segments `["kit"]`. 40 clauses in five frameworks depended on a
+match that was unreachable for every possible input.
 
-**40 clauses in 5 frameworks depend on this**: nestjs 23, angular 10, tauri 4,
-sveltekit 2, astro 1. A scoped npm package's name *is* `@scope/name`; no other
-ecosystem this function serves produces a leading `@` segment, so joining the
-first two parts when the first begins with `@` is a small, generic rule.
-
-`materialize.rs` is frozen, so the fix needs the design-set obligations re-run
-and `tests/fixtures/design-set/freeze.json` re-stamped with a dated note.
-
-**Decided, not yet done.** The five frameworks above are deliberately scheduled
-*after* the fix, so they are written against a correct host rather than around a
-bug. sveltekit's two rules were deleted rather than worked around; the others
-have not been rewritten yet.
+Fixed in the engine at `af46af8`: when the first part begins with `@` and there
+is a second, they are the package together. **No freeze re-stamp was needed** --
+the frozen design-set file is `crates/omega-semantic/src/materialize.rs`, a
+different file from `crates/omega-semantic/src/framework/materialize.rs`. The
+six design-set obligations pass unchanged.
 
 ### 7a. Almost no fact anywhere carries `external`
 
@@ -462,11 +454,10 @@ the Pack, and the fields nothing reads removed.
 
 ---
 
-## 15. Key collisions -- closed except angular
+## 15. Key collisions -- closed
 
-`python pack-design/key_collisions.py`, after wave 12: **3 dropped entity
-outputs, all in omega-framework-angular**, which is deferred behind item 7 with
-the rest of that framework. unity, unreal-engine, ruby-on-rails, vapor, swiftui,
+`python pack-design/key_collisions.py` reports **zero** after wave 13 closed
+angular's three. unity, unreal-engine, ruby-on-rails, vapor, swiftui,
 maui and nuxt are all silent, and so is the cross-framework check.
 
 vapor settled the remedy. A type is routinely several things at once -- `final

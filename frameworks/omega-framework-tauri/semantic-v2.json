@@ -5,17 +5,21 @@
   "maturity_target": "semantic-overlay-full",
   "host": {
     "languages": [
+      "javascript",
       "json",
       "json5",
       "rust",
       "toml",
+      "tsx",
       "typescript"
     ],
     "required_packs": [
+      "omega-javascript",
       "omega-json",
       "omega-json5",
       "omega-rust",
       "omega-toml",
+      "omega-tsx",
       "omega-typescript"
     ],
     "required_capabilities": [
@@ -35,7 +39,6 @@
   "emits": {
     "entities": [
       "ApiUse",
-      "Command",
       "CommandInvocation",
       "Configuration",
       "Dependency",
@@ -45,29 +48,317 @@
       "Resource"
     ],
     "relations": [
+      "applies_to",
       "calls",
+      "configures",
       "depends_on",
+      "grants",
       "handles",
       "uses_api"
     ]
   },
   "rules": [
     {
-      "id": "tauri.command.scoped-attribute",
+      "id": "tauri.frontend.module",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.rust_function_scoped_attribute_context"
+          "value": "import.module"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "@tauri-apps/"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PlatformComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:frontend:{path}"
+          },
+          "attributes": {
+            "role": "tauri-frontend"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:module:{definition.name}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:frontend:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tauri:module:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A file that imports an @tauri-apps module is a Tauri frontend; which module it pulls in is the import specifier the Pack names."
+    },
+    {
+      "id": "tauri.frontend.invoke",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
         },
         {
           "kind": "field_equals",
-          "field": "attribute_path",
-          "value": "tauri::command"
+          "field": "definition.name",
+          "value": "invoke"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_prefix": "@tauri-apps"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CommandInvocation",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:invoke:{path}:{source.start}"
+          },
+          "attributes": {
+            "role": "tauri-ipc-invoke"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "calls",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:frontend:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The call site that crosses the IPC bridge, resolved through the @tauri-apps import that bound `invoke`. The command name is the first argument, which no JS/TS Pack publishes."
+    },
+    {
+      "id": "tauri.frontend.event-listen",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "listen",
+            "once"
+          ]
+        },
+        {
+          "kind": "external_path_matches",
+          "package_prefix": "@tauri-apps",
+          "member_in": [
+            "event"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventSubscription",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:event-listener:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:frontend:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A subscription to a backend event, resolved to @tauri-apps/api/event. The event name is the first argument and is not published."
+    },
+    {
+      "id": "tauri.frontend.event-emit",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "emit",
+            "emitTo"
+          ]
+        },
+        {
+          "kind": "external_path_matches",
+          "package_prefix": "@tauri-apps",
+          "member_in": [
+            "event"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EventEmission",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:event-emitter:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:frontend:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "An event emitted from the frontend, resolved to @tauri-apps/api/event."
+    },
+    {
+      "id": "tauri.frontend.api",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "external_path_matches",
+          "package_prefix": "@tauri-apps"
         },
         {
           "kind": "field_present",
-          "field": "function_name"
+          "field": "external.member"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "invoke",
+            "listen",
+            "once",
+            "emit",
+            "emitTo"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:api:{external.member}:{definition.name}"
+          },
+          "attributes": {
+            "symbol": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "area": {
+              "kind": "field_ref",
+              "field": "external.member"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:frontend:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which Tauri API surface a frontend call resolves to -- external.member is the module segment the binding was imported from (window, path, webview, ...)."
+    },
+    {
+      "id": "tauri.backend.entry",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.macro"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "generate_handler",
+            "generate_context"
+          ]
         },
         {
           "kind": "path_glob",
@@ -78,150 +369,65 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Command",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "tauri:command:{path}:{function_name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "function_name"
-            },
-            "source_role": "fully-qualified-command-attribute",
-            "macro_execution_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Source-authored fully-qualified attribute declaration only; macro expansion and runtime effects are not claimed."
-    },
-    {
-      "id": "tauri.window.config",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_nested_array_object_string_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "parent_key",
-          "value": "app"
-        },
-        {
-          "kind": "field_equals",
-          "field": "array_key",
-          "value": "windows"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "label"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/tauri*.conf.json"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
           "entity_kind": "PlatformComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:window:{path}:{value}"
+            "template": "tauri:backend:{path}"
           },
           "attributes": {
-            "label": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_role": "tauri-config-window-label",
-            "runtime_window_claimed": false
+            "role": "tauri-app-entry"
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored Tauri JSON window label only; dynamic runtime-created windows and merged effective config are not claimed."
+      "coverage_note": "generate_handler! and generate_context! are the two macros only a Tauri app entry point invokes; the handler list inside the macro is a token tree omega-rust does not descend into."
     },
     {
-      "id": "tauri.capability.config",
+      "id": "tauri.backend.builder",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
+          "value": "call.method"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json_string_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "identifier"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "invoke_handler",
+            "plugin",
+            "manage",
+            "setup",
+            "run",
+            "on_window_event",
+            "on_menu_event",
+            "on_page_load",
+            "menu",
+            "system_tray",
+            "register_uri_scheme_protocol"
+          ]
         },
         {
           "kind": "path_glob",
-          "pattern": "**/capabilities/*.json"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Resource",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "tauri:capability:{path}:{value}"
-          },
-          "attributes": {
-            "identifier": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_role": "tauri-capability-identifier",
-            "permission_effects_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored capability identifier only; permission evaluation, window association and runtime resource use are not modeled by this static contract."
-    },
-    {
-      "id": "tauri.generic-api-call.tauri",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "pattern": "**/*.rs"
         },
         {
-          "kind": "external_path_matches",
-          "package": "tauri"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "fact_join_by_field",
+          "fact_kind": "call.macro",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "generate_handler",
+                "generate_context"
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
@@ -231,48 +437,57 @@
           "entity_kind": "ApiUse",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:api-use:{path}:{source.start}"
+            "template": "tauri:builder-step:{path}:{definition.name}"
           },
           "attributes": {
-            "package": "tauri",
-            "source_only": true
+            "step": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "uses_api",
+          "relation_kind": "configures",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "tauri:backend:{path}"
           },
           "target": {
-            "kind": "by_canonical_key",
-            "template": "tauri:api-use:{path}:{source.start}"
+            "kind": "current"
           },
-          "attributes": {
-            "package": "tauri",
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+      "coverage_note": "What the Builder chain configures in the file that assembles the app. The join to the generate_* macro in the same path is the gate that keeps `run` and `plugin` from meaning any other method of that name."
     },
     {
-      "id": "tauri.generic-dependency.tauri",
+      "id": "tauri.cargo.dependency",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "import.target_candidate"
+          "value": "definition.config_key"
         },
         {
-          "kind": "external_path_matches",
-          "package": "tauri"
+          "kind": "path_glob",
+          "pattern": "**/Cargo.toml"
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "dependencies",
+            "build-dependencies",
+            "dev-dependencies"
+          ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "tauri"
         }
       ],
       "guards": [],
@@ -282,231 +497,254 @@
           "entity_kind": "Dependency",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:dependency:tauri"
+            "template": "tauri:crate:{definition.name}"
           },
           "attributes": {
-            "package": "tauri",
-            "source_only": true
+            "crate": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Configuration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:manifest:{path}"
+          },
+          "attributes": {
+            "role": "cargo-manifest"
           }
         },
         {
           "kind": "relation_candidate",
           "relation_kind": "depends_on",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "tauri:manifest:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "tauri:dependency:tauri"
+            "template": "tauri:crate:{definition.name}"
           },
-          "attributes": {
-            "package": "tauri",
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+      "coverage_note": "Which Tauri crates and tauri-plugin-* crates the backend depends on. definition.container is the host-synthesized owning [table]; a [dependencies.tauri-plugin-x] section spells the table `dependencies.tauri-plugin-x` and is not covered."
     },
     {
-      "id": "tauri.invoke",
+      "id": "tauri.config.plugin",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "definition.config_key"
         },
         {
-          "kind": "external_path_matches",
-          "package_in": [
-            "@tauri-apps/api/core",
-            "@tauri-apps/api/tauri"
-          ],
-          "member_in": [
-            "invoke"
-          ]
+          "kind": "path_glob",
+          "pattern": "**/tauri*.conf.json*"
         },
         {
-          "kind": "field_present",
-          "field": "call.arg0"
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "plugins"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "CommandInvocation",
+          "entity_kind": "PlatformComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:invoke:{call.arg0}:{path}:{source.start}"
+            "template": "tauri:plugin:{definition.name}"
           },
           "attributes": {
-            "command": {
+            "plugin": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "definition.name"
             }
           }
         },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "calls",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_field",
-            "field": "call.arg0"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "tauri.event.listen",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "@tauri-apps/api/event",
-          "member_in": [
-            "listen",
-            "once"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "call.arg0"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "EventSubscription",
+          "entity_kind": "Configuration",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:event-sub:{call.arg0}:{path}:{source.start}"
+            "template": "tauri:config:{path}"
           },
           "attributes": {
-            "event": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
+            "role": "tauri-config"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "handles",
+          "relation_kind": "configures",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "tauri:config:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "tauri:event-sub:{call.arg0}:{path}:{source.start}"
+            "template": "tauri:plugin:{definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Each key directly under `plugins` in tauri.conf.json or tauri.conf.json5 is a configured plugin."
     },
     {
-      "id": "tauri.event.emit",
+      "id": "tauri.config.window",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "definition.config_key"
         },
         {
-          "kind": "external_path_matches",
-          "package": "@tauri-apps/api/event",
-          "member_in": [
-            "emit",
-            "emitTo"
+          "kind": "path_glob",
+          "pattern": "**/tauri*.conf.json*"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "label"
+        },
+        {
+          "kind": "field_in",
+          "field": "enclosing.qname",
+          "values": [
+            "app.windows",
+            "tauri.windows"
           ]
-        },
-        {
-          "kind": "field_present",
-          "field": "call.arg0"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "EventEmission",
+          "entity_kind": "PlatformComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:event-emit:{call.arg0}:{path}:{source.start}"
+            "template": "tauri:window-declaration:{path}:{source.start}"
           },
           "attributes": {
-            "event": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
+            "role": "tauri-window-declaration"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Configuration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:config:{path}"
+          },
+          "attributes": {
+            "role": "tauri-config"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "uses_api",
+          "relation_kind": "configures",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "tauri:config:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "tauri:event-emit:{call.arg0}:{path}:{source.start}"
+            "template": "tauri:window-declaration:{path}:{source.start}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "A window declared in the app config: enclosing.qname is app.windows in Tauri 2 and tauri.windows in Tauri 1. omega-json publishes the label text only as an attribute, so the declaration is keyed by its offset and the label itself is not carried."
     },
     {
-      "id": "tauri.window.config-json5",
+      "id": "tauri.capability.permission",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
+          "value": "relation.data"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json5_nested_array_object_string_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "parent_key",
-          "value": "app"
+          "kind": "path_glob",
+          "pattern": "**/capabilities/*.json*"
         },
         {
           "kind": "field_equals",
-          "field": "array_key",
+          "field": "definition.container",
+          "value": "permissions"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:permission:{definition.name}"
+          },
+          "attributes": {
+            "permission": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Resource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "tauri:capability:{path}"
+          },
+          "attributes": {
+            "role": "tauri-capability"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "grants",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:capability:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tauri:permission:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Every element of a capability file's `permissions` array, by the identifier it grants (core:default, fs:allow-read-file). Array elements arrive as relation.data with their quotes already stripped."
+    },
+    {
+      "id": "tauri.capability.window",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/capabilities/*.json*"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
           "value": "windows"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "label"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/tauri*.conf.json5"
         }
       ],
       "guards": [],
@@ -516,288 +754,53 @@
           "entity_kind": "PlatformComponent",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:window:{path}:{value}"
+            "template": "tauri:window:{definition.name}"
           },
           "attributes": {
             "label": {
               "kind": "field_ref",
-              "field": "value"
-            },
-            "source_role": "tauri-json5-window-label",
-            "runtime_window_claimed": false
+              "field": "definition.name"
+            }
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored Tauri configuration evidence only; merged/effective runtime config is not claimed."
-    },
-    {
-      "id": "tauri.capability.config-json5",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
         },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json5_string_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "identifier"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/capabilities/*.json5"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Resource",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "tauri:capability:{path}:{value}"
+            "template": "tauri:capability:{path}"
           },
           "attributes": {
-            "identifier": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_role": "tauri-json5-capability",
-            "permission_effects_claimed": false
+            "role": "tauri-capability"
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "applies_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "tauri:capability:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "tauri:window:{definition.name}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored Tauri configuration evidence only; merged/effective runtime config is not claimed."
-    },
-    {
-      "id": "tauri.window.config-toml",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "toml_table_array_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "container",
-          "value": "app.windows"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "label"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/Tauri.toml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PlatformComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "tauri:window:{path}:{value}"
-          },
-          "attributes": {
-            "label": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_role": "tauri-toml-window-label",
-            "runtime_window_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored Tauri configuration evidence only; merged/effective runtime config is not claimed."
-    },
-    {
-      "id": "tauri.capability.config-toml",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "toml_table_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "identifier"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/capabilities/*.toml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Resource",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "tauri:capability:{path}:{value}"
-          },
-          "attributes": {
-            "identifier": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_role": "tauri-toml-capability",
-            "permission_effects_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored Tauri configuration evidence only; merged/effective runtime config is not claimed."
-    },
-    {
-      "id": "tauri.config.toml-entry",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "toml_table_pair"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/Tauri.toml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Configuration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "tauri:config:{path}:{key}:{source.start}"
-          },
-          "attributes": {
-            "key": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored Tauri config entry; effective platform/config merging is not evaluated."
-    },
-    {
-      "id": "tauri.config.json5-entry",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "json5_nested_pair"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/tauri*.conf.json5"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Configuration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "tauri:config:{path}:{key}:{source.start}"
-          },
-          "attributes": {
-            "key": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored Tauri config entry; effective platform/config merging is not evaluated."
+      "coverage_note": "The window labels a capability applies to. This is the one place a window label is reachable as a name rather than as a config value."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "JSON/JSON5/TOML authored Tauri config, window labels, capability identifiers and generic config entries are materialized; deeply nested permission arrays/objects remain preserved by structured Pack evidence when no exact typed Tauri rule exists",
-      "dynamic/computed command/event names and member aliases require generic value/import resolution; literal authored invoke/listen/emit commands are materialized",
-      "platform override merging, plugin effects, generated bindings, runtime windows/webviews and command execution are runtime/generated semantics"
+      "The command name in invoke(\"greet\") and the event name in listen(\"saved\") are string arguments; no JavaScript or TypeScript Pack publishes call arguments, so a CommandInvocation cannot be joined to the command it calls.",
+      "#[tauri::command] arrives from omega-rust as reference.attribute named `command` spanning the attribute node alone, which is a sibling of the function it decorates and does not contain it, so no span join reaches the decorated function and the set of Tauri commands is not stated.",
+      "omega-json, omega-json5 and omega-toml publish a config key's `value` as an attribute, which the overlay can only compare against a literal; window labels, capability identifiers and product names in the config files are therefore not carried as entity names.",
+      "Plugin registration in Rust (.plugin(tauri_plugin_fs::init())) names the plugin in the path segment tauri_plugin_fs, which omega-rust does not emit; the plugin set is read from Cargo.toml and tauri.conf.json instead.",
+      "Platform override merging, generated bindings, runtime windows and webviews, and command execution are runtime semantics no static fact states."
     ]
   },
   "provenance": [

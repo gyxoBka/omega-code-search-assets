@@ -775,3 +775,61 @@ at all. The restoration itself is `OWED.md` item 13, with next-js and sveltekit.
 
 Totals: **796 overlay rules; 93 that cannot match, all in the four deferred
 frameworks. 3 dropped entity outputs, all in angular.**
+
+---
+
+# Framework wave 13 (nestjs, angular, tauri, astro) -- the four that were deferred
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-nestjs | 31 -> 8 | 0 | 8 |
+| omega-framework-angular | 31 -> 14 | 0 | 14 |
+| omega-framework-tauri | 14 -> 12 | 0 | 12 |
+| omega-framework-astro | 20 -> 20 | 3 | 20 |
+
+These four were held back twice: first behind `parse_external_path`, which split
+a scoped npm package so `@nestjs/common` could never be matched, and then behind
+the discovery that `external.*` was empty in JavaScript altogether. Both are
+fixed -- the JS/TS Packs publish `qualifier`, and a scoped package is now one
+package -- and all four are rewritten against a correct host rather than around
+a bug.
+
+Most of them did not need `external_path_matches` in the end. nestjs went from
+31 rules to 8 by reading what NestJS actually writes down: a class's role is a
+`reference.decorator` named `Controller`, `Injectable`, `Module`,
+`WebSocketGateway` or `Catch` joined to the `definition.class`, and an HTTP
+route is a decorator named for the verb with `definition.container` present.
+Eleven of the old 31 died on the scoped-package clause alone; the rest were
+keyed to composite kinds of the old vocabulary.
+
+## All three measurements are clean
+
+```
+754 overlay rules across 55 frameworks; 0 cannot match any Pack emission (0%)
+0 entity outputs are overwritten by a same-key rule that sorts first
+3 relation ends address a key template no rule mints textually  (all pydantic, all read and sound)
+```
+
+From **1525 rules of which 1217 could not match** at the start of this
+programme, to **754 rules of which none cannot match**. Every Framework states
+only what some Pack actually emits, no Framework's entity is silently
+overwritten by another's, and every relation lands on an entity something mints.
+
+## What the programme leaves behind
+
+Two things, both measured and both written down rather than guessed at:
+
+**The canonical call view** (`OWED.md` item 17). An engine test reads the live
+omega-typescript Pack and asserts a call publishes `call.arg0`, `call.arg1`,
+`call.last_arg` and `receiver`; it fails, because the Pack rewrite deleted the
+two templates that did it as restating their match. They do not restate it --
+each argument is `first`/`select`/`last` over `ordered_children` of the captured
+argument list. That view is what nine Frameworks in these waves asked for as "a
+field only the Pack can supply": a route's URL in fastify, express, bun, gin,
+fiber, axum and vapor, a Shell route in maui, a decorator argument in django and
+pydantic. Items 1 and 11 are both it.
+
+**The file-shaped rules** (`OWED.md` item 13). next-js, nuxt and sveltekit lost
+20, 11 and 10 `data.file` rules while the audit wrongly reported that kind dead.
+They answer file-based routing through a declaration inside the file instead,
+which is narrower at the edges.
