@@ -1083,3 +1083,72 @@ about a Pack has a date.
 
 827 overlay rules, 0 that cannot match, 0 collisions, 5 dangling candidates, all
 pydantic and all read.
+
+---
+
+# Second pass, wave E (symfony, terraform, prisma, kubernetes-config, caddyfile)
+
+The Frameworks that asked for a field, now that eight Packs publish one.
+
+| Framework | rules | what it can now say |
+|---|---|---|
+| omega-framework-prisma | 16 -> 22 | `provider = "postgresql"` -- which database a schema is on |
+| omega-framework-caddyfile | 16 -> 19 | what a matcher tests for |
+| omega-framework-symfony | 12 -> 16 | `#[Route('/orders/{id}')]` and the template an action renders |
+| omega-framework-terraform | 40 -> 33 | a resource's type label, a traversal's root |
+| omega-framework-kubernetes-config | 35 -> 25 | a config key's value |
+
+symfony is the one to read. `#[Route('/orders/{id}', name: 'order_show')]` keys
+as `symfony:route:/orders/{}` -- the same identity every other HTTP framework
+renders for `/orders/:id` -- and `#[Template('order/show.html.twig')]` joins the
+existing template-resolution chain, so *which URL an action serves* and *which
+file it renders* are both one hop. Its agent also found a rename that was
+load-bearing: `symfony.action.attribute` sorted before `symfony.controller.action`,
+so on an action carrying both `#[IsGranted]` and `#[Route]` the Handler
+materialized from the attribute rule and the route was computed and discarded.
+
+## Three blocking defects
+
+**`definition.container` is the innermost enclosing definition, and ties are
+broken by emission order.** In a Prisma field the field, its modifier and its
+type all share one span, so the innermost is the **type**: for `profile Profile
+@map("profile_ref")` inside `model User`, `definition.container` is `Profile`.
+prisma joined that against the model names and stated *model Profile is stored
+in table profile_ref* -- which the schema does not say, since a field-level
+`@map` names a column of `User`. The model-level `@@map` is matched on
+`enclosing.qname` being exactly the model now, and the column rule reaches its
+model by span.
+
+**`fact_join_by_field` is a full cross product.** It pushes a binding for every
+matching candidate, and joining on the built-in `path` matches every fact of
+that kind in the file. A YAML stream's documents are flat siblings -- nothing
+spans a document -- so kubernetes-config, which tied `kind` to `metadata.name`
+by path, minted **n² objects for an n-document manifest**, n of them real.
+
+Two things came out of that. omega-yaml now emits
+`definition.config_document`, one per document, so a rule can reach the document
+a key belongs to. And `SpanRelation::Contains` was added to the overlay:
+`within` reaches a construct's ancestors and could not reach its members, so a
+rule entered from a document could not bind that document's keys. The
+kubernetes-config rewrite onto those two is `OWED.md` item 19 -- 24 of its 25
+rules depend on the old join, which is a rewrite and not a hand-fix.
+
+**An exhaustive qname list is a narrowing.** `k8s.metadata.label` matched
+`enclosing.qname` in `[metadata.labels, spec.template.metadata.labels]`, which
+drops a CronJob's `spec.jobTemplate.spec.template.metadata.labels`, a
+StatefulSet's `spec.volumeClaimTemplates[].metadata.labels` and every pod
+template inside a CRD instance. Matched by ancestry again: owner is `labels`,
+somewhere under a `metadata`.
+
+## `dangling_ends.py` was counting placeholders as literals
+
+It reported 29 candidates, 24 of them because a placeholder in the key-space
+position renders a literal another rule spells out -- `terraform:{block_type}:
+{name}` is where `terraform:module:foo` comes from, and
+`k8s:object:{value}:{n.value}` renders `k8s:object:Ingress:…`. It now matches
+segment by segment with a placeholder on **either** side covering a literal on
+the other, which leaves it a deliberately weak test: it finds a key space
+nothing mints at all, which is the class it was written for. **Zero across all
+55.**
+
+823 overlay rules, 0 that cannot match, 0 collisions, 0 dangling.

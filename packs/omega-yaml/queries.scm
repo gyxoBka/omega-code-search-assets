@@ -99,3 +99,18 @@
 (tag_directive
   (tag_handle) @tag_directive.handle
   (tag_prefix) @tag_directive.prefix) @tag_directive
+
+; --- which document a key belongs to ---
+;
+; A YAML stream is several documents separated by `---`, and their top-level
+; keys are siblings in the tree: nothing spans a document, so the `kind` of one
+; manifest and the `metadata.name` of the next look like keys of one file. An
+; overlay joining them on the file path therefore binds every combination --
+; `fact_join_by_field` pushes a binding per matching candidate, not the first --
+; and a file of n manifests states n-squared objects, n of them real.
+;
+; `definition.config_document` spans one document, so a rule reaches the
+; document a key is in with `fact_join_by_span` `within`, and two keys are in
+; the same document when they join to the same one.
+
+(document) @config.document

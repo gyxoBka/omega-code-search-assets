@@ -29,20 +29,24 @@
       "Field",
       "Generator",
       "Model",
+      "Provider",
       "SchemaProject",
       "Setting",
+      "Table",
       "View"
     ],
     "relations": [
       "configured_by",
       "configures",
+      "constrained_by",
       "declares",
       "depends_on",
       "has_field",
       "has_value",
       "maps_to",
       "relates_to",
-      "uses_enum"
+      "uses_enum",
+      "uses_provider"
     ]
   },
   "rules": [
@@ -814,7 +818,7 @@
       "confidence": "exact"
     },
     {
-      "id": "prisma.datasource.setting",
+      "id": "prisma.datasource.setting.plain",
       "snapshot": true,
       "match": [
         {
@@ -871,7 +875,7 @@
       "confidence": "exact"
     },
     {
-      "id": "prisma.generator.setting",
+      "id": "prisma.generator.setting.plain",
       "snapshot": true,
       "match": [
         {
@@ -1054,14 +1058,372 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact"
+    },
+    {
+      "id": "prisma.datasource.setting",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_setting"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.prisma"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.datasource_config",
+          "relation": "within",
+          "same_path": true,
+          "bind": "ds"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Setting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:setting:datasource:{ds.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "block": {
+              "kind": "field_ref",
+              "field": "ds.definition.name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:setting:datasource:{ds.definition.name}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:datasource:{ds.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "prisma.generator.setting",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_setting"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.prisma"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.generator_config",
+          "relation": "within",
+          "same_path": true,
+          "bind": "gen"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Setting",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:setting:generator:{gen.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "block": {
+              "kind": "field_ref",
+              "field": "gen.definition.name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:setting:generator:{gen.definition.name}:{definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:generator:{gen.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "prisma.datasource.provider",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_setting"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.prisma"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "provider"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.datasource_config",
+          "relation": "within",
+          "same_path": true,
+          "bind": "ds"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Provider",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:provider:{value}"
+          },
+          "attributes": {
+            "provider": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_provider",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:datasource:{ds.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:provider:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "prisma.generator.provider",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_setting"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.prisma"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "provider"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.generator_config",
+          "relation": "within",
+          "same_path": true,
+          "bind": "gen"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Provider",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:provider:{value}"
+          },
+          "attributes": {
+            "provider": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_provider",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:generator:{gen.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:provider:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "prisma.model.table",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_mapping"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.prisma"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.model_type",
+          "current_field": "enclosing.qname",
+          "join_field": "definition.name",
+          "same_path": true,
+          "bind": "owner"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Table",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "prisma:table:{definition.name}"
+          },
+          "attributes": {
+            "table": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "model": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "maps_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:model:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:table:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`@@map(\"users\")` at model level -- the SQL table a model is stored in. Matched on the enclosing chain being exactly the model, because a field-level `@map` names a column and its chain runs model.field.modifier.type; `definition.container` cannot tell them apart, since all three field facts share one span and the innermost is whichever the Pack emitted last."
+    },
+    {
+      "id": "prisma.model.constraint-column",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.field"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.prisma"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.model_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "constrained_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "prisma:model:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "prisma:field:{owner.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "field": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A column named inside `@relation(fields: [...], references: [...])` or `@@index([...])`. The owning model is reached by span, not by `definition.container`: a Prisma field's own facts all share one span, so the innermost enclosing definition is the field's TYPE and joining on it attributes the column to whatever model that type names."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "a setting's value -- provider = \"postgresql\", output, binaryTargets -- is published by omega-prisma as an attribute on definition.config_setting, and an attribute can only be tested against one literal constant, so which provider a datasource or generator uses is not stated",
-      "@@map(\"users\") on a model is the same definition.config_mapping fact as @map(\"created_at\") on a field, told apart only by not lying inside a field's span; the overlay has no negative join, so the table name is not stated and only the column name is",
-      "the field names inside @@id, @@unique, @@index and @relation(fields:/references:) all arrive as reference.field with nothing separating an own-model key column from a target-model referenced column, so no rule claims either",
+      "@@map(\"users\") on a model and @map(\"created_at\") on a field are the same definition.config_mapping fact; the model-level one is told apart by definition.container naming the model, which is what prisma.model.table joins on, so @@map on a view or a composite type is still unstated -- their fields' names would have to be excluded the same way and the arrangement is rare",
+      "the field names inside @relation(fields: [...], references: [...]) arrive as reference.field with definition.container naming the annotated field, and nothing separates the own-model foreign key column from the target-model referenced column, so no rule claims either; the model-level lists of @@id, @@unique and @@index are stated by prisma.model.constraint-column, but nothing in the fact says which of the three it was",
+      "a setting whose value is an array, a number or a call -- previewFeatures = [\"views\"], url = env(...) -- is emitted by the second definition.config_setting template with no value field, so the setting is stated and its value is not; what env(...) holds is stated separately as an EnvVar",
       "computed Prisma Client/runtime query behavior, database introspection and generated client artifacts are runtime/external semantics"
     ]
   },

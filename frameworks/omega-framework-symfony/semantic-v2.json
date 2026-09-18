@@ -9,7 +9,8 @@
     ],
     "required_packs": [
       "omega-php",
-      "omega-twig"
+      "omega-twig",
+      "omega-yaml"
     ],
     "required_capabilities": [
       "calls",
@@ -29,9 +30,11 @@
     "entities": [
       "FrameworkAttribute",
       "Handler",
+      "Route",
       "ServiceDependency",
       "SymfonyClass",
       "SymfonyContract",
+      "SymfonyControllerRef",
       "Template",
       "TemplateBlock",
       "TemplateMacro"
@@ -43,13 +46,166 @@
       "implements",
       "includes",
       "injects",
+      "renders",
       "resolves_to",
+      "serves",
       "uses_macro"
     ]
   },
   "rules": [
     {
-      "id": "symfony.controller.action",
+      "id": "symfony.action.route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Route",
+            "Get",
+            "Post",
+            "Put",
+            "Patch",
+            "Delete",
+            "Head",
+            "Options"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.attribute_applied",
+          "relation": "same",
+          "same_path": true,
+          "bind": "args",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "call.arg0_text",
+              "value": "/"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "action"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "action.definition.name"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "args.call.arg0_text"
+            },
+            "route_attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:route:{normalized_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "args.call.arg0_text"
+            },
+            "route_attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "attributes": {
+            "via": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "serves",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:route:{normalized_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "args.call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.action.route-declared",
       "snapshot": true,
       "match": [
         {
@@ -146,7 +302,252 @@
       "confidence": "exact"
     },
     {
-      "id": "symfony.action.attribute",
+      "id": "symfony.action.template",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Template"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.attribute_applied",
+          "relation": "same",
+          "same_path": true,
+          "bind": "tmpl",
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "call.arg0_text"
+            },
+            {
+              "kind": "field_not_prefix",
+              "field": "call.arg0_text",
+              "value": "template:"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "action"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "action.definition.name"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template-name:{tmpl.call.arg0_text}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "tmpl.call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template-name:{tmpl.call.arg0_text}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "tmpl.call.arg0_text"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.attribute.argument",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "AsAlias",
+            "AsCommand",
+            "AsController",
+            "AsCronTask",
+            "AsDecorator",
+            "AsDoctrineListener",
+            "AsEntityListener",
+            "AsEventListener",
+            "AsLiveComponent",
+            "AsMessageHandler",
+            "AsPeriodicTask",
+            "AsSchedule",
+            "AsTaggedItem",
+            "AsTargetedValueResolver",
+            "AsTwigComponent",
+            "AsTwigFilter",
+            "AsTwigFunction",
+            "Autoconfigure",
+            "AutoconfigureTag",
+            "Autowire",
+            "AutowireCallable",
+            "AutowireDecorated",
+            "AutowireIterator",
+            "AutowireLocator",
+            "AutowireMethodOf",
+            "AutowireServiceClosure",
+            "Cache",
+            "CurrentUser",
+            "Delete",
+            "Exclude",
+            "Get",
+            "Head",
+            "IsGranted",
+            "Lazy",
+            "MapDateTime",
+            "MapEntity",
+            "MapQueryString",
+            "MapRequestPayload",
+            "MapUploadedFile",
+            "Options",
+            "Patch",
+            "Post",
+            "Put",
+            "Required",
+            "Route",
+            "Security",
+            "TaggedIterator",
+            "TaggedLocator",
+            "Target",
+            "Template",
+            "ValueResolver",
+            "When"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.attribute_applied",
+          "relation": "same",
+          "same_path": true,
+          "bind": "args",
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "call.arg0_text"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkAttribute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "argument": {
+              "kind": "field_ref",
+              "field": "args.call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.attribute.on-action",
       "snapshot": true,
       "match": [
         {
@@ -247,7 +648,7 @@
       "confidence": "exact"
     },
     {
-      "id": "symfony.service.attribute",
+      "id": "symfony.attribute.on-class",
       "snapshot": true,
       "match": [
         {
@@ -345,6 +746,107 @@
             "attribute": {
               "kind": "field_ref",
               "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.routing.yaml",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "controller"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/config/routes**"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "definition.container",
+          "join_field": "definition.container",
+          "same_path": true,
+          "bind": "routepath",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "path"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:route:{normalized_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "routepath.value"
+            },
+            "route_name": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyControllerRef",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:controller-ref:{value}"
+          },
+          "attributes": {
+            "controller": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "serves",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:controller-ref:{value}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:route:{normalized_route}"
+          },
+          "attributes": {
+            "route_name": {
+              "kind": "field_ref",
+              "field": "definition.container"
             }
           }
         }
@@ -1069,10 +1571,12 @@
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "a route path, name, methods and requirements live in the arguments of #[Route]; omega-php emits reference.attribute carrying the attribute's name only and publishes no field on any emission, so a Handler is identified by its class and method and not by the URL it serves -- the canonical call view (call.arg0_text and its siblings) that ten Packs now publish is not published by omega-php, and a Symfony route is not a call argument in any case",
-      "the template a controller renders is the first argument of $this->render(); omega-php emits call.method named render with no argument text, so SymfonyClass -> Template is unreachable",
-      "a Twig reference under the default templates/ root now resolves to the artifact it names, via a data.file join that strips that prefix; a reference into a bundle or a custom Twig namespace (@Admin/list.html.twig, or a root added in twig.yaml) still lands in symfony:template-name:* with no artifact behind it",
-      "services.yaml, routes.yaml and framework.yaml are configuration this overlay does not read; omega-yaml publishes a definition.config_key's value as an attribute, which is write-only, so a YAML route could not be linked to the controller it names",
+      "a route path is stated when it is written as the first positional argument of the routing attribute -- omega-php's reference.attribute_applied publishes call.arg0_text on the same span as reference.attribute; the named-argument spelling #[Route(path: '/x')] arrives as the text \"path: '/x'\" and is excluded by a field_prefix \"/\" guard, so such an action is stated as routed but without its URL",
+      "a class-level #[Route('/prefix')] is a prefix Symfony concatenates onto every action's path; the overlay has no clause for \"not inside a method\" and no way to concatenate two values, so only the path written at the action is stated and a prefixed controller's Route key is the suffix, not the resolved URL",
+      "the template a controller renders is stated only for #[Template('x.html.twig')]; $this->render('x.html.twig') arrives as omega-php call.method named render, and every one of omega-php's call templates publishes an empty fields map, so the canonical call view that its attribute template now carries does not exist on calls",
+      "a Twig reference under the default templates/ root resolves to the artifact it names, via a data.file join that strips that prefix; a reference into a bundle or a custom Twig namespace (@Admin/list.html.twig, or a root added in twig.yaml) still lands in symfony:template-name:* with no artifact behind it",
+      "config/routes*.yaml is read: omega-yaml publishes a definition.config_key's scalar as the field `value`, so a YAML route's path and its controller string are both readable. The controller is a fully qualified name (App\\Controller\\OrderController::show) and no Pack states which artifact declares a given FQCN, so SymfonyControllerRef is a separate key space from symfony:class:{path}:{Class} and the two cannot be joined",
+      "services.yaml tags and arguments are not read: a service's tag arrives as relation.data whose enclosing definition.config_key is `tags`, and reaching the service id one container above it needs a second hop that field_equals -- which compares against one literal -- cannot express",
       "container compilation, autowiring resolution and runtime service decoration need runtime state no static fact carries"
     ]
   },

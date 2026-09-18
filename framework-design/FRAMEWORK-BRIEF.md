@@ -395,6 +395,21 @@ omega-framework-vue recorded `provide('themeKey')` as permanently unreachable
 two waves after the JS Packs started publishing `call.arg0_text`. Before you
 repeat a gap the previous author wrote, measure it again.
 
+**`fact_join_by_field` is a full cross product.** It pushes a binding for every
+matching candidate, not the first, so joining on the built-in `path` binds every
+fact of that kind **in the whole file**. That is only safe when the file holds
+exactly one of them. omega-framework-kubernetes-config tied a manifest's `kind`
+to its `metadata.name` that way and minted n² objects for an n-document YAML
+stream. If you need "the other key of the same record", join through a fact that
+spans the record -- and reach its members with `contains`, not `within`.
+
+**`definition.container` is the innermost enclosing definition, and a tie is
+broken by emission order.** Where a Pack puts several definition facts on one
+span -- a Prisma field, its modifier and its type all span the field -- the
+innermost is whichever the Pack emitted last, which is not the one you meant.
+Check with `dump_call_emissions` before keying on it; `enclosing.qname` or a
+span join is often what you actually want.
+
 **An audit cannot tell you whether the Pack's grammar can run.**
 `overlay_audit.py` builds its surface from `packs/*/rules.json` and never looks
 at a grammar's detection keys. Nine laravel rules matched omega-blade and scored

@@ -38,6 +38,25 @@ def norm(template):
                   lambda m: '{' + m.group(1).split('.')[-1] + '}', template)
 
 
+def covers(minted, addressed):
+    """Does a minted key template render every key the addressed one does?
+
+    A placeholder renders a literal: `terraform:{block_type}:{name}` is where
+    `terraform:module:foo` comes from, so it covers `terraform:module:{name}`,
+    and `k8s:object:{value}:{n.value}` covers `k8s:object:Ingress:{value}`.
+    It runs both ways. `terraform:{block_type}:{name}` is addressed by rules
+    that mint `terraform:module:{name}` and `terraform:local:{name}`, so a
+    placeholder on EITHER side matches a literal on the other. That makes this
+    a weak test on purpose: it is here to find a key space nothing mints at
+    all, not to prove two templates agree.
+    """
+    a, b = minted.split(':'), addressed.split(':')
+    if len(a) != len(b):
+        return False
+    return all(x == y or x.startswith('{') or y.startswith('{')
+               for x, y in zip(a, b))
+
+
 def ends(fw):
     p = os.path.join(FRAMEWORKS, fw, 'semantic-v2.json')
     if not os.path.exists(p):
@@ -57,7 +76,8 @@ def ends(fw):
                     if ref.get('kind') == 'by_canonical_key' and ref.get('template'):
                         addressed.setdefault(norm(ref['template']), set()).add(
                             '%s.%s' % (rid, side))
-    return sorted((t, sorted(w)) for t, w in addressed.items() if t not in minted)
+    return sorted((t, sorted(w)) for t, w in addressed.items()
+                  if not any(covers(m, t) for m in minted))
 
 
 def main():

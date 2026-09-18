@@ -586,3 +586,33 @@ span-wide grouping idiom.
 `(pair key: (string) value: _)` in omega-javascript, omega-typescript and
 omega-tsx, with the key unquoted and the value's last identifier segment
 published the way `call.last_arg_name` is.
+
+---
+
+## 19. kubernetes-config ties two keys together by file, and a file is many documents
+
+`fact_join_by_field` pushes a binding for **every** matching candidate
+(`overlay.rs:682`), so joining on the built-in `path` binds every fact of that
+kind in the file. A YAML stream's documents are flat siblings -- omega-yaml's
+own note says `---` does not separate them -- so
+omega-framework-kubernetes-config, which reaches an object's identity by
+joining the top-level `kind` key to the top-level `metadata.name` key on
+`path`, mints **n² objects for an n-document manifest**, n of them real. A file
+with Deployment `web` and Service `web-svc` states four objects, two of which
+are `Deployment/web-svc` and `Service/web`.
+
+Both halves of the fix are in place:
+
+- **omega-yaml emits `definition.config_document`**, one per `(document)` node,
+  so there is a fact spanning a document to join to.
+- **`SpanRelation::Contains`** was added to the overlay. `within` reaches a
+  construct's ancestors and could not reach its members, so a rule entered from
+  a document could not bind that document's keys. `framework/overlay.rs` is not
+  a frozen design-set file, so this needed no re-stamp.
+
+What remains is the rewrite: **24 of the framework's 25 rules** read `{n.value}`
+through the path join. Each has to enter from the document and bind its keys
+with `contains`, which is a rewrite rather than a hand-fix.
+
+**Done looks like:** no rule in that file joining `current_field: path` to
+`join_field: path`, and a two-document manifest stating exactly two objects.

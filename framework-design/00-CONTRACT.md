@@ -99,6 +99,12 @@ fact; join clauses bind one more fact and apply their own nested `where` to it.
 | `fact_join_by_field` | another fact whose `join_field` equals this one's `current_field`, with optional prefix stripping, `same_path`, and further `additional_field_equalities` |
 | `fact_join_by_owner` | another fact by owner field |
 | `fact_join_by_span` | another fact whose span is `same` as, or contains (`within`), this one's |
+
+A span join relates the current fact to the candidate: `same` is an identical
+span, `within` means the candidate **contains** the current fact -- its
+ancestors -- and `contains` means the candidate lies inside it -- its members.
+A rule entered from a container reaches its members only with `contains`.
+
 | `fact_join_by_path_ancestor` | another fact whose path is an ancestor |
 
 Every join takes `fact_kind`, an optional `where` of nested clauses, and an

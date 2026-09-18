@@ -1,3053 +1,3446 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-kubernetes-config",
- "selector": "framework:kubernetes-config",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "yaml",
-   "json"
+  "schema_version": 2,
+  "asset": "omega-framework-kubernetes-config",
+  "selector": "framework:kubernetes-config",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "yaml",
+      "json"
+    ],
+    "required_packs": [
+      "omega-json",
+      "omega-yaml"
+    ],
+    "required_capabilities": [
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "structured_documents",
+    "project_level_evidence",
+    "existing_language_ir"
   ],
-  "required_packs": [
-   "omega-json",
-   "omega-yaml"
+  "emits": {
+    "entities": [
+      "AnnotationKey",
+      "ApiGroup",
+      "ApiResource",
+      "ConfigKey",
+      "ContainerImage",
+      "IngressHost",
+      "KubernetesManifest",
+      "KubernetesNamespace",
+      "KubernetesObject",
+      "KubernetesObjectKind",
+      "LabelPair",
+      "RbacSubject",
+      "Verb"
+    ],
+    "relations": [
+      "binds",
+      "binds_subject",
+      "contains",
+      "defines",
+      "deployed_in",
+      "grants",
+      "has_annotation",
+      "has_label",
+      "instance_of",
+      "routes_to",
+      "runs_image",
+      "scales",
+      "selects",
+      "serves",
+      "uses"
+    ]
+  },
+  "rules": [
+    {
+      "id": "k8s.manifest",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.qname",
+          "value": "apiVersion"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesManifest",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:manifest:{path}"
+          },
+          "attributes": {
+            "api_version": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.object.declaration",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.qname",
+          "value": "kind"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:{value}:{n.value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "n.value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:manifest:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObjectKind",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object-kind:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "instance_of",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object-kind:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.object.namespace",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.qname",
+          "value": "metadata.namespace"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesNamespace",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:namespace:{value}"
+          },
+          "attributes": {
+            "namespace": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "deployed_in",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.configmap.data-key",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "data"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_equals",
+              "field": "value",
+              "value": "ConfigMap"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:config-key:ConfigMap:{n.value}:{definition.name}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "owner_kind": {
+              "kind": "literal",
+              "value": "ConfigMap"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:ConfigMap:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.secret.data-key",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_in",
+          "field": "enclosing.qname",
+          "values": [
+            "data",
+            "stringData"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_equals",
+              "field": "value",
+              "value": "Secret"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ConfigKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:config-key:Secret:{n.value}:{definition.name}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "owner_kind": {
+              "kind": "literal",
+              "value": "Secret"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:Secret:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.metadata.label",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "labels"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "metadata"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LabelPair",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:label:{definition.name}={value}"
+          },
+          "attributes": {
+            "label_key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "label_value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_label",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A label entry: a key whose immediate owner is `labels` and which lies somewhere under a `metadata` key. Stated by ancestry rather than by an exhaustive list of qualified names, because a pod template's metadata sits at `spec.template.metadata` in a Deployment, `spec.jobTemplate.spec.template.metadata` in a CronJob and `spec.volumeClaimTemplates[].metadata` in a StatefulSet -- and at a depth nobody can enumerate inside a CRD instance."
+    },
+    {
+      "id": "k8s.metadata.annotation",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "annotations"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "metadata"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AnnotationKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:annotation:{definition.name}"
+          },
+          "attributes": {
+            "annotation_key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_annotation",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A annotation entry: a key whose immediate owner is `annotations` and which lies somewhere under a `metadata` key. Stated by ancestry rather than by an exhaustive list of qualified names, because a pod template's metadata sits at `spec.template.metadata` in a Deployment, `spec.jobTemplate.spec.template.metadata` in a CronJob and `spec.volumeClaimTemplates[].metadata` in a StatefulSet -- and at a depth nobody can enumerate inside a CRD instance."
+    },
+    {
+      "id": "k8s.selector.match-label",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "field_in",
+          "field": "enclosing.qname",
+          "values": [
+            "spec.selector",
+            "spec.selector.matchLabels",
+            "spec.podSelector.matchLabels"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LabelPair",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:label:{definition.name}={value}"
+          },
+          "attributes": {
+            "label_key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "label_value": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "selects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.rbac.resource",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "rules.resources"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiResource",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:rbac:resource:{definition.name}"
+          },
+          "attributes": {
+            "resource": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "grants",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.rbac.verb",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "rules.verbs"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Verb",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:rbac:verb:{definition.name}"
+          },
+          "attributes": {
+            "verb": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "grants",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.rbac.api-group",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "rules.apiGroups"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiGroup",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:rbac:api-group:{definition.name}"
+          },
+          "attributes": {
+            "api_group": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "grants",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.rbac.role-ref",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "roleRef"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "roleRef"
+            },
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "rk"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:{rk.value}:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "field_ref",
+              "field": "rk.value"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "binds",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.rbac.subject",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "subjects"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RbacSubject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:rbac:subject:{value}"
+          },
+          "attributes": {
+            "subject_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "binds_subject",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ingress.tls-host",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "spec.tls.hosts"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_equals",
+              "field": "value",
+              "value": "Ingress"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IngressHost",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:host:{definition.name}"
+          },
+          "attributes": {
+            "host": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "serves",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:Ingress:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ingress.rule-host",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "host"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "spec.rules"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_equals",
+              "field": "value",
+              "value": "Ingress"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IngressHost",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:host:{value}"
+          },
+          "attributes": {
+            "host": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "serves",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:Ingress:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ingress.backend-service",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "service"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_equals",
+              "field": "value",
+              "value": "Ingress"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:Service:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "Service"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "routes_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:Ingress:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.container.image",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "image"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "containers",
+            "initContainers",
+            "ephemeralContainers"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContainerImage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:image:{value}"
+          },
+          "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "runs_image",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.config-map",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "configMap",
+            "configMapRef",
+            "configMapKeyRef"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:ConfigMap:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "ConfigMap"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.ingress-class",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ingressClassName"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:IngressClass:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "IngressClass"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.persistent-volume-claim",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "claimName"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "persistentVolumeClaim"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:PersistentVolumeClaim:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "PersistentVolumeClaim"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.secret",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "name",
+            "secretName"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "secret",
+            "secretRef",
+            "secretKeyRef",
+            "tls"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:Secret:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "Secret"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.service-account",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "serviceAccountName"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:ServiceAccount:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "ServiceAccount"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.storage-class",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "storageClassName"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:StorageClass:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "StorageClass"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.hpa.scale-target",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "scaleTargetRef"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "scaleTargetRef"
+            },
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "rk"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:{rk.value}:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "field_ref",
+              "field": "rk.value"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "scales",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.crd.defines",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "kind"
+        },
+        {
+          "kind": "field_equals",
+          "field": "enclosing.qname",
+          "value": "spec.names"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_equals",
+              "field": "value",
+              "value": "CustomResourceDefinition"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.config_key",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObjectKind",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object-kind:{value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "defines",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:CustomResourceDefinition:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    }
   ],
-  "required_capabilities": [
-   "data"
-  ]
- },
- "evidence_inputs": [
-  "structured_documents",
-  "project_level_evidence",
-  "existing_language_ir"
- ],
- "emits": {
-  "entities": [
-   "AnnotationKey",
-   "ApiResource",
-   "ConfigKey",
-   "IngressHost",
-   "KubernetesManifest",
-   "KubernetesObject",
-   "LabelKey",
-   "Verb"
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "Helm and Kustomize are not executed; only the authored YAML/JSON documents retained in the repository are indexed, so a templated value is carried through as the template text",
+      "omega-yaml states no document fact, so several documents separated by --- in one file are one path: the same-file joins that pair a kind with its metadata.name cross-produce across the documents of a multi-document file, and an object declared there can be minted under a kind belonging to a sibling document",
+      "a Kubernetes object with no metadata.name (a Kustomization, a raw List) is not minted as an object; its file is still a KubernetesManifest",
+      "an RBAC subject is keyed by name alone: subjects is a sequence of mappings and omega-yaml emits no per-item fact, so the sibling kind of one subject cannot be told from another's"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "checkov",
+      "repository": "https://github.com/bridgecrewio/checkov",
+      "path": "checkov/kubernetes/**",
+      "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "checkov",
+      "repository": "https://github.com/bridgecrewio/checkov",
+      "path": "checkov/common/graph/**",
+      "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "terrascan",
+      "repository": "https://github.com/tenable/terrascan",
+      "path": "pkg/iac-providers/kubernetes/**",
+      "revision": "dafb3e0ad72812fbecfc36d33e8bd4347f12b114",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "terrascan",
+      "repository": "https://github.com/tenable/terrascan",
+      "path": "test/**",
+      "revision": "dafb3e0ad72812fbecfc36d33e8bd4347f12b114",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
   ],
-  "relations": [
-   "contains",
-   "grants",
-   "has_annotation",
-   "has_label",
-   "serves"
-  ]
- },
- "rules": [
-  {
-   "id": "k8s.manifest",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "apiVersion"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesManifest",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "attributes": {
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Deployment",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Deployment"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Deployment"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Deployment"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.StatefulSet",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "StatefulSet"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:StatefulSet"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "StatefulSet"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.DaemonSet",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "DaemonSet"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:DaemonSet"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "DaemonSet"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Job",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Job"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Job"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Job"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.CronJob",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "CronJob"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:CronJob"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "CronJob"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Pod",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Pod"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Pod"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Pod"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Service",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Service"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Service"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Service"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Ingress",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Ingress"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Ingress"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Ingress"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.IngressClass",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "IngressClass"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:IngressClass"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "IngressClass"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.NetworkPolicy",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "NetworkPolicy"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:NetworkPolicy"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "NetworkPolicy"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Gateway",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Gateway"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Gateway"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Gateway"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.HTTPRoute",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "HTTPRoute"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:HTTPRoute"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "HTTPRoute"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.ConfigMap",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "ConfigMap"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:ConfigMap"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "ConfigMap"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Secret",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Secret"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Secret"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Secret"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.ServiceAccount",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "ServiceAccount"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:ServiceAccount"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "ServiceAccount"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.PersistentVolumeClaim",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "PersistentVolumeClaim"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:PersistentVolumeClaim"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "PersistentVolumeClaim"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.PersistentVolume",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "PersistentVolume"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:PersistentVolume"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "PersistentVolume"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.StorageClass",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "StorageClass"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:StorageClass"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "StorageClass"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Role",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Role"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Role"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Role"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.ClusterRole",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "ClusterRole"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:ClusterRole"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "ClusterRole"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.RoleBinding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "RoleBinding"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:RoleBinding"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "RoleBinding"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.ClusterRoleBinding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "ClusterRoleBinding"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:ClusterRoleBinding"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "ClusterRoleBinding"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.HorizontalPodAutoscaler",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "HorizontalPodAutoscaler"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:HorizontalPodAutoscaler"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "HorizontalPodAutoscaler"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.PodDisruptionBudget",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "PodDisruptionBudget"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:PodDisruptionBudget"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "PodDisruptionBudget"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.CustomResourceDefinition",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "CustomResourceDefinition"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:CustomResourceDefinition"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "CustomResourceDefinition"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.object.Namespace",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "kind"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "Namespace"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "apiVersion"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "KubernetesObject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:object:{path}:Namespace"
-     },
-     "attributes": {
-      "kind": {
-       "kind": "literal",
-       "value": "Namespace"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.configmap.data-key",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "data"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "kind"
-      },
-      {
-       "kind": "attribute_equals",
-       "attribute": "value",
-       "value": "ConfigMap"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ConfigKey",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:config-key:ConfigMap:{path}:{definition.name}"
-     },
-     "attributes": {
-      "key": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "owner_kind": {
-       "kind": "literal",
-       "value": "ConfigMap"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:object:{path}:ConfigMap"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.secret.data-key",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "data"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "kind"
-      },
-      {
-       "kind": "attribute_equals",
-       "attribute": "value",
-       "value": "Secret"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ConfigKey",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:config-key:Secret:{path}:{definition.name}"
-     },
-     "attributes": {
-      "key": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "owner_kind": {
-       "kind": "literal",
-       "value": "Secret"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:object:{path}:Secret"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.secret.string-data-key",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "stringData"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "kind"
-      },
-      {
-       "kind": "attribute_equals",
-       "attribute": "value",
-       "value": "Secret"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ConfigKey",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:config-key:Secret:{path}:{definition.name}"
-     },
-     "attributes": {
-      "key": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "owner_kind": {
-       "kind": "literal",
-       "value": "Secret"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:object:{path}:Secret"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.metadata.label",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "labels"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "metadata"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "LabelKey",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:label:{definition.name}"
-     },
-     "attributes": {
-      "key": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "has_label",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.metadata.annotation",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "annotations"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "metadata"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "AnnotationKey",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:annotation:{definition.name}"
-     },
-     "attributes": {
-      "key": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "has_annotation",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.rbac.resource",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "resources"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "rules"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ApiResource",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:rbac:resource:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "grants",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.rbac.verb",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "verbs"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "rules"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Verb",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:rbac:verb:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "grants",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:manifest:{path}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "k8s.ingress.tls-host",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "field_present",
-     "field": "definition.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "hosts"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "tls"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "definition.config_key",
-     "current_field": "path",
-     "join_field": "path",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "kind"
-      },
-      {
-       "kind": "attribute_equals",
-       "attribute": "value",
-       "value": "Ingress"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "IngressHost",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "k8s:host:{definition.name}"
-     },
-     "attributes": {
-      "host": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "serves",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "k8s:object:{path}:Ingress"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "Helm/Kustomize/templates are not executed; only authored retained YAML/JSON documents are indexed",
-   "the object's metadata.name, its namespace, a container image, a Service selector and every other scalar VALUE is carried by omega-yaml as the attribute `value`, which the overlay can compare to a constant but cannot render into a canonical key; every rule keyed on an object's own name is therefore absent, not wrong",
-   "a file holding several documents is one path, so a same-file join relates a kind to a manifest, not to the one document that declared it"
-  ]
- },
- "provenance": [
-  {
-   "source_id": "checkov",
-   "repository": "https://github.com/bridgecrewio/checkov",
-   "path": "checkov/kubernetes/**",
-   "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "checkov",
-   "repository": "https://github.com/bridgecrewio/checkov",
-   "path": "checkov/common/graph/**",
-   "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "terrascan",
-   "repository": "https://github.com/tenable/terrascan",
-   "path": "pkg/iac-providers/kubernetes/**",
-   "revision": "dafb3e0ad72812fbecfc36d33e8bd4347f12b114",
-   "confidence": "medium",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "terrascan",
-   "repository": "https://github.com/tenable/terrascan",
-   "path": "test/**",
-   "revision": "dafb3e0ad72812fbecfc36d33e8bd4347f12b114",
-   "confidence": "medium",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  }
- ],
- "detection_rules": [
-  {
-   "id": "kubernetes-config.exact_signature.1.apiversion",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "apiVersion"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "apiVersion",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.2.apiversion",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "apiVersion"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "apiVersion",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.3.apiversion",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:apiversion"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "apiVersion",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.4.apiversion",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "apiVersion"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "apiVersion",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.1.current-context",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "current-context"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "current-context",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.2.current-context",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "current-context"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "current-context",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.3.current-context",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:current-context"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "current-context",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.4.current-context",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "current-context"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "current-context",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.1.kind",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "kind"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kind",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.2.kind",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "kind"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kind",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.3.kind",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:kind"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kind",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.4.kind",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "kind"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kind",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.1.kustomization.yaml",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "kustomization.yaml"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kustomization.yaml",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.2.kustomization.yaml",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "kustomization.yaml"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kustomization.yaml",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.3.kustomization.yaml",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:kustomization.yaml"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kustomization.yaml",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "kubernetes-config.exact_signature.4.kustomization.yaml",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "kustomization.yaml"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "kubernetes-config"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "kubernetes-config",
-     "framework_name": "Kubernetes config",
-     "signature": "kustomization.yaml",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  }
- ],
- "runtime_status": "terminal-static-source-contract"
+  "detection_rules": [
+    {
+      "id": "kubernetes-config.exact_signature.1.apiversion",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "apiVersion"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "apiVersion",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.2.apiversion",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "apiVersion"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "apiVersion",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.3.apiversion",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:apiversion"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "apiVersion",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.4.apiversion",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "apiVersion"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "apiVersion",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.1.current-context",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "current-context"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "current-context",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.2.current-context",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "current-context"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "current-context",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.3.current-context",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:current-context"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "current-context",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.4.current-context",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "current-context"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "current-context",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.1.kind",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "kind"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kind",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.2.kind",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "kind"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kind",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.3.kind",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:kind"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kind",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.4.kind",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "kind"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kind",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.1.kustomization.yaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "kustomization.yaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kustomization.yaml",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.2.kustomization.yaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "kustomization.yaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kustomization.yaml",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.3.kustomization.yaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:kustomization.yaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kustomization.yaml",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "kubernetes-config.exact_signature.4.kustomization.yaml",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "kustomization.yaml"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "kubernetes-config"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "kubernetes-config",
+          "framework_name": "Kubernetes config",
+          "signature": "kustomization.yaml",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    }
+  ],
+  "runtime_status": "terminal-static-source-contract"
 }
