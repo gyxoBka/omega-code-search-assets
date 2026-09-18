@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 1. Numbers come from
+Last updated after framework wave 2. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -26,10 +26,12 @@ different map.**
 
 | Pack | kind | move to `fields` | asked by |
 |---|---|---|---|
-| omega-yaml, omega-json | `definition.config_key` | `value` | kubernetes-config, openapi-v3 |
+| omega-yaml, omega-json | `definition.config_key` | `value` | kubernetes-config, openapi-v3, gitlab-ci, github-action |
 | omega-hcl | `definition.config_block` | `block_type`, `type_label` | terraform |
 | omega-hcl | `reference.traversal` | `root` | terraform |
 | omega-javascript, omega-typescript, omega-tsx | `binding.import_alias`, `import.symbol` | `qualifier` | node-js |
+| omega-javascript, omega-typescript, omega-tsx | `import.symbol` | `module` — the specifier the symbol came from | react |
+| omega-python | `call.function`, `call.method` | the call's first string-or-identifier argument | django |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
@@ -117,6 +119,6 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-50 of 55 frameworks still hold rules that cannot match: **951 of 1 170**. The
+45 of 55 frameworks still hold rules that cannot match: **757 of 1 059**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.

@@ -6,18 +6,21 @@
   "host": {
     "languages": [
       "javascript",
-      "typescript"
+      "typescript",
+      "tsx"
     ],
     "required_packs": [
       "omega-javascript",
-      "omega-typescript"
+      "omega-typescript",
+      "omega-tsx"
     ],
     "required_capabilities": [
       "calls",
-      "data",
       "definitions",
       "imports",
-      "references"
+      "modules",
+      "references",
+      "scopes"
     ]
   },
   "evidence_inputs": [
@@ -27,99 +30,157 @@
   ],
   "emits": {
     "entities": [
-      "ApiUse",
       "Component",
-      "ComponentReference",
-      "ContextReference",
+      "ComponentName",
+      "Context",
       "Dependency",
-      "EventBinding",
-      "HandlerReference",
       "Hook",
-      "HookDependency",
-      "PropBinding",
-      "ContextFactory",
-      "ComponentWrapper",
-      "LazyComponent"
+      "ReactFile"
     ],
     "relations": [
-      "calls",
-      "consumes_context",
-      "declares_props",
+      "declares_component",
+      "declares_context",
+      "declares_hook",
       "depends_on",
-      "references_handler",
       "renders",
-      "uses_api"
+      "uses_hook"
     ]
   },
   "rules": [
     {
-      "id": "react.hook.call",
-      "snapshot": true,
+      "id": "react.dependency.import",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.direct"
+          "value": "import.module"
         },
         {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_prefix": "use"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "react",
+            "react-dom",
+            "react-dom/client",
+            "react-dom/server",
+            "react-dom/test-utils",
+            "react/jsx-runtime",
+            "react/jsx-dev-runtime"
+          ]
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules"
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Hook",
+          "entity_kind": "ReactFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:hook:{external.member}"
+            "template": "react:file:{path}"
           },
           "attributes": {
-            "name": {
+            "path": {
               "kind": "field_ref",
-              "field": "call.name"
+              "field": "path"
+            },
+            "framework": "react"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "template": "react:package:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "calls",
+          "relation_kind": "depends_on",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "react:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "react:hook:{external.member}"
+            "template": "react:package:{definition.name}"
           },
           "attributes": {}
         }
       ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files are React files and which React package each one imports. The specifier is the import's own name, so no Pack field is needed."
     },
     {
-      "id": "react.component.definition",
-      "snapshot": true,
+      "id": "react.renders.function.javascript",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.function"
+          "value": "reference.component"
         },
         {
-          "kind": "attribute_equals",
-          "field": "name_style",
-          "value": "pascal_case"
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "render"
+              ]
+            }
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Component",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component:{path}:{definition.name}"
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "function"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{definition.name}"
           },
           "attributes": {
             "name": {
@@ -127,373 +188,173 @@
               "field": "definition.name"
             }
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "PascalCase function declarations are candidate React Component identities only when React framework is selected; actual render edges still require JSX source evidence.",
-      "canonical_note": "component identity is path-scoped for source-authored PascalCase function declarations"
-    },
-    {
-      "id": "react.javascript.direct-jsx-component-render",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.javascript_function_return_jsx_component_context"
         },
-        {
-          "kind": "field_present",
-          "field": "path"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_function"
-        },
-        {
-          "kind": "field_present",
-          "field": "child_component"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.function",
-          "current_field": "child_component",
-          "join_field": "definition.name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_present",
-              "field": "definition.qname"
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "relation_candidate",
           "relation_kind": "renders",
           "source": {
             "kind": "by_canonical_key",
-            "template": "react:component:{path}:{owner_function}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "react:component:{path}:{child_component}"
+            "template": "react:component-name:{definition.name}"
           },
           "attributes": {
-            "source_only": true,
-            "syntax": "direct_return_jsx_component",
-            "authored_tag": {
+            "tag": {
               "kind": "field_ref",
-              "field": "child_component"
-            },
-            "same_file_target_required": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "react.generic-api-call.react",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "react"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "react",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_api",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "react:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "react",
-            "source_only": true
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+      "coverage_note": "A PascalCase or dotted JSX tag inside a function declaration or, in JavaScript, a name-bound arrow. The Pack emits only component tags, never intrinsic elements, so the owner is a React component and the tag is the component it renders. The rendered component is addressed by name because no Pack fact ties a named import back to its module specifier."
     },
     {
-      "id": "react.generic-dependency.react",
-      "snapshot": true,
+      "id": "react.renders.variable.javascript",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "import.target_candidate"
+          "value": "reference.component"
         },
         {
-          "kind": "external_path_matches",
-          "package": "react"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Dependency",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:dependency:react"
-          },
-          "attributes": {
-            "package": "react",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "react:dependency:react"
-          },
-          "attributes": {
-            "package": "react",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
-    },
-    {
-      "id": "react.javascript.arrow-jsx-component",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.javascript_arrow_jsx_component_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_function"
-        }
-      ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Component",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component:{path}:{owner_function}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "owner_function"
+              "field": "owner.definition.name"
             },
-            "syntax": "arrow_jsx",
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "variable"
           }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "react.javascript.arrow-jsx-same-file-render",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.javascript_arrow_return_jsx_component_context"
         },
         {
-          "kind": "field_present",
-          "field": "owner_function"
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
         },
         {
-          "kind": "field_present",
-          "field": "child_component"
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.function",
-          "current_field": "child_component",
-          "join_field": "definition.name",
-          "same_path": true
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "relation_candidate",
           "relation_kind": "renders",
           "source": {
             "kind": "by_canonical_key",
-            "template": "react:component:{path}:{owner_function}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "react:component:{path}:{child_component}"
+            "template": "react:component-name:{definition.name}"
           },
           "attributes": {
-            "syntax": "arrow_return_jsx",
-            "source_only": true
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "A PascalCase or dotted JSX tag inside a module-level binding, which is how TSX spells an arrow component. The Pack emits only component tags, never intrinsic elements, so the owner is a React component and the tag is the component it renders. The rendered component is addressed by name because no Pack fact ties a named import back to its module specifier."
     },
     {
-      "id": "react.javascript.imported-render.javascript_function_return_jsx_component_context",
-      "snapshot": true,
+      "id": "react.renders.class.javascript",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.javascript_function_return_jsx_component_context"
+          "value": "reference.component"
         },
         {
-          "kind": "field_present",
-          "field": "owner_function"
-        },
-        {
-          "kind": "field_present",
-          "field": "child_component"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_named_binding_context",
-          "current_field": "child_component",
-          "join_field": "local_name",
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
           "same_path": true,
-          "where": [
-            {
-              "kind": "field_present",
-              "field": "module_source"
-            }
-          ],
-          "bind": "component_import"
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ComponentReference",
+          "entity_kind": "Component",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-ref:{path}:{child_component}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "child_component"
+              "field": "owner.definition.name"
             },
-            "resolved_import": true,
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "class"
           }
         },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "react:component:{path}:{owner_function}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "react:component-ref:{path}:{child_component}"
-          },
-          "attributes": {
-            "import_resolved": true,
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "react.javascript.imported-render.javascript_arrow_return_jsx_component_context",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.javascript_arrow_return_jsx_component_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_function"
-        },
-        {
-          "kind": "field_present",
-          "field": "child_component"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_named_binding_context",
-          "current_field": "child_component",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_present",
-              "field": "module_source"
-            }
-          ],
-          "bind": "component_import"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ComponentReference",
+          "entity_kind": "ComponentName",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-ref:{path}:{child_component}"
+            "template": "react:component-name:{owner.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "child_component"
-            },
-            "resolved_import": true,
-            "source_only": true
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         },
         {
@@ -501,141 +362,699 @@
           "relation_kind": "renders",
           "source": {
             "kind": "by_canonical_key",
-            "template": "react:component:{path}:{owner_function}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "react:component-ref:{path}:{child_component}"
+            "template": "react:component-name:{definition.name}"
           },
           "attributes": {
-            "import_resolved": true,
-            "source_only": true
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "A PascalCase or dotted JSX tag inside a class component; its JSX sits in render(), which is excluded from the function-body rule so the class is named instead. The Pack emits only component tags, never intrinsic elements, so the owner is a React component and the tag is the component it renders. The rendered component is addressed by name because no Pack fact ties a named import back to its module specifier."
     },
     {
-      "id": "react.class-component.imported-base",
-      "snapshot": true,
+      "id": "react.renders.function.tsx",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.ecmascript_class_extends_identifier_context"
+          "value": "reference.jsx_component"
         },
         {
-          "kind": "field_present",
-          "field": "class_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "superclass"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_named_binding_context",
-          "current_field": "superclass",
-          "join_field": "local_name",
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
           "same_path": true,
+          "bind": "owner",
           "where": [
             {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            },
-            {
-              "kind": "field_in",
-              "field": "imported_name",
+              "kind": "field_not_in",
+              "field": "definition.name",
               "values": [
-                "Component",
-                "PureComponent"
+                "render"
               ]
             }
           ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Component",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component:{path}:{class_name}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "class_name"
+              "field": "owner.definition.name"
             },
-            "syntax": "class_component",
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "function"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "A PascalCase or dotted JSX tag inside a function declaration or, in JavaScript, a name-bound arrow. The Pack emits only component tags, never intrinsic elements, so the owner is a React component and the tag is the component it renders. The rendered component is addressed by name because no Pack fact ties a named import back to its module specifier."
     },
     {
-      "id": "react.class-component.react-member-base",
-      "snapshot": true,
+      "id": "react.renders.variable.tsx",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.ecmascript_class_extends_member_context"
+          "value": "reference.jsx_component"
         },
         {
-          "kind": "field_present",
-          "field": "class_name"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "variable"
+          }
         },
         {
-          "kind": "field_equals",
-          "field": "superclass_object",
-          "value": "React"
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A PascalCase or dotted JSX tag inside a module-level binding, which is how TSX spells an arrow component. The Pack emits only component tags, never intrinsic elements, so the owner is a React component and the tag is the component it renders. The rendered component is addressed by name because no Pack fact ties a named import back to its module specifier."
+    },
+    {
+      "id": "react.renders.class.tsx",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.jsx_component"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "class"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:component-name:{definition.name}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A PascalCase or dotted JSX tag inside a class component; its JSX sits in render(), which is excluded from the function-body rule so the class is named instead. The Pack emits only component tags, never intrinsic elements, so the owner is a React component and the tag is the component it renders. The rendered component is addressed by name because no Pack fact ties a named import back to its module specifier."
+    },
+    {
+      "id": "react.component.class-extends",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
         },
         {
           "kind": "field_in",
-          "field": "superclass_member",
+          "field": "definition.name",
           "values": [
             "Component",
             "PureComponent"
           ]
         },
         {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
-            "Component",
-            "PureComponent"
-          ]
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Component",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component:{path}:{class_name}"
+            "template": "react:component:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "class_name"
+              "field": "owner.definition.name"
             },
-            "syntax": "react_member_class_component",
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "class",
+            "base": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "class X extends Component and extends React.Component alike: the Pack reduces a qualified base to its last identifier, so one rule states both, in JavaScript, TypeScript and TSX."
     },
     {
-      "id": "react.custom-hook.definition-function",
-      "snapshot": true,
+      "id": "react.hook.call.in-component.function",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "render"
+              ]
+            },
+            {
+              "kind": "field_not_prefix",
+              "field": "definition.name",
+              "value": "use"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "function"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_hook",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A use-prefixed call inside a named function or binding that is not itself use-prefixed. The Rules of Hooks make that caller a component, and the callee a built-in or custom hook under one key either way."
+    },
+    {
+      "id": "react.hook.call.in-custom-hook.function",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "render"
+              ]
+            },
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "use"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "template": "react:hook:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "custom": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_hook",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:hook:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A use-prefixed call inside a use-prefixed owner: which built-in hooks a custom hook is built out of, and which custom hooks compose others."
+    },
+    {
+      "id": "react.hook.call.in-component.variable",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "field_not_prefix",
+              "field": "definition.name",
+              "value": "use"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "variable"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_hook",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A use-prefixed call inside a named function or binding that is not itself use-prefixed. The Rules of Hooks make that caller a component, and the callee a built-in or custom hook under one key either way."
+    },
+    {
+      "id": "react.hook.call.in-custom-hook.variable",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "use"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Hook",
+          "canonical_key": {
+            "template": "react:hook:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "custom": true
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_hook",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:hook:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:hook:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A use-prefixed call inside a use-prefixed owner: which built-in hooks a custom hook is built out of, and which custom hooks compose others."
+    },
+    {
+      "id": "react.custom-hook.definition",
       "match": [
         {
           "kind": "fact_kind",
@@ -645,1403 +1064,403 @@
           "kind": "field_prefix",
           "field": "definition.name",
           "value": "use"
-        },
-        {
-          "kind": "field_present",
-          "field": "definition.name"
         }
       ],
-      "guards": [],
       "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ReactFile",
+          "canonical_key": {
+            "template": "react:file:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "react"
+          }
+        },
         {
           "kind": "entity_candidate",
           "entity_kind": "Hook",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:custom-hook:{path}:{definition.name}"
+            "template": "react:hook:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "custom": true,
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "react.custom-hook.definition-javascript_arrow_jsx_component_context",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.javascript_arrow_jsx_component_context"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "owner_function",
-          "value": "use"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_function"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Hook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:custom-hook:{path}:{owner_function}"
-          },
-          "attributes": {
-            "name": {
+            "path": {
               "kind": "field_ref",
-              "field": "owner_function"
+              "field": "path"
             },
-            "custom": true,
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "react.useContext.identifier",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_direct_identifier_argument_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
-            "useContext"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "arg1"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ContextReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:context-ref:{path}:{arg1}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg1"
-            },
-            "source_only": true
+            "custom": true
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "consumes_context",
+          "relation_kind": "declares_hook",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "react:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "react:context-ref:{path}:{arg1}"
+            "template": "react:hook:{definition.name}"
           },
-          "attributes": {
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "Which file declares a custom hook, so a uses_hook edge minted anywhere in the project has somewhere to land. The use- prefix is the Rules of Hooks naming contract and is all a Pack states."
     },
     {
-      "id": "react.hook.dependency-array",
-      "snapshot": true,
+      "id": "react.context.create.direct",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.ecmascript_direct_dependency_array_identifier_context"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
-            "useEffect",
-            "useLayoutEffect",
-            "useMemo",
-            "useCallback"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "createContext"
         },
         {
-          "kind": "field_present",
-          "field": "dependency"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "decl",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "HookDependency",
+          "entity_kind": "ReactFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:hook-dependency:{path}:{source.start}:{dependency}"
+            "template": "react:file:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "react"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Context",
+          "canonical_key": {
+            "template": "react:context:{path}:{decl.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "dependency"
+              "field": "decl.definition.name"
             },
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "depends_on",
+          "relation_kind": "declares_context",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "react:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "react:hook-dependency:{path}:{source.start}:{dependency}"
+            "template": "react:context:{path}:{decl.definition.name}"
           },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "react.javascript.jsx-identifier-prop",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.javascript_jsx_identifier_attribute_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_function"
-        },
-        {
-          "kind": "field_present",
-          "field": "child_component"
-        },
-        {
-          "kind": "field_present",
-          "field": "attribute_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "attribute_identifier"
-        },
-        {
-          "kind": "field_not_prefix",
-          "field": "attribute_name",
-          "value": "on"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PropBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:prop:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "attribute_name"
-            },
-            "value_identifier": {
-              "kind": "field_ref",
-              "field": "attribute_identifier"
-            },
-            "child_component": {
-              "kind": "field_ref",
-              "field": "child_component"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares_props",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "react:component:{path}:{owner_function}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "react:prop:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true,
-            "syntax": "jsx_identifier_prop"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "react.javascript.jsx-string-prop",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "value.javascript_jsx_string_attribute_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_function"
-        },
-        {
-          "kind": "field_present",
-          "field": "attribute_name"
-        },
-        {
-          "kind": "field_present",
-          "field": "attribute_value"
-        },
-        {
-          "kind": "field_not_prefix",
-          "field": "attribute_name",
-          "value": "on"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PropBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:prop:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "attribute_name"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "attribute_value"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares_props",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "react:component:{path}:{owner_function}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "react:prop:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true,
-            "syntax": "jsx_string_prop"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "react.javascript.jsx-event-handler-reference",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.javascript_jsx_identifier_attribute_context"
-        },
-        {
-          "kind": "field_prefix",
-          "field": "attribute_name",
-          "value": "on"
-        },
-        {
-          "kind": "field_present",
-          "field": "attribute_identifier"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "EventBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:event:{path}:{source.start}"
-          },
-          "attributes": {
-            "event_attribute": {
-              "kind": "field_ref",
-              "field": "attribute_name"
-            },
-            "handler": {
-              "kind": "field_ref",
-              "field": "attribute_identifier"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HandlerReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:handler-ref:{path}:{attribute_identifier}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "attribute_identifier"
-            },
-            "candidate_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "references_handler",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "react:event:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "react:handler-ref:{path}:{attribute_identifier}"
-          },
-          "attributes": {
-            "candidate_only": true,
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "react.javascript.jsx-member-component-reference",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.javascript_jsx_member_tag"
-        },
-        {
-          "kind": "field_present",
-          "field": "tag"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-ref:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "tag"
-            },
-            "candidate_only": true,
-            "syntax": "jsx_member_tag",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "react.createContext.call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.direct"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
-            "createContext"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ContextFactory",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:context-factory:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "createContext",
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored React.createContext API site only; runtime identity/value semantics are not inferred."
+      "coverage_note": "createContext(...) called through a named import. The context's name is the module binding it is assigned to, reached by the call's span lying inside the declarator's span."
     },
     {
-      "id": "react.memo.call",
-      "snapshot": true,
+      "id": "react.context.create.member",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.direct"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
-            "memo"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "createContext"
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "decl",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
+          "entity_kind": "ReactFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:memo:{path}:{source.start}"
+            "template": "react:file:{path}"
           },
           "attributes": {
-            "api": "memo",
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "react"
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Context",
+          "canonical_key": {
+            "template": "react:context:{path}:{decl.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "decl.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_context",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:context:{path}:{decl.definition.name}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored React.memo API site only; runtime identity/value semantics are not inferred."
+      "coverage_note": "React.createContext(...) called through the default or namespace import. The context's name is the module binding it is assigned to, reached by the call's span lying inside the declarator's span."
     },
     {
-      "id": "react.forwardRef.call",
-      "snapshot": true,
+      "id": "react.component.wrapper.direct",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.direct"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
-            "forwardRef"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:forwardRef:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "forwardRef",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored React.forwardRef API site only; runtime identity/value semantics are not inferred."
-    },
-    {
-      "id": "react.lazy.call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.direct"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "react",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "memo",
+            "forwardRef",
             "lazy"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "decl",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "LazyComponent",
+          "entity_kind": "ReactFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:lazy-component:{path}:{source.start}"
+            "template": "react:file:{path}"
           },
           "attributes": {
-            "api": "lazy",
-            "source_only": true
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "react"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "react:component:{path}:{decl.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "decl.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{decl.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "decl.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{decl.definition.name}"
+          },
+          "attributes": {
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored React.lazy API site only; runtime identity/value semantics are not inferred."
+      "coverage_note": "A component produced by memo, forwardRef or lazy, called through a named import. Which of the three is on the wrapper attribute, so which components are memoized and which are code-split are one lookup."
     },
     {
-      "id": "react.createContext.member-commonjs-root",
-      "snapshot": true,
+      "id": "react.component.wrapper.member",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
+          "value": "call.method"
         },
         {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "createContext"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_commonjs_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            },
-            {
-              "kind": "field_equals",
-              "field": "operator",
-              "value": "require"
-            }
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "memo",
+            "forwardRef",
+            "lazy"
           ]
         },
         {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "decl",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ContextFactory",
+          "entity_kind": "ReactFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:context-factory:{path}:{source.start}"
+            "template": "react:file:{path}"
           },
           "attributes": {
-            "api": "createContext",
-            "argument_identifier": {
+            "path": {
               "kind": "field_ref",
-              "field": "arg0"
+              "field": "path"
             },
-            "source_role": "react-commonjs-member-createContext",
-            "source_only": true,
-            "runtime_identity_claimed": false
+            "framework": "react"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "react:component:{path}:{decl.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "decl.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "template": "react:component-name:{decl.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "decl.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "react:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "react:component:{path}:{decl.definition.name}"
+          },
+          "attributes": {
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored commonjs React namespace createContext(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.createContext.member-namespace-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "createContext"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_namespace_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ContextFactory",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:context-factory:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "createContext",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-namespace-member-createContext",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored namespace React namespace createContext(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.createContext.member-default-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "createContext"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_default_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ContextFactory",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:context-factory:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "createContext",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-default-member-createContext",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored default React namespace createContext(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.memo.member-commonjs-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "memo"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_commonjs_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            },
-            {
-              "kind": "field_equals",
-              "field": "operator",
-              "value": "require"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:memo:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "memo",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-commonjs-member-memo",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored commonjs React namespace memo(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.memo.member-namespace-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "memo"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_namespace_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:memo:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "memo",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-namespace-member-memo",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored namespace React namespace memo(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.memo.member-default-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "memo"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_default_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:memo:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "memo",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-default-member-memo",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored default React namespace memo(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.forwardRef.member-commonjs-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "forwardRef"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_commonjs_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            },
-            {
-              "kind": "field_equals",
-              "field": "operator",
-              "value": "require"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:forwardRef:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "forwardRef",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-commonjs-member-forwardRef",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored commonjs React namespace forwardRef(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.forwardRef.member-namespace-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "forwardRef"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_namespace_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:forwardRef:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "forwardRef",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-namespace-member-forwardRef",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored namespace React namespace forwardRef(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.forwardRef.member-default-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "forwardRef"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_default_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentWrapper",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:component-wrapper:forwardRef:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "forwardRef",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-default-member-forwardRef",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored default React namespace forwardRef(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.lazy.member-commonjs-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "lazy"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_commonjs_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            },
-            {
-              "kind": "field_equals",
-              "field": "operator",
-              "value": "require"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LazyComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:lazy-component:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "lazy",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-commonjs-member-lazy",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored commonjs React namespace lazy(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.lazy.member-namespace-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "lazy"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_namespace_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LazyComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:lazy-component:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "lazy",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-namespace-member-lazy",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored namespace React namespace lazy(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
-    },
-    {
-      "id": "react.lazy.member-default-root",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.ecmascript_member_identifier_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "lazy"
-        },
-        {
-          "kind": "field_present",
-          "field": "object"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_default_binding_context",
-          "current_field": "object",
-          "join_field": "local_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_source",
-              "value": "react"
-            }
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{js,jsx,ts,mjs,cjs,mts,cts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LazyComponent",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "react:lazy-component:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "lazy",
-            "argument_identifier": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "source_role": "react-default-member-lazy",
-            "source_only": true,
-            "runtime_identity_claimed": false
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored default React namespace lazy(identifier) source site with same-file import provenance; runtime component/context identity is not inferred."
+      "coverage_note": "A component produced by memo, forwardRef or lazy, called as React.memo, React.forwardRef or React.lazy. Which of the three is on the wrapper attribute, so which components are memoized and which are code-split are one lookup."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "TSX/JSX authored in TypeScript files remains outside coverage until the retained parser registry includes a TSX grammar; no Pack/Framework rule may fake TSX support.",
-      "dynamic JSX element expressions and source-authored HOC component identities require generic source symbol/value resolution",
-      "runtime-generated component identities and React reconciliation/runtime state remain runtime semantics",
-      "Prop value-flow beyond authored parameters/JSX expression facts, non-identifier wrapper arguments and hook dependency aliasing remain bounded generic-resolver concerns rather than unconditional React relations."
+      "Props: which props a component accepts is carried by definition.parameter_shape_candidate, a carrier folded onto the declaration as an attribute, and an attribute is write-only to the overlay. Which props a JSX tag is passed is emitted by omega-tsx as reference.jsx_attribute, whose span is the prop identifier and lies inside no fact that names the tag, so the receiving component is unreachable.",
+      "A named import cannot be tied to its module specifier: import.symbol spans the identifier and import.module spans the specifier string, and neither contains the other. Cross-file render edges are therefore addressed by component name, not by resolved path.",
+      "useContext(Ctx) names its context in an argument, and no Pack publishes call arguments, so consumes_context cannot be stated. The call is still recorded as a hook use.",
+      "Dynamic JSX element expressions, runtime-generated component identities and React reconciliation remain runtime semantics."
     ]
   },
   "provenance": [

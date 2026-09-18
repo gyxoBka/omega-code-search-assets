@@ -170,3 +170,56 @@ change is one deliberate edit at the end of the framework work, not five edits
 scattered through it.
 
 Totals: **1 525 -> 1 170 overlay rules; 1 415 -> 951 that cannot match.**
+
+---
+
+# Framework wave 2 (gitlab-ci, next-js, django, react, github-action)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-gitlab-ci | 48 -> 19 | 0 | 19 |
+| omega-framework-next-js | 43 -> 20 | 0 | 20 |
+| omega-framework-django | 38 -> 17 | 3 | 17 |
+| omega-framework-react | 35 -> 17 | 1 | 17 |
+| omega-framework-github-action | 34 -> 14 | 0 | 14 |
+
+198 rules became 87, all of them live.
+
+omega-gitlab-ci is worth reading as a design: GitLab CI has no `jobs:` heading,
+so a job is a top-level key whose name GitLab does not own — a thing defined by
+what it is *not*. The old file recognised it with an `a0`…`a2` /
+`parent_key` / `owner_key` / `grandparent_key` ancestor ladder across 48 rules.
+The new one carries **one shared clause** — `fact_join_by_span` / `within` /
+`field_not_in definition.name [55 GitLab keywords]`, bound as `job` — and that
+binding *is* the job. `workflow: rules: - when: always` binds nothing, because
+every enclosing key is GitLab's own; `deploy: rules: - when: manual` binds
+`deploy`.
+
+## Three blocking defects, all one family, none visible to the audit
+
+Every one was a relation end addressing an entity nothing mints — the class
+wave 1 established. Two carried a new detail worth keeping:
+
+**`Reference::Current` is the rule's *first* entity output, not the one you
+meant.** `emit()` sets `own_key` once, in output order. Three gitlab-ci rules
+emitted the Pipeline first and their real entity second, then a relation
+`pipeline -> current`: a Pipeline-contains-Pipeline self-loop, with the Stage,
+the IncludedFile and the CiVariable never linked to anything. Their targets are
+addressed by explicit canonical key now.
+
+**A rule that mints a key must carry the same conditions as the rule that
+addresses it.** `next.pages.route` excludes `_app`, `_document`, `_error` and
+`_middleware`; `next.pages.data_fetching` did not, so a `getServerSideProps` in
+`pages/_app.tsx` emitted a `handles` edge from `http:*:/_app`, a route key no
+rule mints. The exclusion is on both now.
+
+**An unresolvable attribute drops the entity but not the relation.**
+`next.api.call` set an attribute from `external.member`, which is
+`segments.last()` and is `None` for a bare `import next from 'next'`.
+`evaluate_attributes` then returns None and the entity is dropped with
+`overlay_attribute_unresolved`, while the relation is evaluated in a second loop
+and its target template still renders — an edge to an entity that was never
+created. The rule now requires `external.member` to be present.
+
+Totals: **1 170 -> 1 059 overlay rules; 951 -> 757 that cannot match.** Ten
+frameworks are clean; 45 to go.

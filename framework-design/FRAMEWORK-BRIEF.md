@@ -103,6 +103,31 @@ such relations, sourced at a key that four strictly-conditioned rules minted.
 your relations address, and check the second set is contained in the first.** If
 a relation needs an entity that no rule mints, mint it in the same rule.
 
+## 3b. Three more ways a relation end goes nowhere
+
+Wave 2 found all three, and none of them is visible to `overlay_audit.py`.
+
+**`current` is your rule's FIRST entity output, not the one you meant.**
+`emit()` sets `own_key` once, walking outputs in order. If your rule emits a
+container entity first and the thing it is about second, `current` addresses the
+container -- three gitlab-ci rules emitted `Pipeline contains Pipeline` this
+way, and the Stage, the IncludedFile and the CiVariable were linked to nothing.
+Either put the entity you mean first, or address it by explicit
+`by_canonical_key`.
+
+**A rule that addresses a key must carry the same conditions as the rule that
+mints it.** `next.pages.route` excluded `_app`, `_document`, `_error` and
+`_middleware`; `next.pages.data_fetching` did not, so it emitted an edge from a
+route key that no rule mints. When two rules share a key template, they must
+share the clauses that decide whether the key exists.
+
+**An unresolvable attribute drops the entity and keeps the relation.** If any
+attribute expression yields nothing -- `external.member` is `segments.last()`
+and is absent for a bare `import x from 'pkg'` -- `evaluate_attributes` returns
+None and the entity is dropped, while the relation is evaluated in a second loop
+and still renders its ends. Add a `field_present` clause for anything an
+attribute depends on.
+
 ## 4. Verification
 
 ```bash
