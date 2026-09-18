@@ -7,9 +7,11 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 18 overlay rules, 4 detection rules. **0 could match, 18 could not.**
 After the first rewrite: **15 overlay rules, 15 live, 0 dead** -- but one of
-the fifteen was computing an entity the host threw away. After this pass:
-**15 overlay rules, 15 live, 0 dead, 0 key collisions.** Everything from
-here to "What was wrong with it" describes the file that was replaced.
+the fifteen was computing an entity the host threw away. After the key-collision
+pass: **15 overlay rules, 15 live, 0 dead, 0 key collisions.** After this pass,
+which restores the eleven file-shaped rules the first rewrite deleted on a false
+premise: **26 overlay rules, 26 live, 0 dead, 0 key collisions.** Everything
+from here to "What was wrong with it" describes the file that was replaced.
 
 Selector: `framework:nuxt`. Maturity: `semantic-overlay-full`.
 
@@ -107,11 +109,53 @@ set from `packs/*/rules.json` alone. That is fixed.
 A declaration inside the file is a better witness **when there is one**. Where
 there is not -- a `pages/about.vue` that is markup with no `definePageMeta`, a
 server file whose handler is not one of the five named calls, a script-only
-`components/*.vue` -- the file now produces no entity at all, and Nuxt is a
-framework whose whole subject is the file tree. Restoring a file-shaped rule
-wherever the question is about the file rather than about a declaration in it is
-`OWED.md` item 13, together with next-js and sveltekit, which lost 20 and 10 the
-same way.
+`components/*.vue` -- the file produced no entity at all, and Nuxt is a framework
+whose whole subject is the file tree.
+
+**This pass closes that: 11 file-shaped rules are back**, one for each of the
+eleven the first rewrite deleted, and the file goes from 15 rules to 26. They are
+`nuxt.page.file`, `nuxt.layout.file`, `nuxt.middleware.file`,
+`nuxt.component.file`, `nuxt.composable.file`, `nuxt.plugin.file`,
+`nuxt.module.file`, `nuxt.config.file`, `nuxt.server.api.file`,
+`nuxt.server.route.file` and `nuxt.server.middleware.file`. Every one enters on
+`data.file`, is gated by a `path_glob` over the artifact path, and uses
+`{normalized_file_route}`, `{path}` or `{path.stem}` in its key exactly as the
+deleted rules did. Nothing was removed to make room: all 15 declaration-entered
+rules are untouched, so a page is stated twice and interned once.
+
+Three things were fixed while restoring them, none of which the old file got
+right:
+
+- **The old keys were not the new keys.** The deleted rules keyed pages on
+  `nuxt:route:{path.route}` and `nuxt:page:{path.route}` -- `path.route` is not a
+  placeholder `resolve_placeholder` serves, so those keys rendered nothing -- and
+  server files on `nuxt:server-api:{path}` / `nuxt:server-route:{path}`, a key
+  space no rule in the current file addresses. Each restored rule mints **the
+  same key template, the same entity kind and the same attribute set** as its
+  declaration-entered twin: `nuxt.page.file` mints exactly what `nuxt.page`
+  mints, `nuxt.server.api.file` exactly what `nuxt.server.api` mints. So a page
+  recognised by its `<template>` block and the same page recognised by its path
+  are one `Page` and one `Route`, not two.
+- **The richer rule gets the shorter id.** The host interns with `or_insert` and
+  sorts candidates by `rule_id`, so the first rule by id keeps its kind *and* its
+  attributes. Every declaration rule's id is a prefix of its file rule's
+  (`nuxt.page` / `nuxt.page.file`, `nuxt.server.api` / `nuxt.server.api.file`,
+  `nuxt.composable.declaration` / `nuxt.composable.file`), so the declaration
+  rule always sorts first. Since the two agree on kind and attributes anyway,
+  this is belt and braces rather than the load-bearing part.
+- **The old globs carried braces.** `**/server/api/**/*.{js,ts,mjs,mts}` and six
+  more matched only a path that literally ends in that text. The restored globs
+  are `*.*`, or `*.vue` where the file must be an SFC.
+
+Two of the eleven needed a clause the deleted version did not have.
+`nuxt.middleware.file` carries `path_segment exclude: ["server"]`, because
+`**/middleware/*.*` also matches `server/middleware/auth.ts`, which is Nitro's
+and already has its own rule -- the old `nuxt.middleware.file` claimed those
+files as route middleware. `nuxt.composable.file` carries
+`field_not_in path.stem: ["index"]`, because `composables/index.ts` names no
+composable.
+
+next-js and sveltekit lost 20 and 10 rules the same way and are separate items.
 
 **5 rules read fields no Pack publishes.** `call_name`, `key`, `value`,
 `item_call_name`, `array_key` and `exported_name` came from the old
@@ -184,20 +228,35 @@ rule's conditions.
 |---|---|---|
 | Which URL does this page serve? | `scope.template_block` under `**/pages/**/*.vue` (omega-vue) | `Route http:*:{normalized_file_route}` -`handles`-> `Page nuxt:page:{path}` |
 | ...and the same page when it renders from script | `call.function definePageMeta` under `pages/` (omega-javascript / omega-typescript, injected into the SFC `<script>`) | the same `Route`, `Page`, `handles` |
+| ...and the same page when nothing inside it says so | `data.file` (host-synthesized, one per artifact) under `**/pages/**/*.vue` | the same `Route`, `Page`, `handles` -- `nuxt.page.file` |
 | Which layouts exist, under the name a page addresses them by? | `scope.template_block` under `**/layouts/**/*.vue` | `Layout nuxt:layout:{path.stem}`; `NuxtApp` -`extends`-> it |
+| ...including a layout that is pure markup | `data.file` under `**/layouts/**/*.vue` | the same `Layout`, `extends` -- `nuxt.layout.file` |
 | Which route middleware exists? | `call.function defineNuxtRouteMiddleware` | `Middleware nuxt:middleware:{path.stem}`; `NuxtApp` -`extends`-> it |
+| ...including the file Nuxt registers by placement alone | `data.file` under `**/middleware/*.*`, excluding paths with a `server` segment | the same `Middleware`, `extends` -- `nuxt.middleware.file` |
 | What runs while the app is being created? | `call.function defineNuxtPlugin` | `Plugin nuxt:plugin:{path}`; `NuxtApp` -`extends`-> it |
+| ...including a plugin that exports a plain function | `data.file` under `**/plugins/**/*.*` | the same `Plugin`, `extends` -- `nuxt.plugin.file` |
 | Which parts of the app are generated rather than written? | `call.function defineNuxtModule` | `Module nuxt:module:{path}`; `NuxtApp` -`extends`-> it |
+| ...including a local module Nuxt loads by directory | `data.file` under `**/modules/**/*.*` | the same `Module`, `extends` -- `nuxt.module.file` |
 | Which file configures this app? | `call.function defineNuxtConfig` | `NuxtConfig nuxt:config:{path}` -`config`-> `NuxtApp nuxt:app` |
+| ...including a config exported directly | `data.file` matching `**/nuxt.config.*` | the same `NuxtConfig`, `config` -- `nuxt.config.file` |
 | Which handler answers `/api/orders`? | `call.function defineEventHandler` (and the lazy / cached / `eventHandler` spellings) under `**/server/api/**/*.*` | `Route http:*:/api{normalized_file_route}` -`handles`-> `ServerHandler nuxt:server-handler:{path}` |
 | ...and the root-mounted ones | the same calls under `**/server/routes/**/*.*` | `Route http:*:{normalized_file_route}` -`handles`-> `ServerHandler` |
+| ...and either of them when the default export is a bare function | `data.file` under `**/server/api/**/*.*` and `**/server/routes/**/*.*` | the same `Route`, `ServerHandler`, `handles` -- `nuxt.server.api.file`, `nuxt.server.route.file` |
 | Is this URL served by Nitro or rendered by a page? | -- | the kind at the far end of `handles`: `ServerHandler` means Nitro, `Page` means vue-router. One kind, `Route`, in the whole `http:*:` key space |
 | What runs before every server route? | the same calls under `**/server/middleware/**/*.*` | `ServerMiddleware nuxt:server-middleware:{path}`; `NuxtApp` -`extends`-> it |
+| ...including one Nitro registers by placement | `data.file` under `**/server/middleware/**/*.*` | the same `ServerMiddleware`, `extends` -- `nuxt.server.middleware.file` |
 | Which composables does this project define? | `definition.function` under `**/composables/**/*.*` | `Composable nuxt:composable:{definition.name}` -- keyed by name, because the name is what Nuxt auto-imports |
+| ...including one whose default export is anonymous | `data.file` under `**/composables/**/*.*`, stem not `index` | `Composable nuxt:composable:{path.stem}` -- the same key space, because the stem is the auto-import name -- `nuxt.composable.file` |
 | Who calls `useCart()`? | `call.function` joined by `definition.name` to a `definition.function` under `composables/` | `NuxtFile nuxt:file:{path}` -`depends_on`-> `Composable nuxt:composable:{name}` |
 | Which auto-imported components exist? | `scope.template_block` under `**/components/**/*.vue` | `Component nuxt:component:{path}` |
+| ...including a script-only SFC with no template | `data.file` under `**/components/**/*.vue` | the same `Component nuxt:component:{path}` -- `nuxt.component.file` |
 | What does this page render? | `data.vue_element` (omega-vue: a tag that is capitalised or hyphenated) joined by tag name to a `components/` file stem | `NuxtFile nuxt:file:{path}` -`renders`-> `Component nuxt:component:{cmp.path}` |
 | Which files are coupled to Nuxt's own API? | `import.module` named `nuxt`, `nuxt/kit`, `#imports`, `#app`, `h3`, ... | `NuxtFile` -`depends_on`-> `Dependency nuxt:dependency:{module}` |
+
+The eleven `data.file` rows are not extra answers; they are the same answers
+reached from the file tree when nothing inside the file states them. Each mints
+the key, kind and attributes of the declaration-entered rule beside it, so the
+graph gains coverage and no new entities.
 
 `NuxtFile nuxt:file:{path}` is the hub every rule mints for its own artifact, so
 from one file an agent reaches its Nuxt role, the components it renders, the
@@ -250,12 +309,23 @@ and `OWED.md` rather than in one framework's notes.
 
 ## Still to decide
 
-1. **A page with neither `<template>` nor `definePageMeta`.** `nuxt.page` enters
-   on the SFC's template block and `nuxt.page.meta` on the metadata call. A page
-   that is pure `<script setup>` with a render function and no `definePageMeta`
-   is stated by neither. The host's synthetic `data.file` would catch it, but it
-   is outside the Pack vocabulary this rewrite is written against, so the gap is
-   recorded rather than closed that way.
+1. ~~**A page with neither `<template>` nor `definePageMeta`.**~~ **Closed.**
+   `nuxt.page.file` catches it. The premise that `data.file` was outside the
+   vocabulary was wrong: the host pushes it per artifact at `overlay.rs:41` and
+   the audit now scores it live. The same correction closed the equivalent gap
+   for layouts, components, composables, plugins, modules, the config and all
+   three `server/` directories.
+
+   What remains open is the reverse risk the file rules carry: a directory name
+   is weaker evidence than a declaration. `plugins/`, `modules/`,
+   `composables/`, `components/` and `middleware/` are ordinary directory names
+   that a non-Nuxt project in the same repository may also use, and the overlay
+   has no clause for *this subtree is the Nuxt srcDir*. The rules are gated only
+   by the glob, so a Vite `plugins/` directory beside a Nuxt app contributes
+   `Plugin` entities. This is accepted as the same trade the framework's own
+   convention makes -- Nuxt registers by directory too -- and it is bounded by
+   the detector: the overlay runs only where `framework:nuxt` was detected.
+
 2. **Method-suffixed server files.** `server/api/users/[id].get.ts` keys to
    `/users/[id].get`: `file_route` splits the stem at the last dot, so
    `[id].get` stays one segment, and `normalize_http_path` leaves it literal
@@ -291,3 +361,20 @@ and `OWED.md` rather than in one framework's notes.
    and both `handles` edges stand; but it is worth knowing that the two
    templates are not disjoint even though `key_collisions.py`, which compares
    template text, cannot see it.
+7. **Whether the file rules should carry a weaker `confidence`.** They are
+   published `exact`, like their declaration-entered twins, because Nuxt's
+   registration really is by path. But the evidence is strictly weaker, and
+   since the two rules mint one interned entity the distinction would be lost
+   anyway: the declaration rule sorts first and its `exact` is what survives.
+   Left as `exact` rather than publishing a value that cannot be read back.
+
+8. **`nuxt:composable:{path.stem}` and `nuxt:composable:{definition.name}` are
+   two templates in one key space.** `key_collisions.py` compares template text
+   and cannot see that they meet, and for the conventional
+   `composables/useCart.ts` exporting `useCart` they render the same string and
+   the same kind, which is what is wanted. Where they differ -- a file exporting
+   several composables, or a stem that is not a function name -- the extra
+   `Composable` is keyed by the stem and is reachable from its file by the
+   `contains` edge, but `nuxt.composable.use` will not point at it, because that
+   rule resolves a call against declared names. Deliberate: Nuxt's own
+   auto-import resolves the declared name first.

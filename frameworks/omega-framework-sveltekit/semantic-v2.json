@@ -1,1453 +1,1922 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-sveltekit",
- "selector": "framework:sveltekit",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "svelte",
-   "typescript",
-   "javascript"
+  "schema_version": 2,
+  "asset": "omega-framework-sveltekit",
+  "selector": "framework:sveltekit",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "svelte",
+      "typescript",
+      "javascript"
+    ],
+    "required_packs": [
+      "omega-svelte",
+      "omega-typescript",
+      "omega-javascript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references",
+      "scopes",
+      "data"
+    ]
+  },
+  "evidence_inputs": [
+    "file_paths",
+    "directory_conventions",
+    "imports_bindings",
+    "existing_language_ir"
   ],
-  "required_packs": [
-   "omega-svelte",
-   "omega-typescript",
-   "omega-javascript"
-  ],
-  "required_capabilities": [
-   "calls",
-   "definitions",
-   "imports",
-   "references",
-   "scopes",
-   "data"
-  ]
- },
- "evidence_inputs": [
-  "file_paths",
-  "directory_conventions",
-  "imports_bindings",
-  "existing_language_ir"
- ],
- "emits": {
-  "entities": [
-   "Action",
-   "Actions",
-   "ApiUse",
-   "Component",
-   "EndpointHandler",
-   "HookHandler",
-   "HookModule",
-   "KitApi",
-   "KitFile",
-   "KitModule",
-   "Layout",
-   "Loader",
-   "Page",
-   "ParamMatcher",
-   "Route",
-   "RouteOption"
-  ],
-  "relations": [
-   "config",
-   "contains",
-   "depends_on",
-   "handles",
-   "layout_applies_to",
-   "loads",
-   "renders",
-   "route_to_component",
-   "uses_api"
-  ]
- },
- "rules": [
-  {
-   "id": "sveltekit.endpoint.handler",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "field_equals",
-     "field": "path.stem",
-     "value": "+server"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "DELETE",
-      "GET",
-      "HEAD",
-      "OPTIONS",
-      "PATCH",
-      "POST",
-      "PUT",
-      "fallback"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "EndpointHandler",
-     "canonical_key": {
-      "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which handler answers POST on this route: a function named for an HTTP method declared in a +server file, and the route its directory spells."
-  },
-  {
-   "id": "sveltekit.endpoint.handler.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "field_equals",
-     "field": "path.stem",
-     "value": "+server"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "DELETE",
-      "GET",
-      "HEAD",
-      "OPTIONS",
-      "PATCH",
-      "POST",
-      "PUT",
-      "fallback"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "EndpointHandler",
-     "canonical_key": {
-      "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same endpoint handler when it is bound to a name rather than declared -- `export const GET = async (event) => ...`, which TypeScript states as definition.variable."
-  },
-  {
-   "id": "sveltekit.load",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "+layout",
-      "+layout.server",
-      "+page",
-      "+page.server"
-     ]
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "load"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Loader",
-     "canonical_key": {
-      "template": "sveltekit:loader:{path}"
-     },
-     "attributes": {
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "loads",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:loader:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "What data this route loads before it renders. The module the `load` is declared in says where it runs: +page.server/+layout.server are server-only, +page/+layout are universal."
-  },
-  {
-   "id": "sveltekit.load.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "+layout",
-      "+layout.server",
-      "+page",
-      "+page.server"
-     ]
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "load"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Loader",
-     "canonical_key": {
-      "template": "sveltekit:loader:{path}"
-     },
-     "attributes": {
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "loads",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:loader:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same loader when `load` is a named binding rather than a function declaration."
-  },
-  {
-   "id": "sveltekit.actions",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "field_equals",
-     "field": "path.stem",
-     "value": "+page.server"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "actions"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Actions",
-     "canonical_key": {
-      "template": "sveltekit:actions:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:actions:{path}"
-     },
-     "attributes": {
-      "method": "POST"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which route accepts form posts: the exported `actions` object of a +page.server module is what answers a POST to that route."
-  },
-  {
-   "id": "sveltekit.action.member",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "field_equals",
-     "field": "path.stem",
-     "value": "+page.server"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.variable",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "actions"
-      }
-     ],
-     "bind": "actions"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Action",
-     "canonical_key": {
-      "template": "sveltekit:action:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Actions",
-     "canonical_key": {
-      "template": "sveltekit:actions:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:actions:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:action:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which named form action a POST reaches (?/create). A function held by a property of the `actions` object is reached by the span join: the action lies inside the declarator the Pack already spans."
-  },
-  {
-   "id": "sveltekit.hook",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "hooks",
-      "hooks.client",
-      "hooks.server"
-     ]
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "handle",
-      "handleError",
-      "handleFetch",
-      "handleValidationError",
-      "init",
-      "reroute",
-      "transport"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "HookHandler",
-     "canonical_key": {
-      "template": "sveltekit:hook:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "HookModule",
-     "canonical_key": {
-      "template": "sveltekit:hooks:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:hooks:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:hook:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "What runs on every request before any route does: the hooks a project installs, and which of hooks.server / hooks.client / hooks each one belongs to."
-  },
-  {
-   "id": "sveltekit.hook.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "hooks",
-      "hooks.client",
-      "hooks.server"
-     ]
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "handle",
-      "handleError",
-      "handleFetch",
-      "handleValidationError",
-      "init",
-      "reroute",
-      "transport"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "HookHandler",
-     "canonical_key": {
-      "template": "sveltekit:hook:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "HookModule",
-     "canonical_key": {
-      "template": "sveltekit:hooks:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:hooks:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:hook:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same hook when it is a named binding -- `export const handle = sequence(a, b)` is the common spelling."
-  },
-  {
-   "id": "sveltekit.param_matcher",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/params/*.*"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "match"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ParamMatcher",
-     "canonical_key": {
-      "template": "sveltekit:param-matcher:{path.stem}"
-     },
-     "attributes": {
-      "matcher": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Where the matcher a route segment names is defined: `[id=integer]` resolves to the `match` exported by src/params/integer, so the matcher is keyed by the name the route spells, not by its path."
-  },
-  {
-   "id": "sveltekit.param_matcher.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/params/*.*"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "match"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ParamMatcher",
-     "canonical_key": {
-      "template": "sveltekit:param-matcher:{path.stem}"
-     },
-     "attributes": {
-      "matcher": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same matcher when `match` is a named binding rather than a function declaration."
-  },
-  {
-   "id": "sveltekit.page.renders",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.svelte_component"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/+page.svelte"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Page",
-     "canonical_key": {
-      "template": "sveltekit:page:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "template": "sveltekit:component:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "route_to_component",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:page:{path}"
-     },
-     "attributes": {}
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "renders",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:page:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:component:{definition.name}"
-     },
-     "attributes": {
-      "component": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "What this route renders: the page component of the directory, and each Svelte component it puts on the page. A component tag is the one markup fact the Svelte Pack states by name."
-  },
-  {
-   "id": "sveltekit.layout.renders",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.svelte_component"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/+layout.svelte"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Layout",
-     "canonical_key": {
-      "template": "sveltekit:layout:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "template": "sveltekit:component:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "layout_applies_to",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:layout:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {}
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "renders",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:layout:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:component:{definition.name}"
-     },
-     "attributes": {
-      "component": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The layout of a route directory and the components it renders around every page below it. Keyed by file, because a layout is not a URL."
-  },
-  {
-   "id": "sveltekit.layout.ancestry",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.svelte_component"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/+page.svelte"
-    },
-    {
-     "kind": "fact_join_by_path_ancestor",
-     "fact_kind": "reference.svelte_component",
-     "current_path_field": "path",
-     "join_path_field": "path.dir",
-     "where": [
-      {
-       "kind": "path_glob",
-       "pattern": "**/+layout.svelte"
-      }
-     ],
-     "bind": "layout"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Page",
-     "canonical_key": {
-      "template": "sveltekit:page:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Layout",
-     "canonical_key": {
-      "template": "sveltekit:layout:{layout.path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "layout.path"
-      },
-      "directory": {
-       "kind": "field_ref",
-       "field": "layout.path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "layout_applies_to",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:layout:{layout.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:page:{path}"
-     },
-     "attributes": {
-      "convention": "path_ancestor"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which layouts wrap this page. A +layout.svelte applies to every route in its own directory and below, so the join is the layout's directory being an ancestor of the page's path; every ancestor layout is stated."
-  },
-  {
-   "id": "sveltekit.route.option",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "+layout",
-      "+layout.server",
-      "+page",
-      "+page.server",
-      "+server"
-     ]
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
+  "emits": {
+    "entities": [
+      "Action",
+      "Actions",
+      "Component",
+      "Endpoint",
+      "EndpointHandler",
+      "ErrorPage",
+      "HookHandler",
+      "HookModule",
+      "KitFile",
+      "KitModule",
+      "Layout",
+      "Loader",
+      "Page",
+      "ParamMatcher",
+      "Route",
+      "RouteModule",
+      "RouteOption"
+    ],
+    "relations": [
       "config",
-      "csr",
-      "entries",
-      "prerender",
-      "ssr",
-      "trailingSlash"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteOption",
-     "canonical_key": {
-      "template": "sveltekit:route-option:{path}:{definition.name}"
-     },
-     "attributes": {
-      "option": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "module": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "attributes": {
-      "framework": "sveltekit",
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "route": {
-       "kind": "normalize_route",
-       "source": "path.dir"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "config",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:route-option:{path}:{definition.name}"
-     },
-     "attributes": {
-      "option": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which routes set a page option -- prerender, ssr, csr, trailingSlash, config, entries. The option's value is not stated: the Pack names the declaration, not what it is assigned."
+      "contains",
+      "depends_on",
+      "handles",
+      "layout_applies_to",
+      "loads",
+      "renders",
+      "route_to_component"
+    ]
   },
-  {
-   "id": "sveltekit.kit_module.import",
-   "match": [
+  "rules": [
     {
-     "kind": "fact_kind",
-     "value": "import.module"
+      "id": "sveltekit.action.member",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "path.stem",
+          "value": "+page.server"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "actions"
+            }
+          ],
+          "bind": "actions"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Action",
+          "canonical_key": {
+            "template": "sveltekit:action:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Actions",
+          "canonical_key": {
+            "template": "sveltekit:actions:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:actions:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:action:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A named form action -- a member of the `actions` object in `+page.server`. The members are `definition.method`: omega-javascript declares an object-literal member that way whatever its value is, and a nested arrow function inside an action body is the `definition.function` that this rule used to pick up instead."
     },
     {
-     "kind": "field_prefix",
-     "field": "definition.name",
-     "value": "$"
-    }
-   ],
-   "outputs": [
+      "id": "sveltekit.actions",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "field_equals",
+          "field": "path.stem",
+          "value": "+page.server"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "actions"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Actions",
+          "canonical_key": {
+            "template": "sveltekit:actions:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:actions:{path}"
+          },
+          "attributes": {
+            "method": "POST"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which route accepts form posts: the exported `actions` object of a +page.server module is what answers a POST to that route."
+    },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "KitModule",
-     "canonical_key": {
-      "template": "sveltekit:module:{definition.name}"
-     },
-     "attributes": {
-      "specifier": {
-       "kind": "field_ref",
-       "field": "definition.name"
+      "id": "sveltekit.endpoint.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+server.*"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Endpoint",
+          "canonical_key": {
+            "template": "sveltekit:endpoint:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:endpoint:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which routes have a server endpoint, including a +server module whose methods are re-exported (`export { GET } from './impl'`) and therefore never declared here."
+    },
+    {
+      "id": "sveltekit.endpoint.handler",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "path.stem",
+          "value": "+server"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+            "fallback"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EndpointHandler",
+          "canonical_key": {
+            "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which handler answers POST on this route: a function named for an HTTP method declared in a +server file, and the route its directory spells."
+    },
+    {
+      "id": "sveltekit.endpoint.handler.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "field_equals",
+          "field": "path.stem",
+          "value": "+server"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+            "fallback"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EndpointHandler",
+          "canonical_key": {
+            "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:endpoint-handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same endpoint handler when it is bound to a name rather than declared -- `export const GET = async (event) => ...`, which TypeScript states as definition.variable."
+    },
+    {
+      "id": "sveltekit.error.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+error.svelte"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ErrorPage",
+          "canonical_key": {
+            "template": "sveltekit:error-page:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "role": "error",
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:error-page:{path}"
+          },
+          "attributes": {
+            "role": "error"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Where this route's error boundary is. +error.svelte declares nothing at all, so no Pack fact but the artifact names it."
+    },
+    {
+      "id": "sveltekit.hook",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "hooks",
+            "hooks.client",
+            "hooks.server"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "handle",
+            "handleError",
+            "handleFetch",
+            "handleValidationError",
+            "init",
+            "reroute",
+            "transport"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookHandler",
+          "canonical_key": {
+            "template": "sveltekit:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookModule",
+          "canonical_key": {
+            "template": "sveltekit:hooks:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:hooks:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "What runs on every request before any route does: the hooks a project installs, and which of hooks.server / hooks.client / hooks each one belongs to."
+    },
+    {
+      "id": "sveltekit.hook.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "hooks",
+            "hooks.client",
+            "hooks.server"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "handle",
+            "handleError",
+            "handleFetch",
+            "handleValidationError",
+            "init",
+            "reroute",
+            "transport"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookHandler",
+          "canonical_key": {
+            "template": "sveltekit:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookModule",
+          "canonical_key": {
+            "template": "sveltekit:hooks:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:hooks:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same hook when it is a named binding -- `export const handle = sequence(a, b)` is the common spelling."
+    },
+    {
+      "id": "sveltekit.hook.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/src/hooks.*"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "HookModule",
+          "canonical_key": {
+            "template": "sveltekit:hooks:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "That this project installs hooks, when the hook is re-exported or composed rather than declared (`export { handle } from './mw'`)."
+    },
+    {
+      "id": "sveltekit.kit_module.import",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "$"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KitModule",
+          "canonical_key": {
+            "template": "sveltekit:module:{definition.name}"
+          },
+          "attributes": {
+            "specifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KitFile",
+          "canonical_key": {
+            "template": "sveltekit:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:module:{definition.name}"
+          },
+          "attributes": {
+            "specifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which files reach for SvelteKit's own virtual modules: $env/static/private, $env/dynamic/private, $app/state, $app/navigation, $lib. This is what answers 'which code reads a server-only secret'."
+    },
+    {
+      "id": "sveltekit.layout.ancestry",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_component"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.svelte"
+        },
+        {
+          "kind": "fact_join_by_path_ancestor",
+          "fact_kind": "reference.svelte_component",
+          "current_path_field": "path",
+          "join_path_field": "path.dir",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/+layout.svelte"
+            }
+          ],
+          "bind": "layout"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "sveltekit:page:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "template": "sveltekit:layout:{layout.path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "layout.path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "layout.path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_applies_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:layout:{layout.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:page:{path}"
+          },
+          "attributes": {
+            "convention": "path_ancestor"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which layouts wrap this page. A +layout.svelte applies to every route in its own directory and below, so the join is the layout's directory being an ancestor of the page's path; every ancestor layout is stated."
+    },
+    {
+      "id": "sveltekit.layout.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout.svelte"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "template": "sveltekit:layout:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_applies_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:layout:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which directory a layout wraps, from the file alone. A +layout.svelte that is plain markup around <slot/> emits no component tag."
+    },
+    {
+      "id": "sveltekit.layout.renders",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_component"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout.svelte"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "template": "sveltekit:layout:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "sveltekit:component:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_applies_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:layout:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:layout:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:component:{definition.name}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The layout of a route directory and the components it renders around every page below it. Keyed by file, because a layout is not a URL."
+    },
+    {
+      "id": "sveltekit.load",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "+layout",
+            "+layout.server",
+            "+page",
+            "+page.server"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "load"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loader",
+          "canonical_key": {
+            "template": "sveltekit:loader:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "loads",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:loader:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "What data this route loads before it renders. The module the `load` is declared in says where it runs: +page.server/+layout.server are server-only, +page/+layout are universal."
+    },
+    {
+      "id": "sveltekit.load.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "+layout",
+            "+layout.server",
+            "+page",
+            "+page.server"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "load"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Loader",
+          "canonical_key": {
+            "template": "sveltekit:loader:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "loads",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:loader:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same loader when `load` is a named binding rather than a function declaration."
+    },
+    {
+      "id": "sveltekit.page.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.svelte"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "sveltekit:page:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:page:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which route serves this path, from the file alone. A +page.svelte that is static markup declares nothing and emits no component tag, so the declaration-entered rules never see it; the artifact fact does."
+    },
+    {
+      "id": "sveltekit.page.renders",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.svelte_component"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.svelte"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "sveltekit:page:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "sveltekit:component:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:page:{path}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:page:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:component:{definition.name}"
+          },
+          "attributes": {
+            "component": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "What this route renders: the page component of the directory, and each Svelte component it puts on the page. A component tag is the one markup fact the Svelte Pack states by name."
+    },
+    {
+      "id": "sveltekit.param_matcher",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/params/*.*"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "match"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ParamMatcher",
+          "canonical_key": {
+            "template": "sveltekit:param-matcher:{path.stem}"
+          },
+          "attributes": {
+            "matcher": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Where the matcher a route segment names is defined: `[id=integer]` resolves to the `match` exported by src/params/integer, so the matcher is keyed by the name the route spells, not by its path."
+    },
+    {
+      "id": "sveltekit.param_matcher.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/params/*.*"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "match"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ParamMatcher",
+          "canonical_key": {
+            "template": "sveltekit:param-matcher:{path.stem}"
+          },
+          "attributes": {
+            "matcher": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same matcher when `match` is a named binding rather than a function declaration."
+    },
+    {
+      "id": "sveltekit.param_matcher.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/params/*.*"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ParamMatcher",
+          "canonical_key": {
+            "template": "sveltekit:param-matcher:{path.stem}"
+          },
+          "attributes": {
+            "matcher": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The matcher name a route spells as [id=integer] is the file stem, not a declaration; this states it from the file so a matcher whose `match` is re-exported still exists."
+    },
+    {
+      "id": "sveltekit.route.file.layout",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+layout.*"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteModule",
+          "canonical_key": {
+            "template": "sveltekit:route-module:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route-module:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same for +layout.ts / +layout.server.ts: the layout module belongs to this route directory whether or not it declares a load."
+    },
+    {
+      "id": "sveltekit.route.file.page",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/+page.*"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteModule",
+          "canonical_key": {
+            "template": "sveltekit:route-module:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route-module:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which files make up this route, and that the route exists, for a +page.ts or +page.server.ts that exports no load, actions or route option."
+    },
+    {
+      "id": "sveltekit.route.option",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "+layout",
+            "+layout.server",
+            "+page",
+            "+page.server",
+            "+server"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "config",
+            "csr",
+            "entries",
+            "prerender",
+            "ssr",
+            "trailingSlash"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteOption",
+          "canonical_key": {
+            "template": "sveltekit:route-option:{path}:{definition.name}"
+          },
+          "attributes": {
+            "option": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "attributes": {
+            "framework": "sveltekit",
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "route": {
+              "kind": "normalize_route",
+              "source": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "config",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "sveltekit:route-option:{path}:{definition.name}"
+          },
+          "attributes": {
+            "option": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which routes set a page option -- prerender, ssr, csr, trailingSlash, config, entries. The option's value is not stated: the Pack names the declaration, not what it is assigned."
+    }
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "a +page.svelte that renders no component is not stated as a Page: the Svelte Pack names component tags, not files",
+      "an individual form action is stated only where the Pack emits a function held by an object property, which omega-javascript does and omega-typescript does not",
+      "a page option's value (prerender = true vs false) is not stated: the Pack names the declaration, not what it is assigned",
+      "which route segment uses which param matcher needs the `[id=integer]` segment parsed, which no Pack states",
+      "adapter behaviour, matcher execution and runtime handle/action invocation remain runtime semantics"
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/sveltekit/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-sveltekit-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
+  ],
+  "detection_rules": [
+    {
+      "id": "sveltekit.exact_signature.1.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "KitFile",
-     "canonical_key": {
-      "template": "sveltekit:file:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
+      "id": "sveltekit.exact_signature.2.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:file:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "sveltekit:module:{definition.name}"
-     },
-     "attributes": {
-      "specifier": {
-       "kind": "field_ref",
-       "field": "definition.name"
+      "id": "sveltekit.exact_signature.3.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
+    },
+    {
+      "id": "sveltekit.exact_signature.4.@sveltejs_kit",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "@sveltejs/kit"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "sveltekit"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "sveltekit",
+          "framework_name": "SvelteKit",
+          "signature": "@sveltejs/kit",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
     }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which files reach for SvelteKit's own virtual modules: $env/static/private, $env/dynamic/private, $app/state, $app/navigation, $lib. This is what answers 'which code reads a server-only secret'."
-  }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "a +page.svelte that renders no component is not stated as a Page: the Svelte Pack names component tags, not files",
-   "an individual form action is stated only where the Pack emits a function held by an object property, which omega-javascript does and omega-typescript does not",
-   "a page option's value (prerender = true vs false) is not stated: the Pack names the declaration, not what it is assigned",
-   "which route segment uses which param matcher needs the `[id=integer]` segment parsed, which no Pack states",
-   "adapter behaviour, matcher execution and runtime handle/action invocation remain runtime semantics"
-  ]
- },
- "provenance": [
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "packages/core/src/adapters/sveltekit/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
   },
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "fixtures/mini-sveltekit-app/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  }
- ],
- "detection_rules": [
-  {
-   "id": "sveltekit.exact_signature.1.@sveltejs_kit",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "@sveltejs/kit"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "sveltekit"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "sveltekit",
-     "framework_name": "SvelteKit",
-     "signature": "@sveltejs/kit",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "sveltekit.exact_signature.2.@sveltejs_kit",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "@sveltejs/kit"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "sveltekit"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "sveltekit",
-     "framework_name": "SvelteKit",
-     "signature": "@sveltejs/kit",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "sveltekit.exact_signature.3.@sveltejs_kit",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:@sveltejs/kit"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "sveltekit"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "sveltekit",
-     "framework_name": "SvelteKit",
-     "signature": "@sveltejs/kit",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "sveltekit.exact_signature.4.@sveltejs_kit",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "@sveltejs/kit"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "sveltekit"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "sveltekit",
-     "framework_name": "SvelteKit",
-     "signature": "@sveltejs/kit",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  }
- ],
- "reconciliation": {
-  "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded."
- },
- "runtime_status": "terminal-static-source-contract"
+  "runtime_status": "terminal-static-source-contract"
 }

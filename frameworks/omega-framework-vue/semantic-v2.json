@@ -1,1286 +1,1444 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-vue",
- "selector": "framework:vue",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "vue",
-   "javascript",
-   "typescript"
-  ],
-  "required_packs": [
-   "omega-vue",
-   "omega-javascript",
-   "omega-typescript"
-  ],
-  "required_capabilities": [
-   "calls",
-   "data",
-   "definitions",
-   "imports",
-   "references"
-  ]
- },
- "evidence_inputs": [
-  "package_manifests",
-  "file_paths",
-  "imports_bindings",
-  "existing_language_ir"
- ],
- "emits": {
-  "entities": [
-   "ApiUse",
-   "App",
-   "Component",
-   "ComponentApi",
-   "ComponentName",
-   "Composable",
-   "Dependency",
-   "Event",
-   "LifecycleHook",
-   "Router",
-   "Slot",
-   "Store",
-   "TemplateBinding"
-  ],
-  "relations": [
-   "declares",
-   "declares_component",
-   "declares_slot",
-   "depends_on",
-   "listens_to",
-   "provides_store",
-   "renders",
-   "uses_api",
-   "uses_binding",
-   "uses_composable",
-   "uses_lifecycle"
-  ]
- },
- "rules": [
-  {
-   "id": "vue.sfc.component.template",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "scope.template_block"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ComponentName",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:component-name:{path.stem}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "declares_component",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:component-name:{path.stem}"
-     },
-     "attributes": {
-      "evidence": "single_file_component"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "An SFC with a <template> block. The same Component key is minted from the <script> block by vue.sfc.component.script, so a render-function SFC with no template is still a Component and no relation addressing vue:component:{path} dangles."
-  },
-  {
-   "id": "vue.sfc.component.script",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "scope.script_block"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ComponentName",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:component-name:{path.stem}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "declares_component",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:component-name:{path.stem}"
-     },
-     "attributes": {
-      "evidence": "single_file_component"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "An SFC with a <script> or <script setup> block; mints the same Component key as vue.sfc.component.template so that a template-only SFC and a script-only SFC are both one Component."
-  },
-  {
-   "id": "vue.template.renders",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.vue_element"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ComponentName",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:component-name:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "renders",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:component-name:{definition.name}"
-     },
-     "attributes": {
-      "tag": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "omega-vue emits data.vue_element only for a component-shaped tag and never for a plain HTML element, so every match is a component use. The tag name is the hub: the tag <UserCard/> and the file components/UserCard.vue meet at vue:component-name:UserCard."
-  },
-  {
-   "id": "vue.template.slot",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.slot"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Slot",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:slot:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "declares_slot",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:slot:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The named slots an SFC exposes, which is its content contract. omega-vue emits definition.slot only when the slot carries a name attribute."
-  },
-  {
-   "id": "vue.template.event-listener",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.event"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Event",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:event:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "listens_to",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:event:{definition.name}"
-     },
-     "attributes": {
-      "event": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which component handles a named event. omega-vue names the event on @evt and v-on:evt alike, so one rule covers both spellings."
-  },
-  {
-   "id": "vue.template.directive",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.vue_directive_value"
-    },
-    {
-     "kind": "field_in",
-     "field": "directive",
-     "values": [
-      "v-model",
-      "v-for",
-      "v-if",
-      "v-else-if",
-      "v-show",
-      "v-html",
-      "v-text",
-      "v-bind",
-      "v-on",
-      "v-slot",
-      "v-memo",
-      ":",
-      "@",
-      "#"
-     ]
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "TemplateBinding",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:template-binding:{path}:{source.start}"
-     },
-     "attributes": {
-      "directive": {
-       "kind": "field_ref",
-       "field": "directive"
-      },
-      "expression": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_binding",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:template-binding:{path}:{source.start}"
-     },
-     "attributes": {
-      "directive": {
-       "kind": "field_ref",
-       "field": "directive"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The three directives whose presence changes what an agent has to check: v-model (two-way binding), v-for (iteration) and v-html (unescaped HTML). Measured: omega-vue publishes the authored directive name, so the shorthands arrive as ':' and '@' and the long forms as 'v-bind' and 'v-on'; none of these three has a shorthand, which is why the old rule's list of 'v-bind','bind','v-on','on' matched nothing."
-  },
-  {
-   "id": "vue.macro.declares",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.function"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "defineProps",
-      "defineEmits",
-      "defineSlots",
-      "defineExpose",
-      "defineModel",
-      "defineOptions"
-     ]
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ComponentApi",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:component-api:{path}:{definition.name}"
-     },
-     "attributes": {
-      "macro": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "declares",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:component-api:{path}:{definition.name}"
-     },
-     "attributes": {
-      "macro": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "One rule for all six <script setup> compiler macros, which were four rules keyed to call.ecmascript_direct_context and its call_name field before."
-  },
-  {
-   "id": "vue.lifecycle.hook",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.function"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "onMounted",
-      "onBeforeMount",
-      "onUpdated",
-      "onBeforeUpdate",
-      "onUnmounted",
-      "onBeforeUnmount",
-      "onActivated",
-      "onDeactivated",
-      "onErrorCaptured",
-      "onServerPrefetch",
-      "onRenderTracked",
-      "onRenderTriggered"
-     ]
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "LifecycleHook",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:lifecycle:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_lifecycle",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:lifecycle:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which components do work on mount, unmount or error - the entry points for side effects, subscriptions and cleanup."
-  },
-  {
-   "id": "vue.composable.use",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.function"
-    },
-    {
-     "kind": "field_prefix",
-     "field": "definition.name",
-     "value": "use"
-    },
-    {
-     "kind": "field_not_in",
-     "field": "definition.name",
-     "values": [
-      "useRouter",
-      "useRoute",
-      "useLink",
-      "useSlots",
-      "useAttrs",
-      "useId",
-      "useTemplateRef",
-      "useCssModule",
-      "useCssVars",
-      "useModel",
-      "useSSRContext"
-     ]
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "import.symbol",
-     "current_field": "definition.name",
-     "join_field": "definition.name",
-     "same_path": true,
-     "bind": "imported"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Composable",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:composable:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_composable",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:composable:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "A use* call in an SFC that the same file imports by name. The import join is what separates a composable from any local helper that happens to start with 'use'. Vue's and vue-router's own use* functions are excluded here and answered by vue.builtin-api.use. This rule mints the vue:composable:{name} hub itself, so no end dangles when the definition lives outside **/composables/**."
-  },
-  {
-   "id": "vue.composable.declared.function",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "field_prefix",
-     "field": "definition.name",
-     "value": "use"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/composables/**"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Composable",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:composable:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate",
-   "coverage_note": "A composable written as `function useX()`, and in JavaScript also `const useX = () => {}`, which omega-javascript emits as definition.function. Attaches the defining file to the vue:composable:{name} hub."
-  },
-  {
-   "id": "vue.composable.declared.variable",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "field_prefix",
-     "field": "definition.name",
-     "value": "use"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/composables/**"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Composable",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:composable:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate",
-   "coverage_note": "A composable written as `const useX = () => {}` in TypeScript, which omega-typescript emits as definition.variable and not definition.function - measured with dump_call_emissions. Same hub, so the two spellings are one entity."
-  },
-  {
-   "id": "vue.dependency",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "import.module"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
+  "schema_version": 2,
+  "asset": "omega-framework-vue",
+  "selector": "framework:vue",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
       "vue",
-      "vue-router",
-      "vuex",
-      "pinia",
-      "vue-i18n",
-      "vue-demi"
-     ]
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Dependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:package:{definition.name}"
-     },
-     "attributes": {
-      "package": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:package:{definition.name}"
-     },
-     "attributes": {
-      "package": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "import.module's name is the authored module specifier with its quotes stripped, and that is the whole of what the JS/TS Packs publish about an import target. external_path_matches is unusable here: OWED.md item 7a records that JS/TS facts carry no external at all."
+      "javascript",
+      "typescript"
+    ],
+    "required_packs": [
+      "omega-vue",
+      "omega-javascript",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
   },
-  {
-   "id": "vue.app.bootstrap",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.function"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "createApp"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "App",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:app:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Dependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:package:vue"
-     },
-     "attributes": {
-      "package": "vue"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:app:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:package:vue"
-     },
-     "attributes": {
-      "package": "vue"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Where the application is created - the entry point an agent looks for first. The rule mints vue:package:vue itself rather than leaning on vue.dependency, which is gated to **/*.vue while main.ts is not an SFC."
+  "evidence_inputs": [
+    "package_manifests",
+    "file_paths",
+    "imports_bindings",
+    "existing_language_ir"
+  ],
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "App",
+      "Component",
+      "ComponentApi",
+      "ComponentName",
+      "Composable",
+      "Dependency",
+      "Event",
+      "LifecycleHook",
+      "Route",
+      "Router",
+      "Slot",
+      "Store",
+      "TemplateBinding"
+    ],
+    "relations": [
+      "declares",
+      "declares_component",
+      "declares_slot",
+      "depends_on",
+      "listens_to",
+      "provides_store",
+      "renders",
+      "uses_api",
+      "uses_binding",
+      "uses_composable",
+      "uses_lifecycle"
+    ]
   },
-  {
-   "id": "vue.router.definition",
-   "snapshot": true,
-   "match": [
+  "rules": [
     {
-     "kind": "fact_kind",
-     "value": "call.function"
+      "id": "vue.sfc.component.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component-name:{path.stem}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:component-name:{path.stem}"
+          },
+          "attributes": {
+            "evidence": "single_file_component"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Every `.vue` single-file component, entered from the file itself so a template-only or script-only component is still a component. It carries no directory exclusion on purpose: ten rules address `vue:component:{path}` without one, and a minting rule narrower than the rules addressing it leaves their relations pointing at nothing."
     },
     {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "createRouter"
+      "id": "vue.pages.route",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.vue"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".output",
+            ".nuxt"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "row_kind",
+          "join_field": "row_kind",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "vue-router/auto-routes",
+                "vue-router/auto",
+                "unplugin-vue-router",
+                "unplugin-vue-router/runtime",
+                "virtual:generated-pages",
+                "virtual:generated-pages-react",
+                "~pages",
+                "pages-generated"
+              ]
+            }
+          ],
+          "bind": "router_plugin"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:route:{normalized_file_route}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:route:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "attributes": {
+            "evidence": "file_based_route_under_pages"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "Vue Router is configured, not file-based, so this rule fires only where a project has opted into file-based routing: the import.module join is a project-wide existence test (row_kind is 'fact' on every fact, so the join binds if any file anywhere imports one of the generated-routes specifiers of unplugin-vue-router or vite-plugin-pages). A Nuxt project imports none of them, so its pages/ tree is left to omega-framework-nuxt. {normalized_file_route} is the path below the pages/ root with index dropped and [id] normalized, so pages/users/[id].vue is vue:route:/users/{}."
+    },
+    {
+      "id": "vue.template.renders",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.vue_element"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentName",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:component-name:{definition.name}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "omega-vue emits data.vue_element only for a component-shaped tag and never for a plain HTML element, so every match is a component use. The tag name is the hub: the tag <UserCard/> and the file components/UserCard.vue meet at vue:component-name:UserCard."
+    },
+    {
+      "id": "vue.template.renders.file",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.vue_element"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.file",
+          "current_field": "definition.name",
+          "join_field": "path.stem",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/*.vue"
+            },
+            {
+              "kind": "path_segment",
+              "exclude": [
+                "node_modules",
+                "dist",
+                ".output",
+                ".nuxt"
+              ]
+            }
+          ],
+          "bind": "target_file"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "target_file",
+            "field": "file.path",
+            "template": "vue:component:{value}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "evidence": "template_tag_to_file_stem"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which FILE does this tag render. data.vue_element's name is the tag; the join reaches the data.file whose path.stem is that tag, and by_joined_field renders that file's path into vue:component:{value}, the key vue.sfc.component.file mints for every .vue file. This is the edge vue.template.renders cannot make: the name hub says <UserCard/> and something called UserCard are the same thing, this says which file it is. Both are kept because a tag with no matching file -- a library or globally registered component -- still gets the name-hub edge."
+    },
+    {
+      "id": "vue.template.slot",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.slot"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Slot",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:slot:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_slot",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:slot:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The named slots an SFC exposes, which is its content contract. omega-vue emits definition.slot only when the slot carries a name attribute."
+    },
+    {
+      "id": "vue.template.event-listener",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.event"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Event",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:event:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "listens_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:event:{definition.name}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which component handles a named event. omega-vue names the event on @evt and v-on:evt alike, so one rule covers both spellings."
+    },
+    {
+      "id": "vue.template.directive",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.vue_directive_value"
+        },
+        {
+          "kind": "field_in",
+          "field": "directive",
+          "values": [
+            "v-model",
+            "v-for",
+            "v-if",
+            "v-else-if",
+            "v-show",
+            "v-html",
+            "v-text",
+            "v-bind",
+            "v-on",
+            "v-slot",
+            "v-memo",
+            ":",
+            "@",
+            "#"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "field_ref",
+              "field": "directive"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_binding",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:template-binding:{path}:{source.start}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "field_ref",
+              "field": "directive"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The three directives whose presence changes what an agent has to check: v-model (two-way binding), v-for (iteration) and v-html (unescaped HTML). Measured: omega-vue publishes the authored directive name, so the shorthands arrive as ':' and '@' and the long forms as 'v-bind' and 'v-on'; none of these three has a shorthand, which is why the old rule's list of 'v-bind','bind','v-on','on' matched nothing."
+    },
+    {
+      "id": "vue.macro.declares",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "defineProps",
+            "defineEmits",
+            "defineSlots",
+            "defineExpose",
+            "defineModel",
+            "defineOptions"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ComponentApi",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component-api:{path}:{definition.name}"
+          },
+          "attributes": {
+            "macro": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:component-api:{path}:{definition.name}"
+          },
+          "attributes": {
+            "macro": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "One rule for all six <script setup> compiler macros, which were four rules keyed to call.ecmascript_direct_context and its call_name field before."
+    },
+    {
+      "id": "vue.lifecycle.hook",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "onMounted",
+            "onBeforeMount",
+            "onUpdated",
+            "onBeforeUpdate",
+            "onUnmounted",
+            "onBeforeUnmount",
+            "onActivated",
+            "onDeactivated",
+            "onErrorCaptured",
+            "onServerPrefetch",
+            "onRenderTracked",
+            "onRenderTriggered"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LifecycleHook",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:lifecycle:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_lifecycle",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:lifecycle:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which components do work on mount, unmount or error - the entry points for side effects, subscriptions and cleanup."
+    },
+    {
+      "id": "vue.composable.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "useRouter",
+            "useRoute",
+            "useLink",
+            "useSlots",
+            "useAttrs",
+            "useId",
+            "useTemplateRef",
+            "useCssModule",
+            "useCssVars",
+            "useModel",
+            "useSSRContext"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.symbol",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "same_path": true,
+          "bind": "imported"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Composable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:composable:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_composable",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:composable:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A use* call in an SFC that the same file imports by name. The import join is what separates a composable from any local helper that happens to start with 'use'. Vue's and vue-router's own use* functions are excluded here and answered by vue.builtin-api.use. This rule mints the vue:composable:{name} hub itself, so no end dangles when the definition lives outside **/composables/**."
+    },
+    {
+      "id": "vue.composable.declared.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/composables/**"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Composable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:composable:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A composable written as `function useX()`, and in JavaScript also `const useX = () => {}`, which omega-javascript emits as definition.function. Attaches the defining file to the vue:composable:{name} hub."
+    },
+    {
+      "id": "vue.composable.declared.variable",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "use"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/composables/**"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Composable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:composable:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A composable written as `const useX = () => {}` in TypeScript, which omega-typescript emits as definition.variable and not definition.function - measured with dump_call_emissions. Same hub, so the two spellings are one entity."
+    },
+    {
+      "id": "vue.dependency",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "vue",
+            "vue-router",
+            "vuex",
+            "pinia",
+            "vue-i18n",
+            "vue-demi"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:package:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:package:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "import.module's name is the authored module specifier with its quotes stripped, and that is the whole of what the JS/TS Packs publish about an import target. external_path_matches is unusable here: OWED.md item 7a records that JS/TS facts carry no external at all."
+    },
+    {
+      "id": "vue.app.bootstrap",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "createApp"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "App",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:app:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:package:vue"
+          },
+          "attributes": {
+            "package": "vue"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:package:vue"
+          },
+          "attributes": {
+            "package": "vue"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Where the application is created - the entry point an agent looks for first. The rule mints vue:package:vue itself rather than leaning on vue.dependency, which is gated to **/*.vue while main.ts is not an SFC."
+    },
+    {
+      "id": "vue.router.definition",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "createRouter"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Router",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:router:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:package:vue-router"
+          },
+          "attributes": {
+            "package": "vue-router"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:router:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:package:vue-router"
+          },
+          "attributes": {
+            "package": "vue-router"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which file builds the router. The route table is the object-literal argument of createRouter and no JS/TS Pack emits a fact for it, so route path -> component is not claimed; see the gaps."
+    },
+    {
+      "id": "vue.builtin-api.use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "useRouter",
+            "useRoute",
+            "useLink",
+            "useSlots",
+            "useAttrs",
+            "useId",
+            "useTemplateRef",
+            "useCssModule",
+            "useCssVars",
+            "useModel",
+            "useSSRContext"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which components are route-aware (useRouter, useRoute) and which reach for slots or attrs. The old uses_api rule ran from an entity to the key that same entity had just been minted under, a self-loop; this one runs from the component to a named API hub."
+    },
+    {
+      "id": "vue.store.definition",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "defineStore"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "binding"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Store",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:store:{binding.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "binding.definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Composable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:composable:{binding.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "binding.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:package:pinia"
+          },
+          "attributes": {
+            "package": "pinia"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "provides_store",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:composable:{binding.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:store:{binding.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "binding.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:store:{binding.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:package:pinia"
+          },
+          "attributes": {
+            "package": "pinia"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`export const useCounter = defineStore('counter', ...)`. defineStore's own string id is an argument no Pack emits, but the binding it is assigned to is the name every component imports, and the call's span lies inside the definition.variable span - so a span join names the store with no Pack field. Minting vue:composable:{name} here is what links the store to the components that call it, through vue.composable.use."
+    },
+    {
+      "id": "vue.injection.key",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "provide",
+            "inject"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.vue"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "InjectionKey",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:injection-key:{call.arg0_text}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_injection_key",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vue:component:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vue:injection-key:{call.arg0_text}"
+          },
+          "attributes": {
+            "direction": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`provide('themeKey', theme)` and `inject('themeKey')`. The key is the call's first argument and is deliberately path-free, so the component that provides a key and the component that injects it meet on one entity -- the one Vue edge that crosses files without an import."
     }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Router",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:router:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Dependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:package:vue-router"
-     },
-     "attributes": {
-      "package": "vue-router"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:router:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:package:vue-router"
-     },
-     "attributes": {
-      "package": "vue-router"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which file builds the router. The route table is the object-literal argument of createRouter and no JS/TS Pack emits a fact for it, so route path -> component is not claimed; see the gaps."
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "Route path -> component is not claimed: the route table is the object-literal argument of createRouter, and omega-javascript/omega-typescript emit a fact for an object key only when its value is a function, so neither the path string nor the component identifier reaches the overlay.",
+      "provide()/inject() keys are not claimed: the key is a string-literal first argument and call.function carries the callee name and nothing else, so a ContextKey entity would have nothing to be named by.",
+      "The event names declared by defineEmits(['a','b']) are not claimed for the same reason. vue.macro.declares states that the component declares emits, and vue.template.event-listener states which events a parent listens for.",
+      "Tag -> file resolution is by file stem, not by import: vue.template.renders.file joins the tag name to the data.file whose path.stem matches, so <UserCard/> reaches components/UserCard.vue, but a kebab-case tag (<user-card/>) does not, because no clause or key template can case-fold; those tags keep only the name-hub edge from vue.template.renders. data.vue_element spans only the tag name, so a prop or a listener written on the same tag still cannot be span-joined to it.",
+      "A dynamic <component :is=\"x\"> target, an auto-imported component and a globally registered component are build-tool or runtime facts and are not claimed.",
+      "TS/JS script semantics inside an SFC arrive through the omega-vue injection, which resolves lang=js/ts/mjs/cjs/jsx/tsx to the javascript or typescript Pack; there is no TSX Pack path, so a <script lang=\"tsx\"> block is analysed as TypeScript."
+    ]
   },
-  {
-   "id": "vue.builtin-api.use",
-   "snapshot": true,
-   "match": [
+  "provenance": [
     {
-     "kind": "fact_kind",
-     "value": "call.function"
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/vue/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
     },
     {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "useRouter",
-      "useRoute",
-      "useLink",
-      "useSlots",
-      "useAttrs",
-      "useId",
-      "useTemplateRef",
-      "useCssModule",
-      "useCssVars",
-      "useModel",
-      "useSSRContext"
-     ]
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-vue-spa-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
     },
     {
-     "kind": "path_glob",
-     "pattern": "**/*.vue"
+      "source_id": "gristle",
+      "repository": "https://github.com/Alchemy-Agentic/gristle",
+      "path": "src/gristle/**",
+      "revision": "00c6722c9112c233b354454ce1e66851c56093e7",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "gristle",
+      "repository": "https://github.com/Alchemy-Agentic/gristle",
+      "path": "tests/**",
+      "revision": "00c6722c9112c233b354454ce1e66851c56093e7",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
     }
-   ],
-   "guards": [],
-   "outputs": [
+  ],
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
     {
-     "kind": "entity_candidate",
-     "entity_kind": "ApiUse",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:api:{definition.name}"
-     },
-     "attributes": {
-      "api": {
-       "kind": "field_ref",
-       "field": "definition.name"
+      "id": "vue.exact_signature.1.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_api",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:component:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:api:{definition.name}"
-     },
-     "attributes": {
-      "api": {
-       "kind": "field_ref",
-       "field": "definition.name"
+      "id": "vue.exact_signature.2.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
+    },
+    {
+      "id": "vue.exact_signature.3.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "vue.exact_signature.4.vue",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "vue"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vue"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vue",
+          "framework_name": "Vue",
+          "signature": "vue",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
     }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which components are route-aware (useRouter, useRoute) and which reach for slots or attrs. The old uses_api rule ran from an entity to the key that same entity had just been minted under, a self-loop; this one runs from the component to a named API hub."
-  },
-  {
-   "id": "vue.store.definition",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.function"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "defineStore"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.variable",
-     "relation": "within",
-     "same_path": true,
-     "bind": "binding"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Store",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:store:{binding.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "binding.definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Composable",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:composable:{binding.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "binding.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Dependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vue:package:pinia"
-     },
-     "attributes": {
-      "package": "pinia"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "provides_store",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:composable:{binding.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:store:{binding.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "binding.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vue:store:{binding.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vue:package:pinia"
-     },
-     "attributes": {
-      "package": "pinia"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "`export const useCounter = defineStore('counter', ...)`. defineStore's own string id is an argument no Pack emits, but the binding it is assigned to is the name every component imports, and the call's span lies inside the definition.variable span - so a span join names the store with no Pack field. Minting vue:composable:{name} here is what links the store to the components that call it, through vue.composable.use."
-  }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "Route path -> component is not claimed: the route table is the object-literal argument of createRouter, and omega-javascript/omega-typescript emit a fact for an object key only when its value is a function, so neither the path string nor the component identifier reaches the overlay.",
-   "provide()/inject() keys are not claimed: the key is a string-literal first argument and call.function carries the callee name and nothing else, so a ContextKey entity would have nothing to be named by.",
-   "The event names declared by defineEmits(['a','b']) are not claimed for the same reason. vue.macro.declares states that the component declares emits, and vue.template.event-listener states which events a parent listens for.",
-   "Tag -> file resolution is by name, not by import: data.vue_element spans only the tag name, so a prop or a listener written on the same tag cannot be span-joined to it, and a kebab-case tag does not meet its PascalCase file stem at vue:component-name.",
-   "A dynamic <component :is=\"x\"> target, an auto-imported component and a globally registered component are build-tool or runtime facts and are not claimed.",
-   "TS/JS script semantics inside an SFC arrive through the omega-vue injection, which resolves lang=js/ts/mjs/cjs/jsx/tsx to the javascript or typescript Pack; there is no TSX Pack path, so a <script lang=\"tsx\"> block is analysed as TypeScript."
   ]
- },
- "provenance": [
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "packages/core/src/adapters/vue/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "fixtures/mini-vue-spa-app/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "gristle",
-   "repository": "https://github.com/Alchemy-Agentic/gristle",
-   "path": "src/gristle/**",
-   "revision": "00c6722c9112c233b354454ce1e66851c56093e7",
-   "confidence": "medium",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "gristle",
-   "repository": "https://github.com/Alchemy-Agentic/gristle",
-   "path": "tests/**",
-   "revision": "00c6722c9112c233b354454ce1e66851c56093e7",
-   "confidence": "medium",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  }
- ],
- "runtime_status": "terminal-static-source-contract",
- "detection_rules": [
-  {
-   "id": "vue.exact_signature.1.vue",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "vue"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vue"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vue",
-     "framework_name": "Vue",
-     "signature": "vue",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "vue.exact_signature.2.vue",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "vue"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vue"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vue",
-     "framework_name": "Vue",
-     "signature": "vue",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "vue.exact_signature.3.vue",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:vue"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vue"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vue",
-     "framework_name": "Vue",
-     "signature": "vue",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "vue.exact_signature.4.vue",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "vue"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vue"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vue",
-     "framework_name": "Vue",
-     "signature": "vue",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  }
- ]
 }

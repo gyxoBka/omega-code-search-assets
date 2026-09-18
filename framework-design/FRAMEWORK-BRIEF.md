@@ -382,6 +382,19 @@ Write both rules and have them mint the same key with the same kind, and give
 the argument-bearing one the **shorter id** -- the host interns with
 `or_insert`, so the first rule by id is the one whose attributes survive.
 
+**A `data.file` rule sees every artifact in the view**, not only the ones your
+Framework's languages parse -- `.png`, `.txt`, `.json`, `.md`. That is what
+makes a static `app/robots.txt` or `app/icon.png` reachable, and it is why such
+a rule must pin an extension or a distinctive stem: a bare `**/pages/**/*.*`
+mints a Route for every stylesheet and README under `pages/`.
+
+**A measurement you write down has a date.** Three times now a `coverage.gaps`
+sentence or a "field only the Pack can supply" note has outlived the thing it
+measured, and the next agent inherited a conclusion instead of a fact --
+omega-framework-vue recorded `provide('themeKey')` as permanently unreachable
+two waves after the JS Packs started publishing `call.arg0_text`. Before you
+repeat a gap the previous author wrote, measure it again.
+
 **An audit cannot tell you whether the Pack's grammar can run.**
 `overlay_audit.py` builds its surface from `packs/*/rules.json` and never looks
 at a grammar's detection keys. Nine laravel rules matched omega-blade and scored

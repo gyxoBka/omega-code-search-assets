@@ -405,37 +405,24 @@ own filename because a manifest may not repeat its language as a filename.
 
 ---
 
-## 13. The file-shaped rules deleted while the audit called `data.file` dead
+## 13. The file-shaped rules -- restored
 
-`OverlayFact::artifact` (`overlay.rs:41`) pushes one synthetic `data.file` fact
-per artifact, with field `path`, before any Pack emission. It is how a rule
-addresses the file itself — file-based routing, a migration, a manifest.
-`overlay_audit.py` built its kind set from `packs/*/rules.json` only, so it
-reported every such rule dead, and the frameworks whose whole subject is the
-file tree were rewritten against that mismeasurement:
+`OverlayFact::artifact` pushes one synthetic `data.file` fact per artifact, and
+`overlay_audit.py` built its kind set from `packs/*/rules.json` and reported it
+dead. On that false premise the rewrite waves deleted the file-shaped rules of
+the frameworks whose whole subject is the file tree: next-js 20, nuxt 11,
+sveltekit 10, vue 3, blazor 2.
 
-| framework | `data.file` rules at the baseline | now |
-|---|---|---|
-| omega-framework-next-js | 20 | 0 |
-| omega-framework-nuxt | 11 | 0 |
-| omega-framework-sveltekit | 10 | 0 |
-| omega-framework-astro | 3 | 3 |
-| omega-framework-vue | 3 | 0 |
-| omega-framework-blazor | 2 | 0 |
-| omega-framework-django | 1 | 0 |
+Restored in second-pass wave D, each minting the same key with the same entity
+kind as the declaration-entered rule beside it, with a `.file` suffix so the
+declaration rule sorts first and keeps its attributes. A `page.tsx` that is
+static markup, a `+page.svelte` that declares nothing, a script-only
+`components/*.vue` and `app/robots.txt` are all entities again.
 
-All three routing frameworks still answer *which URL does this file serve*, but
-through a **declaration inside the file** plus a path glob — `next.pages.route`
-matches a `definition.function` under `pages/`, `nuxt.page` a
-`scope.template_block`. That is narrower than the file itself in a way that
-shows at the edges: a `+page.svelte` that is static markup, a `pages/about.vue`
-with only a template, a route file whose default export the Pack does not
-declare, all produce no Route.
-
-The audit is fixed. **Done looks like:** one pass over those seven, restoring a
-file-shaped rule wherever the question is about the file and not about a
-declaration in it, with `normalized_file_route` / `normalized_pages_route` used
-in the key as before.
+**Worth keeping:** a `data.file` rule sees **every artifact in the view**, not
+only the Framework's own languages -- `.png`, `.txt`, `.md` included. That is
+what makes a static metadata file reachable, and it is why such a rule must pin
+an extension or a distinctive stem.
 
 ---
 

@@ -5,8 +5,10 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-**20 overlay rules, 4 detection rules. All 20 match; 0 cannot.**
-It was 43 rules, 0 of which could match.
+**32 overlay rules, 4 detection rules. All 32 match; 0 cannot.**
+It was 43 rules, 0 of which could match; the first rewrite left 20, and this
+wave restored, as 12 rules, the 20 file-shaped rules that rewrite had deleted on
+a false premise.
 
 Selector: `framework:next-js`. Maturity: `semantic-overlay-full`.
 Packs it reads: `omega-javascript`, `omega-typescript`, `omega-tsx`.
@@ -16,19 +18,22 @@ Packs it reads: `omega-javascript`, `omega-typescript`, `omega-tsx`.
 | kind | rules | who emits it |
 |---|---|---|
 | `definition.function` | 11 | javascript, typescript, tsx |
+| `data.file` | 12 | nobody — the **host** synthesises one per artifact before any Pack emission (`OverlayFact::artifact`, overlay.rs:41) |
 | `definition.variable` | 5 | javascript, typescript, tsx |
 | `reference.jsx_component` | 1 | tsx |
 | `reference.component` | 1 | javascript |
 | `import.module` | 1 | all three |
 | `call.function` | 1 | all three |
 
-Clause vocabulary: `fact_kind` x20, `field_in` x21, `path_glob` x19,
-`external_path_matches` x1, `fact_join_by_path_ancestor` x1, `field_not_in` x1
-(the join's own `fact_kind`, `path_glob` and `field_in` are counted here too).
-Fields read: only the built-ins — `path.stem` x15 and `definition.name` x7 in
-match clauses, `path`, `path.dir`, `definition.name`, `path.stem`,
-`external.member` and `source.start` in keys and attributes. **No Pack field at
-all.**
+Two joins name a fact kind of their own: `definition.function` in
+`next.app.layout_hierarchy`, `data.file` in `next.app.layout_hierarchy.file`.
+
+Clause vocabulary: `fact_kind` x32, `path_glob` x32, `field_in` x31,
+`field_not_in` x6, `fact_join_by_path_ancestor` x2, `fact_join_by_field` x1,
+`field_prefix` x1 (a join's own clauses are counted here too). Fields read:
+only the built-ins — `path.stem` x29 and `definition.name` x9 in match
+clauses, `path`, `path.dir`, `definition.name`, `path.stem` and `source.start`
+in keys and attributes. **No Pack field at all.**
 
 ---
 
@@ -40,7 +45,7 @@ all.**
 
 | kind it matched | rules | no Pack emits it because |
 |---|---|---|
-| `data.file` | 20 | never a Pack fact; the host synthesises it, the Packs do not |
+| `data.file` | 20 | **this row was wrong** — no Pack emits it, but the host does, once per artifact; see §6 |
 | `definition.ecmascript_exported_variable_context` | 13 | the ECMAScript Packs now emit `definition.variable` |
 | `definition.ecmascript_exported_function_context` | 6 | now `definition.function` |
 | `data.ecmascript_module_directive_context` | 4 | deleted outright; nothing replaced it |
@@ -117,6 +122,55 @@ minted that key — and it was a `data.file` rule with a brace glob, so it minte
 nothing, ever. Each handler rule now mints the route it is handled by, in the
 same rule, under a method-scoped key.
 
+### 6. Then the rewrite deleted every rule that was about a file (20 rules)
+
+`overlay_audit.py` built its kind set from `packs/*/rules.json` alone, so it
+reported `data.file` dead. It is not: the host pushes one synthetic `data.file`
+fact per artifact, with field `path`, before any Pack emission
+(`OverlayFact::artifact`, overlay.rs:41), and `path.dir`, `path.stem` and the
+`{normalized_file_route}` placeholder all work on it. It is the only way to
+address the **file** rather than a declaration inside it.
+
+On that false premise all 20 file-shaped rules were dropped and every question
+about the file tree was re-entered through a declaration plus a path glob. That
+is narrower at exactly the edges that matter for a file-based router, because a
+route file that declares nothing a Pack can name is common, not exotic:
+
+| file | what it declares | before this wave |
+|---|---|---|
+| `app/about/page.tsx` — `export default () => <p/>` | nothing named | no `Route`, no `Page`, no segment |
+| `app/blog/loading.tsx` — static markup | nothing named | no `AppFile` |
+| `app/api/orders/route.ts` — `export { GET } from './handlers'` | nothing named | the URL did not exist |
+| `app/robots.txt`, `app/icon.png`, `app/manifest.json` | not code at all | nothing |
+| `pages/about.js` whose default export is an anonymous arrow | nothing named | no route |
+| `middleware.ts` — `export { default } from './mw'` | nothing named | no `Middleware` |
+
+Twelve rules are restored, not twenty: the eleven per-name `next.special.*`
+rules collapse to three by `path.stem`, the same way their declaration-entered
+counterparts did, and the pages-router rule is four rules because `glob_here`
+has no alternation (§2) and a bare `**/pages/**/*.*` over `data.file` would
+make a route out of every stylesheet, README and JSON fixture under `pages/`.
+
+Each restored rule mints **the same canonical key with the same entity kind** as
+the declaration-entered rule beside it, so a page recognised either way is one
+entity; and each carries a `.file` suffix, so the declaration rule — the one
+that can also state a method or an export name — sorts first and keeps its
+attributes under `or_insert` (brief §3g). `key_collisions.py` reports nothing.
+
+Two of them have no declaration-entered twin to agree with:
+
+- `next.app.route_handler.file` mints `http:*:{route}` and `next:handler:{path}`
+  — the file-level route, method unknown. The method-scoped
+  `http:GET:{route}` / `next:handler:{path}:GET` keys are untouched.
+- `next.app.layout_hierarchy.file` joins `data.file` to `data.file`, so a
+  markup-only layout wrapping a markup-only page is stated. Both its ends are
+  minted by `next.app.layout.file` and `next.app.page.file`, which match every
+  file it joins — the same-conditions requirement of brief §3b.
+
+Nothing that worked was deleted: all 20 declaration-entered rules are still
+there, unchanged apart from one `coverage_note` on `next.metadata_route` that
+said a static `sitemap.xml` "is not stated", which is no longer true.
+
 ---
 
 ## What it states now
@@ -144,12 +198,24 @@ dropped, `[id]`, `:id` and `{id}` normalized to one spelling.
 | where is the request middleware | `definition.function` in `**/middleware.*` | `Middleware next:middleware:{path}` |
 | which files depend on which part of Next.js | `import.module` whose `definition.name` is one of 21 `next/*` specifiers | `NextFile next:file:{path}`, `NextModule next-js:module:{specifier}`; `depends_on` File→Module |
 | which files call a Next.js API, and which one | `call.function` whose resolved `external.package` is `next` | `NextFile`, `ApiUse next-js:api-use:{path}:{start}` carrying `api` and the `next/*` submodule; `uses_api` File→ApiUse |
+| the same six questions when the **file** answers them, not a declaration in it | `data.file` (host-synthesised, one per artifact) under the same glob and stem | identical keys and kinds: `Route`+`Page`+`RouteSegment` for `page.*`, `Layout` for `layout.*`, `AppFile` for the six reserved stems, `MetadataRoute`, `MetadataAsset`, `Middleware` |
+| is there a route handler at this URL at all, whatever it exports | `data.file`, `path.stem` = `route` | `Route http:*:{route}`, `RouteHandler next:handler:{path}`; `handles` Route→RouteHandler |
+| which layouts wrap this page when either is markup only | `data.file` in a `page.*` joined by path ancestor to a `data.file` `layout.*` | `layout_of` Layout→Page |
+| which URL does this pages-router **file** serve | `data.file` in `**/pages/**/*.js`, `.jsx`, `.ts`, `.tsx` (four rules — the glob has no alternation), stem not `_app`/`_document`/`_error`/`_middleware` | `Route http:*:{route}`, `Page next:page:{route}`; `route_to_component` Route→Page |
+| is `app/robots.txt` / `app/icon.png` / `app/manifest.json` a metadata route or asset | `data.file`, `path.stem` in those names — the static form declares nothing | `MetadataRoute` / `MetadataAsset`; `contains` Segment→it |
 
 ### Every relation end is minted
 
-Checked by running the program (20 rules parsed, `complete: true`) over a
-synthetic App Router + Pages Router fact set: 23 entities, 18 relations, **zero
-relation ends addressing a key no rule mints**. The rule that could have
+Every canonical key the 32 rules address is minted by one of them:
+`http:*:{route}`, `http:{method}:{route}`, `next:page:{route}`,
+`next:layout:{path}`, `next:segment:{path.dir}`, `next:handler:{path}`,
+`next:handler:{path}:{method}`, `next:app-file:{path}`,
+`next:metadata-route:{path}`, `next:metadata-asset:{path}`,
+`next:metadata:{path}:{name}`, `next:route-segment-config:{path}:{name}`,
+`next:component:{name}`, `next:middleware:{path}`, `next:file:{path}`,
+`next-js:module:{name}` and `next-js:api-use:{path}:{start}`. The only end
+addressed through a joined field, `next:layout:{layout.path}`, renders into the
+`next:layout:{path}` space both layout rules mint. The rule that could have
 dangled is `renders`, whose source is `next:segment:{path.dir}` — so both
 `renders` rules mint that segment themselves rather than trusting the page,
 layout and special-file rules to have fired first.
@@ -228,22 +294,36 @@ acted on.
    `{normalized_file_route}` instead, at the cost of losing the group
    directories.
 
-2. **`next.middleware` matches `**/middleware.*` anywhere.** Next.js only
+2. **The middleware rules match `**/middleware.*` anywhere.** Next.js only
    honours `middleware.ts` at the project root or under `src/`, but the overlay
    has no notion of a project root, so a `src/lib/middleware.ts` helper is
-   stated as the app's middleware. Tightening it means two rules with literal
-   globs (`middleware.*`, `src/middleware.*`), which is a false-negative risk in
-   monorepos. Left broad, with `file` on the entity so a consumer can judge.
+   stated as the app's middleware — and the file-entered rule widens that to a
+   `middleware.md` or a `middleware.json`, since `data.file` is every artifact.
+   Tightening it means literal globs (`middleware.*`, `src/middleware.*`), which
+   is a false-negative risk in monorepos. Left broad, with `file` on the entity
+   so a consumer can judge.
 
-3. **`next.pages.route` mints a `Route` for every `definition.function` in
-   `pages/`,** including a file that exports only helpers. A pages-router file
-   that is reachable at a URL is exactly a file under `pages/`, so this is
-   right by the framework's own rule — but it means a `pages/utils/format.ts`
-   that should not be there is stated as `/utils/format`. No Pack fact
-   distinguishes them.
+3. **Everything under `pages/` is a route, and now that is true of the file as
+   well as of its declarations.** A pages-router file reachable at a URL is
+   exactly a file under `pages/`, so this is right by the framework's own rule,
+   but a `pages/utils/format.ts` that should not be there is stated as
+   `/utils/format`. The file-entered rules are restricted to `.js`, `.jsx`,
+   `.ts` and `.tsx` so that a stylesheet or a fixture under `pages/` is not a
+   route; a helper module with a code extension still is. No Pack fact
+   distinguishes a helper from a page.
 
-4. **Anonymous default exports are invisible.** `export default () => <div/>`
-   declares no name, so neither omega-javascript nor omega-typescript emits a
-   definition, and a `page.tsx` written only that way produces no `Page`, no
-   `Route` and no segment. Rare in App Router code, common enough in small
-   components. Nothing but a Pack change reaches it, and it is not worth one.
+4. **The app-router rules key on `path.stem`, and `data.file` is every
+   artifact.** An `app/blog/page.css` has stem `page`, so the file-entered rule
+   mints the same `/blog` route from it. The key and the kind are the ones
+   `page.tsx` mints, so nothing is corrupted; only the `file` attribute could
+   come from the stylesheet, and only when the real `page.tsx` declares nothing
+   at all. `page.module.css`, the conventional spelling, has stem `page.module`
+   and does not match. Accepted rather than spent four more rules on.
+
+5. **Anonymous default exports are now reachable, but only as a file.**
+   `export default () => <div/>` declares no name, so no Pack emits a
+   definition; `next.app.page.file` and the pages-router file rules state the
+   `Route` and the `Page` anyway, because the file is the route. What is still
+   unreachable is the *name* of that component and anything inside it — the
+   file is stated, the declaration is not. That remains a Pack question and is
+   still not worth a field.

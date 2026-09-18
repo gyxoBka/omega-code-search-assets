@@ -1020,3 +1020,66 @@ filename, already `OWED.md` item 12.
 
 793 overlay rules, 0 that cannot match, 0 collisions, 5 dangling candidates, all
 pydantic and all read.
+
+---
+
+# Second pass, wave D (next-js, nuxt, sveltekit, vue, blazor) -- OWED item 13
+
+The file-shaped rules, restored. These five lost 20, 11, 10, 3 and 2 `data.file`
+rules across the rewrite waves because `overlay_audit.py` built its kind set
+from `packs/*/rules.json` and reported the host-synthesized artifact fact dead.
+
+| Framework | rules | what the file itself can now answer |
+|---|---|---|
+| omega-framework-next-js | 20 -> 32 | a `page.tsx` that is static markup is still a Route; `app/robots.txt` and `app/icon.png`, which are not code at all, are a MetadataRoute and a MetadataAsset |
+| omega-framework-nuxt | 15 -> 26 | a `pages/about.vue` with no `definePageMeta` is a page |
+| omega-framework-sveltekit | 15 -> 23 | a `+page.svelte` that declares nothing is a route |
+| omega-framework-vue | 16 -> 18 | a template-only or script-only `.vue` is a component |
+| omega-framework-blazor | 11 -> 12 | a `.razor` with no `@code` block is a component |
+
+Each restored rule mints the **same key with the same entity kind** as the
+declaration-entered rule beside it, and carries a `.file` suffix so the
+declaration rule -- which can also state a method or an export name -- sorts
+first and keeps its attributes under `or_insert`. A page is one entity however
+it was recognised.
+
+## `data.file` is every artifact, not every source file
+
+The premise, confirmed against the host: `facts_of_surface` is built from every
+surface in the view, not only from surfaces of the Framework's own
+`host.languages`. So a `data.file` rule sees `.png`, `.txt`, `.json` and `.md`
+artifacts too. That is what makes a static `app/robots.txt` reachable -- and it
+is why a file-shaped rule **must pin an extension or a distinctive stem**. A
+bare `**/pages/**/*.*` would mint a Route for every stylesheet and README under
+`pages/`. next-js writes four rules rather than one for exactly this reason:
+`glob_here` has no brace alternation.
+
+## Three blocking defects
+
+**sveltekit matched the wrong kind for a form action.** `export const actions =
+{ create: async … }` declares its members as `definition.method`; the rule
+matched `definition.function`, which inside that span is only a *nested local
+arrow function*. So the rule named `helper` and never `create`. Measured, then
+fixed.
+
+**vue minted its hub more narrowly than ten rules addressed it.**
+`vue:component:{path}` was minted by one rule carrying a `path_segment` excluding
+`node_modules`, `dist`, `.output`, `.nuxt`, while ten rules pointed relations at
+that key with no such exclusion -- so every `.vue` under those directories had
+ten relation ends pointing at nothing. A minting rule must be at least as
+permissive as the rules that address it.
+
+**vue recorded a gap that had been closed two waves earlier.** Its `.md` and
+`coverage.gaps` said omega-javascript emits `call.function` "with no fields at
+all"; the Pack publishes the whole `call.arg0`/`call.arg0_text`/`call.arg0_name`
+family. `provide('themeKey')` / `inject('themeKey')` was reachable and recorded
+as permanently unreachable. `vue.injection.key` states it now, on a deliberately
+path-free key, so the component that provides and the component that injects
+meet on one entity -- the one Vue edge that crosses files without an import.
+
+That is the third time a withdrawn measurement has outlived the thing it
+measured. A `coverage.gaps` sentence is a claim like any other, and a claim
+about a Pack has a date.
+
+827 overlay rules, 0 that cannot match, 0 collisions, 5 dangling candidates, all
+pydantic and all read.

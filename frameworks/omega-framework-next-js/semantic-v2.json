@@ -155,6 +155,100 @@
       "coverage_note": "An app-router page segment: the URL the directory spells, the page module that serves it, and the segment directory that owns it. The entry fact is a function declared in page.*, which is the page component in its declaration form."
     },
     {
+      "id": "next.app.page.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "page"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same app-router page segment, entered from the file itself. A page.* that declares nothing the Pack can name -- static markup, an anonymous default export, a re-export -- is still a URL, and this is the only rule that says so. Same keys and same entity kinds as next.app.page, which sorts first and keeps its attributes."
+    },
+    {
       "id": "next.app.page.binding",
       "match": [
         {
@@ -319,6 +413,76 @@
       "coverage_note": "An app-router layout, keyed by its file because a layout is not a URL: it wraps every route below its own directory."
     },
     {
+      "id": "next.app.layout.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "layout"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "template": "next:layout:{path}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:layout:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The layout of a segment, entered from the file. A layout.* is a layout because of where it is, not because of what it declares."
+    },
+    {
       "id": "next.app.layout.binding",
       "match": [
         {
@@ -449,6 +613,66 @@
       "coverage_note": "Which layouts wrap this page. A layout applies to every route under its own directory, so the join is the layout's directory being an ancestor of the page's path; every ancestor layout is stated, which is how the App Router nests them."
     },
     {
+      "id": "next.app.layout_hierarchy.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "page"
+          ]
+        },
+        {
+          "kind": "fact_join_by_path_ancestor",
+          "fact_kind": "data.file",
+          "current_path_field": "path",
+          "join_path_field": "path.dir",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/app/**/*.*"
+            },
+            {
+              "kind": "field_in",
+              "field": "path.stem",
+              "values": [
+                "layout"
+              ]
+            }
+          ],
+          "bind": "layout"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_of",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:layout:{layout.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "convention": "app_router_path_ancestor"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which layouts wrap this page, over files rather than over declarations, so a markup-only layout or a markup-only page is still nested. Both ends are minted by next.app.layout.file and next.app.page.file, which match every file this rule joins."
+    },
+    {
       "id": "next.app.route_handler",
       "match": [
         {
@@ -539,6 +763,73 @@
       "evidence_class": "structurally_derived",
       "confidence": "exact",
       "coverage_note": "Which handler answers GET /api/orders: an HTTP-method-named function declared in an app-router route.* file, and the method-scoped route it answers."
+    },
+    {
+      "id": "next.app.route_handler.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "route"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteHandler",
+          "canonical_key": {
+            "template": "next:handler:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:handler:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "There is a route handler at this URL, whatever methods it exports. The method-scoped rules above state GET, POST and the rest when they are declared as named functions; a route.* that exports them by re-export or by assignment declares no such name, and without this rule the URL would not exist at all. The method is unknown from the file, so the Route is the wildcard-method one the page rules also use."
     },
     {
       "id": "next.app.route_handler.binding",
@@ -713,6 +1004,86 @@
       "coverage_note": "The reserved UI files of a route segment -- loading, error, not-found, global-error, template, default -- as one rule over the file stem, and the segment each belongs to."
     },
     {
+      "id": "next.app.special_file.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "default",
+            "error",
+            "global-error",
+            "loading",
+            "not-found",
+            "template"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AppFile",
+          "canonical_key": {
+            "template": "next:app-file:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:app-file:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The reserved UI files of a segment, entered from the file. loading.tsx is very often static markup with no named declaration, and that file has the same role whether or not it declares one."
+    },
+    {
       "id": "next.metadata_route",
       "match": [
         {
@@ -786,7 +1157,83 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "A generated metadata route -- sitemap, robots, manifest -- in its code-generated form. A static sitemap.xml or robots.txt is parsed by no language Pack and so is not stated."
+      "coverage_note": "A generated metadata route -- sitemap, robots, manifest -- in its code-generated form. The static form (sitemap.xml, robots.txt) declares nothing and is stated by next.metadata_route.file instead."
+    },
+    {
+      "id": "next.metadata_route.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "manifest",
+            "robots",
+            "sitemap"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataRoute",
+          "canonical_key": {
+            "template": "next:metadata-route:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:metadata-route:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A metadata route in its static form -- robots.txt, sitemap.xml, manifest.json -- which declares nothing at all and is a route purely by its name and place. data.file is one fact per ingested artifact, so this states the static file as well as the generated one."
     },
     {
       "id": "next.metadata_asset",
@@ -864,6 +1311,83 @@
       "evidence_class": "structurally_derived",
       "confidence": "exact",
       "coverage_note": "A generated metadata image -- icon, apple-icon, opengraph-image, twitter-image -- and the segment it decorates."
+    },
+    {
+      "id": "next.metadata_asset.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "apple-icon",
+            "icon",
+            "opengraph-image",
+            "twitter-image"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataAsset",
+          "canonical_key": {
+            "template": "next:metadata-asset:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:metadata-asset:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A metadata image in its static form -- icon.png, opengraph-image.jpg -- which is the common form and declares nothing."
     },
     {
       "id": "next.metadata.export",
@@ -1163,6 +1687,286 @@
       "coverage_note": "A pages-router route: the URL the file path spells and the module that serves it. The reserved _app, _document and _error modules are not routes and are excluded by stem."
     },
     {
+      "id": "next.pages.route.file.js",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.js"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "path.stem",
+          "values": [
+            "_app",
+            "_document",
+            "_error",
+            "_middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A pages-router route entered from the file: under pages/, the file IS the route, whether or not its default export is a declaration the Pack can name. The glob has no alternation, so the four JavaScript extensions are four rules; that is deliberate, because a bare **/pages/**/*.* would make a route out of every stylesheet and README under pages/. Same keys and kinds as next.pages.route, which sorts first."
+    },
+    {
+      "id": "next.pages.route.file.jsx",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.jsx"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "path.stem",
+          "values": [
+            "_app",
+            "_document",
+            "_error",
+            "_middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A pages-router route entered from the file: under pages/, the file IS the route, whether or not its default export is a declaration the Pack can name. The glob has no alternation, so the four JavaScript extensions are four rules; that is deliberate, because a bare **/pages/**/*.* would make a route out of every stylesheet and README under pages/. Same keys and kinds as next.pages.route, which sorts first."
+    },
+    {
+      "id": "next.pages.route.file.ts",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.ts"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "path.stem",
+          "values": [
+            "_app",
+            "_document",
+            "_error",
+            "_middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A pages-router route entered from the file: under pages/, the file IS the route, whether or not its default export is a declaration the Pack can name. The glob has no alternation, so the four JavaScript extensions are four rules; that is deliberate, because a bare **/pages/**/*.* would make a route out of every stylesheet and README under pages/. Same keys and kinds as next.pages.route, which sorts first."
+    },
+    {
+      "id": "next.pages.route.file.tsx",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.tsx"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "path.stem",
+          "values": [
+            "_app",
+            "_document",
+            "_error",
+            "_middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A pages-router route entered from the file: under pages/, the file IS the route, whether or not its default export is a declaration the Pack can name. The glob has no alternation, so the four JavaScript extensions are four rules; that is deliberate, because a bare **/pages/**/*.* would make a route out of every stylesheet and README under pages/. Same keys and kinds as next.pages.route, which sorts first."
+    },
+    {
       "id": "next.pages.data_fetching",
       "match": [
         {
@@ -1273,6 +2077,45 @@
       "evidence_class": "structurally_derived",
       "confidence": "exact",
       "coverage_note": "Where the project's request middleware is. Which routes it runs on is the config.matcher initializer, a value no Pack publishes."
+    },
+    {
+      "id": "next.middleware.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "data.file"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/middleware.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "next:middleware:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The request middleware, entered from the file, so a middleware.* whose default export is a re-export or a wrapped call is still stated."
     },
     {
       "id": "next.segment.renders.jsx",
