@@ -321,12 +321,21 @@
 ; --- a call ---
 ;
 ; The span is the name that is called, not the call with its arguments: a
-; mention is the bytes that name the thing.
-
-(call_expression function: (identifier) @call.function)
+; mention is the bytes that name the thing. The argument list is captured
+; beside it, because a call's positional arguments are the one thing every
+; framework overlay asks a call for -- a route's URL, a registration's prefix,
+; a service token -- and they are already there, as the ordered children of the
+; node the call names them in.
 
 (call_expression
-  function: (member_expression property: (property_identifier) @call.method))
+  function: (identifier) @call.function
+  arguments: (arguments) @call.args)
+
+(call_expression
+  function: (member_expression
+    object: (_) @call.receiver
+    property: (property_identifier) @call.method)
+  arguments: (arguments) @call.args)
 
 (new_expression
   constructor: [(identifier) @call.constructor

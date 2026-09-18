@@ -96,9 +96,20 @@
 ; The span is the name that is called, not the call with its arguments: a
 ; mention is the bytes that name the thing.
 
-(call function: (identifier) @call.name)
+; The argument list is captured beside the name, because a call's positional
+; arguments are what a framework overlay asks a call for -- a Django route, a
+; Pydantic field alias, a torch extension's source list -- and they are the
+; ordered children of the node the call already names them in.
 
-(call function: (attribute attribute: (identifier) @call.method))
+(call
+  function: (identifier) @call.name
+  arguments: (argument_list) @call.args)
+
+(call
+  function: (attribute
+    object: (_) @call.receiver
+    attribute: (identifier) @call.method)
+  arguments: (argument_list) @call.args)
 
 ; --- an annotation ---
 ;

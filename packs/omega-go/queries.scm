@@ -172,11 +172,20 @@
 
 ; --- calls ---
 
-(call_expression function: (identifier) @call.function.name) @call.function
+; The argument list is captured beside the name: a call's positional arguments
+; are the one thing every framework overlay asks a call for -- a route's URL, a
+; group's prefix, a Static mount's directory -- and they are the ordered
+; children of the node the call already names them in.
+
+(call_expression
+  function: (identifier) @call.function.name
+  arguments: (argument_list) @call.args) @call.function
 
 (call_expression
   function: (selector_expression
-    field: (field_identifier) @call.method.name)) @call.method
+    operand: (_) @call.receiver
+    field: (field_identifier) @call.method.name)
+  arguments: (argument_list) @call.args) @call.method
 
 ; --- every mention of a type by name ---
 

@@ -147,16 +147,25 @@
 
 ; ---------------------------------------------------------------------- calls
 
+; The argument list is captured beside the name: a call's positional arguments
+; are what a framework overlay asks a call for -- an axum route's URL, a
+; `.nest()` prefix -- and they are the ordered children of the node the call
+; already names them in.
+
 (call_expression
-  function: (identifier) @call.function.name) @call.function
+  function: (identifier) @call.function.name
+  arguments: (arguments) @call.args) @call.function
 
 (call_expression
   function: (scoped_identifier
-    name: (identifier) @call.path.name)) @call.path
+    name: (identifier) @call.path.name)
+  arguments: (arguments) @call.args) @call.path
 
 (call_expression
   function: (field_expression
-    field: (field_identifier) @call.method.name)) @call.method
+    value: (_) @call.receiver
+    field: (field_identifier) @call.method.name)
+  arguments: (arguments) @call.args) @call.method
 
 (call_expression
   function: (generic_function

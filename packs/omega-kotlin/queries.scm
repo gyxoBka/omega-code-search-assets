@@ -237,6 +237,22 @@
   (navigation_expression
     (navigation_suffix (simple_identifier) @call.method.name)))
 
+; What a call was given, as a fact of its own. `run { }` and `launch { }` have
+; no `value_arguments` node at all, and an unbound capture skips a template
+; whole, so the arguments cannot be a field on the call itself. A framework
+; reads this with `fact_join_by_span` `relation: "same"`.
+
+(call_expression
+  .
+  (simple_identifier) @call.arguments.name
+  (call_suffix (value_arguments) @call.args))
+
+(call_expression
+  .
+  (navigation_expression
+    (navigation_suffix (simple_identifier) @call.arguments.name))
+  (call_suffix (value_arguments) @call.args))
+
 ; `::foo` and `Foo::bar` name a callable without applying it.
 
 (callable_reference (simple_identifier) @member.reference)

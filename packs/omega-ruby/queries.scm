@@ -107,6 +107,23 @@
      "attr" "attr_accessor" "attr_reader" "attr_writer"
      "define_method"))
 
+
+; What a call was given, as a fact of its own. A Ruby call needs no
+; parentheses, and an unbound optional capture skips a whole template -- `save`
+; would stop being a call at all -- so the argument list is a second emission on
+; the same span as the call rather than a field on it. A framework reads it with
+; `fact_join_by_span` `relation: "same"`. This is what a Rails macro states:
+; `belongs_to :author`, `validates :title, presence: true`.
+
+(call
+  method: [(identifier) (constant)] @call.arguments.name
+  arguments: (argument_list) @call.args
+  (#not-any-of? @call.arguments.name
+     "require" "require_relative" "load"
+     "include" "extend" "prepend"
+     "attr" "attr_accessor" "attr_reader" "attr_writer"
+     "define_method"))
+
 ; --- a constant ---
 ;
 ; The one name in Ruby that resolves across files.

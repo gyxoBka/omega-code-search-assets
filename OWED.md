@@ -492,53 +492,63 @@ check run beside the other two from then on.
 
 ---
 
-## 17. The canonical call view was deleted, and it is the answer nine Frameworks asked for
+## 17. The canonical call view -- restored in nine Packs
 
-`crates/omega-ingest/tests/injection_regions.rs::the_canonical_call_view_reaches_the_emission_fields`
-fails against the rewritten Packs. It reads the live `packs/omega-typescript`,
-executes `app.get("/users/:id", mw, getUser)` and asserts
+An engine test
+(`crates/omega-ingest/tests/injection_regions.rs::the_canonical_call_view_reaches_the_emission_fields`)
+reads the live omega-typescript Pack, executes `app.get("/users/:id", mw,
+getUser)` and asserts the call publishes `call.arg0`, `call.arg1`,
+`call.last_arg` and `receiver`. It failed: the Pack rewrite deleted the two
+templates that did it, as restating their match. They do not restate it -- each
+argument is `first`/`select`/`last` over `ordered_children` of the captured
+argument list, ops `expr.rs` has always had.
 
-```
-call.arg0     "/users/:id"
-call.arg1     mw
-call.last_arg getUser
-receiver      app
-```
+That view is what nine Frameworks asked for across the waves as "a field only
+the Pack can supply". Restored, on the current kind names, in nine Packs:
 
-Before the Pack rewrite omega-typescript had exactly that, on two templates:
-
-| kind | fields |
+| Pack | now answers |
 |---|---|
-| `call.member` | `call.arg0`, `call.arg1`, `call.arg2`, `call.last_arg`, `call.member`, `call.name`, `receiver` |
-| `call.direct` | the same without `receiver` |
+| omega-typescript, omega-javascript, omega-tsx | `app.get("/users/:id", mw, getUser)` -- the URL, the middleware, the handler, the receiver |
+| omega-go | `r.GET("/users/:id", ctrl.GetUser)`, `app.Static("/assets", "./public")` |
+| omega-rust | `.route("/users/:id", get(handlers::list))`, `.nest("/api", …)` |
+| omega-python | `path("admin/", admin.site.urls)`, `include_router(users.router, prefix="/api")` |
+| omega-c-sharp | `Routing.RegisterRoute("details", typeof(DetailsPage))` |
+| omega-kotlin | `composable("home") { … }`, `navController.navigate("details")` |
+| omega-ruby | `belongs_to :author`, `validates :title, presence: true` |
 
-and **none of it needed a new capture or a Pack field to be invented**. Each
-argument is `first` / `select` / `last` over `ordered_children` of the captured
-argument list -- ops `expr.rs` has had all along. The rewrite deleted both
-templates as restating their match. They do not restate it: an argument list is
-a node, and its ordered children are the arguments.
+The engine test now names the current spelling: the kind is `call.method`,
+because the rewrite gave every language one spelling for a call on a receiver,
+and the callee's name is the emission's name rather than a field repeating it.
 
-This is the single most-requested thing in this file. Every one of these asked
-for it, in these words or near them:
+### Where the arguments are a fact of their own
 
-| Framework | what it cannot say without it |
-|---|---|
-| fastify, express, bun | a route's URL, a plugin registration's prefix |
-| gin, fiber | `r.GET("/users/:id", h)` -- the path, the group prefix, a Static mount's directory |
-| axum | `.route("/users/:id", get(h))`, `.nest("/api", …)` |
-| vapor | `app.get("todos", ":id")`, `@Field(key: "title")`, a model's table name |
-| maui | `Routing.RegisterRoute("details", typeof(P))`, `GoToAsync("//details")` |
-| django, pydantic, pytorch-extensions | a decorator's or constructor's first argument |
-| jetpack-compose | `composable("home") { … }` |
+In most languages a call always has an argument-list node, empty parentheses
+included, so the arguments are fields on the call itself. **Ruby and Kotlin are
+not like that**: `save`, `run { }` and `launch { }` have no argument node at
+all, and an unbound capture skips a whole template -- which silently deleted
+every trailing-lambda call from omega-kotlin when it was first tried. In those
+two the arguments are a second emission, `call.arguments`, on the same span as
+the call, read with `fact_join_by_span` `relation: "same"`.
 
-`OWED.md` items 1 and 11 are both this, described from the Framework side and
-guessed at as "a field only the Pack can supply". It is not a new field: it is a
-view the Packs already had.
+That is the general rule: **an optional capture is not optional, it is a filter
+on the whole template.** `default` cannot rescue it, because `CaptureRef` fails
+before `default` sees it.
 
-**Done looks like:** the canonical call view restored on the call templates of
-every Pack whose query captures the argument list -- starting with
-omega-javascript, omega-typescript and omega-tsx, where the engine test asserts
-it, then omega-go, omega-rust, omega-c-sharp, omega-python, omega-kotlin,
-omega-swift and omega-ruby -- on the **current** kind names (`call.method`,
-`call.function`), the engine test updated to the current spelling, and a second
-pass over the Frameworks above so they use it. Items 1 and 11 close with it.
+### Still to do
+
+**omega-swift.** Its call pattern ends in `(call_suffix)`, and a trailing-closure
+call has no `value_arguments`, so it needs the Ruby/Kotlin treatment. vapor's
+route URLs and `@Field(key: "title")` wait on it.
+
+**The second pass over the Frameworks.** fastify, express, bun, gin, fiber,
+axum, vapor, maui, django, pydantic, pytorch-extensions, jetpack-compose and
+ruby-on-rails all wrote "a Route has no URL" into their `coverage.gaps` and
+keyed routes by byte offset. They can now say it. Items 1 and 11 close with that
+pass.
+
+**The quote bytes.** `call.arg0` is the argument as written, so a string
+argument arrives as `"\"/users/:id\""`. That is the shape the engine test
+asserts, and it is item 14's rule seen from the other side: a Framework must not
+key on it directly. Either the Packs publish a stripped variant beside it, or
+every Framework strips in its own join -- which it cannot, because a key
+template has no strip. **Decide before the second pass.**

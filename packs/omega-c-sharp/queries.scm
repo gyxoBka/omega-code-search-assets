@@ -195,11 +195,17 @@
 
 ; ================================ calls =================================
 
+; The argument list is captured beside the name: a call's positional arguments
+; are what a framework overlay asks a call for -- a route's URL, a registered
+; service token, a resource path -- and they are the ordered children of the
+; node the call already names them in.
+
 (invocation_expression
   function: (member_access_expression
               expression: (_) @call.receiver
               name: [(identifier) @call.name
-                     (generic_name (identifier) @call.name)])) @call.member
+                     (generic_name (identifier) @call.name)])
+  arguments: (argument_list) @call.args) @call.member
 
 (invocation_expression
   function: (conditional_access_expression
@@ -210,7 +216,8 @@
 
 (invocation_expression
   function: [(identifier) @call.plain.name
-             (generic_name (identifier) @call.plain.name)]) @call.plain
+             (generic_name (identifier) @call.plain.name)]
+  arguments: (argument_list) @call.args) @call.plain
 
 (invocation_expression
   function: (qualified_name
