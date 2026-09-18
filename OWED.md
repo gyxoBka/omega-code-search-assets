@@ -4,7 +4,8 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 13, the last one. Numbers come from
+Last updated after the second pass and the four remaining items. Open work is
+items 10, 18 and 19a; everything else is closed. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -271,7 +272,7 @@ omega-vbscript, so it is not re-opened as a Pack defect.
 
 ---
 
-## 9. Eight frameworks mint several entity kinds on one canonical key
+## 9. Eight frameworks minting several kinds on one key -- closed (see item 15)
 
 Entity identity is the rendered canonical key **alone**:
 `EntityId::from_binding(Canonical { key })` (`omega-domain/src/ir/view.rs:425`)
@@ -325,7 +326,7 @@ config_key gate moved; noted, not yet decided.
 
 ---
 
-## 11. A call's string arguments are unreachable in Go, Rust and C#
+## 11. A call's string arguments -- closed by item 17
 
 Four frameworks this wave asked for the same thing and none can get it by a join:
 these Packs emit **no fact at all** over a string literal, so `fact_join_by_span`
@@ -480,7 +481,7 @@ neutral hub is the default for this shape, not a per-framework judgement.
 
 ---
 
-## 16. A dangling relation end now has a check -- and it is a candidate finder
+## 16. A dangling relation end has a check -- zero across all 55
 
 `pack-design/dangling_ends.py` collects the canonical key templates a file's
 `entity_candidate` outputs render, collects the ones its `relation_candidate`
