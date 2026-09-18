@@ -91,6 +91,30 @@
      function: [(identifier) @decorator.name
                 (attribute attribute: (identifier) @decorator.name)])])
 
+; `reference.decorator_applied` -- the same decorator as a fact of its own,
+; carrying what it was given and what it is on. It is a second emission on the
+; same span rather than a field on `reference.decorator`, so a rule matching the
+; plain kind does not fire twice. Read it with `fact_join_by_span` `relation:
+; "same"`.
+;
+; What it was given and what it is on. A decorator and
+; the declaration it decorates are SIBLINGS under `decorated_definition`, so no
+; span join reaches from one to the other: the target has to be captured in the
+; pattern that captures the decorator. `@app.route("/users")` is where a Flask
+; URL is stated, and `@field_validator("title")` is what a Pydantic validator
+; validates.
+
+(decorated_definition
+  (decorator
+    [(identifier) @decorator.applied.name
+     (attribute attribute: (identifier) @decorator.applied.name)
+     (call
+       function: [(identifier) @decorator.applied.name
+                  (attribute attribute: (identifier) @decorator.applied.name)]
+       arguments: (argument_list) @call.args)])
+  definition: [(function_definition name: (identifier) @decorator.target)
+               (class_definition name: (identifier) @decorator.target)])
+
 ; --- a call ---
 ;
 ; The span is the name that is called, not the call with its arguments: a

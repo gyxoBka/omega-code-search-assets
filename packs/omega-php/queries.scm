@@ -242,6 +242,17 @@
 (attribute
   . [(name) (qualified_name) (relative_name)] @attribute.name) @attribute
 
+; `reference.attribute_applied` -- the same attribute carrying what it was
+; given. `#[Route('/orders/{id}')]` is where a Symfony URL is stated, and the
+; argument list is the only place it appears. A second emission on the same
+; span rather than a field on `reference.attribute`, so a rule matching the
+; plain kind does not fire twice; read it with `fact_join_by_span` `relation:
+; "same"`.
+
+(attribute
+  . [(name) (qualified_name) (relative_name)] @attribute.applied.name
+  parameters: (arguments) @call.args) @attribute.applied
+
 ; --- the two places a variable crosses a scope boundary ---
 ;
 ; Ordinary variable reads are not stated: `(variable_name)` is every `$x` in

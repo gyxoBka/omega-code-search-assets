@@ -54,46 +54,41 @@ local index kept reusing its cached analysis component after the Pack was
 re-selected, and the rows still read `target_hint = NULL`. The deferred
 framework wave is the real consumer and will settle it.
 
-### Still collecting
+### The rest -- done
 
-**Status: the call rows are done** — item 17 restored the canonical call view in
-nine Packs, which closed every row that asked for a call's first argument or its
-receiver. What is left is the config-shaped rows, and they are all the same
-one-word move.
+Every row is published. The value stays in `attributes` as well, because that is
+what `pack_attribute_bag` puts on the card; nothing was gained by moving the
+bytes rather than copying them.
 
-`OverlayFact::field` (`omega-semantic/src/framework/overlay.rs:56`) resolves the
-`fields` map and a fixed list of built-in names. It **never consults
-`attributes`**, and the only clause that reads an attribute is
-`attribute_equals`, against one literal constant. So a value a Pack publishes as
-an *attribute* can be tested for equality and used for nothing else: not as a
-canonical key, a relation end, an entity attribute, or a join key.
+| Pack | kind | now also a field |
+|---|---|---|
+| omega-yaml, omega-json, omega-toml | `definition.config_key` | `value` |
+| omega-hcl | `definition.config_block` | `block_type`, `type_label` |
+| omega-hcl | `reference.traversal` | `root` |
+| omega-caddyfile | `definition.config_matcher_condition` | `operand` |
+| omega-xml | `definition.config_attribute` | `value` |
+| omega-prisma | `definition.config_setting` | `value` |
+| omega-razor | `reference.attribute_value` | `attribute` |
 
-**Same bytes, a different map** is the whole of most rows below.
+Two needed a query rather than a map, and both took the second-emission shape
+the canonical call view established, so a rule matching the plain kind does not
+fire twice:
 
-| Pack | kind | move to `fields` | asked by |
-|---|---|---|---|
-| omega-yaml, omega-json | `definition.config_key` | `value` | kubernetes-config, openapi-v3, gitlab-ci, github-action |
-| omega-hcl | `definition.config_block` | `block_type`, `type_label` | terraform |
-| omega-hcl | `reference.traversal` | `root` | terraform |
-| omega-javascript, omega-typescript, omega-tsx | `import.symbol` | `module` — the specifier the symbol came from | react |
-| omega-caddyfile | `definition.config_matcher_condition` | `operand` — what the condition tests for | caddyfile |
-| omega-php | `reference.attribute` | the attribute's argument text — `#[Route('/orders/{id}')]` is where a Symfony URL is stated | symfony |
-| omega-xml | `definition.config_attribute` | `value` | maui — `Route="home"`, `x:Class="MyApp.DetailsPage"` |
-| omega-prisma | `definition.config_setting` | `value` | prisma — `provider = "postgresql"` is the most-asked fact about a schema |
-| omega-razor | `reference.attribute_value` | `attribute` — which event a handler is bound to | blazor |
-| omega-hcl | `definition.config_block` | `type_label` — the resource type, which is what attributes a resource to a provider | terraform-providers |
-| omega-python | `reference.decorator` | `target` — the declaration the decorator is attached to; in tree-sitter-python they are siblings, so no span join reaches it | flask |
-| omega-python | `reference.decorator` | the decorator's first argument — the call templates have it now, a decorator is a separate pattern with no argument capture | pydantic, pytorch-extensions, django |
+**`reference.decorator_applied`** in omega-python carries `target` -- the
+declaration the decorator is on -- and the call view of its arguments. A
+decorator and its declaration are **siblings** under `decorated_definition`, so
+no span join reaches from one to the other and the target had to be captured in
+the same pattern. `@app.route("/users")` and `@field_validator("title")` are
+statable.
 
-`qualifier` is the one with a second consumer: the host reads it for external
-package resolution (`content_builder.rs::mention_fields` accepts a qualifier
-only under that literal name, and `materialize.rs::external_environment` builds
-`OverlayFact.external` from bindings whose `target_hint` is set).
+**`reference.attribute_applied`** in omega-php carries the call view of an
+attribute's arguments. `#[Route('/orders/{id}')]` is where a Symfony URL is
+stated and the argument list is the only place it appears.
 
-**Done looks like:** one commit moving those values, re-running both audits, and
-a second pass over the frameworks that asked, so they actually use what they
-now can reach. Add to this table as later waves report; the workflow prompt
-collects `pack_fields_needed` from every agent.
+The last row, `import.symbol` `module` for react, needed nothing: the JS/TS
+Packs publish `qualifier` on `binding.import_symbol`, which spans the same
+identifier as `import.symbol`, so the specifier is one `fact_join_by_span`
+`relation: "same"` away.
 
 ### 1a. Not a field: a span that cannot be joined
 
