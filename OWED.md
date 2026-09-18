@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 7. Numbers come from
+Last updated after framework wave 8. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -34,6 +34,8 @@ different map.**
 | omega-python | `call.function`, `call.method` | the call's first string-or-identifier argument | django |
 | omega-caddyfile | `definition.config_matcher_condition` | `operand` — what the condition tests for | caddyfile |
 | omega-php | `reference.attribute` | the attribute's argument text — `#[Route('/orders/{id}')]` is where a Symfony URL is stated | symfony |
+| omega-xml | `definition.config_attribute` | `value` | maui — `Route="home"`, `x:Class="MyApp.DetailsPage"` |
+| omega-prisma | `definition.config_setting` | `value` | prisma — `provider = "postgresql"` is the most-asked fact about a schema |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
@@ -121,7 +123,7 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-21 of 55 frameworks still hold rules that cannot match: **255 of 823**. The
+16 of 55 frameworks still hold rules that cannot match: **193 of 820**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -192,3 +194,147 @@ library that ships a DLL declares a public class (`MYLIB_API`, `CORE_EXPORT`,
 **Done looks like:** omega-cpp declaring the class in that shape. Until then
 omega-framework-unreal-engine answers for the plain spelling only, and its
 `coverage.gaps` says so.
+
+---
+
+## 9. Eight frameworks mint several entity kinds on one canonical key
+
+Entity identity is the rendered canonical key **alone**:
+`EntityId::from_binding(Canonical { key })` (`omega-domain/src/ir/view.rs:425`)
+never sees the descriptor, and `apply_overlay_runs` interns with `or_insert`
+(`omega-semantic/src/framework/overlay_ir.rs:96`), candidates ordered by
+`rule_id` string (`overlay.rs:566`). First rule wins, with its kind **and** its
+attributes; every other rule's output for that key is discarded in silence.
+
+`python pack-design/key_collisions.py` counts **62 dropped entity outputs in 8
+frameworks**: unity 17, unreal-engine 12, ruby-on-rails 10, maui 9, vapor 8,
+swiftui 7, angular 3, nuxt 1.
+
+A shared key with **one** kind is the hub pattern and is correct — it is how a
+relation from another file lands on a type. Several kinds on one key is the
+defect.
+
+**Done looks like:** each of the eight either minting one neutral kind per key
+space and carrying the classification in its relations, or giving each
+classification its own key space related back to the hub; and
+`key_collisions.py` reporting zero. Scheduled as its own wave, after the
+matchability waves. angular is behind item 7.
+
+---
+
+## 10. Two things omega-rust cannot say, both measured
+
+**A scoped path emits a fact at every nesting level.** `(scoped_identifier name:
+(identifier) @reference.path.name) @reference.path` fires on each
+`scoped_identifier` in the nest, so `get(crate::handlers::users::list)` emits
+three `reference.path` facts — `handlers` at 56-71, `users` at 56-78, `list` at
+56-84. Only the widest is the thing referred to. omega-framework-axum's handler
+rule therefore mints `axum:handler:users` and `axum:handler:handlers` beside the
+real one, and **the overlay has no clause for "not contained in another fact of
+this kind"** — `fact_join_by_span` only affirms containment. Either omega-rust
+emits the outermost path only, or the overlay gains a negative span join.
+
+**`[dependencies.axum]` is invisible.** omega-toml names a table from its header
+text, so the ordinary Cargo spelling
+
+```toml
+[dependencies.axum]
+version = "0.7"
+```
+
+names the table `dependencies.axum` and puts one `definition.config_key` named
+`version` under it. Every rule that gates on *a config_key named axum inside a
+config_table named dependencies* is silent for it — in omega-framework-axum that
+is all twelve rules. The inline spellings (`axum = "0.7"`, `axum = { version =
+… }`) do match. A `field_prefix` on the table name would reach it if the
+config_key gate moved; noted, not yet decided.
+
+---
+
+## 11. A call's string arguments are unreachable in Go, Rust and C#
+
+Four frameworks this wave asked for the same thing and none can get it by a join:
+these Packs emit **no fact at all** over a string literal, so `fact_join_by_span`
+has nothing to bind, and they publish no field to derive from either.
+
+| Pack | what is lost |
+|---|---|
+| omega-go | every Fiber/Gin/Echo route's URL, a `Group("/api/v1")` prefix, a `Static` mount's directory, the verb in `Handle("GET", …)` |
+| omega-rust | every axum `.route("/users/:id", …)` path and `.nest("/api", …)` prefix |
+| omega-c-sharp | MAUI's `Routing.RegisterRoute("details", typeof(P))` and `GoToAsync("//details")` |
+
+omega-python has the same row in item 1 already (asked by django in wave 2).
+
+It is bigger than a field: the honest shape is **one `literal.string` template
+per Pack**, named by the literal's text and spanned on the literal node, which
+every framework overlay can then reach with a span join — rather than a
+per-kind `arg0_literal` field that has to be added to every calling template.
+Decide the shape once and apply it to all four Packs.
+
+Two of the three also publish **no field on any template at all** (omega-go 47
+templates, omega-rust 71), the same shape the index already records for
+omega-ruby. Those overlays have kind, name, path and span and nothing else.
+
+---
+
+## 12. Twenty-seven grammars cannot be reached by their own file extensions
+
+`ParserRegistry::detect_path` (`omega-ingest/src/parser_registry.rs:377`) tries
+`filenames`, then `shebang_regexes`, then the extension through `by_language`.
+`by_language` looks the string up in the alias map, which `register_identity`
+fills from `language` plus `aliases`, and `extensions` adds to separately. So a
+grammar declaring `extensions = []` is reachable by extension **only when the
+extension happens to spell its language name** — `.go` finds `go`, `.rb` does
+not find `ruby`.
+
+**51 of 59 grammar manifests declare `extensions = []`**; only omega-c,
+omega-dockerfile, omega-javascript, omega-json, omega-python, omega-rust,
+omega-typescript and omega-yaml declare any. Those eight are exactly the packs
+the control index had installed, which is why this was never seen.
+
+27 grammars have at least one unreachable extension:
+
+| grammar | not reachable |
+|---|---|
+| omega-xml | xml, xaml, csproj, props, targets, resx, plist (its `language` is `msbuild`) |
+| omega-cpp | cc, cxx, hpp, hh, h |
+| omega-ruby | rb, rake, gemspec |
+| omega-c-sharp | cs, csx |
+| omega-powershell | ps1, psm1, psd1 |
+| omega-godot-resource | tres, tscn, godot |
+| omega-kotlin | kt, kts |
+| omega-hcl | tf, tfvars |
+| omega-elixir | ex, exs |
+| omega-erlang | erl, hrl |
+| omega-bash | sh, zsh |
+| omega-batch | bat, cmd |
+| omega-markdown | md |
+| omega-gdscript | gd |
+| omega-solidity | sol |
+| omega-julia | jl |
+| omega-nginx | conf |
+| omega-make | mk |
+| omega-razor | cshtml |
+| omega-scala | sc |
+| omega-groovy | gradle |
+| omega-vbscript | vbs |
+| omega-blade | blade.php |
+| omega-graphql | gql |
+| omega-html | htm |
+| omega-ini | cfg |
+| omega-pug | jade |
+
+`filenames` is empty in 57 of 59, so `Makefile`, `Dockerfile` (which has it),
+`Gemfile`, `Rakefile`, `Caddyfile`, `nginx.conf`, `.editorconfig`,
+`CMakeLists.txt` and the rest reach a parser only if their name happens to carry
+one of these extensions.
+
+Every framework overlay over one of these languages is inert today, whatever its
+rules say. maui is the clearest case: `.xaml` and `.cs` both miss, so not one of
+its nine live rules can fire on a real repository.
+
+**Done looks like:** every grammar manifest declaring the extensions and
+filenames its language actually uses, with the ownership conflicts decided
+deliberately (`.h` between omega-c and omega-cpp; `.conf` between omega-nginx
+and omega-ini; `.sc` between omega-scala and omega-r), and a control index over
+a polyglot repository showing each of them ingesting files.

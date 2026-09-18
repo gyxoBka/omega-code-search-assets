@@ -17,7 +17,12 @@ PACKS = 'packs'
 # Names a fact answers with no published field at all (overlay.rs OverlayFact::field)
 BUILTIN = {'path', 'file.path', 'source.path', 'path.value', 'path.dir', 'path.stem',
            'source.start', 'source.end', 'row_kind',
-           'definition.name', 'enclosing.name', 'external.package', 'external.member'}
+           'definition.name', 'enclosing.name', 'external.package', 'external.member',
+           # Synthesized by the host on every fact from the nesting of the
+           # definition facts in the same file (overlay.rs:1233-1249), so they
+           # are answerable whatever the Pack publishes -- and they are the
+           # cheapest ancestor chain a rule can ask for.
+           'enclosing.qname', 'definition.container', 'definition.qname'}
 FRAMEWORKS = 'frameworks'
 
 

@@ -202,6 +202,63 @@ pattern that produces the field. If the Pack captures the value generically, the
 list constrains nothing but your own rule, and every value you drop is an answer
 you delete.
 
+## 3g. A canonical key holds exactly one entity, and the first rule wins
+
+`Entity::named` builds its id from `EntityBindingSeed::Canonical { key }`
+(`omega-domain/src/ir/view.rs:425`) — **the entity kind is not part of the
+identity** — and `apply_overlay_runs` does
+
+    entities.entry(id).or_insert(entity);
+
+(`omega-semantic/src/framework/overlay_ir.rs:96`). Candidates are sorted by
+`candidate_order`, whose first component is the `rule_id` string
+(`overlay.rs:566`). So when two rules render the same canonical key, the one
+whose id sorts alphabetically first materializes, **with its kind and its
+attributes**, and everything the other rules computed for that key is silently
+discarded. The host's own comment states the intent: "Two rules describing the
+same construct agree on its key."
+
+That is exactly what a hub entity is for: every rule that needs a type as a
+relation end mints it under one key with **one** kind, and the relations carry
+the meaning. It becomes a defect the moment two rules disagree about the kind.
+
+Measured in omega-framework-maui, which put eleven kinds on `maui:type:{...}`:
+for
+
+    [QueryProperty(...)] public partial class DetailsPage : ContentPage
+    { [RelayCommand] private async Task LoadAsync() {} }
+
+five rules render `maui:type:DetailsPage`; `maui.mvvm.relay_command` sorts
+first, so the graph gets a `MauiCommandOwner` carrying one attribute, and
+`MauiPage` (with its base class and code-behind file), `MauiShellQueryReceiver`,
+`MauiRouteTarget` and `MauiNavigationTarget` are all computed and thrown away.
+A view model with a `[RelayCommand]` — in a CommunityToolkit.Mvvm app, every
+view model — never materializes as `MauiViewModel` at all.
+
+**The audit cannot see this**, the same way it cannot see a dangling relation
+end. Measure it:
+
+```bash
+python pack-design/key_collisions.py <your-framework>
+```
+
+It prints every canonical key template minted under more than one kind, which
+rule wins, and which outputs are dropped.
+
+**The remedy, in order of preference:**
+
+1. One neutral kind per key space, carrying the classification in the relations
+   that point at it — `unity:type:{name}` is a `UnityType`, and it is a
+   component because a `declares` edge from a `GameComponent` rule says so.
+   Note that attributes collide too: only the first rule's attributes survive,
+   so a classification carried as an attribute is no safer than one carried as
+   a kind.
+2. A key space per classification — `maui:page:{class}`, `maui:viewmodel:
+   {class}` — related back to the hub. Heavier, but it keeps both kinds and both
+   attribute sets, and each is separately addressable.
+
+Never: several kinds on one key template.
+
 ## 4. Verification
 
 ```bash

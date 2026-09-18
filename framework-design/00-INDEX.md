@@ -457,3 +457,82 @@ before shortening any `field_in`, `member_in` or `#any-of?` list.
 
 Totals: **847 -> 823 overlay rules; 334 -> 255 that cannot match.** Thirty-four
 frameworks are clean.
+
+---
+
+# Framework wave 8 (fiber, gin, maui, prisma, axum)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-prisma | 12 -> 16 | 0 | 16 |
+| omega-framework-fiber | 14 -> 10 | 0 | 10 |
+| omega-framework-gin | 12 -> 12 | 0 | 12 |
+| omega-framework-axum | 12 -> 12 | 0 | 12 |
+| omega-framework-maui | 12 -> 9 | 0 | 9 |
+
+Five frameworks that answered **nothing at all** before this wave: 62 rules, not
+one of them live. Every one was keyed to a composite fact kind of the old
+vocabulary -- `call.go_receiver_string_identifier_context`,
+`definition.go_unaliased_import_group_binding_context`,
+`call.csharp_class_nested_member_string_context`, `data.prisma_model_typed_field`
+-- a kind naming the shape of its own match rather than a fact. 59 rules now, all
+live.
+
+omega-go is the limit case of the new Pack vocabulary: 47 templates, **zero
+fields and zero attributes on every one of them**. So fiber and gin have kind,
+name, path and span, and nothing else. Both came out whole anyway, on joins: a
+Fiber handler is a `type_use.name` named `Ctx` inside a `definition.function`;
+its owning controller is reachable because `definition.receiver_candidate` spans
+the entire method declaration and is named for the receiver type, so a second
+span join names the struct with no Pack field at all. What neither can state is
+the URL: `app.Get("/users/:id", h)` has its path in a string literal, and
+omega-go publishes no argument text. That is now a row in `OWED.md`.
+
+## The blocking defect: a canonical key holds exactly one entity
+
+omega-framework-maui minted eleven entity kinds on one key template,
+`maui:type:{class}`. Entity identity in the host is the rendered canonical key
+**alone** -- `EntityId::from_binding(Canonical { key })` never sees the
+descriptor -- and `overlay_ir.rs` interns with `or_insert`, first one wins,
+candidates ordered by `rule_id` string. So a page that is also a route target, a
+navigation target, a query receiver and carries a `[RelayCommand]` reaches the
+graph as exactly one entity: `MauiCommandOwner`, because `maui.mvvm.relay_command`
+sorts before the rest. Every CommunityToolkit.Mvvm view model loses its
+`MauiViewModel` the same way. Two of the nine answers the file advertised never
+arrive.
+
+This is invisible to `overlay_audit.py`, which reads matchability and nothing
+else, so it now has its own measurement, `pack-design/key_collisions.py`. Across
+all 55 frameworks it finds **62 entity outputs overwritten in 8 frameworks**:
+
+| framework | dropped outputs |
+|---|---|
+| omega-framework-unity | 17 |
+| omega-framework-unreal-engine | 12 |
+| omega-framework-ruby-on-rails | 10 |
+| omega-framework-maui | 9 |
+| omega-framework-vapor | 8 |
+| omega-framework-swiftui | 7 |
+| omega-framework-angular | 3 |
+| omega-framework-nuxt | 1 |
+
+A shared key is right when the rules agree on the kind -- that is the hub
+pattern wave 1 established for unity, where every rule mints one neutral
+`UnityType` so a relation from another file can land on it. It is a defect the
+moment they disagree, and eight frameworks disagree. Attributes collide on the
+same rule, so moving the classification into an attribute does not help either;
+it needs either one neutral kind per key space or a key space per
+classification. Recorded as `OWED.md` item 9 and scheduled as its own wave.
+
+Two more things measured rather than read, both now in `OWED.md` item 10:
+omega-rust emits a `reference.path` at **every** nesting level of a scoped path,
+so `get(crate::handlers::users::list)` gives three facts and axum's handler rule
+mints `axum:handler:users` and `axum:handler:handlers` alongside the real one --
+and the overlay has no way to say "not contained in another fact of this kind".
+And `[dependencies.axum]` with `version = "0.7"` under it names the table
+`dependencies.axum`, so axum's twelve-rule dependency gate is silent for that
+perfectly ordinary Cargo spelling.
+
+Totals: **823 -> 820 overlay rules; 255 -> 193 that cannot match.** Thirty-nine
+frameworks match everything they name; sixteen still hold dead rules, four of
+them deferred behind the host fix in item 7.

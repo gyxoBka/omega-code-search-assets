@@ -55,6 +55,30 @@ fact whatever the Pack published:
 `source.start`, `source.end`, `definition.name`, `enclosing.name`,
 `external.package`, `external.member`, `row_kind`.
 
+And three the host **computes from the file's own structure** before the program
+runs (`overlay.rs:1200-1249`): for each fact it collects every `definition.*`
+fact whose span strictly contains it, outermost first, and fills
+
+| name | value |
+|---|---|
+| `enclosing.qname` | those names joined with `.` — the ancestor chain |
+| `definition.container` | the innermost of them — the immediate owner |
+| `definition.qname` | the chain with the fact's own name appended |
+
+They are ordinary fields: readable by `field_equals`/`field_in`/`field_prefix`,
+usable in a canonical key template, joinable with `fact_join_by_field`. A Pack
+that publishes its own value under one of these names keeps it — the host only
+fills a name that is absent. **This is the cheapest ancestor question there is**,
+and it replaces the parent/grandparent join ladders the old files carried: *which
+class is this method in*, *which module owns this function*, *is this decorator
+on a class or on a free function* are all one field read.
+
+One caution: the chain is every `definition.*` fact with a non-empty name whose
+span **strictly** contains the fact, and that includes carriers. A carrier named
+for the modifier text (`public`, `expect`) that spans wider than the declaration
+puts that word in the chain. Equal spans are excluded, which is the common case,
+but read a chain before you key on it.
+
 **`definition.name` is the emission's name.** Most rules need nothing beyond it,
 the kind, and the path. Reach for a Pack `field` only when the answer is not
 derivable from those and not reachable by a join.
@@ -148,9 +172,17 @@ rule should be keyed to, with the number of Packs emitting each:
 | `relation.implements`, `relation.depends`, `relation.data`, `relation.config`, `relation.handles`, `relation.tests` | the six relations the host knows |
 | `scope.function_body`, `scope.class_body` | a region to join `within` |
 
-A carrier (`definition.*_candidate`) is folded onto its declaration by the host
-and is **not** visible to the overlay as a separate fact under that name; what
-it carries arrives as an attribute `omega.pack.<name>` on the declaration.
+A carrier (`definition.*_candidate`) **is** visible to the overlay under its own
+kind. The overlay's facts are built straight from the Pack's normalized
+emissions (`omega-runtime/src/build/production.rs::overlay_facts_of`), before
+any folding; the `omega.pack.<name>` folding in `content_builder.rs` happens on
+the other path, the one that builds cards. So `definition.visibility_candidate`,
+`definition.modifier_candidate`, `definition.parameter_shape_candidate`,
+`definition.return_type_candidate` and the rest arrive as ordinary facts, on a
+span that is usually identical to the declaration's — which makes
+`fact_join_by_span` with `relation: "same"` the way to read a modifier off a
+declaration in a Pack that publishes no fields at all. omega-kotlin's
+`expect`/`actual` is stated exactly this way.
 
 ## 7. What a Framework is judged by
 
