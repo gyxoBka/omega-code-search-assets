@@ -42,6 +42,37 @@ def collisions(fw):
     return out
 
 
+def across_frameworks():
+    """Key templates minted under different kinds by different Frameworks.
+
+    `apply_overlay_runs` interns across every overlay in the run, not one at a
+    time, and sorts by rule_id -- so two Frameworks that render the same key
+    collide exactly as two rules in one file do, and the framework whose rule
+    ids sort first wins.
+    """
+    by_template = {}
+    for fw in sorted(os.listdir(FRAMEWORKS)):
+        p = os.path.join(FRAMEWORKS, fw, 'semantic-v2.json')
+        if not os.path.exists(p):
+            continue
+        doc = json.load(open(p, encoding='utf-8'))
+        for r in doc.get('rules') or []:
+            for o in r.get('outputs') or []:
+                if o.get('kind') != 'entity_candidate':
+                    continue
+                tpl = ((o.get('canonical_key') or {}).get('template')) or '?'
+                by_template.setdefault(tpl, set()).add(
+                    (fw, r.get('id', '?'), o.get('entity_kind')))
+    out = []
+    for tpl, mints in sorted(by_template.items()):
+        if len({fw for fw, _, _ in mints}) < 2:
+            continue
+        if len({k for _, _, k in mints}) < 2:
+            continue
+        out.append((tpl, sorted(mints, key=lambda m: m[1])))
+    return out
+
+
 def main():
     names = sys.argv[1:] or sorted(os.listdir(FRAMEWORKS))
     names = [n if n.startswith('omega-framework-') else 'omega-framework-' + n
@@ -61,6 +92,17 @@ def main():
         print()
     print('%d entity outputs are overwritten by a same-key rule that sorts first'
           % total)
+    if len(sys.argv) > 1:
+        return
+    shared = across_frameworks()
+    if shared:
+        print()
+        print('%d key templates are minted under different kinds by different '
+              'Frameworks; interning is global, so these collide too:' % len(shared))
+        for tpl, mints in shared:
+            print('   %s' % tpl)
+            for fw, rid, kind in mints:
+                print('      %-34s %-28s %s' % (kind, rid, fw))
 
 
 if __name__ == '__main__':

@@ -64,6 +64,30 @@ def pack_surface(only=None):
     return kinds, fields, attrs
 
 
+_QUALIFIER = set()
+
+
+def qualifier_publishers():
+    """Packs that publish a field or attribute named `qualifier`.
+
+    `OverlayFact.external` is built by `external_environment` from bindings
+    whose `target_hint` is set; `target_hint` is `occurrence.qualifier`, which
+    the host reads only from a field or attribute literally named `qualifier`.
+    A Framework over a language whose Pack publishes none has `external.package`
+    and `external.member` empty on every fact, so an `external_path_matches`
+    clause -- scoped or not -- is false for every possible input.
+    """
+    if not _QUALIFIER:
+        for p in sorted(os.listdir(PACKS)):
+            rp = os.path.join(PACKS, p, 'rules.json')
+            if not os.path.exists(rp):
+                continue
+            for t in json.load(open(rp, encoding='utf-8')).get('templates', []):
+                if 'qualifier' in (t.get('fields') or {}) or                    'qualifier' in (t.get('attributes') or {}):
+                    _QUALIFIER.add(p)
+    return _QUALIFIER
+
+
 _EMITTERS = {}
 
 
@@ -103,6 +127,7 @@ def walk_clauses(clauses, out):
             if '{' in g:
                 out['bad_glob'].add(g)
         elif k == 'external_path_matches':
+            out['external'] = True
             # parse_external_path takes the FIRST path part as the package, so a
             # scoped npm name is split: `@sveltejs/kit` is package `@sveltejs`.
             vals = [c.get('package'), c.get('package_prefix')] + list(c.get('package_in') or [])
@@ -138,12 +163,13 @@ def audit(fw, kinds, fields, attrs):
             emitters = emitters_of().get(k)
             if emitters:
                 undeclared[k] = ', '.join(emitters)
+    qualifier_packs = qualifier_publishers()
     rules = doc.get('rules') or []
     dead, live, detail = 0, 0, []
     undeclared_rules, note = 0, []
     for r in rules:
         out = {'kinds': set(), 'fields': set(), 'attrs': set(),
-               'bad_glob': set(), 'scoped': set()}
+               'bad_glob': set(), 'scoped': set(), 'external': False}
         walk_clauses(r.get('match'), out)
         out['kinds'].discard(None)
         missing_kind = {k for k in out['kinds'] if k not in kinds}
@@ -162,8 +188,12 @@ def audit(fw, kinds, fields, attrs):
         # reader decide which of the two it is.
         undeclared_here = sorted(missing_kind & set(undeclared))
         missing_kind -= set(undeclared)
+        if out['external'] and not qualifier_packs & set(required or []):
+            out['scoped'].add('external.* is empty: no declared Pack publishes '
+                              'a qualifier')
         extra = (['brace glob ' + g for g in sorted(out['bad_glob'])] +
-                 ['scoped package ' + g for g in sorted(out['scoped'])] +
+                 [g if g.startswith('external.*') else 'scoped package ' + g
+                  for g in sorted(out['scoped'])] +
                  ['%s, emitted only by %s, which host.required_packs does not list'
                   % (k, undeclared[k]) for k in undeclared_here])
         if missing_kind or missing_field or missing_attr or extra:

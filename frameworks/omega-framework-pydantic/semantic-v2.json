@@ -26,26 +26,17 @@
   ],
   "emits": {
     "entities": [
-      "ApiUse",
-      "ComputedField",
-      "Dependency",
-      "Field",
-      "FieldConfig",
-      "FieldSerializer",
-      "FieldValidator",
-      "Model",
-      "ModelConfig",
-      "ModelSerializer",
-      "ModelValidator",
-      "Validator"
+      "PydanticField",
+      "PydanticFieldDeclaration",
+      "PydanticModel",
+      "PydanticModelConfig",
+      "PydanticModelHook"
     ],
     "relations": [
-      "configured_by",
       "configures",
-      "depends_on",
+      "extends",
       "has_field",
-      "uses_api",
-      "validates"
+      "references_model"
     ]
   },
   "rules": [
@@ -55,125 +46,16 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.python_from_import_class_base_context"
+          "value": "relation.implements"
         },
         {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "BaseModel"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Model",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:model:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.python_class_field_context"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_class"
-        },
-        {
-          "kind": "field_present",
-          "field": "field_name"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.class",
-          "current_field": "owner_class",
-          "join_field": "definition.name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "external_path_matches",
-              "package": "pydantic",
-              "member_in": [
-                "BaseModel"
-              ]
-            }
-          ],
-          "bind": "model_decl"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Field",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "type": {
-              "kind": "field_ref",
-              "field": "field_type"
-            },
-            "owner_class": {
-              "kind": "field_ref",
-              "field": "owner_class"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "has_field",
-          "source": {
-            "kind": "by_joined_field",
-            "bind": "model_decl",
-            "field": "definition.qname",
-            "template": "pydantic:model:{value}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:field:{path}:{owner_class}:{field_name}"
-          },
-          "attributes": {
-            "source_only": true,
-            "target_requires_model_declaration": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "pydantic.validator",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "field_validator"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "BaseModel",
+            "RootModel",
+            "BaseSettings",
+            "GenericModel"
           ]
         },
         {
@@ -185,165 +67,345 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Validator",
+          "entity_kind": "PydanticModel",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pydantic:validator:{definition.qname}"
+            "template": "pydantic:model:{definition.container}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "base": {
+              "kind": "field_ref",
               "field": "definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A class is a Pydantic model because omega-python emits relation.implements naming one of pydantic's root bases. A subscripted base -- class Ids(RootModel[list[int]]) -- emits no relation.implements, so a parameterized RootModel is not seen."
+    },
+    {
+      "id": "pydantic.model.config",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ConfigDict"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "fact_join_by_field",
+              "fact_kind": "relation.implements",
+              "current_field": "definition.name",
+              "join_field": "definition.container",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_in",
+                  "field": "definition.name",
+                  "values": [
+                    "BaseModel",
+                    "RootModel",
+                    "BaseSettings",
+                    "GenericModel"
+                  ]
+                }
+              ]
+            }
+          ],
+          "bind": "model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PydanticModelConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pydantic:model-config:{path}:{model.definition.name}"
+          },
+          "attributes": {
+            "model_name": {
+              "kind": "field_ref",
+              "field": "model.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "validates",
+          "relation_kind": "configures",
           "source": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:validator:{definition.qname}"
+            "kind": "current"
           },
           "target": {
-            "kind": "by_field",
-            "field": "decorator.arg0"
+            "kind": "by_canonical_key",
+            "template": "pydantic:model:{model.definition.name}"
           },
           "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "pydantic.model.extends",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "BaseModel",
+            "RootModel",
+            "BaseSettings",
+            "GenericModel",
+            "object",
+            "Exception",
+            "BaseException",
+            "Enum",
+            "IntEnum",
+            "StrEnum",
+            "Flag",
+            "IntFlag",
+            "Protocol",
+            "ABC",
+            "ABCMeta",
+            "Generic",
+            "TypedDict",
+            "NamedTuple",
+            "Thread",
+            "Process",
+            "str",
+            "int",
+            "float",
+            "bool",
+            "bytes",
+            "dict",
+            "list",
+            "tuple",
+            "set",
+            "frozenset",
+            "type"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.container"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.from_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "pydantic"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PydanticModel",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pydantic:model:{definition.container}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "extends",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:model:{definition.name}"
+          },
+          "attributes": {
+            "base_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A subclass of a project model, in a file that imports from pydantic. omega-python names a base by its last identifier only, so the edge lands on whichever model carries that name."
+    },
+    {
+      "id": "pydantic.model.field",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.field"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.container"
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.qname"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "relation.implements",
+          "current_field": "definition.container",
+          "join_field": "definition.container",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "BaseModel",
+                "RootModel",
+                "BaseSettings",
+                "GenericModel"
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PydanticField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "pydantic:field:{path}:{definition.qname}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "model_name": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_field",
           "source": {
             "kind": "by_canonical_key",
             "template": "pydantic:model:{definition.container}"
           },
           "target": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:validator:{definition.qname}"
+            "kind": "current"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact"
     },
     {
-      "id": "pydantic.generic-api-call.pydantic",
+      "id": "pydantic.model.field.declaration",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package": "pydantic"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Field",
+            "PrivateAttr"
+          ]
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "pydantic",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_api",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "pydantic",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
-    },
-    {
-      "id": "pydantic.generic-dependency.pydantic",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "import.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Dependency",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:dependency:pydantic"
-          },
-          "attributes": {
-            "package": "pydantic",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:dependency:pydantic"
-          },
-          "attributes": {
-            "package": "pydantic",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
-    },
-    {
-      "id": "pydantic.model.basemodel",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.python_from_import_class_base_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "pydantic"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.field",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
           ],
-          "member_in": [
-            "BaseModel"
+          "bind": "fld"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "fact_join_by_field",
+              "fact_kind": "relation.implements",
+              "current_field": "definition.name",
+              "join_field": "definition.container",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_in",
+                  "field": "definition.name",
+                  "values": [
+                    "BaseModel",
+                    "RootModel",
+                    "BaseSettings",
+                    "GenericModel"
+                  ]
+                }
+              ]
+            }
           ]
         }
       ],
@@ -351,95 +413,254 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Model",
+          "entity_kind": "PydanticFieldDeclaration",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pydantic:model:{class_name}"
+            "template": "pydantic:field-declaration:{path}:{fld.definition.qname}"
           },
           "attributes": {
-            "name": {
+            "helper": {
               "kind": "field_ref",
-              "field": "class_name"
+              "field": "definition.name"
             },
-            "base": "BaseModel"
+            "field_name": {
+              "kind": "field_ref",
+              "field": "fld.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:field:{path}:{fld.definition.qname}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "Which model fields carry an explicit Field()/PrivateAttr() declaration. The alias, default and constraints are call arguments, and omega-python emits no fact over an argument, so they are not stated."
     },
     {
-      "id": "pydantic.model.rootmodel",
+      "id": "pydantic.model.field.type",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.python_from_import_class_base_context"
+          "value": "type_use.name"
         },
         {
-          "kind": "external_path_matches",
-          "package_in": [
-            "pydantic"
-          ],
-          "member_in": [
-            "RootModel"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Model",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:model:{class_name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "class_name"
-            },
-            "base": "RootModel"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "pydantic.field.call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.direct"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "str",
+            "int",
+            "float",
+            "bool",
+            "bytes",
+            "bytearray",
+            "complex",
+            "list",
+            "dict",
+            "set",
+            "frozenset",
+            "tuple",
+            "type",
+            "object",
+            "None",
+            "Optional",
+            "Union",
+            "Any",
+            "List",
+            "Dict",
+            "Set",
+            "FrozenSet",
+            "Tuple",
+            "Sequence",
+            "Mapping",
+            "MutableMapping",
+            "Iterable",
+            "Iterator",
+            "Callable",
+            "Literal",
+            "Annotated",
+            "Final",
+            "ClassVar",
+            "Self",
+            "TypeVar",
+            "Generic",
+            "datetime",
+            "date",
+            "time",
+            "timedelta",
+            "timezone",
+            "UUID",
+            "Decimal",
+            "Path",
+            "Enum",
+            "IntEnum",
+            "StrEnum",
+            "EmailStr",
+            "HttpUrl",
+            "AnyUrl",
+            "AnyHttpUrl",
+            "SecretStr",
+            "SecretBytes",
+            "Json",
+            "StrictStr",
+            "StrictInt",
+            "StrictBool",
+            "PositiveInt",
+            "NonNegativeInt",
+            "PositiveFloat",
+            "constr",
+            "conint",
+            "confloat",
+            "conlist",
             "Field"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.field",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "definition.qname"
+            }
+          ],
+          "bind": "fld"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "fact_join_by_field",
+              "fact_kind": "relation.implements",
+              "current_field": "definition.name",
+              "join_field": "definition.container",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_in",
+                  "field": "definition.name",
+                  "values": [
+                    "BaseModel",
+                    "RootModel",
+                    "BaseSettings",
+                    "GenericModel"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references_model",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:field:{path}:{fld.definition.qname}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "pydantic:model:{definition.name}"
+          },
+          "attributes": {
+            "type_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A model field annotated with a non-scalar type name: the composition edge between models, and the one pydantic question that crosses files. The target is a name, not a resolved class, so an annotation naming a type that is not a model addresses no entity."
+    },
+    {
+      "id": "pydantic.model.hook",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "field_validator",
+            "model_validator",
+            "computed_field",
+            "field_serializer",
+            "model_serializer",
+            "validator",
+            "root_validator"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "definition.container"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "relation.implements",
+          "current_field": "definition.container",
+          "join_field": "definition.container",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "BaseModel",
+                "RootModel",
+                "BaseSettings",
+                "GenericModel"
+              ]
+            }
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "FieldConfig",
+          "entity_kind": "PydanticModelHook",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "pydantic:field-config:{path}:{source.start}"
+            "template": "pydantic:model-hook:{path}:{source.start}"
           },
           "attributes": {
-            "alias": {
+            "hook": {
               "kind": "field_ref",
-              "field": "call.kwarg.alias"
+              "field": "definition.name"
             },
-            "default": {
+            "model_name": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "definition.container"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -451,338 +672,24 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "pydantic:field-config:{path}:{source.start}"
+            "template": "pydantic:model:{definition.container}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.decorator.field_validator",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "field_validator"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FieldValidator",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:field_validator:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "decorator.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:field_validator:{definition.qname}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "kind": "field_validator"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.decorator.model_validator",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "model_validator"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ModelValidator",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:model_validator:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "decorator.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:model_validator:{definition.qname}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "kind": "model_validator"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.decorator.computed_field",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "computed_field"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComputedField",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:computed_field:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "decorator.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:computed_field:{definition.qname}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "kind": "computed_field"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.decorator.field_serializer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "field_serializer"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FieldSerializer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:field_serializer:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "decorator.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:field_serializer:{definition.qname}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "kind": "field_serializer"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.decorator.model_serializer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "model_serializer"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ModelSerializer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:model_serializer:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "target": {
-              "kind": "field_ref",
-              "field": "decorator.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:model_serializer:{definition.qname}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "kind": "model_serializer"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "pydantic.configdict",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.python_from_import_constructor_binding_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "pydantic",
-          "member_in": [
-            "ConfigDict"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ModelConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "pydantic:config:{binding_name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "binding_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "pydantic:config:{binding_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "A decorator's span precedes the function it decorates and neither contains the other, so no join relates a hook to the method it names; the hook is keyed by its own position and related to the model that owns it. The field it validates is a string argument, which omega-python does not emit."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
+      "a base written as a subscript -- class Ids(RootModel[list[int]]) -- emits no relation.implements in omega-python, so a parameterized RootModel is not recognized as a model",
+      "Field(alias=...), field_validator(\"name\") and ConfigDict(frozen=True) carry their answer in a call argument; omega-python emits no fact over a string literal or a keyword argument, so aliases, validated field names and config settings are not stated",
+      "a decorator's span neither contains nor is contained by the span of the function it decorates, so which method implements a validator or serializer is not statable",
       "dynamic validators/serializers created by metaprogramming, model_rebuild effects and runtime validation are runtime semantics",
-      "generated JSON Schema is not executed; authored model fields, Field declarations, validators/serializers and ConfigDict declarations are materialized",
+      "generated JSON Schema is not executed; authored model classes, fields, Field declarations, validators/serializers and ConfigDict declarations are materialized",
       "forward-reference target resolution and complex Annotated metadata require generic type/value resolution, not Framework guessing"
     ]
   },

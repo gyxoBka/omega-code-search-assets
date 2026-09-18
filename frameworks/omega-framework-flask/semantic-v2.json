@@ -18,110 +18,190 @@
     ]
   },
   "evidence_inputs": [
-    "package_manifests",
     "imports_bindings",
     "decorators_annotations",
     "calls_members",
-    "existing_language_ir",
-    "definition.python_from_import_constructor_binding_context",
-    "call.python_receiver_identifier_argument_context"
+    "existing_language_ir"
   ],
   "emits": {
     "entities": [
-      "ApiUse",
+      "AppFactory",
       "Application",
       "Blueprint",
+      "BlueprintRegistration",
       "Command",
       "ConfigSource",
       "Dependency",
+      "FlaskModule",
       "Handler",
       "LifecycleHook",
       "Route"
     ],
     "relations": [
       "configured_by",
+      "declares",
       "depends_on",
-      "handles",
-      "mounts",
-      "uses_api"
+      "mounts"
     ]
   },
   "rules": [
     {
-      "id": "flask.route.decorator",
+      "id": "flask.app.construct",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.decorator"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "route",
-            "get",
-            "post",
-            "put",
-            "patch",
-            "delete"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Flask"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Route",
+          "entity_kind": "Application",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "flask:route:{decorator.arg0}"
+            "template": "flask:app:{path}"
           },
           "attributes": {
-            "path": {
+            "module": {
               "kind": "field_ref",
-              "field": "decorator.arg0"
+              "field": "path.stem"
             },
-            "method": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "decorator.member"
+              "field": "path"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "Handler",
+          "entity_kind": "FlaskModule",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "flask:handler:{definition.qname}"
+            "template": "flask:module:{path}"
           },
           "attributes": {
-            "name": {
+            "module": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "path.stem"
             },
-            "qname": {
+            "path": {
               "kind": "field_ref",
-              "field": "definition.qname"
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "handles",
+          "relation_kind": "declares",
           "source": {
             "kind": "by_canonical_key",
-            "template": "flask:route:{decorator.arg0}"
+            "template": "flask:module:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "flask:handler:{definition.qname}"
+            "template": "flask:app:{path}"
           },
-          "attributes": {}
+          "attributes": {
+            "construct": "Flask"
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high",
+      "coverage_note": "The application object of a module is keyed by that module; a module that builds two Flask objects states one."
+    },
+    {
+      "id": "flask.app.factory",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Flask"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Application",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:app:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AppFactory",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:app-factory:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:app-factory:{path}:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:app:{path}"
+          },
+          "attributes": {
+            "construct": "Flask"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
     },
     {
       "id": "flask.blueprint.construct",
@@ -129,26 +209,12 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.python_from_import_constructor_binding_context"
+          "value": "call.function"
         },
         {
           "kind": "field_equals",
-          "field": "module_name",
-          "value": "flask"
-        },
-        {
-          "kind": "field_equals",
-          "field": "imported_name",
+          "field": "definition.name",
           "value": "Blueprint"
-        },
-        {
-          "kind": "field_equals",
-          "field": "callee_name",
-          "value": "Blueprint"
-        },
-        {
-          "kind": "field_present",
-          "field": "binding_name"
         },
         {
           "kind": "path_glob",
@@ -162,91 +228,152 @@
           "entity_kind": "Blueprint",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "flask:blueprint:{path}:{binding_name}"
+            "template": "flask:blueprint:{path}:{source.start}"
           },
           "attributes": {
-            "name": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "binding_name"
+              "field": "path"
             },
-            "binding": {
+            "offset": {
               "kind": "field_ref",
-              "field": "binding_name"
+              "field": "source.start"
             },
-            "source_only": true
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:blueprint:{path}:{source.start}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "flask.blueprint.mount.proven-bindings",
+      "id": "flask.blueprint.register",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.python_receiver_identifier_argument_context"
+          "value": "call.method"
         },
         {
           "kind": "field_equals",
-          "field": "member",
+          "field": "definition.name",
           "value": "register_blueprint"
         },
         {
-          "kind": "field_present",
-          "field": "receiver"
-        },
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
         {
-          "kind": "field_present",
-          "field": "arg0_identifier"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.python_from_import_constructor_binding_context",
-          "current_field": "receiver",
-          "join_field": "binding_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_name",
-              "value": "flask"
+          "kind": "entity_candidate",
+          "entity_kind": "Application",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:app:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
             },
-            {
-              "kind": "field_equals",
-              "field": "imported_name",
-              "value": "Blueprint"
-            },
-            {
-              "kind": "field_equals",
-              "field": "callee_name",
-              "value": "Blueprint"
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
-          ]
+          }
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.python_from_import_constructor_binding_context",
-          "current_field": "arg0_identifier",
-          "join_field": "binding_name",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "module_name",
-              "value": "flask"
+          "kind": "entity_candidate",
+          "entity_kind": "BlueprintRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:blueprint-registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             },
-            {
-              "kind": "field_equals",
-              "field": "imported_name",
-              "value": "Blueprint"
-            },
-            {
-              "kind": "field_equals",
-              "field": "callee_name",
-              "value": "Blueprint"
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
             }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:blueprint-registration:{path}:{source.start}"
+          },
+          "attributes": {
+            "declared_via": "register_blueprint"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "Which blueprint object is passed to register_blueprint is an argument value; the registration site is stated, the argument is not."
+    },
+    {
+      "id": "flask.route.decorator",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "route",
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete"
           ]
         },
         {
@@ -257,406 +384,84 @@
       "guards": [],
       "outputs": [
         {
-          "kind": "relation_candidate",
-          "relation_kind": "mounts",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "flask:blueprint:{path}:{receiver}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flask:blueprint:{path}:{arg0_identifier}"
-          },
-          "attributes": {
-            "declared_via": "register_blueprint",
-            "source_only": true,
-            "endpoint_proof": "both_blueprint_bindings"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "flask.generic-api-call.flask",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
           "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
+          "entity_kind": "Route",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "flask:api-use:{path}:{source.start}"
+            "template": "flask:route:{path}:{source.start}"
           },
           "attributes": {
-            "package": "flask",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_api",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flask:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "flask",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
-    },
-    {
-      "id": "flask.generic-dependency.flask",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "import.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Dependency",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:dependency:flask"
-          },
-          "attributes": {
-            "package": "flask",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flask:dependency:flask"
-          },
-          "attributes": {
-            "package": "flask",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
-    },
-    {
-      "id": "flask.app.construct",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.python_from_import_constructor_binding_context"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "Flask"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Application",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:app:{binding_name}"
-          },
-          "attributes": {
-            "name": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "binding_name"
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "form": "decorator"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:route:{path}:{source.start}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "high"
     },
     {
-      "id": "flask.app.mount-blueprint",
+      "id": "flask.route.add-url-rule",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "register_blueprint"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "mounts",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_field",
-            "field": "call.arg0"
-          },
-          "attributes": {
-            "url_prefix": {
-              "kind": "field_ref",
-              "field": "call.kwarg.url_prefix"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flask.decorator.before_request",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "add_url_rule"
         },
         {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "before_request"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:lifecyclehook:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "decorator": "before_request"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flask.decorator.after_request",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "after_request"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:lifecyclehook:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "decorator": "after_request"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flask.decorator.teardown_request",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "teardown_request"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LifecycleHook",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:lifecyclehook:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "decorator": "teardown_request"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flask.decorator.errorhandler",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "errorhandler"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Handler",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:handler:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "decorator": "errorhandler"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flask.decorator.cli_command",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.decorator"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "command"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Command",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flask:command:{definition.qname}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "decorator": "cli.command"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flask.add-url-rule",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
-            "add_url_rule"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "call.arg0"
+          "kind": "path_glob",
+          "pattern": "**/*.py"
         }
       ],
       "guards": [],
@@ -666,52 +471,338 @@
           "entity_kind": "Route",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "flask:route:{call.arg0}"
+            "template": "flask:route:{path}:{source.start}"
           },
           "attributes": {
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            },
+            "form": "add_url_rule"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
             "path": {
               "kind": "field_ref",
-              "field": "call.arg0"
-            },
-            "endpoint": {
-              "kind": "field_ref",
-              "field": "call.kwarg.endpoint"
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "handles",
+          "relation_kind": "declares",
           "source": {
             "kind": "by_canonical_key",
-            "template": "flask:route:{call.arg0}"
+            "template": "flask:module:{path}"
           },
           "target": {
-            "kind": "by_field",
-            "field": "call.kwarg.view_func"
+            "kind": "by_canonical_key",
+            "template": "flask:route:{path}:{source.start}"
           },
-          "attributes": {}
+          "attributes": {
+            "form": "add_url_rule"
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high"
     },
     {
-      "id": "flask.config.from-object",
+      "id": "flask.lifecycle.hook",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "reference.decorator"
         },
         {
-          "kind": "external_path_matches",
-          "package": "flask",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "before_request",
+            "after_request",
+            "teardown_request",
+            "before_first_request",
+            "teardown_appcontext",
+            "context_processor",
+            "after_this_request",
+            "before_app_request",
+            "after_app_request",
+            "teardown_app_request",
+            "app_context_processor",
+            "url_value_preprocessor",
+            "url_defaults"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "LifecycleHook",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:lifecycle-hook:{path}:{source.start}"
+          },
+          "attributes": {
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            },
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:lifecycle-hook:{path}:{source.start}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
+    },
+    {
+      "id": "flask.error-handler",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "errorhandler",
+            "app_errorhandler"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:error-handler:{path}:{source.start}"
+          },
+          "attributes": {
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            },
+            "form": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:error-handler:{path}:{source.start}"
+          },
+          "attributes": {
+            "form": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
+    },
+    {
+      "id": "flask.cli.command",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.decorator"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "command"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Command",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:command:{path}:{source.start}"
+          },
+          "attributes": {
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
+            },
+            "form": "cli.command"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:command:{path}:{source.start}"
+          },
+          "attributes": {
+            "form": "cli.command"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
+    },
+    {
+      "id": "flask.config.source",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
             "from_object",
             "from_pyfile",
-            "from_file"
+            "from_envvar",
+            "from_json",
+            "from_file",
+            "from_mapping",
+            "from_prefixed_env"
           ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
         }
       ],
       "guards": [],
@@ -724,13 +815,35 @@
             "template": "flask:config-source:{path}:{source.start}"
           },
           "attributes": {
-            "kind": {
+            "declared_in": {
               "kind": "field_ref",
-              "field": "call.name"
+              "field": "path"
             },
-            "source": {
+            "offset": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "source.start"
+            },
+            "form": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Application",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:app:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -738,24 +851,167 @@
           "kind": "relation_candidate",
           "relation_kind": "configured_by",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "flask:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
             "template": "flask:config-source:{path}:{source.start}"
           },
-          "attributes": {}
+          "attributes": {
+            "form": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "high"
+    },
+    {
+      "id": "flask.import.from-module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.from_module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "flask"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:dependency:flask"
+          },
+          "attributes": {
+            "package": "flask"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:dependency:flask"
+          },
+          "attributes": {
+            "form": "from flask import"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
+    },
+    {
+      "id": "flask.import.module",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "flask"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:dependency:flask"
+          },
+          "attributes": {
+            "package": "flask"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlaskModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flask:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flask:dependency:flask"
+          },
+          "attributes": {
+            "form": "import flask"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high"
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "computed route strings, endpoint names and config paths remain unresolved until bounded value resolution proves them",
-      "Blueprint/app factories, imported Blueprint instances and runtime rebinding require cross-file value provenance; direct source constructors/registration are materialized",
+      "route paths, endpoint names, config sources and CLI command names are string arguments; omega-python emits the called name and no argument, so a Route is keyed by its declaration site and carries its HTTP method, not its URL",
+      "which function a route decorator decorates is unreachable: omega-python spans reference.decorator on the decorator identifier and definition.function on function_definition, which are siblings, and fact_join_by_span offers only same and within",
+      "which Blueprint object register_blueprint receives, and cross-file blueprint identity, need argument value provenance the Pack does not publish",
       "runtime extension initialization, request context and dynamic registration are runtime state"
     ]
   },

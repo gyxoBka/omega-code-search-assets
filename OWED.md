@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 9. Numbers come from
+Last updated after framework wave 10. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -39,6 +39,9 @@ different map.**
 | omega-razor | `reference.attribute_value` | `attribute` — which event a handler is bound to | blazor |
 | omega-javascript, omega-typescript, omega-tsx | `call.method`, `call.function` | `arg0` (first string-literal argument), `receiver` | express, bun, fastify |
 | omega-kotlin | `call.function`, `call.method` | first string-literal argument — a Navigation Compose destination | jetpack-compose |
+| omega-hcl | `definition.config_block` | `type_label` — the resource type, which is what attributes a resource to a provider | terraform-providers |
+| omega-python | `reference.decorator` | `target` — the declaration the decorator is attached to; in tree-sitter-python they are siblings, so no span join reaches it | flask |
+| omega-python | `call.function`, `call.method`, `reference.decorator` | the first string-literal or keyword argument | pydantic, pytorch-extensions, django |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
@@ -122,7 +125,7 @@ kept, because that is the statement the whole framework contract rests on.
 
 ## 6. The framework waves themselves
 
-11 of 55 frameworks still hold rules that cannot match: **168 of 802**, measured with the surface scoped to each framework's own `host.required_packs`. The
+6 of 55 frameworks still hold rules that cannot match: **104 of 785**, measured with the surface scoped to each framework's own `host.required_packs`. Four of the six are deferred behind item 7; the other two are godot and pytorch-inductor. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -149,7 +152,7 @@ and `tests/fixtures/design-set/freeze.json` re-stamped with a dated note.
 bug. sveltekit's two rules were deleted rather than worked around; the others
 have not been rewritten yet.
 
-### 7a. JS/TS facts never carry `external` at all
+### 7a. Almost no fact anywhere carries `external`
 
 Separately and compounding it: `facts_of_surface` resolves external identity
 through `external_environment`, which only registers a binding whose
@@ -162,6 +165,19 @@ fails regardless of scoping.
 
 This is the same `qualifier` row already in item 1, now known to be load-bearing
 for the whole `external.*` mechanism in the largest language family Omega has.
+
+Measured again in wave 10 across Python, and then across every Pack: exactly
+**two** publish a `qualifier` — omega-c-sharp and omega-docker-compose. So
+`external.package` and `external.member` are empty on every fact in every other
+language, and an `external_path_matches` clause is false for every possible
+input whether or not the package is scoped. `overlay_audit.py` now reports that.
+
+**This demotes item 7.** Teaching `parse_external_path` about scoped packages
+fixes nothing until a Pack publishes `qualifier` at all: the four frameworks
+deferred behind it — nestjs, angular, tauri, astro — are JavaScript, and would
+still see an empty `external`. The order is now: publish `qualifier` from the
+JS/TS Packs (item 1), *then* the host fix, *then* those four. In the meantime
+the import join is the answer, and fastify and next-js are written that way.
 
 ---
 

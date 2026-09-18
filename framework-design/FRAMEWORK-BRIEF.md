@@ -282,6 +282,30 @@ under-declares its packs, which is the case when your Framework legitimately
 reads a second language's file, the way axum reads `Cargo.toml` and fastify
 reads `package.json`. Then add the Pack to `host.required_packs`.
 
+## 3i. `external_path_matches` is false in every language but two
+
+`OverlayFact.external` is built by `external_environment` from bindings whose
+`target_hint` is set; `target_hint` is `occurrence.qualifier`; and the host reads
+a qualifier only from an emission field or attribute **literally named
+`qualifier`**. Exactly two Packs publish one — omega-c-sharp and
+omega-docker-compose. Everywhere else `external.package` and `external.member`
+are empty on every fact, so an `external_path_matches` clause, scoped or not, is
+false for every possible input. Twenty fastify rules and six flask rules were
+scored live by the audit while matching nothing.
+
+Use the import join instead. It reaches the same answer in any language:
+
+```json
+{"kind": "fact_join_by_field", "fact_kind": "import.module",
+ "current_field": "path", "join_field": "path", "same_path": true,
+ "where": [{"kind": "field_prefix", "field": "definition.name",
+            "value": "fastify"}]}
+```
+
+*This file imports something whose module name starts with `fastify`* is what
+keeps `call.method get` from meaning `Map.prototype.get`, and it is the gate
+every rule in a package-scoped Framework should carry.
+
 ## 4. Verification
 
 ```bash

@@ -1,1803 +1,1831 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-next-js",
- "selector": "framework:next-js",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "javascript",
-   "typescript",
-   "tsx"
+  "schema_version": 2,
+  "asset": "omega-framework-next-js",
+  "selector": "framework:next-js",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "javascript",
+      "typescript",
+      "tsx"
+    ],
+    "required_packs": [
+      "omega-javascript",
+      "omega-tsx",
+      "omega-typescript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "package_manifests",
+    "file_paths",
+    "directory_conventions",
+    "imports_bindings",
+    "existing_language_ir",
+    "project_level_evidence"
   ],
-  "required_packs": [
-   "omega-javascript",
-   "omega-tsx",
-   "omega-typescript"
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "AppFile",
+      "Component",
+      "DataFetching",
+      "Layout",
+      "Metadata",
+      "MetadataAsset",
+      "MetadataRoute",
+      "Middleware",
+      "NextFile",
+      "NextModule",
+      "Page",
+      "Route",
+      "RouteHandler",
+      "RouteSegment",
+      "RouteSegmentConfig"
+    ],
+    "relations": [
+      "config",
+      "contains",
+      "depends_on",
+      "handles",
+      "layout_of",
+      "renders",
+      "route_to_component",
+      "uses_api"
+    ]
+  },
+  "rules": [
+    {
+      "id": "next.app.page",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "page"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "An app-router page segment: the URL the directory spells, the page module that serves it, and the segment directory that owns it. The entry fact is a function declared in page.*, which is the page component in its declaration form."
+    },
+    {
+      "id": "next.app.page.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "page"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same page segment when the component is bound to a name instead of declared (const Page = () => ...), which TypeScript and TSX state as definition.variable."
+    },
+    {
+      "id": "next.app.layout",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "layout"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "template": "next:layout:{path}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:layout:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "An app-router layout, keyed by its file because a layout is not a URL: it wraps every route below its own directory."
+    },
+    {
+      "id": "next.app.layout.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "layout"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Layout",
+          "canonical_key": {
+            "template": "next:layout:{path}"
+          },
+          "attributes": {
+            "router": "app",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:layout:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same layout when its component is a named binding rather than a declaration."
+    },
+    {
+      "id": "next.app.layout_hierarchy",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "page"
+          ]
+        },
+        {
+          "kind": "fact_join_by_path_ancestor",
+          "fact_kind": "definition.function",
+          "current_path_field": "path",
+          "join_path_field": "path.dir",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/app/**/*.*"
+            },
+            {
+              "kind": "field_in",
+              "field": "path.stem",
+              "values": [
+                "layout"
+              ]
+            }
+          ],
+          "bind": "layout"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "layout_of",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:layout:{layout.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_file_route}"
+          },
+          "attributes": {
+            "convention": "app_router_path_ancestor"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which layouts wrap this page. A layout applies to every route under its own directory, so the join is the layout's directory being an ancestor of the page's path; every ancestor layout is stated, which is how the App Router nests them."
+    },
+    {
+      "id": "next.app.route_handler",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "route"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{definition.name}:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteHandler",
+          "canonical_key": {
+            "template": "next:handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:{definition.name}:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which handler answers GET /api/orders: an HTTP-method-named function declared in an app-router route.* file, and the method-scoped route it answers."
+    },
+    {
+      "id": "next.app.route_handler.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "route"
+          ]
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:{definition.name}:{normalized_file_route}"
+          },
+          "attributes": {
+            "router": "app",
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteHandler",
+          "canonical_key": {
+            "template": "next:handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:{definition.name}:{normalized_file_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:handler:{path}:{definition.name}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same handler written as a const arrow function, which TypeScript and TSX state as definition.variable."
+    },
+    {
+      "id": "next.app.special_file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "default",
+            "error",
+            "global-error",
+            "loading",
+            "not-found",
+            "template"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "AppFile",
+          "canonical_key": {
+            "template": "next:app-file:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:app-file:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The reserved UI files of a route segment -- loading, error, not-found, global-error, template, default -- as one rule over the file stem, and the segment each belongs to."
+    },
+    {
+      "id": "next.metadata_route",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "manifest",
+            "robots",
+            "sitemap"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataRoute",
+          "canonical_key": {
+            "template": "next:metadata-route:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:metadata-route:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A generated metadata route -- sitemap, robots, manifest -- in its code-generated form. A static sitemap.xml or robots.txt is parsed by no language Pack and so is not stated."
+    },
+    {
+      "id": "next.metadata_asset",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "apple-icon",
+            "icon",
+            "opengraph-image",
+            "twitter-image"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MetadataAsset",
+          "canonical_key": {
+            "template": "next:metadata-asset:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:metadata-asset:{path}"
+          },
+          "attributes": {
+            "role": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A generated metadata image -- icon, apple-icon, opengraph-image, twitter-image -- and the segment it decorates."
+    },
+    {
+      "id": "next.metadata.export",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "generateImageMetadata",
+            "generateMetadata",
+            "generateViewport",
+            "metadata",
+            "viewport"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "template": "next:metadata:{path}:{definition.name}"
+          },
+          "attributes": {
+            "export": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:metadata:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A metadata or viewport export of a route segment declared as a function (generateMetadata, generateViewport, generateImageMetadata). What it returns is an expression no Pack publishes."
+    },
+    {
+      "id": "next.metadata.export.binding",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "generateImageMetadata",
+            "generateMetadata",
+            "generateViewport",
+            "metadata",
+            "viewport"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Metadata",
+          "canonical_key": {
+            "template": "next:metadata:{path}:{definition.name}"
+          },
+          "attributes": {
+            "export": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:metadata:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The same metadata surface declared as a value (export const metadata = {})."
+    },
+    {
+      "id": "next.route_segment_config",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.variable"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "dynamic",
+            "dynamicParams",
+            "experimental_ppr",
+            "fetchCache",
+            "maxDuration",
+            "preferredRegion",
+            "revalidate",
+            "runtime"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegmentConfig",
+          "canonical_key": {
+            "template": "next:route-segment-config:{path}:{definition.name}"
+          },
+          "attributes": {
+            "option": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "config",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:route-segment-config:{path}:{definition.name}"
+          },
+          "attributes": {
+            "option": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which rendering options a route segment sets: dynamic, revalidate, runtime and the rest are always export const, so definition.variable states all of them. The chosen value is an initializer no Pack publishes."
+    },
+    {
+      "id": "next.pages.route",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.*"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "path.stem",
+          "values": [
+            "_app",
+            "_document",
+            "_error",
+            "_middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Page",
+          "canonical_key": {
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {
+            "router": "pages",
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "route_to_component",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:page:{normalized_pages_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "A pages-router route: the URL the file path spells and the module that serves it. The reserved _app, _document and _error modules are not routes and are excluded by stem."
+    },
+    {
+      "id": "next.pages.data_fetching",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pages/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "getInitialProps",
+            "getServerSideProps",
+            "getStaticPaths",
+            "getStaticProps"
+          ]
+        },
+        {
+          "kind": "field_not_in",
+          "field": "path.stem",
+          "values": [
+            "_app",
+            "_document",
+            "_error",
+            "_middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DataFetching",
+          "canonical_key": {
+            "template": "next:data-fetching:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "http:*:{normalized_pages_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:data-fetching:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "How a pages-router route gets its data, and therefore whether it renders per request, at build time or on the client."
+    },
+    {
+      "id": "next.middleware",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/middleware.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "middleware"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "next:middleware:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Where the project's request middleware is. Which routes it runs on is the config.matcher initializer, a value no Pack publishes."
+    },
+    {
+      "id": "next.segment.renders.jsx",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.jsx_component"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "default",
+            "error",
+            "global-error",
+            "layout",
+            "loading",
+            "not-found",
+            "page",
+            "template"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "next:component:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:component:{definition.name}"
+          },
+          "attributes": {
+            "in_file": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "What a route segment's file renders: a capitalized JSX element used inside page, layout or a reserved segment file, in TSX."
+    },
+    {
+      "id": "next.segment.renders.component",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.component"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.*"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "default",
+            "error",
+            "global-error",
+            "layout",
+            "loading",
+            "not-found",
+            "page",
+            "template"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteSegment",
+          "canonical_key": {
+            "template": "next:segment:{path.dir}"
+          },
+          "attributes": {
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            },
+            "router": "app"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Component",
+          "canonical_key": {
+            "template": "next:component:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "next:segment:{path.dir}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next:component:{definition.name}"
+          },
+          "attributes": {
+            "in_file": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The same rendering edge in JavaScript and JSX, where the Pack spells a JSX element reference.component."
+    },
+    {
+      "id": "next.import.module",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "next",
+            "next/after",
+            "next/app",
+            "next/cache",
+            "next/config",
+            "next/constants",
+            "next/document",
+            "next/dynamic",
+            "next/error",
+            "next/font/google",
+            "next/font/local",
+            "next/form",
+            "next/head",
+            "next/headers",
+            "next/image",
+            "next/link",
+            "next/navigation",
+            "next/og",
+            "next/router",
+            "next/script",
+            "next/server"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NextFile",
+          "canonical_key": {
+            "template": "next:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NextModule",
+          "canonical_key": {
+            "template": "next-js:module:{definition.name}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "package": "next"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next-js:module:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files depend on which part of Next.js -- next/navigation, next/server, next/image and the rest -- from the specifier as written."
+    },
+    {
+      "id": "next.api.call",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "redirect",
+            "permanentRedirect",
+            "notFound",
+            "cookies",
+            "headers",
+            "draftMode",
+            "revalidatePath",
+            "revalidateTag",
+            "unstable_cache",
+            "unstable_noStore",
+            "useRouter",
+            "usePathname",
+            "useSearchParams",
+            "useParams",
+            "useSelectedLayoutSegment",
+            "useSelectedLayoutSegments",
+            "connection",
+            "after",
+            "forbidden",
+            "unauthorized"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "next"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "NextFile",
+          "canonical_key": {
+            "template": "next:file:{path}"
+          },
+          "attributes": {
+            "file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "next-js"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "template": "next-js:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "package": "next"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "next-js:api-use:{path}:{source.start}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "A call to one of Next.js's own functions in a file that imports from next -- redirect, notFound, cookies, headers, revalidatePath. The import join replaces external.*, which is empty for every JavaScript and TypeScript fact because those Packs publish no qualifier."
+    }
   ],
-  "required_capabilities": [
-   "calls",
-   "definitions",
-   "imports",
-   "references"
-  ]
- },
- "evidence_inputs": [
-  "package_manifests",
-  "file_paths",
-  "directory_conventions",
-  "imports_bindings",
-  "existing_language_ir",
-  "project_level_evidence"
- ],
- "emits": {
-  "entities": [
-   "ApiUse",
-   "AppFile",
-   "Component",
-   "DataFetching",
-   "Layout",
-   "Metadata",
-   "MetadataAsset",
-   "MetadataRoute",
-   "Middleware",
-   "NextFile",
-   "NextModule",
-   "Page",
-   "Route",
-   "RouteHandler",
-   "RouteSegment",
-   "RouteSegmentConfig"
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "The use client and use server directives are emitted by none of omega-javascript, omega-typescript and omega-tsx, so client/server boundaries and directive-declared Server Actions are not stated at all.",
+      "No Pack states that a declaration is exported, so a page, layout or handler is identified by its file and its name, not by its export.",
+      "An anonymous default export (export default () => ...) declares no name and so emits no definition; a segment file written only that way is not stated.",
+      "Initializer values -- a route-segment option's value, a metadata object's fields, a middleware matcher -- are expressions no Pack publishes.",
+      "Route groups are dropped and dynamic segments normalized by the host's route derivation; runtime rewrites, redirects and intercepted routes remain runtime semantics."
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "packages/core/src/adapters/nextjs/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-next-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "codebase-viz",
+      "repository": "https://github.com/cubha/codebase-viz",
+      "path": "fixtures/mini-nextpages-app/**",
+      "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "scripts/source_map_v2/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "cc-rsg",
+      "repository": "https://github.com/daishir0/cc-rsg",
+      "path": "references/**",
+      "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "src/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    },
+    {
+      "source_id": "tieline",
+      "repository": "https://github.com/nugehs/tieline",
+      "path": "test/**",
+      "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
+      "confidence": "medium",
+      "reuse_mode": "knowledge-adapt-after-license-review"
+    }
   ],
-  "relations": [
-   "config",
-   "contains",
-   "depends_on",
-   "handles",
-   "layout_of",
-   "renders",
-   "route_to_component",
-   "uses_api"
-  ]
- },
- "rules": [
-  {
-   "id": "next.app.page",
-   "match": [
+  "runtime_status": "terminal-static-source-contract",
+  "detection_rules": [
     {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "page"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "http:*:{normalized_file_route}"
-     },
-     "attributes": {
-      "router": "app",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Page",
-     "canonical_key": {
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {
-      "router": "app",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
+      "id": "next-js.exact_signature.1.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "route_to_component",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "http:*:{normalized_file_route}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {}
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "An app-router page segment: the URL the directory spells, the page module that serves it, and the segment directory that owns it. The entry fact is a function declared in page.*, which is the page component in its declaration form."
-  },
-  {
-   "id": "next.app.page.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "page"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "http:*:{normalized_file_route}"
-     },
-     "attributes": {
-      "router": "app",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Page",
-     "canonical_key": {
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {
-      "router": "app",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
+      "id": "next-js.exact_signature.2.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "route_to_component",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "http:*:{normalized_file_route}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {}
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same page segment when the component is bound to a name instead of declared (const Page = () => ...), which TypeScript and TSX state as definition.variable."
-  },
-  {
-   "id": "next.app.layout",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "layout"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Layout",
-     "canonical_key": {
-      "template": "next:layout:{path}"
-     },
-     "attributes": {
-      "router": "app",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
+      "id": "next-js.exact_signature.3.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:layout:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "An app-router layout, keyed by its file because a layout is not a URL: it wraps every route below its own directory."
-  },
-  {
-   "id": "next.app.layout.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "layout"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Layout",
-     "canonical_key": {
-      "template": "next:layout:{path}"
-     },
-     "attributes": {
-      "router": "app",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
+      "id": "next-js.exact_signature.4.next",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "next"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "next-js"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "next-js",
+          "framework_name": "Next.js",
+          "signature": "next",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:layout:{path}"
-     },
-     "attributes": {}
     }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same layout when its component is a named binding rather than a declaration."
-  },
-  {
-   "id": "next.app.layout_hierarchy",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "page"
-     ]
-    },
-    {
-     "kind": "fact_join_by_path_ancestor",
-     "fact_kind": "definition.function",
-     "current_path_field": "path",
-     "join_path_field": "path.dir",
-     "where": [
-      {
-       "kind": "path_glob",
-       "pattern": "**/app/**/*.*"
-      },
-      {
-       "kind": "field_in",
-       "field": "path.stem",
-       "values": [
-        "layout"
-       ]
-      }
-     ],
-     "bind": "layout"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "layout_of",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:layout:{layout.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:page:{normalized_file_route}"
-     },
-     "attributes": {
-      "convention": "app_router_path_ancestor"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which layouts wrap this page. A layout applies to every route under its own directory, so the join is the layout's directory being an ancestor of the page's path; every ancestor layout is stated, which is how the App Router nests them."
-  },
-  {
-   "id": "next.app.route_handler",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "route"
-     ]
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "DELETE",
-      "GET",
-      "HEAD",
-      "OPTIONS",
-      "PATCH",
-      "POST",
-      "PUT"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "http:{definition.name}:{normalized_file_route}"
-     },
-     "attributes": {
-      "router": "app",
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteHandler",
-     "canonical_key": {
-      "template": "next:handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "http:{definition.name}:{normalized_file_route}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which handler answers GET /api/orders: an HTTP-method-named function declared in an app-router route.* file, and the method-scoped route it answers."
-  },
-  {
-   "id": "next.app.route_handler.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "route"
-     ]
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "DELETE",
-      "GET",
-      "HEAD",
-      "OPTIONS",
-      "PATCH",
-      "POST",
-      "PUT"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "http:{definition.name}:{normalized_file_route}"
-     },
-     "attributes": {
-      "router": "app",
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteHandler",
-     "canonical_key": {
-      "template": "next:handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "http:{definition.name}:{normalized_file_route}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:handler:{path}:{definition.name}"
-     },
-     "attributes": {
-      "method": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same handler written as a const arrow function, which TypeScript and TSX state as definition.variable."
-  },
-  {
-   "id": "next.app.special_file",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "default",
-      "error",
-      "global-error",
-      "loading",
-      "not-found",
-      "template"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "AppFile",
-     "canonical_key": {
-      "template": "next:app-file:{path}"
-     },
-     "attributes": {
-      "role": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:app-file:{path}"
-     },
-     "attributes": {
-      "role": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The reserved UI files of a route segment -- loading, error, not-found, global-error, template, default -- as one rule over the file stem, and the segment each belongs to."
-  },
-  {
-   "id": "next.metadata_route",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "manifest",
-      "robots",
-      "sitemap"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "MetadataRoute",
-     "canonical_key": {
-      "template": "next:metadata-route:{path}"
-     },
-     "attributes": {
-      "role": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:metadata-route:{path}"
-     },
-     "attributes": {
-      "role": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "A generated metadata route -- sitemap, robots, manifest -- in its code-generated form. A static sitemap.xml or robots.txt is parsed by no language Pack and so is not stated."
-  },
-  {
-   "id": "next.metadata_asset",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "apple-icon",
-      "icon",
-      "opengraph-image",
-      "twitter-image"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "MetadataAsset",
-     "canonical_key": {
-      "template": "next:metadata-asset:{path}"
-     },
-     "attributes": {
-      "role": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:metadata-asset:{path}"
-     },
-     "attributes": {
-      "role": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "A generated metadata image -- icon, apple-icon, opengraph-image, twitter-image -- and the segment it decorates."
-  },
-  {
-   "id": "next.metadata.export",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "generateImageMetadata",
-      "generateMetadata",
-      "generateViewport",
-      "metadata",
-      "viewport"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Metadata",
-     "canonical_key": {
-      "template": "next:metadata:{path}:{definition.name}"
-     },
-     "attributes": {
-      "export": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:metadata:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "A metadata or viewport export of a route segment declared as a function (generateMetadata, generateViewport, generateImageMetadata). What it returns is an expression no Pack publishes."
-  },
-  {
-   "id": "next.metadata.export.binding",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "generateImageMetadata",
-      "generateMetadata",
-      "generateViewport",
-      "metadata",
-      "viewport"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Metadata",
-     "canonical_key": {
-      "template": "next:metadata:{path}:{definition.name}"
-     },
-     "attributes": {
-      "export": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:metadata:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "The same metadata surface declared as a value (export const metadata = {})."
-  },
-  {
-   "id": "next.route_segment_config",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.variable"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "dynamic",
-      "dynamicParams",
-      "experimental_ppr",
-      "fetchCache",
-      "maxDuration",
-      "preferredRegion",
-      "revalidate",
-      "runtime"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegmentConfig",
-     "canonical_key": {
-      "template": "next:route-segment-config:{path}:{definition.name}"
-     },
-     "attributes": {
-      "option": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "config",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:route-segment-config:{path}:{definition.name}"
-     },
-     "attributes": {
-      "option": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Which rendering options a route segment sets: dynamic, revalidate, runtime and the rest are always export const, so definition.variable states all of them. The chosen value is an initializer no Pack publishes."
-  },
-  {
-   "id": "next.pages.route",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/pages/**/*.*"
-    },
-    {
-     "kind": "field_not_in",
-     "field": "path.stem",
-     "values": [
-      "_app",
-      "_document",
-      "_error",
-      "_middleware"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Route",
-     "canonical_key": {
-      "template": "http:*:{normalized_pages_route}"
-     },
-     "attributes": {
-      "router": "pages",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Page",
-     "canonical_key": {
-      "template": "next:page:{normalized_pages_route}"
-     },
-     "attributes": {
-      "router": "pages",
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "route_to_component",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "http:*:{normalized_pages_route}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:page:{normalized_pages_route}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "A pages-router route: the URL the file path spells and the module that serves it. The reserved _app, _document and _error modules are not routes and are excluded by stem."
-  },
-  {
-   "id": "next.pages.data_fetching",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/pages/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "getInitialProps",
-      "getServerSideProps",
-      "getStaticPaths",
-      "getStaticProps"
-     ]
-    },
-    {
-     "kind": "field_not_in",
-     "field": "path.stem",
-     "values": [
-      "_app",
-      "_document",
-      "_error",
-      "_middleware"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "DataFetching",
-     "canonical_key": {
-      "template": "next:data-fetching:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "http:*:{normalized_pages_route}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:data-fetching:{path}:{definition.name}"
-     },
-     "attributes": {
-      "hook": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "How a pages-router route gets its data, and therefore whether it renders per request, at build time or on the client."
-  },
-  {
-   "id": "next.middleware",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/middleware.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "middleware"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Middleware",
-     "canonical_key": {
-      "template": "next:middleware:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Where the project's request middleware is. Which routes it runs on is the config.matcher initializer, a value no Pack publishes."
-  },
-  {
-   "id": "next.segment.renders.jsx",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.jsx_component"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "default",
-      "error",
-      "global-error",
-      "layout",
-      "loading",
-      "not-found",
-      "page",
-      "template"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "template": "next:component:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "renders",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:component:{definition.name}"
-     },
-     "attributes": {
-      "in_file": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate",
-   "coverage_note": "What a route segment's file renders: a capitalized JSX element used inside page, layout or a reserved segment file, in TSX."
-  },
-  {
-   "id": "next.segment.renders.component",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.component"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/app/**/*.*"
-    },
-    {
-     "kind": "field_in",
-     "field": "path.stem",
-     "values": [
-      "default",
-      "error",
-      "global-error",
-      "layout",
-      "loading",
-      "not-found",
-      "page",
-      "template"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RouteSegment",
-     "canonical_key": {
-      "template": "next:segment:{path.dir}"
-     },
-     "attributes": {
-      "directory": {
-       "kind": "field_ref",
-       "field": "path.dir"
-      },
-      "router": "app"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "template": "next:component:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "renders",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "next:segment:{path.dir}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next:component:{definition.name}"
-     },
-     "attributes": {
-      "in_file": {
-       "kind": "field_ref",
-       "field": "path.stem"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate",
-   "coverage_note": "The same rendering edge in JavaScript and JSX, where the Pack spells a JSX element reference.component."
-  },
-  {
-   "id": "next.import.module",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "import.module"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "next",
-      "next/after",
-      "next/app",
-      "next/cache",
-      "next/config",
-      "next/constants",
-      "next/document",
-      "next/dynamic",
-      "next/error",
-      "next/font/google",
-      "next/font/local",
-      "next/form",
-      "next/head",
-      "next/headers",
-      "next/image",
-      "next/link",
-      "next/navigation",
-      "next/og",
-      "next/router",
-      "next/script",
-      "next/server"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "NextFile",
-     "canonical_key": {
-      "template": "next:file:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "NextModule",
-     "canonical_key": {
-      "template": "next-js:module:{definition.name}"
-     },
-     "attributes": {
-      "module": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "package": "next"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next-js:module:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact",
-   "coverage_note": "Which files depend on which part of Next.js -- next/navigation, next/server, next/image and the rest -- from the specifier as written."
-  },
-  {
-   "id": "next.api.call",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.function"
-    },
-    {
-     "kind": "external_path_matches",
-     "package": "next"
-    },
-    {
-     "kind": "field_present",
-     "field": "external.member"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "NextFile",
-     "canonical_key": {
-      "template": "next:file:{path}"
-     },
-     "attributes": {
-      "file": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "framework": "next-js"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ApiUse",
-     "canonical_key": {
-      "template": "next-js:api-use:{path}:{source.start}"
-     },
-     "attributes": {
-      "api": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "module": {
-       "kind": "field_ref",
-       "field": "external.member"
-      },
-      "package": "next"
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_api",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "next-js:api-use:{path}:{source.start}"
-     },
-     "attributes": {
-      "api": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact",
-   "coverage_note": "A call to a function this file imported from Next.js -- redirect, notFound, cookies, headers, revalidatePath -- resolved through the import environment rather than by name alone."
+  ],
+  "reconciliation": {
+    "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded.",
+    "wave_2": "Overlay rewritten against the cross-language Pack vocabulary: 43 rules over seven kinds no Pack emits became 20 rules over definition.function, definition.variable, reference.component, reference.jsx_component, import.module and call.function."
   }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "The use client and use server directives are emitted by none of omega-javascript, omega-typescript and omega-tsx, so client/server boundaries and directive-declared Server Actions are not stated at all.",
-   "No Pack states that a declaration is exported, so a page, layout or handler is identified by its file and its name, not by its export.",
-   "An anonymous default export (export default () => ...) declares no name and so emits no definition; a segment file written only that way is not stated.",
-   "Initializer values -- a route-segment option's value, a metadata object's fields, a middleware matcher -- are expressions no Pack publishes.",
-   "Route groups are dropped and dynamic segments normalized by the host's route derivation; runtime rewrites, redirects and intercepted routes remain runtime semantics."
-  ]
- },
- "provenance": [
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "packages/core/src/adapters/nextjs/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "fixtures/mini-next-app/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "codebase-viz",
-   "repository": "https://github.com/cubha/codebase-viz",
-   "path": "fixtures/mini-nextpages-app/**",
-   "revision": "e69ba487844865a3fa51188e2dff60ec24330977",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "cc-rsg",
-   "repository": "https://github.com/daishir0/cc-rsg",
-   "path": "scripts/source_map_v2/**",
-   "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "cc-rsg",
-   "repository": "https://github.com/daishir0/cc-rsg",
-   "path": "references/**",
-   "revision": "7845efe5cf936bca11c0f6606e7e7813485e9c5d",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "tieline",
-   "repository": "https://github.com/nugehs/tieline",
-   "path": "src/**",
-   "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
-   "confidence": "medium",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  },
-  {
-   "source_id": "tieline",
-   "repository": "https://github.com/nugehs/tieline",
-   "path": "test/**",
-   "revision": "8f56e97c084c97c85b6a5aa6b174d59fd67e513e",
-   "confidence": "medium",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  }
- ],
- "runtime_status": "terminal-static-source-contract",
- "detection_rules": [
-  {
-   "id": "next-js.exact_signature.1.next",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "next"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "next-js"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "next-js",
-     "framework_name": "Next.js",
-     "signature": "next",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "next-js.exact_signature.2.next",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "next"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "next-js"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "next-js",
-     "framework_name": "Next.js",
-     "signature": "next",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "next-js.exact_signature.3.next",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:next"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "next-js"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "next-js",
-     "framework_name": "Next.js",
-     "signature": "next",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "next-js.exact_signature.4.next",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "next"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "next-js"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "next-js",
-     "framework_name": "Next.js",
-     "signature": "next",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  }
- ],
- "reconciliation": {
-  "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded.",
-  "wave_2": "Overlay rewritten against the cross-language Pack vocabulary: 43 rules over seven kinds no Pack emits became 20 rules over definition.function, definition.variable, reference.component, reference.jsx_component, import.module and call.function."
- }
 }

@@ -16,7 +16,8 @@
       "calls",
       "definitions",
       "imports",
-      "references"
+      "references",
+      "types"
     ]
   },
   "evidence_inputs": [
@@ -27,38 +28,235 @@
   ],
   "emits": {
     "entities": [
-      "ApiUse",
       "Decoration",
       "Dependency",
+      "FastifyApp",
       "FrameworkConfig",
       "FrameworkHook",
       "Handler",
       "Listener",
       "Plugin",
-      "Route"
+      "PluginRegistration",
+      "Route",
+      "Server"
     ],
     "relations": [
       "configured_by",
       "configures",
+      "declares",
       "depends_on",
       "handles",
-      "mounts",
-      "uses_api"
+      "mounts"
     ]
   },
   "rules": [
+    {
+      "id": "fastify.dependency.core",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "fastify"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:dependency:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:dependency:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "import ... from 'fastify' / 'fastify-plugin' / 'fastify-*'; the module name is the import.module fact's own name, so no external resolution is needed (JS/TS facts carry no external.*)."
+    },
+    {
+      "id": "fastify.dependency.plugin_package",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "@fastify/"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:dependency:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:dependency:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The scoped official plugins, @fastify/cors and the rest; same key space and same kind as fastify.dependency.core. external_path_matches cannot name a scoped package, so this is a prefix on the module name."
+    },
+    {
+      "id": "fastify.app.instance",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Fastify",
+            "fastify",
+            "fastifyFactory"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Server",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:server:{path}:{source.start}"
+          },
+          "attributes": {
+            "factory": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:server:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The Fastify() factory call: which module builds the server. The factory options object is the first argument and the JS/TS Packs publish no argument text."
+    },
     {
       "id": "fastify.route.verb",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
             "get",
             "post",
             "put",
@@ -70,8 +268,18 @@
           ]
         },
         {
-          "kind": "field_present",
-          "field": "call.last_arg"
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
         }
       ],
       "guards": [],
@@ -81,31 +289,24 @@
           "entity_kind": "Route",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:route:{call.member}:{call.arg0}"
+            "template": "fastify:route:{path}:{source.start}"
           },
           "attributes": {
             "method": {
               "kind": "field_ref",
-              "field": "call.member"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "definition.name"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "Handler",
+          "entity_kind": "FastifyApp",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:handler:{call.last_arg}"
+            "template": "fastify:app:{path}"
           },
           "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "call.last_arg"
-            }
+            "framework": "fastify"
           }
         },
         {
@@ -113,34 +314,45 @@
           "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
-            "template": "fastify:route:{call.member}:{call.arg0}"
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:handler:{call.last_arg}"
+            "template": "fastify:route:{path}:{source.start}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "fastify.get / post / ...; the HTTP method is the call's own name. The URL is the first argument and is not published by the JS/TS Packs."
     },
     {
-      "id": "fastify.route.object",
+      "id": "fastify.route.declarative",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.method"
         },
         {
           "kind": "field_equals",
-          "field": "call.member",
+          "field": "definition.name",
           "value": "route"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify"
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
         }
       ],
       "guards": [],
@@ -150,43 +362,148 @@
           "entity_kind": "Route",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:route:{call.arg0.method}:{call.arg0.url}"
+            "template": "fastify:route:{path}:{source.start}"
           },
           "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "call.arg0.method"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "call.arg0.url"
-            }
+            "declaration": "route-object"
           }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:route:{path}:{source.start}"
+          },
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "fastify.route({ method, url, handler }); same key space and same kind as fastify.route.verb. method and url live inside the options object, which is not published."
     },
     {
-      "id": "fastify.register",
+      "id": "fastify.plugin.register",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.method"
         },
         {
           "kind": "field_equals",
-          "field": "call.member",
+          "field": "definition.name",
           "value": "register"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify"
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PluginRegistration",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:registration:{path}:{source.start}"
+          },
+          "attributes": {}
         },
         {
-          "kind": "field_present",
-          "field": "call.arg0"
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "mounts",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:registration:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "fastify.register(plugin, { prefix }); which module mounts plugins. The plugin reference and the prefix are arguments and are not published."
+    },
+    {
+      "id": "fastify.plugin.declaration.function",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "type_use.name"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "FastifyInstance",
+            "FastifyPluginAsync",
+            "FastifyPluginCallback",
+            "FastifyPluginOptions",
+            "FastifyRegisterOptions"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
         }
       ],
       "guards": [],
@@ -196,168 +513,431 @@
           "entity_kind": "Plugin",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:plugin:{call.arg0}"
+            "template": "fastify:plugin:{path}:{fn.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "fn.definition.name"
             }
           }
         },
         {
-          "kind": "relation_candidate",
-          "relation_kind": "mounts",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_field",
-            "field": "call.arg0"
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
           },
           "attributes": {
-            "prefix": {
-              "kind": "field_ref",
-              "field": "call.arg1.prefix"
-            }
+            "framework": "fastify"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "depends_on",
+          "relation_kind": "declares",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:plugin:{call.arg0}"
+            "template": "fastify:plugin:{path}:{fn.definition.name}"
           },
-          "attributes": {
-            "prefix": {
-              "kind": "field_ref",
-              "field": "call.arg1.prefix"
-            }
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "A Fastify plugin, recognised by the FastifyInstance/FastifyPlugin* type it is annotated with (definition.function spelling); same key space and same kind as the other fastify.plugin.declaration rule."
     },
     {
-      "id": "fastify.generic-api-call.fastify",
+      "id": "fastify.plugin.declaration.binding",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "type_use.name"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "FastifyInstance",
+            "FastifyPluginAsync",
+            "FastifyPluginCallback",
+            "FastifyPluginOptions",
+            "FastifyRegisterOptions"
+          ]
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
+          "entity_kind": "Plugin",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:api-use:{path}:{source.start}"
+            "template": "fastify:plugin:{path}:{fn.definition.name}"
           },
           "attributes": {
-            "package": "fastify",
-            "source_only": true
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "uses_api",
+          "relation_kind": "declares",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:api-use:{path}:{source.start}"
+            "template": "fastify:plugin:{path}:{fn.definition.name}"
           },
-          "attributes": {
-            "package": "fastify",
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+      "confidence": "candidate",
+      "coverage_note": "A Fastify plugin, recognised by the FastifyInstance/FastifyPlugin* type it is annotated with (definition.variable spelling); same key space and same kind as the other fastify.plugin.declaration rule."
     },
     {
-      "id": "fastify.generic-dependency.fastify",
+      "id": "fastify.handler.function",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "import.target_candidate"
+          "value": "type_use.name"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "FastifyRequest",
+            "FastifyReply",
+            "RouteHandlerMethod",
+            "RouteShorthandMethod",
+            "RouteOptions",
+            "RouteGenericInterface",
+            "FastifyError",
+            "preHandlerHookHandler",
+            "onRequestHookHandler",
+            "preValidationHookHandler",
+            "preSerializationHookHandler"
+          ]
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.function",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
         }
       ],
       "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Dependency",
+          "entity_kind": "Handler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:dependency:fastify"
+            "template": "fastify:handler:{path}:{fn.definition.name}"
           },
           "attributes": {
-            "package": "fastify",
-            "source_only": true
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "depends_on",
+          "relation_kind": "handles",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:dependency:fastify"
+            "template": "fastify:handler:{path}:{fn.definition.name}"
           },
-          "attributes": {
-            "package": "fastify",
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+      "confidence": "candidate",
+      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.function spelling); one key space and one kind across all three spellings."
     },
     {
-      "id": "fastify.config.addhook",
+      "id": "fastify.handler.binding",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "type_use.name"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "addHook"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "FastifyRequest",
+            "FastifyReply",
+            "RouteHandlerMethod",
+            "RouteShorthandMethod",
+            "RouteOptions",
+            "RouteGenericInterface",
+            "FastifyError",
+            "preHandlerHookHandler",
+            "onRequestHookHandler",
+            "preValidationHookHandler",
+            "preSerializationHookHandler"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.variable",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:handler:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:handler:{path}:{fn.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.variable spelling); one key space and one kind across all three spellings."
+    },
+    {
+      "id": "fastify.handler.method",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "type_use.name"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "FastifyRequest",
+            "FastifyReply",
+            "RouteHandlerMethod",
+            "RouteShorthandMethod",
+            "RouteOptions",
+            "RouteGenericInterface",
+            "FastifyError",
+            "preHandlerHookHandler",
+            "onRequestHookHandler",
+            "preValidationHookHandler",
+            "preSerializationHookHandler"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:handler:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:handler:{path}:{fn.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "A request handler, recognised by the FastifyRequest/FastifyReply/Route* type it names (definition.method spelling); one key space and one kind across all three spellings."
+    },
+    {
+      "id": "fastify.hook.add",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "addHook"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
           ]
         }
       ],
@@ -368,389 +948,69 @@
           "entity_kind": "FrameworkHook",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastify:addHook:{path}:{source.start}"
+            "template": "fastify:hook:{path}:{source.start}"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
           },
           "attributes": {
-            "operation": "addHook",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
+            "framework": "fastify"
           }
         },
         {
           "kind": "relation_candidate",
           "relation_kind": "configured_by",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastify:addHook:{path}:{source.start}"
+            "template": "fastify:hook:{path}:{source.start}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "fastify.addHook('onRequest', fn); which module installs lifecycle hooks. The hook name is the first argument and is not published."
     },
     {
-      "id": "fastify.config.addschema",
+      "id": "fastify.decorate",
       "snapshot": true,
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "addSchema"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:addSchema:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "addSchema",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:addSchema:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.setvalidatorcompiler",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "setValidatorCompiler"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:setValidatorCompiler:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "setValidatorCompiler",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:setValidatorCompiler:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.setserializercompiler",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "setSerializerCompiler"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:setSerializerCompiler:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "setSerializerCompiler",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:setSerializerCompiler:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.seterrorhandler",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "setErrorHandler"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:setErrorHandler:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "setErrorHandler",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:setErrorHandler:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.setnotfoundhandler",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "setNotFoundHandler"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:setNotFoundHandler:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "setNotFoundHandler",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:setNotFoundHandler:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.decorate.decorate",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "decorate"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Decoration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:decoration:{path}:{source.start}"
-          },
-          "attributes": {
-            "scope": "decorate",
-            "name": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:decoration:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.decorate.decoraterequest",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "decorateRequest"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Decoration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:decoration:{path}:{source.start}"
-          },
-          "attributes": {
-            "scope": "decorateRequest",
-            "name": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:decoration:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.decorate.decoratereply",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "decorate",
+            "decorateRequest",
             "decorateReply"
           ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
         }
       ],
       "guards": [],
@@ -763,18 +1023,29 @@
             "template": "fastify:decoration:{path}:{source.start}"
           },
           "attributes": {
-            "scope": "decorateReply",
-            "name": {
+            "scope": {
               "kind": "field_ref",
-              "field": "call.arg0"
+              "field": "definition.name"
             }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
           }
         },
         {
           "kind": "relation_candidate",
           "relation_kind": "configures",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
@@ -784,7 +1055,94 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "decorate / decorateRequest / decorateReply collapsed into one rule; the decorated surface is the call's own name. The decorator's property name is the first argument and is not published."
+    },
+    {
+      "id": "fastify.config.set",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "addSchema",
+            "addContentTypeParser",
+            "addConstraintStrategy",
+            "setValidatorCompiler",
+            "setSerializerCompiler",
+            "setReplySerializer",
+            "setErrorHandler",
+            "setNotFoundHandler",
+            "setSchemaController",
+            "setSchemaErrorFormatter",
+            "setGenReqId",
+            "withTypeProvider"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkConfig",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:config:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "attributes": {
+            "framework": "fastify"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastify:config:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The twelve instance-level configuration calls in one rule; the operation is the call's own name. Ten separate rules previously said this, one per method name."
     },
     {
       "id": "fastify.listen",
@@ -792,13 +1150,25 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.member"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "listen"
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "listen"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastify"
+            }
           ]
         }
       ],
@@ -811,22 +1181,25 @@
             "kind": "canonical_key",
             "template": "fastify:listener:{path}:{source.start}"
           },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FastifyApp",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastify:app:{path}"
+          },
           "attributes": {
-            "port": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            },
-            "host": {
-              "kind": "field_ref",
-              "field": "call.kwarg.host"
-            }
+            "framework": "fastify"
           }
         },
         {
           "kind": "relation_candidate",
           "relation_kind": "configured_by",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "fastify:app:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
@@ -836,260 +1209,16 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.addcontenttypeparser",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "addContentTypeParser"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:addContentTypeParser:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "addContentTypeParser",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:addContentTypeParser:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.addconstraintstrategy",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "addConstraintStrategy"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:addConstraintStrategy:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "addConstraintStrategy",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:addConstraintStrategy:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.setreplyserializer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "setReplySerializer"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:setReplySerializer:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "setReplySerializer",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:setReplySerializer:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.withtypeprovider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "withTypeProvider"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:withTypeProvider:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "withTypeProvider",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:withTypeProvider:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "fastify.config.setgenreqid",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.member"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "fastify",
-          "member_in": [
-            "setGenReqId"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FrameworkConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "fastify:setGenReqId:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "setGenReqId",
-            "arg0": {
-              "kind": "field_ref",
-              "field": "call.arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "fastify:setGenReqId:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "fastify.listen({ port, host }); which module starts the server. The port and host are arguments and are not published."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "computed URLs/schema objects/hook names remain source candidates until bounded value resolution proves them",
-      "encapsulated plugin runtime scope, decorators after runtime mutation and plugin execution state are runtime semantics",
-      "handler/plugin expressions are preserved as authored candidates when a concrete callable/module target cannot be resolved"
+      "The JS/TS Packs publish no argument text, so a route URL, a hook name, a decorated property name, a registered plugin reference and a listen port are all unreachable; a Route is located by file and byte offset, not by its path.",
+      "Handlers and plugins are recognised by the TypeScript type they name, so a plain JavaScript Fastify project yields routes, hooks, decorations and configuration but no Handler or Plugin entity.",
+      "Encapsulated plugin scope, decorators added at runtime and plugin execution order are runtime semantics and are not stated."
     ]
   },
   "provenance": [

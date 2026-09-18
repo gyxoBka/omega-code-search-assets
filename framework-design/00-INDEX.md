@@ -597,3 +597,56 @@ Scoping pushed the count the other way and the two corrections nearly cancel:
 Seven non-deferred frameworks still hold dead rules — fastify 20, flask 8,
 pydantic 8, pytorch-extensions 8, terraform-providers 8, godot 6,
 pytorch-inductor 5 — and four are deferred behind item 7.
+
+---
+
+# Framework wave 10 (fastify, flask, pydantic, pytorch-extensions, terraform-providers)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-fastify | 20 -> 15 | 0 | 15 |
+| omega-framework-flask | 14 -> 12 | 6 | 12 |
+| omega-framework-pydantic | 14 -> 7 | 6 | 7 |
+| omega-framework-terraform-providers | 8 -> 5 | 0 | 5 |
+| omega-framework-pytorch-extensions | 8 -> 8 | 0 | 8 |
+
+64 rules became 47, all live, no blocking defect.
+
+fastify shows what replaces `external_path_matches` where it never worked: one
+shared gate, `fact_join_by_field` on `import.module` in the same path whose name
+has prefix `fastify`. That is what keeps `call.method get` from meaning
+`Map.prototype.get`, and it is reachable in every language, unlike the external
+environment. Ten byte-identical `set*Compiler`/`set*Handler` rules collapsed into
+one `field_in` over twelve names that states more than the ten did.
+
+## `external_path_matches` is false in every language but two
+
+Three agents traced the same chain independently this wave.
+`OverlayFact.external` is built by `external_environment` from bindings whose
+`target_hint` is set; `target_hint` is `occurrence.qualifier`; and the host reads
+a qualifier only from a field or attribute **literally named `qualifier`**.
+Exactly two Packs publish one: omega-c-sharp and omega-docker-compose. In every
+other language `external.package` and `external.member` are empty on every fact,
+so an `external_path_matches` clause is false for every possible input.
+
+The audit only flagged the *scoped* npm case, so twenty fastify rules and six
+flask rules were scored live while matching nothing. It now reports any
+`external_path_matches` in a Framework none of whose declared Packs publishes a
+`qualifier`. One rule survived that check across the other 50 frameworks —
+`next.api.call` — and it is rewritten on the same import join fastify uses.
+
+This widens `OWED.md` item 7a from JavaScript to everything, and it moves item 7
+from *decided and worth doing* to *not sufficient*: fixing `parse_external_path`
+for scoped packages does nothing until a Pack publishes `qualifier` at all.
+
+## Interning is global, so Frameworks collide with each other too
+
+`key_collisions.py` read one framework at a time, but `apply_overlay_runs`
+interns across every overlay in the run. Checked now: exactly one key template
+is minted under two kinds by two Frameworks — `http:*:{normalized_file_route}`,
+where astro, next-js and nuxt all mint `Route`, which is the point of a shared
+key space, and `nuxt.server.route` mints `ServerRoute` on it, which is not.
+Folded into the collision wave.
+
+Totals: **785 overlay rules; 168 -> 104 that cannot match.** Only godot (6) and
+pytorch-inductor (5) are left outside the four deferred behind item 7.

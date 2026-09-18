@@ -12,118 +12,138 @@
   ],
   "required_capabilities": [
    "definitions",
-   "calls",
-   "references",
-   "data",
-   "scopes"
+   "references"
   ]
  },
  "evidence_inputs": [
-  "existing_language_ir",
-  "project_level_evidence",
-  "structured_documents",
-  "calls_members",
-  "scope.hcl_body"
+  "definitions",
+  "references"
  ],
  "emits": {
   "entities": [
-   "ConfigDocument",
    "ProviderAlias",
-   "ProviderConfig",
+   "ProviderConfiguration",
+   "ProviderConsumer",
    "ProviderRequirement",
-   "ProviderSelection"
+   "ProviderSelection",
+   "TerraformProvider"
   ],
   "relations": [
-   "configured_by"
+   "aliased_by",
+   "configures",
+   "passes_provider",
+   "requires",
+   "selects"
   ]
  },
  "rules": [
   {
-   "id": "terraform-providers.source-authored.config-document",
+   "id": "terraform-providers.configuration",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "scope.hcl_body"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ConfigDocument",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform-providers:config-document:{path}"
-     },
-     "attributes": {
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL document identity only; module/resource/provider/effective values and Terraform evaluation remain unresolved."
-  },
-  {
-   "id": "terraform-providers.provider-block",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.hcl_block_labeled"
+     "value": "definition.config_block"
     },
     {
-     "kind": "field_equals",
-     "field": "block_kind",
+     "kind": "attribute_equals",
+     "attribute": "block_type",
      "value": "provider"
     },
     {
      "kind": "field_present",
-     "field": "label0"
+     "field": "definition.name"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
     }
    ],
    "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ProviderConfig",
+     "entity_kind": "ProviderConfiguration",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:provider:{path}:{label0}:{source.start}"
+      "template": "terraform-providers:provider-config:{path}:{source.start}"
      },
      "attributes": {
       "provider": {
        "kind": "field_ref",
-       "field": "label0"
+       "field": "definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
       }
      }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "TerraformProvider",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-providers:provider:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configures",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "terraform-providers:provider:{definition.name}"
+     },
+     "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "exact"
+   "confidence": "exact",
+   "coverage_note": "Which provider a provider block configures, and where. The settings inside it (region, profile, assume_role) are declarations only: omega-hcl carries a scalar value as an attribute, which the overlay cannot read."
   },
   {
-   "id": "terraform-providers.provider-alias",
+   "id": "terraform-providers.configuration.alias",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.hcl_block_string_attribute_context"
+     "value": "definition.config_attribute"
     },
     {
      "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "provider"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
+     "field": "definition.name",
      "value": "alias"
     },
     {
-     "kind": "field_present",
-     "field": "value"
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_block",
+     "relation": "within",
+     "same_path": true,
+     "bind": "blk",
+     "where": [
+      {
+       "kind": "attribute_equals",
+       "attribute": "block_type",
+       "value": "provider"
+      },
+      {
+       "kind": "field_present",
+       "field": "definition.name"
+      }
+     ]
     }
    ],
    "guards": [],
@@ -133,56 +153,65 @@
      "entity_kind": "ProviderAlias",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:provider-alias:{path}:{owner_label0}:{value}"
+      "template": "terraform-providers:provider-alias:{path}:{blk.source.start}"
      },
      "attributes": {
       "provider": {
        "kind": "field_ref",
-       "field": "owner_label0"
+       "field": "blk.definition.name"
       },
-      "alias": {
+      "file": {
        "kind": "field_ref",
-       "field": "value"
+       "field": "path"
       }
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "configured_by",
+     "relation_kind": "aliased_by",
      "source": {
       "kind": "by_canonical_key",
-      "template": "terraform:provider:{path}:{owner_label0}:{source.start}"
+      "template": "terraform-providers:provider-config:{path}:{blk.source.start}"
      },
      "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform:provider-alias:{path}:{owner_label0}:{value}"
+      "kind": "current"
      },
      "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "candidate"
+   "confidence": "exact",
+   "coverage_note": "Marks a provider block as an additional (aliased) configuration rather than the default one. The alias string is the attribute value, which omega-hcl publishes as an attribute and the overlay cannot read."
   },
   {
-   "id": "terraform-providers.required-provider",
+   "id": "terraform-providers.requirement",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.hcl_unlabeled_block_attribute_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "required_providers"
+     "value": "definition.config_attribute"
     },
     {
      "kind": "field_present",
-     "field": "key"
+     "field": "definition.name"
     },
     {
-     "kind": "field_present",
-     "field": "value"
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_block",
+     "relation": "within",
+     "same_path": true,
+     "bind": "req",
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "required_providers"
+      }
+     ]
     }
    ],
    "guards": [],
@@ -192,225 +221,259 @@
      "entity_kind": "ProviderRequirement",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:required-provider:{path}:{key}"
+      "template": "terraform-providers:requirement:{path}:{definition.name}"
      },
      "attributes": {
       "provider": {
        "kind": "field_ref",
-       "field": "key"
+       "field": "definition.name"
       },
-      "constraint": {
+      "file": {
        "kind": "field_ref",
-       "field": "value"
+       "field": "path"
       }
      }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate"
-  },
-  {
-   "id": "terraform-providers.selection.resource",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.hcl_block_attribute_context"
     },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "resource"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "provider"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    }
-   ],
-   "guards": [],
-   "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ProviderSelection",
+     "entity_kind": "TerraformProvider",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:provider-selection:{path}:resource:{owner_label0}:{source.start}"
-     },
-     "attributes": {
-      "owner_kind": "resource",
-      "owner": {
-       "kind": "field_ref",
-       "field": "owner_label0"
-      },
-      "provider": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate"
-  },
-  {
-   "id": "terraform-providers.selection.data",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.hcl_block_attribute_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "data"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "provider"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ProviderSelection",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform:provider-selection:{path}:data:{owner_label0}:{source.start}"
-     },
-     "attributes": {
-      "owner_kind": "data",
-      "owner": {
-       "kind": "field_ref",
-       "field": "owner_label0"
-      },
-      "provider": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate"
-  },
-  {
-   "id": "terraform-providers.selection.module",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.hcl_block_attribute_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "provider"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ProviderSelection",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform:provider-selection:{path}:module:{owner_label0}:{source.start}"
-     },
-     "attributes": {
-      "owner_kind": "module",
-      "owner": {
-       "kind": "field_ref",
-       "field": "owner_label0"
-      },
-      "provider": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate"
-  },
-  {
-   "id": "terraform-providers.required-provider-entry",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.hcl_block_object_entry_unlabeled_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "terraform"
-    },
-    {
-     "kind": "field_equals",
-     "field": "attribute_key",
-     "value": "required_providers"
-    },
-    {
-     "kind": "field_present",
-     "field": "object_key"
-    },
-    {
-     "kind": "field_present",
-     "field": "object_value"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ProviderRequirement",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform:required-provider:{path}:{source.start}"
+      "template": "terraform-providers:provider:{definition.name}"
      },
      "attributes": {
       "name": {
        "kind": "field_ref",
-       "field": "object_key"
-      },
-      "constraint_or_object": {
-       "kind": "field_ref",
-       "field": "object_value"
-      },
-      "source_only": true
+       "field": "definition.name"
+      }
      }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "requires",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "terraform-providers:provider:{definition.name}"
+     },
+     "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
    "confidence": "exact",
-   "coverage_note": "Authored required_providers entry; nested source/version object fields remain raw value text unless further resolved."
+   "coverage_note": "Which providers a module requires, by local name, and in which file. source and version inside the entry are definition.config_entry facts whose value omega-hcl publishes as an attribute, so the registry address and the version constraint are not stated."
+  },
+  {
+   "id": "terraform-providers.module-providers",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.config_entry"
+    },
+    {
+     "kind": "field_present",
+     "field": "definition.name"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_attribute",
+     "relation": "within",
+     "same_path": true,
+     "bind": "arg",
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "providers"
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_block",
+     "relation": "within",
+     "same_path": true,
+     "bind": "blk",
+     "where": [
+      {
+       "kind": "attribute_equals",
+       "attribute": "block_type",
+       "value": "module"
+      },
+      {
+       "kind": "field_present",
+       "field": "definition.name"
+      }
+     ]
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderConsumer",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-providers:consumer:{path}:{blk.source.start}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "blk.definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "TerraformProvider",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-providers:provider:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "passes_provider",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "terraform-providers:provider:{definition.name}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which provider local names a module block passes down through providers = { ... }. The right-hand side (aws.west) is a traversal whose root omega-hcl publishes as an attribute, so the configuration passed is named by the entry key alone."
+  },
+  {
+   "id": "terraform-providers.selection",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.traversal"
+    },
+    {
+     "kind": "field_present",
+     "field": "definition.name"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_attribute",
+     "relation": "within",
+     "same_path": true,
+     "bind": "arg",
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "provider"
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_block",
+     "relation": "within",
+     "same_path": true,
+     "bind": "blk",
+     "where": [
+      {
+       "kind": "field_present",
+       "field": "definition.name"
+      }
+     ]
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderConsumer",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-providers:consumer:{path}:{blk.source.start}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "blk.definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderSelection",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-providers:selection:{path}:{source.start}"
+     },
+     "attributes": {
+      "alias": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "owner": {
+       "kind": "field_ref",
+       "field": "blk.definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "selects",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "terraform-providers:selection:{path}:{source.start}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate",
+   "coverage_note": "A declaration pinned to a non-default provider configuration by provider = <provider>.<alias>. The traversal names the alias; its root is the provider local name, which omega-hcl publishes as an attribute, so the selection is stated by alias alone."
   }
  ],
  "coverage": {
   "mode": "explicit-classified",
   "gaps": [
-   "provider blocks, aliases, required_providers entries/object values and authored provider selections are materialized; nested source/version object fields are preserved in authored object text unless generic HCL object recursion resolves them",
+   "provider blocks, required_providers entries, module providers mappings and provider = selections are stated as declarations; every authored value is omitted because omega-hcl publishes a scalar value, a block type label and a traversal root as attributes, and the overlay reads only fields",
+   "a resource or data block cannot be attributed to a provider without an explicit provider = argument: the implicit attribution runs from the block type label (aws_instance -> aws), which omega-hcl publishes as an attribute",
    "provider schemas, installed plugin versions, remote credentials/state and runtime/tool execution are external state and are never executed during indexing"
   ]
  },
