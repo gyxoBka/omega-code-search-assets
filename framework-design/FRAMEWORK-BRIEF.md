@@ -372,13 +372,11 @@ whitespace only. The `default` is load-bearing: a call with no arguments has no
 first argument, and a strip over a None is a type error that skips the whole
 template -- which quietly stopped `app.listen()` being a call at all.
 
-In omega-ruby and omega-kotlin the arguments are a separate emission,
-`call.arguments`, on the same span as the call -- a Ruby call needs no
-parentheses and a Kotlin call can be all trailing lambda, so there is no
-argument node to capture and an unbound capture would skip the whole call
-template. Read it with `fact_join_by_span` `relation: "same"`.
-
-omega-swift does not have it yet.
+In omega-ruby, omega-kotlin and omega-swift the arguments are a separate
+emission, `call.arguments`, on the **same span** as the call -- a Ruby call
+needs no parentheses and a Kotlin or Swift call can be all trailing closure, so
+there is no argument node to capture and an unbound capture would skip the whole
+call template. Read it with `fact_join_by_span` `relation: "same"`.
 
 ## 4. Verification
 

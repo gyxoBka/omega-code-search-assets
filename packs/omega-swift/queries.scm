@@ -142,6 +142,21 @@
        suffix: (simple_identifier) @call.callee))]
   (call_suffix)) @call
 
+; What a call was given, as a fact of its own. A Swift call can be all trailing
+; closure -- `Task { }` has a `call_suffix` with a `lambda_literal` and no
+; `value_arguments` -- and an unbound capture skips a whole template, so the
+; arguments cannot be a field on the call itself. A framework reads this with
+; `fact_join_by_span` `relation: "same"`. It is what a Vapor route states:
+; `app.get("todos", ":id")`, `@Field(key: "title")`.
+
+(call_expression
+  .
+  [(simple_identifier) @call.arguments.name
+   (navigation_expression
+     suffix: (navigation_suffix
+       suffix: (simple_identifier) @call.arguments.name))]
+  (call_suffix (value_arguments) @call.args)) @call.arguments
+
 (macro_invocation
   (simple_identifier) @macro_call.callee) @macro_call
 

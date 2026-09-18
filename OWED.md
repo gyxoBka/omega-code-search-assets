@@ -535,9 +535,11 @@ before `default` sees it.
 
 ### Still to do
 
-**omega-swift.** Its call pattern ends in `(call_suffix)`, and a trailing-closure
-call has no `value_arguments`, so it needs the Ruby/Kotlin treatment. vapor's
-route URLs and `@Field(key: "title")` wait on it.
+**omega-swift -- done.** Its call pattern ends in `(call_suffix)` and a
+trailing-closure call has no `value_arguments`, so it took the Ruby/Kotlin
+treatment: a `call.arguments` emission on the **same span** as `call.swift`.
+`app.get("todos", ":id") { req in … }` now gives `todos` and `:id`, and
+`Task { }` is still a call. Ten Packs carry the view.
 
 **The second pass over the Frameworks.** fastify, express, bun, gin, fiber,
 axum, vapor, maui, django, pydantic, pytorch-extensions, jetpack-compose and
