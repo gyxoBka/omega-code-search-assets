@@ -1,1519 +1,949 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-vite",
- "selector": "framework:vite",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "typescript",
-   "javascript"
+  "schema_version": 2,
+  "asset": "omega-framework-vite",
+  "selector": "framework:vite",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "typescript",
+      "javascript"
+    ],
+    "required_packs": [
+      "omega-typescript",
+      "omega-javascript"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
+  },
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
   ],
-  "required_packs": [
-   "omega-typescript",
-   "omega-javascript"
+  "emits": {
+    "entities": [
+      "ApiUse",
+      "BuildModule",
+      "BuildPlugin",
+      "BuildProject",
+      "Dependency",
+      "EnvironmentSetting",
+      "PluginHook"
+    ],
+    "relations": [
+      "configured_by",
+      "contains",
+      "depends_on",
+      "uses_api",
+      "uses_plugin"
+    ]
+  },
+  "rules": [
+    {
+      "id": "vite.config.define",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "defineConfig"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/vite.config.*"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildProject",
+          "canonical_key": {
+            "template": "vite:build:{path}"
+          },
+          "attributes": {
+            "config_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "vite",
+            "declared_with": "defineConfig"
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which file configures the Vite build. defineConfig() is the call Vite's own API exports for the purpose, so the call names the build and the artifact path identifies it."
+    },
+    {
+      "id": "vite.config.dependency",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/vite.config.*"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "."
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "node:"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "/"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "path",
+            "fs",
+            "url",
+            "os",
+            "process",
+            "crypto",
+            "util",
+            "child_process",
+            "module",
+            "assert",
+            "stream",
+            "events",
+            "http",
+            "https",
+            "zlib",
+            "buffer"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "template": "vite:package:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildProject",
+          "canonical_key": {
+            "template": "vite:build:{path}"
+          },
+          "attributes": {
+            "config_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "vite"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:build:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:package:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which published packages the Vite build configuration pulls in -- the plugin packages and presets a build is made of. The specifier is the import's own name, so no Pack field is needed; relative, absolute and Node built-in specifiers are excluded because they name no package."
+    },
+    {
+      "id": "vite.config.plugin-call",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/vite.config.*"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "defineConfig",
+            "defineProject",
+            "defineWorkspace",
+            "mergeConfig",
+            "loadEnv",
+            "resolveConfig",
+            "normalizePath",
+            "searchForWorkspaceRoot",
+            "createLogger",
+            "createFilter",
+            "splitVendorChunkPlugin",
+            "loadConfigFromFile",
+            "fileURLToPath",
+            "createRequire",
+            "require",
+            "resolve",
+            "join",
+            "dirname",
+            "basename",
+            "extname",
+            "cwd",
+            "process",
+            "parseInt",
+            "Number",
+            "String",
+            "Boolean",
+            "Object",
+            "Array",
+            "URL",
+            "env"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildPlugin",
+          "canonical_key": {
+            "template": "vite:plugin:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "config_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildProject",
+          "canonical_key": {
+            "template": "vite:build:{path}"
+          },
+          "attributes": {
+            "config_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "vite"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_plugin",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:build:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:plugin:{path}:{definition.name}"
+          },
+          "attributes": {
+            "plugin": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Which plugins the build invokes. In a vite.config.* file a bare function call that is not one of Vite's own config helpers and not a Node path/url helper is a plugin factory: react(), vue(), svelte(), tsconfigPaths(). The plugin's package is not claimed -- no Pack fact ties a call back to the import that bound its name."
+    },
+    {
+      "id": "vite.config.env-load",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "loadEnv"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/vite.config.*"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EnvironmentSetting",
+          "canonical_key": {
+            "template": "vite:env:{path}"
+          },
+          "attributes": {
+            "config_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "source": "loadEnv"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildProject",
+          "canonical_key": {
+            "template": "vite:build:{path}"
+          },
+          "attributes": {
+            "config_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "vite"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:build:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:env:{path}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Whether this build's configuration is decided by .env files at config time. loadEnv is the only Vite API that reads them, so the call is the answer; which prefix or directory it reads is a call argument, and no Pack publishes call arguments."
+    },
+    {
+      "id": "vite.module.uses-vite",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.module"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "vite",
+            "vite/client",
+            "vite/types",
+            "vite/module-runner",
+            "vite/dynamic-import-polyfill",
+            "vite-node",
+            "vite-node/client"
+          ]
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildModule",
+          "canonical_key": {
+            "template": "vite:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "vite"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "template": "vite:package:{definition.name}"
+          },
+          "attributes": {
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:package:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which source modules belong to the build rather than to the application -- config files, build scripts, dev-server wrappers and plugin sources. This is the rule that mints vite:module:{path}, the key vite.api.call addresses."
+    },
+    {
+      "id": "vite.api.call",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "createServer",
+            "build",
+            "preview",
+            "resolveConfig",
+            "mergeConfig",
+            "loadEnv",
+            "transformWithEsbuild",
+            "createLogger",
+            "normalizePath",
+            "searchForWorkspaceRoot",
+            "createFilter",
+            "splitVendorChunkPlugin",
+            "loadConfigFromFile",
+            "resolveEnvPrefix",
+            "formatPostcssSourceMap",
+            "buildErrorMessage",
+            "isCSSRequest",
+            "send"
+          ]
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "bind": "vite_import",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "vite",
+                "vite/module-runner",
+                "vite-node"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiUse",
+          "canonical_key": {
+            "template": "vite:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildModule",
+          "canonical_key": {
+            "template": "vite:module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "framework": "vite"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which files drive Vite programmatically and through which API -- createServer for a custom dev server, build for a scripted build, preview for a served bundle. The join is on the artifact path, a name every fact answers without any Pack field: it requires the same file to import 'vite', which is what makes the bare name a Vite API and not a same-named local function."
+    },
+    {
+      "id": "vite.plugin.hook",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "config",
+            "configResolved",
+            "configureServer",
+            "configurePreviewServer",
+            "transformIndexHtml",
+            "handleHotUpdate",
+            "hotUpdate",
+            "applyToEnvironment",
+            "buildStart",
+            "buildEnd",
+            "resolveId",
+            "generateBundle",
+            "renderChunk",
+            "renderStart",
+            "renderError",
+            "writeBundle",
+            "closeBundle",
+            "outputOptions",
+            "augmentChunkHash",
+            "moduleParsed",
+            "shouldTransformCachedModule",
+            "watchChange",
+            "closeWatcher"
+          ]
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PluginHook",
+          "canonical_key": {
+            "template": "vite:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildPlugin",
+          "canonical_key": {
+            "template": "vite:plugin-module:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "hook_object"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:plugin-module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "Which files implement a Vite plugin, and which points of the build they hook. A plugin is an object literal whose keys are hook names, and both Packs emit definition.method for an object key bound to a function, so the hook name is the emission's own name. The generic hooks load and transform are deliberately not listed: as bare object keys they are not distinctive enough to be evidence."
+    },
+    {
+      "id": "vite.plugin.factory",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.method"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "config",
+            "configResolved",
+            "configureServer",
+            "configurePreviewServer",
+            "transformIndexHtml",
+            "handleHotUpdate",
+            "hotUpdate",
+            "applyToEnvironment",
+            "buildStart",
+            "buildEnd",
+            "resolveId",
+            "generateBundle",
+            "renderChunk",
+            "renderStart",
+            "renderError",
+            "writeBundle",
+            "closeBundle",
+            "outputOptions",
+            "augmentChunkHash",
+            "moduleParsed",
+            "shouldTransformCachedModule",
+            "watchChange",
+            "closeWatcher"
+          ]
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "dist",
+            ".vite"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "factory"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "BuildPlugin",
+          "canonical_key": {
+            "template": "vite:plugin-factory:{path}:{factory.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "factory.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "factory"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PluginHook",
+          "canonical_key": {
+            "template": "vite:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vite:plugin-factory:{path}:{factory.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vite:hook:{path}:{definition.name}"
+          },
+          "attributes": {
+            "hook": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The name of the plugin factory a hook object is returned from, which is the name the config calls: export function myPlugin(): Plugin { return { resolveId() {...} } }. The enclosing declaration is reached by fact_join_by_span within on scope.function_body, so neither side needs a Pack field. A plugin written as a bare module-level object has no enclosing function and is stated by vite.plugin.hook instead."
+    }
   ],
-  "required_capabilities": [
-   "calls",
-   "data",
-   "definitions",
-   "imports",
-   "references"
-  ]
- },
- "evidence_inputs": [
-  "existing_language_ir",
-  "imports_bindings",
-  "calls_members",
-  "project_level_evidence"
- ],
- "emits": {
-  "entities": [
-   "ApiUse",
-   "BasePath",
-   "BuildOutput",
-   "BuildProject",
-   "BuildRoot",
-   "BuildSetting",
-   "BuildTarget",
-   "CacheDirectory",
-   "Dependency",
-   "StaticDirectory",
-   "EnvironmentSetting",
-   "Alias",
-   "ProxyRoute",
-   "BuildInput"
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "No scalar of the Vite config is readable. base, root, publicDir, cacheDir, envDir, envPrefix, appType, logLevel, build.outDir, build.assetsDir, build.target, build.sourcemap, server.host, server.open, server.origin, resolve.alias, server.proxy and build.rollupOptions.input are keys of an object literal passed to defineConfig, and the JavaScript and TypeScript Packs publish no fact for an object key whose value is a string, an array or a nested object -- only for a key whose value is a function, as definition.method.",
+      "A plugin call cannot be tied to the package that supplied it. import.module spans the specifier string and the local binding (import.default in omega-javascript, binding.import_default in omega-typescript) spans the identifier; neither span contains the other, and neither publishes a field naming the other side. uses_plugin therefore names the factory that was called, not the package it came from.",
+      "Call arguments are published by no Pack, so loadEnv's prefix and directory, createServer's inline config and a plugin factory's options are unreachable.",
+      "import.meta.env is a member expression and emits no fact; import.meta.glob() emits call.method named glob, which is indistinguishable from any other .glob() call, so glob imports are not claimed.",
+      "Plugin execution order, transform output, the generated module graph and dev-server middleware behaviour are runtime semantics."
+    ]
+  },
+  "provenance": [
+    {
+      "source_id": "vite",
+      "repository": "https://github.com/vitejs/vite",
+      "path": "packages/vite/src/node/config.ts",
+      "revision": "f94df87ff03b40b65e29bacdc04cc18c7bccaa4a",
+      "confidence": "high",
+      "reuse_mode": "knowledge-only-reimplement"
+    }
   ],
-  "relations": [
-   "configured_by",
-   "contains",
-   "depends_on",
-   "produces",
-   "uses_api",
-   "uses_plugin"
-  ]
- },
- "rules": [
-  {
-   "id": "vite.config.direct-plugin-call",
-   "snapshot": true,
-   "match": [
+  "detection_rules": [
     {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_array_direct_call_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "plugins"
-    },
-    {
-     "kind": "field_present",
-     "field": "item_call_name"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildProject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "attributes": {
-      "path": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "declaration_only": true,
-      "source": "vite_config_defineConfig"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Dependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:plugin-declaration:{path}:{item_call_name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "item_call_name"
-      },
-      "declaration_only": true,
-      "resolved_package": false
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_plugin",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:plugin-declaration:{path}:{item_call_name}"
-     },
-     "attributes": {
-      "declaration_only": true,
-      "execution_not_claimed": true,
-      "resolved_package_not_claimed": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "candidate",
-   "coverage_note": "Only direct plugin call items authored in defineConfig({plugins:[...]}) inside vite.config.*; import provenance, variables, member calls, plugin execution and resolved package identity remain outside this rule."
-  },
-  {
-   "id": "vite.config.build-outdir",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "build"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "outDir"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildProject",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "attributes": {
-      "path": {
-       "kind": "field_ref",
-       "field": "path"
+      "id": "vite.exact_signature.1.vite",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "vite"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vite"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vite",
+          "framework_name": "Vite",
+          "signature": "vite",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildTarget",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build-target:{path}:build"
-     },
-     "attributes": {
-      "name": "build"
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildOutput",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build-output:{path}:{value}"
-     },
-     "attributes": {
-      "path": {
-       "kind": "field_ref",
-       "field": "value"
+      "id": "vite.exact_signature.2.vite",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "vite"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vite"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vite",
+          "framework_name": "Vite",
+          "signature": "vite",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-target:{path}:build"
-     },
-     "attributes": {}
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "produces",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-target:{path}:build"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-output:{path}:{value}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.generic-api-call.vite",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.target_candidate"
-    },
-    {
-     "kind": "external_path_matches",
-     "package": "vite"
-    },
-    {
-     "kind": "field_present",
-     "field": "source.start"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ApiUse",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:api-use:{path}:{source.start}"
-     },
-     "attributes": {
-      "package": "vite",
-      "source_only": true
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_api",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:api-use:{path}:{source.start}"
-     },
-     "attributes": {
-      "package": "vite",
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
-  },
-  {
-   "id": "vite.generic-dependency.vite",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "import.target_candidate"
-    },
-    {
-     "kind": "external_path_matches",
-     "package": "vite"
-    },
-    {
-     "kind": "field_present",
-     "field": "source.start"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Dependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:dependency:vite"
-     },
-     "attributes": {
-      "package": "vite",
-      "source_only": true
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:dependency:vite"
-     },
-     "attributes": {
-      "package": "vite",
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
-  },
-  {
-   "id": "vite.config.base",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "base"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BasePath",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:base:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
+      "id": "vite.exact_signature.3.vite",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:vite"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vite"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vite",
+          "framework_name": "Vite",
+          "signature": "vite",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:base:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.root",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "root"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildRoot",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:root:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
+      "id": "vite.exact_signature.4.vite",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "vite"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "vite"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "vite",
+          "framework_name": "Vite",
+          "signature": "vite",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:root:{value}:{path}"
-     },
-     "attributes": {}
     }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.publicdir",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "publicDir"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "StaticDirectory",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:publicDir:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:publicDir:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.cachedir",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "cacheDir"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "CacheDirectory",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:cacheDir:{value}:{path}"
-     },
-     "attributes": {
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:cacheDir:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.build.assetsdir",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "build"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "assetsDir"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build:assetsDir:{value}:{path}"
-     },
-     "attributes": {
-      "section": "build",
-      "key": "assetsDir",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:build:assetsDir:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.build.sourcemap",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "build"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "sourcemap"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build:sourcemap:{value}:{path}"
-     },
-     "attributes": {
-      "section": "build",
-      "key": "sourcemap",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:build:sourcemap:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.server.host",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "server"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "host"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:server:host:{value}:{path}"
-     },
-     "attributes": {
-      "section": "server",
-      "key": "host",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:server:host:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.server.origin",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "server"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "origin"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:server:origin:{value}:{path}"
-     },
-     "attributes": {
-      "section": "server",
-      "key": "origin",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "current"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:server:origin:{value}:{path}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.envdir",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "envDir"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "EnvironmentSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:envdir:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "envDir",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.apptype",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "appType"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:apptype:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "appType",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.loglevel",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "logLevel"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:loglevel:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "logLevel",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.envprefix-item",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_array_item_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "envPrefix"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "EnvironmentSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:env-prefix:{path}:{source.start}"
-     },
-     "attributes": {
-      "key": "envPrefix",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.build.target",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "build"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "target"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:build-target:{path}:{source.start}"
-     },
-     "attributes": {
-      "section": "build",
-      "key": "target",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.server.open",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_nested_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "server"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "open"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildSetting",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:server-open:{path}:{source.start}"
-     },
-     "attributes": {
-      "section": "server",
-      "key": "open",
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "vite.config.resolve.alias",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_three_level_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "resolve"
-    },
-    {
-     "kind": "field_equals",
-     "field": "middle_key",
-     "value": "alias"
-    },
-    {
-     "kind": "field_present",
-     "field": "key"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Alias",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:alias:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "key"
-      },
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:alias:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored bounded Vite config object entry; runtime/build resolution is not inferred."
-  },
-  {
-   "id": "vite.config.server.proxy",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_three_level_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "server"
-    },
-    {
-     "kind": "field_equals",
-     "field": "middle_key",
-     "value": "proxy"
-    },
-    {
-     "kind": "field_present",
-     "field": "key"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ProxyRoute",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:proxy:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "key"
-      },
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:proxy:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored bounded Vite config object entry; runtime/build resolution is not inferred."
-  },
-  {
-   "id": "vite.config.rollup.input",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_three_level_object_string_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "outer_key",
-     "value": "build"
-    },
-    {
-     "kind": "field_equals",
-     "field": "middle_key",
-     "value": "rollupOptions"
-    },
-    {
-     "kind": "field_present",
-     "field": "key"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/vite.config.*"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "input"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "BuildInput",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "vite:rollup-input:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "key"
-      },
-      "value": {
-       "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "vite:build-project:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "vite:rollup-input:{path}:{key}:{value}"
-     },
-     "attributes": {
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored bounded Vite config object entry; runtime/build resolution is not inferred."
-  }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "import/package identity of plugins, resolve.alias/proxy objects, rollup input graphs, variables/spreads and computed config require generic import/value provenance; direct scalar/array config supported by host facts is materialized",
-   "runtime plugin hooks, transform output and generated module graph are build/runtime semantics"
-  ]
- },
- "provenance": [
-  {
-   "source_id": "vite",
-   "repository": "https://github.com/vitejs/vite",
-   "path": "packages/vite/src/node/config.ts",
-   "revision": "f94df87ff03b40b65e29bacdc04cc18c7bccaa4a",
-   "confidence": "high",
-   "reuse_mode": "knowledge-only-reimplement"
-  }
- ],
- "detection_rules": [
-  {
-   "id": "vite.exact_signature.1.vite",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "vite"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vite"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vite",
-     "framework_name": "Vite",
-     "signature": "vite",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "vite.exact_signature.2.vite",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "vite"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vite"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vite",
-     "framework_name": "Vite",
-     "signature": "vite",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "vite.exact_signature.3.vite",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:vite"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vite"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vite",
-     "framework_name": "Vite",
-     "signature": "vite",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "vite.exact_signature.4.vite",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "vite"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "vite"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "vite",
-     "framework_name": "Vite",
-     "signature": "vite",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  }
- ],
- "runtime_status": "terminal-static-source-contract"
+  ],
+  "runtime_status": "terminal-static-source-contract"
 }

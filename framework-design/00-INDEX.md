@@ -328,3 +328,49 @@ against the macros that do emit.
 
 Totals: **982 -> 926 overlay rules; 630 -> 503 that cannot match.** Twenty
 frameworks are clean.
+
+---
+
+# Framework wave 5 (vite, android, jakarta-ee, flutter, unreal-engine)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-vite | 21 -> 8 | 0 | 8 |
+| omega-framework-android | 21 -> 12 | 0 | 12 |
+| omega-framework-jakarta-ee | 20 -> 12 | 0 | 12 |
+| omega-framework-flutter | 20 -> 10 | 0 | 10 |
+| omega-framework-unreal-engine | 19 (reverted) | 19 | 19 |
+
+omega-vite is the sharpest deletion so far: 18 of its 21 rules read a config
+scalar — `base`, `root`, `publicDir`, `build.outDir`, `server.proxy`,
+`resolve.alias` — and every one of them was unreachable *in principle*, because
+a Vite config is an object literal and the JS/TS Packs emit a fact for an object
+key only when its value is a function. Each also minted an entity keyed by the
+value it had just read. Eight rules replace them, built on two hubs: the build
+and the module.
+
+## unreal-engine: a measurement generalised too far, and reverted
+
+Wave 4's review measured that `class MYGAME_API AHero : public ACharacter`
+emits nothing — true. The wave-5 agent read that as *Unreal classes are not
+declared* and deleted the 13 class-joined rules.
+
+Measured here, directly:
+
+| source | what omega-cpp emits |
+|---|---|
+| `UCLASS() class ATwo : public AActor { GENERATED_BODY() int H; };` | `definition.class ATwo`, `relation.implements AActor`, `definition.field H` |
+| `UCLASS() class MYGAME_API AHero : public ACharacter { ... };` | `reference.type MYGAME_API` and `call.function GENERATED_BODY`, nothing else |
+
+**It is the export macro between `class` and the name, and nothing else.** The
+rewrite was reverted to the wave-4 file, which works for the plain spelling, and
+its `coverage.gaps` now states the macro limitation instead of the false claim
+that `UCLASS` and `GENERATED_BODY` emit no fact — they arrive as `call.function`
+named exactly that.
+
+`OWED.md` item 8 is narrowed to what was measured. The lesson is in the brief as
+§3d: reproduce a "this emits nothing" claim on the exact spelling *and its
+neighbours* before acting on it, with `dump_call_emissions`.
+
+Totals: **926 -> 886 overlay rules; 503 -> 421 that cannot match.** Twenty-four
+frameworks are clean.

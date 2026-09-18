@@ -144,6 +144,31 @@ lands, do not write a rule against a scoped package; and note `OWED.md` item 7a:
 JS/TS facts carry no `external` at all, because the Packs publish `target` and
 `module` rather than `qualifier`.
 
+## 3d. Measure the exact spelling, and do not generalise one measurement
+
+A wave-4 review measured that omega-cpp emits nothing for
+
+    class MYGAME_API AHero : public ACharacter { GENERATED_BODY() int Health; };
+
+which is true. A wave-5 agent read that as "Unreal classes are not declared" and
+deleted 13 working rules. Measured alongside it,
+
+    UCLASS() class ATwo : public AActor { GENERATED_BODY() int H; };
+
+emits `definition.class ATwo`, `relation.implements AActor` and
+`definition.field H`. **It is the export macro between `class` and the name that
+breaks the parse, and nothing else.** The deletion was reverted.
+
+So: when a review tells you a construct emits nothing, reproduce it yourself on
+the exact spelling, and on the neighbouring spellings, before you act on it.
+`target/release/examples/dump_call_emissions.exe <pack-dir> <grammar-dir> <file>`
+takes a hand-written file and prints every emission with its span and name. One
+run settles what an hour of reading `node-types.json` cannot.
+
+And when you write a `coverage.gaps` entry, it is a claim like any other: the
+same file asserted that `UCLASS` and `GENERATED_BODY` produce no fact, and they
+arrive as `call.function` named exactly that.
+
 ## 4. Verification
 
 ```bash

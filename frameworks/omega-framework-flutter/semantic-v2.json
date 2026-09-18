@@ -20,194 +20,361 @@
     ]
   },
   "evidence_inputs": [
-    "calls_members",
     "existing_language_ir",
-    "authored_source_files",
-    "definition.dart_class_extends_context",
-    "call.dart_named_string_builder_constructor_context",
-    "import.dart_module_context",
-    "call.target_candidate",
-    "call.dart_receiver_member_context",
-    "call.dart_receiver_member_route_context",
-    "structured.entry",
-    "value.document"
+    "imports_bindings",
+    "calls_members",
+    "definitions_declarations",
+    "structured_config"
   ],
   "emits": {
     "entities": [
-      "AppShell",
-      "AsyncWidget",
-      "Component",
-      "Page",
-      "Route",
-      "RouteReference",
-      "StateProvider",
-      "WidgetUse",
-      "StateConsumer",
+      "AppEntrypoint",
+      "DartFile",
+      "Dependency",
+      "FlutterConfig",
       "FlutterProject",
       "Resource",
-      "FlutterConfig",
-      "FontFamily",
-      "FontFaceSetting"
+      "RouteReference",
+      "StateBinding",
+      "Widget",
+      "WidgetName"
     ],
     "relations": [
       "configured_by",
+      "declares_entrypoint",
+      "declares_widget",
+      "depends_on",
       "renders",
-      "route_to_component",
       "routes_to"
     ]
   },
   "rules": [
     {
-      "id": "flutter.widget.direct-subclass",
-      "snapshot": true,
+      "id": "flutter.widget.declaration",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.dart_class_extends_context"
+          "value": "relation.implements"
         },
         {
           "kind": "field_in",
-          "field": "superclass_name",
+          "field": "definition.name",
           "values": [
             "StatelessWidget",
-            "StatefulWidget"
+            "StatefulWidget",
+            "State",
+            "InheritedWidget",
+            "InheritedModel",
+            "InheritedNotifier",
+            "ConsumerWidget",
+            "ConsumerStatefulWidget",
+            "ConsumerState",
+            "HookWidget",
+            "HookConsumerWidget",
+            "StatefulHookConsumerWidget",
+            "PreferredSizeWidget",
+            "AnimatedWidget",
+            "ImplicitlyAnimatedWidget",
+            "LeafRenderObjectWidget",
+            "SingleChildRenderObjectWidget",
+            "MultiChildRenderObjectWidget",
+            "RenderObjectWidget",
+            "ProxyWidget",
+            "CustomPainter",
+            "CustomClipper",
+            "StatefulShellRouteData",
+            "GoRouteData"
           ]
-        },
-        {
-          "kind": "field_present",
-          "field": "class_name"
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.dart"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Component",
+          "entity_kind": "Widget",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:widget:{path}:{class_name}"
+            "template": "flutter:widget:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "class_name"
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
             },
             "widget_base": {
               "kind": "field_ref",
-              "field": "superclass_name"
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WidgetName",
+          "canonical_key": {
+            "template": "flutter:widget-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_widget",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flutter:widget-name:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flutter:widget:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "widget_base": {
+              "kind": "field_ref",
+              "field": "definition.name"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "Which classes in this project are Flutter widgets, which base each extends, and where. `extends StatelessWidget` is a relation.implements named after the supertype; the class that declares it is the definition.class whose span contains it. The WidgetName node is what a renders edge in another file addresses, because no Dart fact ties a construction to the file that declares the type."
     },
     {
-      "id": "flutter.go-route.literal-builder",
-      "snapshot": true,
+      "id": "flutter.widget.constructs",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.dart_named_string_builder_constructor_context"
+          "value": "call.constructor"
         },
         {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "GoRoute"
-        },
-        {
-          "kind": "field_equals",
-          "field": "string_label",
-          "value": "path"
-        },
-        {
-          "kind": "field_equals",
-          "field": "builder_label",
-          "value": "builder"
-        },
-        {
-          "kind": "field_present",
-          "field": "string_value"
-        },
-        {
-          "kind": "field_present",
-          "field": "constructor_name"
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "Duration",
+            "EdgeInsets",
+            "EdgeInsetsDirectional",
+            "TextStyle",
+            "Color",
+            "Offset",
+            "Size",
+            "Rect",
+            "Radius",
+            "BorderRadius",
+            "BoxConstraints",
+            "Key",
+            "ValueKey",
+            "ObjectKey",
+            "GlobalKey",
+            "UniqueKey",
+            "Alignment",
+            "Locale",
+            "Uri",
+            "DateTime",
+            "RegExp",
+            "BoxDecoration",
+            "BoxShadow",
+            "InputDecoration",
+            "Matrix4",
+            "IconData",
+            "AssetImage",
+            "NetworkImage"
+          ]
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.dart"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.dart_class_extends_context",
-          "current_field": "constructor_name",
-          "join_field": "class_name",
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
           "same_path": true,
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "superclass_name",
-              "values": [
-                "StatelessWidget",
-                "StatefulWidget"
-              ]
-            }
-          ],
-          "bind": "component"
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Route",
+          "entity_kind": "WidgetName",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:route:{path}:{string_value}"
+            "template": "flutter:widget-name:{definition.name}"
           },
           "attributes": {
-            "path_literal": {
+            "name": {
               "kind": "field_ref",
-              "field": "string_value"
-            },
-            "declaration": "GoRoute"
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "Page",
+          "entity_kind": "WidgetName",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:page:{path}:{string_value}"
+            "template": "flutter:widget-name:{owner.definition.name}"
           },
           "attributes": {
-            "path_literal": {
+            "name": {
               "kind": "field_ref",
-              "field": "string_value"
-            },
-            "component": {
-              "kind": "field_ref",
-              "field": "constructor_name"
+              "field": "owner.definition.name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "route_to_component",
+          "relation_kind": "renders",
           "source": {
             "kind": "by_canonical_key",
-            "template": "flutter:route:{path}:{string_value}"
+            "template": "flutter:widget-name:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "flutter:page:{path}:{string_value}"
+            "template": "flutter:widget-name:{definition.name}"
           },
           "attributes": {
-            "evidence": "literal_go_route_builder"
+            "evidence": "const_or_new_expression"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "What a widget builds with, for the `const X(...)` / `new X(...)` spelling Flutter's own lints prefer. The target is the name node, so it meets the declaration of that widget wherever in the project it lives. The exclusion list is the value types a const expression commonly constructs that are not widgets."
+    },
+    {
+      "id": "flutter.widget.renders",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "MaterialApp",
+            "CupertinoApp",
+            "WidgetsApp",
+            "Scaffold",
+            "CupertinoPageScaffold",
+            "CupertinoTabScaffold",
+            "AppBar",
+            "SliverAppBar",
+            "Drawer",
+            "BottomNavigationBar",
+            "NavigationBar",
+            "NavigationRail",
+            "TabBar",
+            "TabBarView",
+            "PageView",
+            "Navigator",
+            "Router",
+            "MaterialPageRoute",
+            "CupertinoPageRoute",
+            "PageRouteBuilder",
+            "GoRouter",
+            "GoRoute",
+            "ShellRoute",
+            "StatefulShellRoute",
+            "AutoRouter",
+            "Hero",
+            "StreamBuilder",
+            "FutureBuilder",
+            "ValueListenableBuilder",
+            "AnimatedBuilder",
+            "LayoutBuilder",
+            "OrientationBuilder",
+            "Builder",
+            "ListView",
+            "GridView",
+            "CustomScrollView",
+            "SingleChildScrollView",
+            "Form",
+            "TextFormField",
+            "Theme",
+            "MediaQuery",
+            "WillPopScope",
+            "PopScope",
+            "SafeArea",
+            "Column",
+            "Row",
+            "Stack",
+            "Container",
+            "Expanded",
+            "Padding",
+            "Center",
+            "Text",
+            "Icon",
+            "Image",
+            "InkWell",
+            "GestureDetector",
+            "ElevatedButton",
+            "TextButton",
+            "IconButton",
+            "FloatingActionButton",
+            "Card",
+            "ListTile",
+            "Dialog",
+            "AlertDialog",
+            "BottomSheet",
+            "SnackBar"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.dart"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WidgetName",
+          "canonical_key": {
+            "template": "flutter:widget-name:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WidgetName",
+          "canonical_key": {
+            "template": "flutter:widget-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
           }
         },
         {
@@ -215,351 +382,260 @@
           "relation_kind": "renders",
           "source": {
             "kind": "by_canonical_key",
-            "template": "flutter:page:{path}:{string_value}"
+            "template": "flutter:widget-name:{owner.definition.name}"
           },
           "target": {
-            "kind": "by_joined_field",
-            "bind": "component",
-            "field": "class_name",
-            "template": "flutter:widget:{path}:{value}"
+            "kind": "by_canonical_key",
+            "template": "flutter:widget-name:{definition.name}"
           },
           "attributes": {
-            "evidence": "same_file_literal_go_route_builder",
-            "target_requires_declaration": true
+            "evidence": "widget_constructor_call"
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "Which widget has the app shell, which one is a screen with a Scaffold, which one drives a StreamBuilder or a Navigator. A bare `Scaffold(...)` is a call.function in Dart, so a name list is what separates a widget construction from any other call in a build method; the list is Flutter's own structural vocabulary."
     },
     {
-      "id": "flutter.api.materialapp",
-      "snapshot": true,
+      "id": "flutter.app.entrypoint",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package_in": [
-            "package:flutter/material.dart",
-            "package:flutter/widgets.dart",
-            "package:flutter/cupertino.dart"
-          ],
-          "member_in": [
-            "MaterialApp"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "runApp"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.dart"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "AppShell",
+          "entity_kind": "AppEntrypoint",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:appshell:{path}:{source.start}"
+            "template": "flutter:entrypoint:{path}"
           },
           "attributes": {
-            "api": "MaterialApp"
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "api": "runApp"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DartFile",
+          "canonical_key": {
+            "template": "flutter:file:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "declares_entrypoint",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "flutter:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "flutter:appshell:{path}:{source.start}"
+            "template": "flutter:entrypoint:{path}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Where the application starts. `runApp` is the one call that boots a Flutter app; the file that calls it is the entry point. The widget handed to it is an argument, and no Dart Pack states call arguments, so the edge stops at the file."
     },
     {
-      "id": "flutter.api.cupertinoapp",
-      "snapshot": true,
+      "id": "flutter.navigation.named-route",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.method"
         },
         {
-          "kind": "external_path_matches",
-          "package_in": [
-            "package:flutter/material.dart",
-            "package:flutter/widgets.dart",
-            "package:flutter/cupertino.dart"
-          ],
-          "member_in": [
-            "CupertinoApp"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "pushNamed",
+            "pushReplacementNamed",
+            "popAndPushNamed",
+            "pushNamedAndRemoveUntil",
+            "restorablePushNamed",
+            "restorablePushReplacementNamed",
+            "restorablePopAndPushNamed",
+            "goNamed",
+            "pushReplacement",
+            "pushAndRemoveUntil"
           ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.dart"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "AppShell",
+          "entity_kind": "RouteReference",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:appshell:{path}:{source.start}"
+            "template": "flutter:route-ref:{path}:{source.start}"
           },
           "attributes": {
-            "api": "CupertinoApp"
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WidgetName",
+          "canonical_key": {
+            "template": "flutter:widget-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "routes_to",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "flutter:widget-name:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "flutter:appshell:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.api.scaffold",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "package:flutter/material.dart",
-            "package:flutter/widgets.dart",
-            "package:flutter/cupertino.dart"
-          ],
-          "member_in": [
-            "Scaffold"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "WidgetUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:widgetuse:{path}:{source.start}"
+            "template": "flutter:route-ref:{path}:{source.start}"
           },
           "attributes": {
-            "api": "Scaffold"
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:widgetuse:{path}:{source.start}"
-          },
-          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Which widgets navigate, and by which Navigator or go_router operation. The route name itself is a string argument and omega-dart states no argument, so the reference records the operation and the site, not the destination."
     },
     {
-      "id": "flutter.api.streambuilder",
-      "snapshot": true,
+      "id": "flutter.state.binding",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.function"
         },
         {
-          "kind": "external_path_matches",
-          "package_in": [
-            "package:flutter/material.dart",
-            "package:flutter/widgets.dart",
-            "package:flutter/cupertino.dart"
-          ],
-          "member_in": [
-            "StreamBuilder"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AsyncWidget",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:asyncwidget:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "StreamBuilder"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:asyncwidget:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.api.futurebuilder",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "package:flutter/material.dart",
-            "package:flutter/widgets.dart",
-            "package:flutter/cupertino.dart"
-          ],
-          "member_in": [
-            "FutureBuilder"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "AsyncWidget",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:asyncwidget:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "FutureBuilder"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:asyncwidget:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.api.hero",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_in": [
-            "package:flutter/material.dart",
-            "package:flutter/widgets.dart",
-            "package:flutter/cupertino.dart"
-          ],
-          "member_in": [
-            "Hero"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "WidgetUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:widgetuse:{path}:{source.start}"
-          },
-          "attributes": {
-            "api": "Hero"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:widgetuse:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.api.provider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "member_in": [
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
             "Provider",
+            "MultiProvider",
             "ChangeNotifierProvider",
+            "ChangeNotifierProxyProvider",
+            "ListenableProvider",
+            "ValueListenableProvider",
             "FutureProvider",
             "StreamProvider",
             "ProxyProvider",
-            "MultiProvider"
-          ],
-          "package": "package:provider/provider.dart"
+            "Consumer",
+            "Consumer2",
+            "Consumer3",
+            "Selector",
+            "ProviderScope",
+            "StateProvider",
+            "StateNotifierProvider",
+            "NotifierProvider",
+            "AsyncNotifierProvider",
+            "BlocProvider",
+            "MultiBlocProvider",
+            "RepositoryProvider",
+            "MultiRepositoryProvider",
+            "BlocBuilder",
+            "BlocListener",
+            "BlocConsumer",
+            "BlocSelector",
+            "GetBuilder",
+            "Obx",
+            "ScopedModel",
+            "ScopedModelDescendant",
+            "InheritedProvider",
+            "Riverpod"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.dart"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "StateProvider",
+          "entity_kind": "StateBinding",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:stateprovider:{path}:{source.start}"
+            "template": "flutter:state:{path}:{source.start}"
           },
           "attributes": {
             "api": {
               "kind": "field_ref",
-              "field": "call.name"
+              "field": "definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WidgetName",
+          "canonical_key": {
+            "template": "flutter:widget-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
             }
           }
         },
@@ -567,671 +643,198 @@
           "kind": "relation_candidate",
           "relation_kind": "configured_by",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "flutter:widget-name:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "flutter:stateprovider:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.navigator.pushnamed",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.dart_receiver_member_route_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "receiver",
-          "value": "Navigator"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "pushNamed"
-        },
-        {
-          "kind": "field_present",
-          "field": "route"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:navigation:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "pushNamed",
-            "route": {
-              "kind": "field_ref",
-              "field": "route"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "routes_to",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:navigation:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.navigator.pushreplacementnamed",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.dart_receiver_member_route_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "receiver",
-          "value": "Navigator"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "pushReplacementNamed"
-        },
-        {
-          "kind": "field_present",
-          "field": "route"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:navigation:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "pushReplacementNamed",
-            "route": {
-              "kind": "field_ref",
-              "field": "route"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "routes_to",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:navigation:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.navigator.popandpushnamed",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.dart_receiver_member_route_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "receiver",
-          "value": "Navigator"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "popAndPushNamed"
-        },
-        {
-          "kind": "field_present",
-          "field": "route"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RouteReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:navigation:{path}:{source.start}"
-          },
-          "attributes": {
-            "operation": "popAndPushNamed",
-            "route": {
-              "kind": "field_ref",
-              "field": "route"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "routes_to",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:navigation:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "flutter.api.provider-consumer",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "member_in": [
-            "Consumer",
-            "Selector"
-          ],
-          "package": "package:provider/provider.dart"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateConsumer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:state-consumer:{path}:{source.start}"
+            "template": "flutter:state:{path}:{source.start}"
           },
           "attributes": {
             "api": {
               "kind": "field_ref",
-              "field": "call.name"
-            },
-            "source_only": true
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Where a widget provides or consumes application state, and under which library's vocabulary -- provider, riverpod, bloc, get or scoped_model. The model type is a type argument and is not stated by the Pack, so the binding records the API and the widget it sits in."
     },
     {
-      "id": "flutter.pubspec.project",
-      "snapshot": true,
+      "id": "flutter.dependency.import",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "value.document"
+          "value": "import.library"
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.name",
+          "value": "package:"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.dart"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DartFile",
+          "canonical_key": {
+            "template": "flutter:file:{path}"
+          },
+          "attributes": {
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Dependency",
+          "canonical_key": {
+            "template": "flutter:package:{definition.name}"
+          },
+          "attributes": {
+            "library": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flutter:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flutter:package:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files are Flutter files and which package library each one pulls in -- package:flutter/material.dart, package:provider/provider.dart, package:go_router/go_router.dart. The import's own name is the URI, so no Pack field is needed. omega-dart publishes no `qualifier`, so `external_path_matches` resolves nothing for Dart and the prefix test on the URI is what states the package."
+    },
+    {
+      "id": "flutter.pubspec.section",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "flutter"
         },
         {
           "kind": "path_glob",
           "pattern": "**/pubspec.yaml"
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "FlutterProject",
           "canonical_key": {
-            "kind": "canonical_key",
             "template": "flutter:project:{path}"
           },
           "attributes": {
-            "manifest": "pubspec.yaml"
+            "manifest": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "section": "flutter"
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored pubspec.yaml document identity only; package resolution and generated build state are not inferred."
+      "coverage_note": "Which packages in this repository are Flutter packages rather than plain Dart ones: a pubspec.yaml with a top-level `flutter:` section. This is the node every pubspec edge below is sourced at, and in a monorepo there is one per package directory."
     },
     {
-      "id": "flutter.pubspec.asset",
-      "snapshot": true,
+      "id": "flutter.pubspec.resource",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_scalar_sequence_item"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "flutter"
-        },
-        {
-          "kind": "field_equals",
-          "field": "sequence_key",
-          "value": "assets"
-        },
-        {
-          "kind": "field_present",
-          "field": "item_value"
+          "value": "relation.data"
         },
         {
           "kind": "path_glob",
           "pattern": "**/pubspec.yaml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
+        },
         {
-          "kind": "entity_candidate",
-          "entity_kind": "Resource",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:asset:{path}:{item_value}"
-          },
-          "attributes": {
-            "resource_kind": "asset",
-            "declared_path": {
-              "kind": "field_ref",
-              "field": "item_value"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "group",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "assets",
+                "shaders",
+                "deferred-components"
+              ]
             }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "flutter:project:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:asset:{path}:{item_value}"
-          },
-          "attributes": {
-            "evidence": "pubspec_flutter_assets"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Literal authored flutter.assets sequence item; filesystem existence and package asset resolution are external evidence."
-    },
-    {
-      "id": "flutter.pubspec.uses-material-design",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "parent_key",
-          "value": "flutter"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "uses-material-design"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/pubspec.yaml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FlutterConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:config:{path}:uses-material-design"
-          },
-          "attributes": {
-            "key": "uses-material-design",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "flutter:project:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:config:{path}:uses-material-design"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "flutter.pubspec.shader",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_scalar_sequence_item"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "flutter"
-        },
-        {
-          "kind": "field_equals",
-          "field": "sequence_key",
-          "value": "shaders"
-        },
-        {
-          "kind": "field_present",
-          "field": "item_value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/pubspec.yaml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Resource",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:shader:{path}:{item_value}"
-          },
-          "attributes": {
-            "resource_kind": "shader",
-            "declared_path": {
-              "kind": "field_ref",
-              "field": "item_value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "flutter:project:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:shader:{path}:{item_value}"
-          },
-          "attributes": {
-            "evidence": "pubspec_flutter_shaders"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "flutter.pubspec.font-family",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_mapping_sequence_field"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "flutter"
-        },
-        {
-          "kind": "field_equals",
-          "field": "sequence_key",
-          "value": "fonts"
-        },
-        {
-          "kind": "field_equals",
-          "field": "item_key",
-          "value": "family"
-        },
-        {
-          "kind": "field_present",
-          "field": "item_value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/pubspec.yaml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FontFamily",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:font-family:{path}:{item_value}"
-          },
-          "attributes": {
-            "family": {
-              "kind": "field_ref",
-              "field": "item_value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "flutter:project:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:font-family:{path}:{item_value}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "flutter.pubspec.generate",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_nested_pair"
-        },
-        {
-          "kind": "field_equals",
-          "field": "parent_key",
-          "value": "flutter"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "generate"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/pubspec.yaml"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "FlutterConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:config:{path}:generate"
-          },
-          "attributes": {
-            "key": "generate",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "flutter:project:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "flutter:config:{path}:generate"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "flutter.pubspec.font-face-setting",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "structured.entry"
-        },
-        {
-          "kind": "attribute_equals",
-          "attribute": "role",
-          "value": "yaml_owned_nested_sequence_mapping_field"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_key",
-          "value": "flutter"
-        },
-        {
-          "kind": "field_equals",
-          "field": "outer_sequence_key",
-          "value": "fonts"
-        },
-        {
-          "kind": "field_equals",
-          "field": "identity_key",
-          "value": "family"
-        },
-        {
-          "kind": "field_present",
-          "field": "identity_value"
-        },
-        {
-          "kind": "field_equals",
-          "field": "inner_sequence_key",
-          "value": "fonts"
-        },
-        {
-          "kind": "field_in",
-          "field": "field_key",
-          "values": [
-            "asset",
-            "style",
-            "weight"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "field_value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/pubspec.yaml"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "section",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "flutter"
+            }
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "FontFaceSetting",
+          "entity_kind": "Resource",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "flutter:font-face-setting:{path}:{identity_value}:{source.start}:{field_key}"
+            "template": "flutter:asset:{path}:{definition.name}"
           },
           "attributes": {
-            "family": {
+            "declared_path": {
               "kind": "field_ref",
-              "field": "identity_value"
+              "field": "definition.name"
             },
-            "key": {
+            "resource_kind": {
               "kind": "field_ref",
-              "field": "field_key"
-            },
-            "value": {
-              "kind": "field_ref",
-              "field": "field_value"
+              "field": "group.definition.name"
             }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlutterProject",
+          "canonical_key": {
+            "template": "flutter:project:{path}"
+          },
+          "attributes": {
+            "manifest": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "section": "flutter"
           }
         },
         {
@@ -1239,29 +842,125 @@
           "relation_kind": "configured_by",
           "source": {
             "kind": "by_canonical_key",
-            "template": "flutter:font-family:{path}:{identity_value}"
+            "template": "flutter:project:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "flutter:font-face-setting:{path}:{identity_value}:{source.start}:{field_key}"
+            "template": "flutter:asset:{path}:{definition.name}"
           },
           "attributes": {
-            "evidence": "pubspec_flutter_font_face"
+            "resource_kind": {
+              "kind": "field_ref",
+              "field": "group.definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Authored flutter.fonts[].fonts[] asset/style/weight field tied to its enclosing family; filesystem/package resolution and effective font loading remain external/runtime evidence."
+      "coverage_note": "Which asset and shader paths this package ships. A pubspec list item is a relation.data named after its own text; the key it is listed under is the definition.config_key whose span contains it, and `flutter:` is the one above that. Two span joins replace the four `owner_key`/`sequence_key` ladder rules this file used to carry."
+    },
+    {
+      "id": "flutter.pubspec.setting",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "uses-material-design",
+            "generate",
+            "plugin",
+            "module",
+            "assets",
+            "fonts",
+            "shaders",
+            "deferred-components",
+            "disable-swift-package-manager"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/pubspec.yaml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "section",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "flutter"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlutterConfig",
+          "canonical_key": {
+            "template": "flutter:config:{path}:{definition.name}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FlutterProject",
+          "canonical_key": {
+            "template": "flutter:project:{path}"
+          },
+          "attributes": {
+            "manifest": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "section": "flutter"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "flutter:project:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "flutter:config:{path}:{definition.name}"
+          },
+          "attributes": {
+            "key": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which build-affecting switches this package sets under `flutter:` -- uses-material-design, generate, plugin, module, and whether it declares assets, fonts, shaders or deferred components at all. The switch's value is published by omega-yaml as an attribute, which is write-only to the overlay, so the key is stated and the value is not."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "dynamic/source-authored constructor expressions require generic source symbol/value resolution before exact widget identity can be materialized",
-      "generated typed routes and runtime Navigator stack remain generated/runtime semantics",
-      "nested widget builder ownership beyond source-proven local constructor facts requires generic source call/symbol ownership resolution",
-      "pubspec.yaml project identity, assets, shaders, font-family declarations, per-font asset/style/weight fields and common flutter config flags are materialized; package resolution and filesystem/resource existence remain external evidence"
+      "omega-dart states no call argument, so every string a Flutter construct carries is invisible: the path of a GoRoute, the name given to Navigator.pushNamed, the `initialRoute` of a MaterialApp and the routes map. Navigation is therefore recorded as an operation at a site, not as an edge to a named route, and the old route-to-component rule is deleted rather than ported.",
+      "omega-yaml publishes a config key's value as an attribute, and an attribute is write-only to the overlay (overlay.rs OverlayFact::field never consults it). So `uses-material-design: true` yields the key and not the truth value, and a font `family: Raleway` cannot be keyed by the family name -- which is why FontFamily and FontFaceSetting are gone.",
+      "A bare `MyButton(...)` is a call.function in Dart, indistinguishable from `setState(...)` by anything the Pack states, and the enclosing class cannot be tested for being a widget because a span join relates the call to its class and not the class to its supertype clause. So a project's own widgets are reached through the `const`/`new` spelling and through Flutter's own widget names, not through every construction.",
+      "omega-dart publishes no `qualifier`, so no Dart fact carries `external`, and no rule here can name the package a call resolves to. The package is read from the import URI instead.",
+      "definition.function spans the signature and not the body, so a call in a method body joins its class but never its method; a per-method attribution is not available."
     ]
   },
   "provenance": [

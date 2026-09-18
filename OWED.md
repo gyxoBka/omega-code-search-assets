@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 4. Numbers come from
+Last updated after framework wave 5. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -120,7 +120,7 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-35 of 55 frameworks still hold rules that cannot match: **503 of 926**. The
+31 of 55 frameworks still hold rules that cannot match: **421 of 886**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -163,7 +163,7 @@ for the whole `external.*` mechanism in the largest language family Omega has.
 
 ---
 
-## 8. omega-cpp does not see a class declared with a module API macro
+## 8. omega-cpp does not see a class declared with an export macro before its name
 
 Measured with `dump_call_emissions` over `packs/omega-cpp` on a canonical
 Unreal header:
@@ -175,15 +175,19 @@ struct MYGAME_API FRow : public FTableRowBase { GENERATED_BODY() int V; };
 
 Total emissions for both declarations: `reference.type MYGAME_API` twice and
 `call.function GENERATED_BODY` twice. **No `definition.class`, no
-`definition.struct`, no `relation.implements`.** The export macro between
-`class` and the name defeats tree-sitter-cpp, and with it every rule that joins
-a class — 13 of omega-framework-unreal-engine's 19.
+`definition.struct`, no `relation.implements`.**
+
+It is the macro **between `class` and the name** that does it, and nothing else.
+Measured alongside it, `UCLASS() class ATwo : public AActor { GENERATED_BODY()
+int H; };` emits `definition.class ATwo`, `relation.implements AActor` and
+`definition.field H` — everything a rule needs. A wave-5 agent generalised the
+first measurement to all Unreal headers and deleted 13 working rules on that
+basis; the deletion was reverted.
 
 `class EXPORT_MACRO Name` is not an Unreal peculiarity: it is how every C++
 library that ships a DLL declares a public class (`MYLIB_API`, `CORE_EXPORT`,
 `__declspec(dllexport)` behind a macro).
 
-**Done looks like:** omega-cpp declaring the class in that shape, or a guard
-saying it cannot and why. Until then the Unreal overlay is written against the
-macros that do emit — `UCLASS`, `UPROPERTY`, `GENERATED_BODY` arrive as
-`call.function` — rather than against the class.
+**Done looks like:** omega-cpp declaring the class in that shape. Until then
+omega-framework-unreal-engine answers for the plain spelling only, and its
+`coverage.gaps` says so.
