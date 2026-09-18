@@ -64,9 +64,12 @@
           "value": "definition.config_key"
         },
         {
-          "kind": "field_equals",
+          "kind": "field_in",
           "field": "definition.qname",
-          "value": "apiVersion"
+          "values": [
+            "apiVersion",
+            "apiVersion"
+          ]
         },
         {
           "kind": "field_present",
@@ -101,22 +104,47 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.qname",
-          "value": "kind"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -130,24 +158,6 @@
             }
           ],
           "bind": "n"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ]
         }
       ],
       "outputs": [
@@ -156,12 +166,12 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:{value}:{n.value}"
+            "template": "k8s:object:{k.value}:{n.value}"
           },
           "attributes": {
             "object_kind": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "k.value"
             },
             "object_name": {
               "kind": "field_ref",
@@ -186,12 +196,12 @@
           "entity_kind": "KubernetesObjectKind",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object-kind:{value}"
+            "template": "k8s:object-kind:{k.value}"
           },
           "attributes": {
             "object_kind": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "k.value"
             }
           }
         },
@@ -203,7 +213,7 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "k8s:object-kind:{value}"
+            "template": "k8s:object-kind:{k.value}"
           },
           "attributes": {}
         }
@@ -216,22 +226,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.qname",
-          "value": "metadata.namespace"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -247,10 +264,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -266,22 +282,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
               "field": "definition.qname",
-              "value": "apiVersion"
+              "value": "metadata.namespace"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -290,12 +306,12 @@
           "entity_kind": "KubernetesNamespace",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:namespace:{value}"
+            "template": "k8s:namespace:{t.value}"
           },
           "attributes": {
             "namespace": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -316,26 +332,33 @@
       "confidence": "exact"
     },
     {
-      "id": "k8s.configmap.data-key",
+      "id": "k8s.data-key",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "data"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -344,17 +367,24 @@
               "value": "kind"
             },
             {
-              "kind": "field_equals",
+              "kind": "field_present",
+              "field": "value"
+            },
+            {
+              "kind": "field_in",
               "field": "value",
-              "value": "ConfigMap"
+              "values": [
+                "ConfigMap",
+                "Secret"
+              ]
             }
-          ]
+          ],
+          "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -370,137 +400,25 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "kind": "field_in",
+              "field": "enclosing.qname",
+              "values": [
+                "data",
+                "stringData"
+              ]
             },
             {
               "kind": "field_present",
-              "field": "value"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ConfigKey",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "k8s:config-key:ConfigMap:{n.value}:{definition.name}"
-          },
-          "attributes": {
-            "key": {
-              "kind": "field_ref",
               "field": "definition.name"
-            },
-            "owner_kind": {
-              "kind": "literal",
-              "value": "ConfigMap"
-            },
-            "source_path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "k8s:object:ConfigMap:{n.value}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "k8s.secret.data-key",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.config_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_in",
-          "field": "enclosing.qname",
-          "values": [
-            "data",
-            "stringData"
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "kind"
-            },
-            {
-              "kind": "field_equals",
-              "field": "value",
-              "value": "Secret"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "metadata.name"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
             }
           ],
-          "bind": "n"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ]
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -509,16 +427,16 @@
           "entity_kind": "ConfigKey",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:config-key:Secret:{n.value}:{definition.name}"
+            "template": "k8s:config-key:{k.value}:{n.value}:{t.definition.name}"
           },
           "attributes": {
             "key": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             },
             "owner_kind": {
-              "kind": "literal",
-              "value": "Secret"
+              "kind": "field_ref",
+              "field": "k.value"
             },
             "source_path": {
               "kind": "field_ref",
@@ -531,7 +449,7 @@
           "relation_kind": "contains",
           "source": {
             "kind": "by_canonical_key",
-            "template": "k8s:object:Secret:{n.value}"
+            "template": "k8s:object:{k.value}:{n.value}"
           },
           "target": {
             "kind": "current"
@@ -547,21 +465,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -577,10 +503,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -596,40 +521,29 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "kind": "field_in",
+              "field": "enclosing.qname",
+              "values": [
+                "metadata.labels",
+                "spec.template.metadata.labels"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.name"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "labels"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "metadata"
-            }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -638,16 +552,16 @@
           "entity_kind": "LabelPair",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:label:{definition.name}={value}"
+            "template": "k8s:label:{t.definition.name}={t.value}"
           },
           "attributes": {
             "label_key": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             },
             "label_value": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -665,25 +579,36 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "A label entry: a key whose immediate owner is `labels` and which lies somewhere under a `metadata` key. Stated by ancestry rather than by an exhaustive list of qualified names, because a pod template's metadata sits at `spec.template.metadata` in a Deployment, `spec.jobTemplate.spec.template.metadata` in a CronJob and `spec.volumeClaimTemplates[].metadata` in a StatefulSet -- and at a depth nobody can enumerate inside a CRD instance."
+      "confidence": "exact"
     },
     {
       "id": "k8s.metadata.annotation",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -699,10 +624,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -718,40 +642,25 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "kind": "field_in",
+              "field": "enclosing.qname",
+              "values": [
+                "metadata.annotations",
+                "spec.template.metadata.annotations"
+              ]
             },
             {
               "kind": "field_present",
-              "field": "value"
+              "field": "definition.name"
             }
-          ]
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "annotations"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "metadata"
-            }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -760,12 +669,12 @@
           "entity_kind": "AnnotationKey",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:annotation:{definition.name}"
+            "template": "k8s:annotation:{t.definition.name}"
           },
           "attributes": {
             "annotation_key": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             }
           }
         },
@@ -783,38 +692,36 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "A annotation entry: a key whose immediate owner is `annotations` and which lies somewhere under a `metadata` key. Stated by ancestry rather than by an exhaustive list of qualified names, because a pod template's metadata sits at `spec.template.metadata` in a Deployment, `spec.jobTemplate.spec.template.metadata` in a CronJob and `spec.volumeClaimTemplates[].metadata` in a StatefulSet -- and at a depth nobody can enumerate inside a CRD instance."
+      "confidence": "exact"
     },
     {
       "id": "k8s.selector.match-label",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "field_in",
-          "field": "enclosing.qname",
-          "values": [
-            "spec.selector",
-            "spec.selector.matchLabels",
-            "spec.podSelector.matchLabels"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
           ]
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -830,10 +737,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -849,22 +755,30 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "kind": "field_in",
+              "field": "enclosing.qname",
+              "values": [
+                "spec.selector",
+                "spec.selector.matchLabels",
+                "spec.podSelector.matchLabels"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "definition.name"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -873,16 +787,16 @@
           "entity_kind": "LabelPair",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:label:{definition.name}={value}"
+            "template": "k8s:label:{t.definition.name}={t.value}"
           },
           "attributes": {
             "label_key": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             },
             "label_value": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -907,22 +821,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "relation.data"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "rules.resources"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -938,10 +859,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -957,22 +877,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "kind": "fact_join_by_span",
+          "fact_kind": "relation.data",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "enclosing.qname",
+              "value": "rules.resources"
             },
             {
               "kind": "field_present",
-              "field": "value"
+              "field": "definition.name"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -981,12 +901,12 @@
           "entity_kind": "ApiResource",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:rbac:resource:{definition.name}"
+            "template": "k8s:rbac:resource:{t.definition.name}"
           },
           "attributes": {
             "resource": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             }
           }
         },
@@ -1011,22 +931,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "relation.data"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "rules.verbs"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1042,10 +969,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1061,22 +987,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "kind": "fact_join_by_span",
+          "fact_kind": "relation.data",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "enclosing.qname",
+              "value": "rules.verbs"
             },
             {
               "kind": "field_present",
-              "field": "value"
+              "field": "definition.name"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1085,12 +1011,12 @@
           "entity_kind": "Verb",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:rbac:verb:{definition.name}"
+            "template": "k8s:rbac:verb:{t.definition.name}"
           },
           "attributes": {
             "verb": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             }
           }
         },
@@ -1115,22 +1041,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "relation.data"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "rules.apiGroups"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1146,10 +1079,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1165,22 +1097,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "kind": "fact_join_by_span",
+          "fact_kind": "relation.data",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "enclosing.qname",
+              "value": "rules.apiGroups"
             },
             {
               "kind": "field_present",
-              "field": "value"
+              "field": "definition.name"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1189,12 +1121,12 @@
           "entity_kind": "ApiGroup",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:rbac:api-group:{definition.name}"
+            "template": "k8s:rbac:api-group:{t.definition.name}"
           },
           "attributes": {
             "api_group": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             }
           }
         },
@@ -1219,51 +1151,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "roleRef"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.container",
-              "value": "roleRef"
-            },
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "kind"
+              "field": "definition.qname",
+              "value": "apiVersion"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ],
-          "bind": "rk"
+          ]
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1279,10 +1189,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1298,22 +1207,40 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
               "field": "definition.qname",
-              "value": "apiVersion"
+              "value": "roleRef.kind"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "rk"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "roleRef.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1322,7 +1249,7 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:{rk.value}:{value}"
+            "template": "k8s:object:{rk.value}:{t.value}"
           },
           "attributes": {
             "object_kind": {
@@ -1331,7 +1258,7 @@
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -1356,27 +1283,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "subjects"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1392,10 +1321,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1411,22 +1339,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
               "field": "definition.qname",
-              "value": "apiVersion"
+              "value": "subjects.name"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1435,12 +1363,12 @@
           "entity_kind": "RbacSubject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:rbac:subject:{value}"
+            "template": "k8s:rbac:subject:{t.value}"
           },
           "attributes": {
             "subject_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -1465,22 +1393,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "relation.data"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_present",
-          "field": "definition.name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "spec.tls.hosts"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1489,17 +1424,21 @@
               "value": "kind"
             },
             {
+              "kind": "field_present",
+              "field": "value"
+            },
+            {
               "kind": "field_equals",
               "field": "value",
               "value": "Ingress"
             }
-          ]
+          ],
+          "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1515,22 +1454,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "kind": "fact_join_by_span",
+          "fact_kind": "relation.data",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "enclosing.qname",
+              "value": "spec.tls.hosts"
             },
             {
               "kind": "field_present",
-              "field": "value"
+              "field": "definition.name"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1539,12 +1478,12 @@
           "entity_kind": "IngressHost",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:host:{definition.name}"
+            "template": "k8s:host:{t.definition.name}"
           },
           "attributes": {
             "host": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "t.definition.name"
             }
           }
         },
@@ -1553,7 +1492,7 @@
           "relation_kind": "serves",
           "source": {
             "kind": "by_canonical_key",
-            "template": "k8s:object:Ingress:{n.value}"
+            "template": "k8s:object:{k.value}:{n.value}"
           },
           "target": {
             "kind": "current"
@@ -1569,27 +1508,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "host"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "spec.rules"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1598,17 +1539,21 @@
               "value": "kind"
             },
             {
+              "kind": "field_present",
+              "field": "value"
+            },
+            {
               "kind": "field_equals",
               "field": "value",
               "value": "Ingress"
             }
-          ]
+          ],
+          "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1624,22 +1569,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
               "field": "definition.qname",
-              "value": "apiVersion"
+              "value": "spec.rules.host"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1648,12 +1593,12 @@
           "entity_kind": "IngressHost",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:host:{value}"
+            "template": "k8s:host:{t.value}"
           },
           "attributes": {
             "host": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -1662,7 +1607,7 @@
           "relation_kind": "serves",
           "source": {
             "kind": "by_canonical_key",
-            "template": "k8s:object:Ingress:{n.value}"
+            "template": "k8s:object:{k.value}:{n.value}"
           },
           "target": {
             "kind": "current"
@@ -1678,27 +1623,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "service"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1707,17 +1654,21 @@
               "value": "kind"
             },
             {
+              "kind": "field_present",
+              "field": "value"
+            },
+            {
               "kind": "field_equals",
               "field": "value",
               "value": "Ingress"
             }
-          ]
+          ],
+          "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1733,22 +1684,27 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "definition.container",
+              "value": "service"
+            },
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "name"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1757,7 +1713,7 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:Service:{value}"
+            "template": "k8s:object:Service:{t.value}"
           },
           "attributes": {
             "object_kind": {
@@ -1766,7 +1722,7 @@
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -1775,7 +1731,7 @@
           "relation_kind": "routes_to",
           "source": {
             "kind": "by_canonical_key",
-            "template": "k8s:object:Ingress:{n.value}"
+            "template": "k8s:object:{k.value}:{n.value}"
           },
           "target": {
             "kind": "current"
@@ -1791,31 +1747,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "image"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.container",
-          "values": [
-            "containers",
-            "initContainers",
-            "ephemeralContainers"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
           ]
         },
         {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1831,10 +1785,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1850,22 +1803,31 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "definition.name",
+              "value": "image"
+            },
+            {
+              "kind": "field_in",
+              "field": "definition.container",
+              "values": [
+                "containers",
+                "initContainers",
+                "ephemeralContainers"
+              ]
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1874,12 +1836,12 @@
           "entity_kind": "ContainerImage",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:image:{value}"
+            "template": "k8s:image:{t.value}"
           },
           "attributes": {
             "image": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -1904,31 +1866,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "name"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.container",
-          "values": [
-            "configMap",
-            "configMapRef",
-            "configMapKeyRef"
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
           ]
         },
         {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1944,10 +1904,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -1963,22 +1922,31 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "definition.name",
+              "value": "name"
+            },
+            {
+              "kind": "field_in",
+              "field": "definition.container",
+              "values": [
+                "configMap",
+                "configMapRef",
+                "configMapKeyRef"
+              ]
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -1987,7 +1955,7 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:ConfigMap:{value}"
+            "template": "k8s:object:ConfigMap:{t.value}"
           },
           "attributes": {
             "object_kind": {
@@ -1996,228 +1964,7 @@
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "k8s:object:{k.value}:{n.value}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "k8s.ref.ingress-class",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.config_key"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "ingressClassName"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "kind"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ],
-          "bind": "k"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "metadata.name"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ],
-          "bind": "n"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "KubernetesObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "k8s:object:IngressClass:{value}"
-          },
-          "attributes": {
-            "object_kind": {
-              "kind": "literal",
-              "value": "IngressClass"
-            },
-            "object_name": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "k8s:object:{k.value}:{n.value}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "k8s.ref.persistent-volume-claim",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.config_key"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "claimName"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "persistentVolumeClaim"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "kind"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ],
-          "bind": "k"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "metadata.name"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ],
-          "bind": "n"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
-            },
-            {
-              "kind": "field_present",
-              "field": "value"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "KubernetesObject",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "k8s:object:PersistentVolumeClaim:{value}"
-          },
-          "attributes": {
-            "object_kind": {
-              "kind": "literal",
-              "value": "PersistentVolumeClaim"
-            },
-            "object_name": {
-              "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -2242,35 +1989,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "name",
-            "secretName"
-          ]
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.container",
-          "values": [
-            "secret",
-            "secretRef",
-            "secretKeyRef",
-            "tls"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2286,10 +2027,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2305,10 +2045,83 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "name",
+                "secretName"
+              ]
+            },
+            {
+              "kind": "field_in",
+              "field": "definition.container",
+              "values": [
+                "secret",
+                "secretRef",
+                "secretKeyRef",
+                "tls"
+              ]
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "t"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:Secret:{t.value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "Secret"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "t.value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.persistent-volume-claim",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "scope.config_document"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2321,6 +2134,65 @@
               "field": "value"
             }
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "claimName"
+            },
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "persistentVolumeClaim"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -2329,16 +2201,16 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:Secret:{value}"
+            "template": "k8s:object:PersistentVolumeClaim:{t.value}"
           },
           "attributes": {
             "object_kind": {
               "kind": "literal",
-              "value": "Secret"
+              "value": "PersistentVolumeClaim"
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -2363,22 +2235,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "serviceAccountName"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2394,10 +2273,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2413,22 +2291,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.qname",
-              "value": "apiVersion"
+              "field": "definition.name",
+              "value": "serviceAccountName"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -2437,7 +2315,7 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:ServiceAccount:{value}"
+            "template": "k8s:object:ServiceAccount:{t.value}"
           },
           "attributes": {
             "object_kind": {
@@ -2446,7 +2324,7 @@
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -2471,22 +2349,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "storageClassName"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2502,10 +2387,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2521,10 +2405,70 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "storageClassName"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "t"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "KubernetesObject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "k8s:object:StorageClass:{t.value}"
+          },
+          "attributes": {
+            "object_kind": {
+              "kind": "literal",
+              "value": "StorageClass"
+            },
+            "object_name": {
+              "kind": "field_ref",
+              "field": "t.value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "k8s:object:{k.value}:{n.value}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "k8s.ref.ingress-class",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "scope.config_document"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2537,6 +2481,60 @@
               "field": "value"
             }
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "kind"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "k"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "metadata.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "n"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "ingressClassName"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -2545,16 +2543,16 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:StorageClass:{value}"
+            "template": "k8s:object:IngressClass:{t.value}"
           },
           "attributes": {
             "object_kind": {
               "kind": "literal",
-              "value": "StorageClass"
+              "value": "IngressClass"
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -2579,51 +2577,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "name"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.container",
-          "value": "scaleTargetRef"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.container",
-              "value": "scaleTargetRef"
-            },
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "kind"
+              "field": "definition.qname",
+              "value": "apiVersion"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ],
-          "bind": "rk"
+          ]
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2639,10 +2615,9 @@
           "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2658,22 +2633,40 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
               "field": "definition.qname",
-              "value": "apiVersion"
+              "value": "spec.scaleTargetRef.kind"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "rk"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "spec.scaleTargetRef.name"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -2682,7 +2675,7 @@
           "entity_kind": "KubernetesObject",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object:{rk.value}:{value}"
+            "template": "k8s:object:{rk.value}:{t.value}"
           },
           "attributes": {
             "object_kind": {
@@ -2691,7 +2684,7 @@
             },
             "object_name": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -2716,27 +2709,29 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "kind"
-        },
-        {
-          "kind": "field_equals",
-          "field": "enclosing.qname",
-          "value": "spec.names"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.qname",
+              "value": "apiVersion"
+            },
+            {
+              "kind": "field_present",
+              "field": "value"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2745,17 +2740,21 @@
               "value": "kind"
             },
             {
+              "kind": "field_present",
+              "field": "value"
+            },
+            {
               "kind": "field_equals",
               "field": "value",
               "value": "CustomResourceDefinition"
             }
-          ]
+          ],
+          "bind": "k"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
@@ -2771,22 +2770,22 @@
           "bind": "n"
         },
         {
-          "kind": "fact_join_by_field",
+          "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
+          "relation": "contains",
           "same_path": true,
           "where": [
             {
               "kind": "field_equals",
               "field": "definition.qname",
-              "value": "apiVersion"
+              "value": "spec.names.kind"
             },
             {
               "kind": "field_present",
               "field": "value"
             }
-          ]
+          ],
+          "bind": "t"
         }
       ],
       "outputs": [
@@ -2795,12 +2794,12 @@
           "entity_kind": "KubernetesObjectKind",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "k8s:object-kind:{value}"
+            "template": "k8s:object-kind:{t.value}"
           },
           "attributes": {
             "object_kind": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "t.value"
             }
           }
         },
@@ -2809,7 +2808,7 @@
           "relation_kind": "defines",
           "source": {
             "kind": "by_canonical_key",
-            "template": "k8s:object:CustomResourceDefinition:{n.value}"
+            "template": "k8s:object:{k.value}:{n.value}"
           },
           "target": {
             "kind": "current"
@@ -2825,9 +2824,9 @@
     "mode": "explicit-classified",
     "gaps": [
       "Helm and Kustomize are not executed; only the authored YAML/JSON documents retained in the repository are indexed, so a templated value is carried through as the template text",
-      "omega-yaml states no document fact, so several documents separated by --- in one file are one path: the same-file joins that pair a kind with its metadata.name cross-produce across the documents of a multi-document file, and an object declared there can be minted under a kind belonging to a sibling document",
       "a Kubernetes object with no metadata.name (a Kustomization, a raw List) is not minted as an object; its file is still a KubernetesManifest",
-      "an RBAC subject is keyed by name alone: subjects is a sequence of mappings and omega-yaml emits no per-item fact, so the sibling kind of one subject cannot be told from another's"
+      "an RBAC subject is keyed by name alone: subjects is a sequence of mappings and omega-yaml emits no per-sequence-item fact, so the sibling kind of one subject cannot be told from another's, and the same limit leaves a container unnamed",
+      "omega-json emits no definition.config_document, so a Kubernetes manifest written as JSON is stated as a KubernetesManifest and nothing else; every other rule is entered from the YAML document fact"
     ]
   },
   "provenance": [

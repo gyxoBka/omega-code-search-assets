@@ -20,6 +20,7 @@
   ],
   "emits": {
     "entities": [
+      "Action",
       "EnvironmentBinding",
       "Job",
       "JobContainer",
@@ -28,6 +29,8 @@
       "MatrixAxis",
       "PermissionPolicy",
       "Pipeline",
+      "ReusableWorkflow",
+      "Runner",
       "Step",
       "Trigger",
       "WorkflowContractField"
@@ -36,7 +39,9 @@
       "configured_by",
       "contains",
       "contains_step",
-      "needs"
+      "needs",
+      "runs_on",
+      "uses"
     ]
   },
   "rules": [
@@ -45,16 +50,11 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "definition.config_key"
+          "value": "scope.config_document"
         },
         {
           "kind": "path_glob",
           "pattern": "**/.github/workflows/*.y*ml"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "jobs"
         }
       ],
       "outputs": [
@@ -92,48 +92,9 @@
           "pattern": "**/.github/workflows/*.y*ml"
         },
         {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "runs-on",
-            "steps",
-            "uses"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_not_in",
-              "field": "definition.name",
-              "values": [
-                "steps",
-                "with",
-                "strategy",
-                "matrix",
-                "include",
-                "exclude",
-                "defaults"
-              ]
-            },
-            {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "jobs"
-                }
-              ]
-            }
-          ],
-          "bind": "job"
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "jobs"
         }
       ],
       "outputs": [
@@ -142,12 +103,12 @@
           "entity_kind": "Job",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "ci:github:job:{path}:{job.definition.name}"
+            "template": "ci:github:job:{path}:{definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
-              "field": "job.definition.name"
+              "field": "definition.name"
             },
             "path": {
               "kind": "field_ref",
@@ -172,7 +133,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.job.needs",
+      "id": "github.job.needs.list",
       "match": [
         {
           "kind": "fact_kind",
@@ -183,17 +144,9 @@
           "pattern": "**/.github/workflows/*.y*ml"
         },
         {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "needs"
-            }
-          ]
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "needs"
         },
         {
           "kind": "fact_join_by_span",
@@ -202,24 +155,9 @@
           "same_path": true,
           "where": [
             {
-              "kind": "field_not_in",
-              "field": "definition.name",
-              "values": [
-                "needs"
-              ]
-            },
-            {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "jobs"
-                }
-              ]
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
             }
           ],
           "bind": "job"
@@ -244,7 +182,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.workflow.trigger",
+      "id": "github.job.needs.scalar",
       "match": [
         {
           "kind": "fact_kind",
@@ -255,45 +193,13 @@
           "pattern": "**/.github/workflows/*.y*ml"
         },
         {
-          "kind": "field_in",
+          "kind": "field_equals",
           "field": "definition.name",
-          "values": [
-            "branch_protection_rule",
-            "check_run",
-            "check_suite",
-            "create",
-            "delete",
-            "deployment",
-            "deployment_status",
-            "discussion",
-            "discussion_comment",
-            "fork",
-            "gollum",
-            "issue_comment",
-            "issues",
-            "label",
-            "merge_group",
-            "milestone",
-            "page_build",
-            "project",
-            "project_card",
-            "project_column",
-            "public",
-            "pull_request",
-            "pull_request_review",
-            "pull_request_review_comment",
-            "pull_request_target",
-            "push",
-            "registry_package",
-            "release",
-            "repository_dispatch",
-            "schedule",
-            "status",
-            "watch",
-            "workflow_call",
-            "workflow_dispatch",
-            "workflow_run"
-          ]
+          "value": "needs"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
         },
         {
           "kind": "fact_join_by_span",
@@ -303,37 +209,87 @@
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.name",
-              "value": "on"
+              "field": "definition.container",
+              "value": "jobs"
             }
-          ]
+          ],
+          "bind": "job"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "needs",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job.runner",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "runs-on"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
         }
       ],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Trigger",
+          "entity_kind": "Runner",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "ci:github:trigger:{path}:{definition.name}"
+            "template": "ci:github:runner:{value}"
           },
           "attributes": {
-            "event": {
+            "label": {
               "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
+              "field": "value"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "runs_on",
           "source": {
             "kind": "by_canonical_key",
-            "template": "ci:github:{path}"
+            "template": "ci:github:job:{path}:{job.definition.name}"
           },
           "target": {
             "kind": "current"
@@ -345,108 +301,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.workflow.trigger.sequence",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.data"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/.github/workflows/*.y*ml"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "branch_protection_rule",
-            "check_run",
-            "check_suite",
-            "create",
-            "delete",
-            "deployment",
-            "deployment_status",
-            "discussion",
-            "discussion_comment",
-            "fork",
-            "gollum",
-            "issue_comment",
-            "issues",
-            "label",
-            "merge_group",
-            "milestone",
-            "page_build",
-            "project",
-            "project_card",
-            "project_column",
-            "public",
-            "pull_request",
-            "pull_request_review",
-            "pull_request_review_comment",
-            "pull_request_target",
-            "push",
-            "registry_package",
-            "release",
-            "repository_dispatch",
-            "schedule",
-            "status",
-            "watch",
-            "workflow_call",
-            "workflow_dispatch",
-            "workflow_run"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "on"
-            }
-          ]
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Trigger",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "ci:github:trigger:{path}:{definition.name}"
-          },
-          "attributes": {
-            "event": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "ci:github:{path}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "github.workflow-call.contract-field",
+      "id": "github.job.calls",
       "match": [
         {
           "kind": "fact_kind",
@@ -455,18 +310,22 @@
         {
           "kind": "path_glob",
           "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "uses"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
         },
         {
           "kind": "field_not_in",
-          "field": "definition.name",
+          "field": "definition.container",
           "values": [
-            "required",
-            "type",
-            "default",
-            "description",
-            "deprecationMessage",
-            "options",
-            "value"
+            "steps",
+            "with"
           ]
         },
         {
@@ -476,16 +335,68 @@
           "same_path": true,
           "where": [
             {
-              "kind": "field_in",
-              "field": "definition.name",
-              "values": [
-                "inputs",
-                "secrets",
-                "outputs"
-              ]
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
             }
           ],
-          "bind": "section"
+          "bind": "job"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ReusableWorkflow",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:reusable-workflow:{value}"
+          },
+          "attributes": {
+            "ref": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job.step",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "uses",
+            "run"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "steps"
         },
         {
           "kind": "fact_join_by_span",
@@ -494,50 +405,118 @@
           "same_path": true,
           "where": [
             {
-              "kind": "field_in",
-              "field": "definition.name",
-              "values": [
-                "workflow_call",
-                "workflow_dispatch"
-              ]
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
             }
           ],
-          "bind": "event"
+          "bind": "job"
         }
       ],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "WorkflowContractField",
+          "entity_kind": "Step",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "ci:github:contract:{path}:{event.definition.name}:{section.definition.name}:{definition.name}"
+            "template": "ci:github:step:{path}:{job.definition.name}:{source.start}"
           },
           "attributes": {
-            "name": {
+            "form": {
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "section": {
+            "job": {
               "kind": "field_ref",
-              "field": "section.definition.name"
-            },
-            "event": {
-              "kind": "field_ref",
-              "field": "event.definition.name"
+              "field": "job.definition.name"
             },
             "path": {
               "kind": "field_ref",
               "field": "path"
+            },
+            "offset": {
+              "kind": "field_ref",
+              "field": "source.start"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "contains_step",
           "source": {
             "kind": "by_canonical_key",
-            "template": "ci:github:{path}"
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job.step.action",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "uses"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "steps"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Action",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:action:{value}"
+          },
+          "attributes": {
+            "ref": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:step:{path}:{job.definition.name}:{source.start}"
           },
           "target": {
             "kind": "current"
@@ -560,17 +539,13 @@
           "pattern": "**/.github/workflows/*.y*ml"
         },
         {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "outputs"
-            }
-          ]
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "outputs"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
         },
         {
           "kind": "fact_join_by_span",
@@ -579,24 +554,9 @@
           "same_path": true,
           "where": [
             {
-              "kind": "field_not_in",
-              "field": "definition.name",
-              "values": [
-                "outputs"
-              ]
-            },
-            {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "jobs"
-                }
-              ]
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
             }
           ],
           "bind": "job"
@@ -614,6 +574,113 @@
             "name": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "job": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "expression": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job.env",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "env"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "env"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.container",
+              "values": [
+                "document",
+                "steps",
+                "with",
+                "inputs",
+                "secrets",
+                "outputs"
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "EnvironmentBinding",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:env:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
             },
             "job": {
               "kind": "field_ref",
@@ -653,6 +720,11 @@
           "pattern": "**/.github/workflows/*.y*ml"
         },
         {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "matrix"
+        },
+        {
           "kind": "field_not_in",
           "field": "definition.name",
           "values": [
@@ -668,39 +740,8 @@
           "where": [
             {
               "kind": "field_equals",
-              "field": "definition.name",
-              "value": "matrix"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_not_in",
-              "field": "definition.name",
-              "values": [
-                "strategy",
-                "matrix",
-                "include",
-                "exclude"
-              ]
-            },
-            {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "jobs"
-                }
-              ]
+              "field": "definition.container",
+              "value": "jobs"
             }
           ],
           "bind": "job"
@@ -759,6 +800,15 @@
         {
           "kind": "field_equals",
           "field": "definition.name",
+          "value": "image"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
           "value": "container"
         },
         {
@@ -768,17 +818,9 @@
           "same_path": true,
           "where": [
             {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "jobs"
-                }
-              ]
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
             }
           ],
           "bind": "job"
@@ -793,6 +835,10 @@
             "template": "ci:github:container:{path}:{job.definition.name}"
           },
           "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            },
             "job": {
               "kind": "field_ref",
               "field": "job.definition.name"
@@ -820,113 +866,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.job.step",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.config_key"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/.github/workflows/*.y*ml"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "uses",
-            "run"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "steps"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_not_in",
-              "field": "definition.name",
-              "values": [
-                "steps",
-                "with"
-              ]
-            },
-            {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "jobs"
-                }
-              ]
-            }
-          ],
-          "bind": "job"
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Step",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "ci:github:step:{path}:{job.definition.name}:{source.start}"
-          },
-          "attributes": {
-            "form": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "job": {
-              "kind": "field_ref",
-              "field": "job.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains_step",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "ci:github:job:{path}:{job.definition.name}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "github.service",
+      "id": "github.job.service",
       "match": [
         {
           "kind": "fact_kind",
@@ -942,26 +882,36 @@
           "value": "image"
         },
         {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
           "kind": "fact_join_by_span",
           "fact_kind": "definition.config_key",
           "relation": "within",
           "same_path": true,
           "where": [
             {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "services"
-                }
-              ]
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "services"
             }
           ],
           "bind": "service"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
         }
       ],
       "outputs": [
@@ -970,12 +920,179 @@
           "entity_kind": "JobService",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "ci:github:service:{path}:{service.definition.name}"
+            "template": "ci:github:service:{path}:{job.definition.name}:{service.definition.name}"
           },
           "attributes": {
             "name": {
               "kind": "field_ref",
               "field": "service.definition.name"
+            },
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "job": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job.permission",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "permissions"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PermissionPolicy",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:permission:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "scope": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "access": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "job": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.workflow.contract",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "inputs",
+            "secrets",
+            "outputs"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "workflow_call",
+                "workflow_dispatch"
+              ]
+            }
+          ],
+          "bind": "event"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WorkflowContractField",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:contract:{path}:{event.definition.name}:{definition.container}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "section": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "event": {
+              "kind": "field_ref",
+              "field": "event.definition.name"
             },
             "path": {
               "kind": "field_ref",
@@ -1000,7 +1117,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.env.binding",
+      "id": "github.workflow.env",
       "match": [
         {
           "kind": "fact_kind",
@@ -1009,6 +1126,15 @@
         {
           "kind": "path_glob",
           "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "env"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
         },
         {
           "kind": "fact_join_by_span",
@@ -1020,6 +1146,10 @@
               "kind": "field_equals",
               "field": "definition.name",
               "value": "env"
+            },
+            {
+              "kind": "field_absent",
+              "field": "definition.container"
             }
           ]
         }
@@ -1037,6 +1167,10 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
+            "value": {
+              "kind": "field_ref",
+              "field": "value"
+            },
             "path": {
               "kind": "field_ref",
               "field": "path"
@@ -1060,7 +1194,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.permission.write",
+      "id": "github.workflow.permission",
       "match": [
         {
           "kind": "fact_kind",
@@ -1071,9 +1205,13 @@
           "pattern": "**/.github/workflows/*.y*ml"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "value",
-          "value": "write"
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "permissions"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
         },
         {
           "kind": "fact_join_by_span",
@@ -1085,6 +1223,10 @@
               "kind": "field_equals",
               "field": "definition.name",
               "value": "permissions"
+            },
+            {
+              "kind": "field_absent",
+              "field": "definition.container"
             }
           ]
         }
@@ -1103,8 +1245,8 @@
               "field": "definition.name"
             },
             "access": {
-              "kind": "literal",
-              "value": "write"
+              "kind": "field_ref",
+              "field": "value"
             },
             "path": {
               "kind": "field_ref",
@@ -1129,7 +1271,7 @@
       "confidence": "exact"
     },
     {
-      "id": "github.permission.write-all",
+      "id": "github.workflow.permission.all",
       "match": [
         {
           "kind": "fact_kind",
@@ -1145,9 +1287,12 @@
           "value": "permissions"
         },
         {
-          "kind": "attribute_equals",
-          "attribute": "value",
-          "value": "write-all"
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "field_absent",
+          "field": "definition.container"
         }
       ],
       "outputs": [
@@ -1156,7 +1301,7 @@
           "entity_kind": "PermissionPolicy",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "ci:github:permission:{path}:write-all"
+            "template": "ci:github:permission:{path}:all"
           },
           "attributes": {
             "scope": {
@@ -1164,8 +1309,8 @@
               "value": "all"
             },
             "access": {
-              "kind": "literal",
-              "value": "write"
+              "kind": "field_ref",
+              "field": "value"
             },
             "path": {
               "kind": "field_ref",
@@ -1188,15 +1333,473 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact"
+    },
+    {
+      "id": "github.workflow.trigger.map",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "branch_protection_rule",
+            "check_run",
+            "check_suite",
+            "create",
+            "delete",
+            "deployment",
+            "deployment_status",
+            "discussion",
+            "discussion_comment",
+            "fork",
+            "gollum",
+            "issue_comment",
+            "issues",
+            "label",
+            "merge_group",
+            "milestone",
+            "page_build",
+            "project",
+            "project_card",
+            "project_column",
+            "public",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "pull_request_target",
+            "push",
+            "registry_package",
+            "release",
+            "repository_dispatch",
+            "schedule",
+            "status",
+            "watch",
+            "workflow_call",
+            "workflow_dispatch",
+            "workflow_run"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "on"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Trigger",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:trigger:{path}:{definition.name}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.workflow.trigger.list",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "branch_protection_rule",
+            "check_run",
+            "check_suite",
+            "create",
+            "delete",
+            "deployment",
+            "deployment_status",
+            "discussion",
+            "discussion_comment",
+            "fork",
+            "gollum",
+            "issue_comment",
+            "issues",
+            "label",
+            "merge_group",
+            "milestone",
+            "page_build",
+            "project",
+            "project_card",
+            "project_column",
+            "public",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "pull_request_target",
+            "push",
+            "registry_package",
+            "release",
+            "repository_dispatch",
+            "schedule",
+            "status",
+            "watch",
+            "workflow_call",
+            "workflow_dispatch",
+            "workflow_run"
+          ]
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "on"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Trigger",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:trigger:{path}:{definition.name}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.workflow.trigger.scalar",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "on"
+        },
+        {
+          "kind": "field_in",
+          "field": "value",
+          "values": [
+            "branch_protection_rule",
+            "check_run",
+            "check_suite",
+            "create",
+            "delete",
+            "deployment",
+            "deployment_status",
+            "discussion",
+            "discussion_comment",
+            "fork",
+            "gollum",
+            "issue_comment",
+            "issues",
+            "label",
+            "merge_group",
+            "milestone",
+            "page_build",
+            "project",
+            "project_card",
+            "project_column",
+            "public",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "pull_request_target",
+            "push",
+            "registry_package",
+            "release",
+            "repository_dispatch",
+            "schedule",
+            "status",
+            "watch",
+            "workflow_call",
+            "workflow_dispatch",
+            "workflow_run"
+          ]
+        },
+        {
+          "kind": "field_absent",
+          "field": "definition.container"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Trigger",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:trigger:{path}:{value}"
+          },
+          "attributes": {
+            "event": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "github.job.container.shorthand",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "container"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "JobContainer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:container:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "job": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`container: node:18` -- the shorthand, where the key named `container` carries the image itself. The mapping form `container: { image: ... }` is the rule this one is named after; a guard that only the mapping form passes drops the shorthand entirely."
+    },
+    {
+      "id": "github.job.matrix.axis.include",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.github/workflows/*.y*ml"
+        },
+        {
+          "kind": "field_not_in",
+          "field": "definition.name",
+          "values": [
+            "include",
+            "exclude"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.container",
+              "value": "jobs"
+            }
+          ],
+          "bind": "job"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "include",
+            "exclude"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "matrix"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "MatrixAxis",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:github:matrix-axis:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "job": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:github:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "An axis written under `include:` or `exclude:`. Its immediate owner is the `include` list and not the matrix, so the matrix is reached by ancestry instead -- `definition.container` names only the innermost owner."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "omega-yaml publishes a scalar key's value as an attribute, and an attribute is only testable for equality against a literal constant; so the values of uses, runs-on, if, environment and concurrency.group are unreadable, and no rule can state which action a step runs or which reusable workflow a job calls",
-      "on: push and needs: build written as a bare scalar carry the event or job name in that same unreadable attribute; only the mapping and sequence spellings are stated",
-      "a service container is scoped to the workflow file rather than to the job: the service id is itself an unknown key name, so the job ancestor cannot be told apart from it by name",
-      "secrets, environment and expression values are never source truth; only names are stated"
+      "a key set to a mapping, a sequence or a block scalar carries no value, so run: | states that a step is a script and not what the script is, runs-on: [self-hosted, linux] states no runner, and environment: written as a mapping is not stated",
+      "env and permissions are stated at workflow level and at job level; a step-level env block is not stated, because a step's env key is told from a job's only by an ancestor named steps and a span join cannot assert the absence of one",
+      "an expression is copied as written: a job output value is usually a steps.<id>.outputs.<name> expression and no rule resolves it to the step that produced it",
+      "an anchor merge key is not expanded by omega-yaml, so keys a job inherits from an anchor are not declared at the job that merges them",
+      "secrets are named and never valued"
     ]
   },
   "provenance": [

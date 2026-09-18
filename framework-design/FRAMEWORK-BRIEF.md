@@ -410,6 +410,20 @@ innermost is whichever the Pack emitted last, which is not the one you meant.
 Check with `dump_call_emissions` before keying on it; `enclosing.qname` or a
 span join is often what you actually want.
 
+**A value literal is a measurement with a date, and no check sees it go stale.**
+A Pack adding one named `definition.*` fact changes every `definition.qname`,
+`enclosing.qname` and `definition.container` under it, because the host builds
+those from the nesting of named definition facts. When a YAML document fact was
+added as a declaration, 25 shipped kubernetes-config rules went from stating a
+graph to stating **nothing** -- and `overlay_audit.py` still reported 25 live
+and `key_collisions.py` nothing, because both are structural and neither can see
+a literal that no longer occurs. Run the rules over real `dump_call_emissions`
+output before you believe a value comparison.
+
+**`field_absent` is how a rule says "at the top level".** A construct with no
+enclosing declaration has no `enclosing.qname` at all, and every other clause
+needs a value to compare against.
+
 **An audit cannot tell you whether the Pack's grammar can run.**
 `overlay_audit.py` builds its surface from `packs/*/rules.json` and never looks
 at a grammar's detection keys. Nine laravel rules matched omega-blade and scored

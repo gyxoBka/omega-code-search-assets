@@ -109,7 +109,7 @@
 ; `fact_join_by_field` pushes a binding per matching candidate, not the first --
 ; and a file of n manifests states n-squared objects, n of them real.
 ;
-; `definition.config_document` spans one document, so a rule reaches the
+; `scope.config_document` spans one document, so a rule reaches the
 ; document a key is in with `fact_join_by_span` `within`, and two keys are in
 ; the same document when they join to the same one.
 

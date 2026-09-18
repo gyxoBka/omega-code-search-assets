@@ -1,2361 +1,2660 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-gitlab-ci",
- "selector": "framework:gitlab-ci",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "yaml"
-  ],
-  "required_packs": [
-   "omega-yaml"
-  ],
-  "required_capabilities": [
-   "data"
-  ]
- },
- "evidence_inputs": [
-  "structured_documents",
-  "project_level_evidence"
- ],
- "emits": {
-  "entities": [
-   "ArtifactPath",
-   "CachePath",
-   "CiVariable",
-   "Command",
-   "IncludedFile",
-   "Job",
-   "Pipeline",
-   "RunnerTag",
-   "ServiceImage",
-   "Stage"
-  ],
-  "relations": [
-   "caches",
-   "contains",
-   "defines",
-   "depends_on",
-   "extends",
-   "includes",
-   "needs",
-   "produces",
-   "requires_runner",
-   "runs",
-   "runs_in",
-   "uses_service"
-  ]
- },
- "rules": [
-  {
-   "id": "gitlab.pipeline",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "default",
-      "include",
-      "spec",
-      "stages",
-      "workflow"
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Pipeline",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "attributes": {
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
+  "schema_version": 2,
+  "asset": "omega-framework-gitlab-ci",
+  "selector": "framework:gitlab-ci",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "yaml"
+    ],
+    "required_packs": [
+      "omega-yaml"
+    ],
+    "required_capabilities": [
+      "data"
+    ]
   },
-  {
-   "id": "gitlab.job",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "after_script",
-      "allow_failure",
-      "artifacts",
-      "before_script",
-      "cache",
-      "coverage",
-      "dast_configuration",
-      "dependencies",
-      "environment",
-      "except",
+  "evidence_inputs": [
+    "structured_documents",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "ArtifactPath",
+      "CachePath",
+      "CiProject",
+      "CiVariable",
+      "Command",
+      "ContainerImage",
+      "Environment",
+      "IncludedFile",
+      "Job",
+      "Pipeline",
+      "RunnerTag",
+      "ServiceImage",
+      "Stage"
+    ],
+    "relations": [
+      "caches",
+      "contains",
+      "defines",
+      "depends_on",
+      "deploys_to",
       "extends",
-      "hooks",
-      "id_tokens",
-      "identity",
-      "image",
-      "inherit",
-      "interruptible",
+      "includes",
+      "includes_from",
       "needs",
-      "only",
-      "pages",
-      "parallel",
-      "publish",
-      "resource_group",
-      "retry",
-      "rules",
-      "script",
-      "secrets",
-      "services",
-      "stage",
-      "tags",
-      "timeout",
-      "trigger",
-      "variables",
-      "when"
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Pipeline",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "attributes": {
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Job",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "job.definition.name"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
+      "produces",
+      "requires_runner",
+      "runs",
+      "runs_in",
+      "runs_in_image",
+      "triggers",
+      "uses_service"
+    ]
   },
-  {
-   "id": "gitlab.stage",
-   "match": [
+  "rules": [
     {
-     "kind": "fact_kind",
-     "value": "relation.data"
+      "id": "gitlab.pipeline",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_absent",
+          "field": "enclosing.qname"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "default",
+            "include",
+            "spec",
+            "stages",
+            "workflow"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
     },
     {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
+      "id": "gitlab.job",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "after_script",
+            "allow_failure",
+            "artifacts",
+            "before_script",
+            "cache",
+            "coverage",
+            "dast_configuration",
+            "dependencies",
+            "environment",
+            "except",
+            "extends",
+            "hooks",
+            "id_tokens",
+            "identity",
+            "image",
+            "inherit",
+            "interruptible",
+            "needs",
+            "only",
+            "pages",
+            "parallel",
+            "publish",
+            "resource_group",
+            "retry",
+            "rules",
+            "script",
+            "secrets",
+            "services",
+            "stage",
+            "tags",
+            "timeout",
+            "trigger",
+            "variables",
+            "when"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
     },
     {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "stages"
-      }
-     ]
+      "id": "gitlab.stage",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "stages"
+            },
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Stage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:stage:{path}:{definition.name}"
+          },
+          "attributes": {
+            "stage_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:stage:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.stage",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "stage"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Stage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:stage:{path}:{value}"
+          },
+          "attributes": {
+            "stage_name": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "runs_in",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:stage:{path}:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.needs",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "needs"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "needs",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.dependencies",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "dependencies"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.extends",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "extends"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "extends",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.extends.scalar",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "extends"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{value}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "extends",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.command",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "phase",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "script"
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Command",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:command:{path}:{job.definition.name}:{phase.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "command": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "phase": {
+              "kind": "field_ref",
+              "field": "phase.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "runs",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:command:{path}:{job.definition.name}:{phase.definition.name}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.tag",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "tags"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RunnerTag",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:runner-tag:{definition.name}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "requires_runner",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:runner-tag:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.service",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "services"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceImage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:service:{definition.name}"
+          },
+          "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_service",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:service:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.image",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "image"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContainerImage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:image:{value}"
+          },
+          "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "runs_in_image",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:image:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.image.name",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "image"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContainerImage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:image:{value}"
+          },
+          "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "runs_in_image",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:image:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.default.image",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "image"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "default"
+            },
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ContainerImage",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:image:{value}"
+          },
+          "attributes": {
+            "image": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "runs_in_image",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:image:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.environment",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "environment"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Environment",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:environment:{value}"
+          },
+          "attributes": {
+            "environment": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "deploys_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:environment:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.environment.name",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "name"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "environment"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Environment",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:environment:{value}"
+          },
+          "attributes": {
+            "environment": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "deploys_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:environment:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.artifact.path",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "paths"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "artifacts"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ArtifactPath",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:artifact:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "artifact_path": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "produces",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:artifact:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.cache.path",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "paths"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "cache"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CachePath",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:cache:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "cache_path": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "caches",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:cache:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.include.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "include"
+            },
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IncludedFile",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:include:{definition.name}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "includes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:include:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.include.target",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "component",
+            "file",
+            "local",
+            "remote",
+            "template"
+          ]
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "include"
+            },
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "IncludedFile",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:include:{value}"
+          },
+          "attributes": {
+            "target": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "includes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:include:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.include.project",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "project"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "include"
+            },
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CiProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:project:{value}"
+          },
+          "attributes": {
+            "project": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "includes_from",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:project:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.trigger.project",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "project"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "trigger"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CiProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:project:{value}"
+          },
+          "attributes": {
+            "project": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "triggers",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:project:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.job.trigger.scalar",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "trigger"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CiProject",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:project:{value}"
+          },
+          "attributes": {
+            "project": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "triggers",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:project:{value}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.variable",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "variables"
+            },
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CiVariable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:variable:{path}:{definition.name}"
+          },
+          "attributes": {
+            "variable": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Pipeline",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "attributes": {
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "defines",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:pipeline:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:variable:{path}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "gitlab.variable.job",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/.gitlab-ci.y*ml"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "variables"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "job",
+          "where": [
+            {
+              "kind": "field_absent",
+              "field": "enclosing.qname"
+            },
+            {
+              "kind": "field_not_in",
+              "field": "definition.name",
+              "values": [
+                "after_script",
+                "before_script",
+                "cache",
+                "default",
+                "image",
+                "include",
+                "services",
+                "spec",
+                "stages",
+                "types",
+                "variables",
+                "workflow"
+              ]
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "CiVariable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:variable:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "variable": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Job",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "attributes": {
+            "job_name": {
+              "kind": "field_ref",
+              "field": "job.definition.name"
+            },
+            "source_path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "defines",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:job:{path}:{job.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "ci:gitlab:variable:{path}:{job.definition.name}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
     }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Pipeline",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "attributes": {
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Stage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:stage:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "contains",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:stage:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "omega-yaml carries a key's value only when it is a plain or quoted scalar, so `script: |`, `extends: *base` and any key set to a block scalar or an alias arrive with no value and nothing is stated about what they are set to; a merge key (`<<: *defaults`) is not expanded either, so the keys a job inherits from an anchor are not declared where they are merged",
+      "`include: - project: group/app` and the `file:` beside it are stated separately: a YAML sequence item is not itself a fact, so which included file comes from which project is not stated",
+      "hidden dot-prefixed templates are stated as Job entities so that `extends` resolves; whether one is runnable is not stated",
+      "`rules:`/`only:`/`except:` conditions, `parallel: matrix:` expansion, generated child pipelines and runner state need evidence outside the file"
+    ]
   },
-  {
-   "id": "gitlab.job.stage.pre",
-   "match": [
+  "provenance": [
     {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "stage"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": ".pre"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
+      "source_id": "checkov",
+      "repository": "https://github.com/bridgecrewio/checkov",
+      "path": "checkov/gitlab_ci/**",
+      "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
     }
-   ],
-   "outputs": [
+  ],
+  "detection_rules": [
     {
-     "kind": "entity_candidate",
-     "entity_kind": "Stage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:stage:{path}:.pre"
-     },
-     "attributes": {
-      "name": {
-       "kind": "literal",
-       "value": ".pre"
+      "id": "gitlab-ci.candidate_signature.1.specifier",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "gitlab-ci"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "gitlab-ci"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "gitlab-ci",
+          "signature": "gitlab-ci",
+          "source": "candidate_signature"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
       }
-     }
     },
     {
-     "kind": "relation_candidate",
-     "relation_kind": "runs_in",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:stage:{path}:.pre"
-     },
-     "attributes": {}
+      "id": "gitlab-ci.candidate_signature.1.name",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "gitlab-ci"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "gitlab-ci"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "gitlab-ci",
+          "signature": "gitlab-ci",
+          "source": "candidate_reference"
+        },
+        "external_path": null,
+        "evidence_class": "heuristic"
+      }
     }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.stage.build",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "stage"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "build"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Stage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:stage:{path}:build"
-     },
-     "attributes": {
-      "name": {
-       "kind": "literal",
-       "value": "build"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "runs_in",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:stage:{path}:build"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.stage.test",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "stage"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "test"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Stage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:stage:{path}:test"
-     },
-     "attributes": {
-      "name": {
-       "kind": "literal",
-       "value": "test"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "runs_in",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:stage:{path}:test"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.stage.deploy",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "stage"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": "deploy"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Stage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:stage:{path}:deploy"
-     },
-     "attributes": {
-      "name": {
-       "kind": "literal",
-       "value": "deploy"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "runs_in",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:stage:{path}:deploy"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.stage.post",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "field_equals",
-     "field": "definition.name",
-     "value": "stage"
-    },
-    {
-     "kind": "attribute_equals",
-     "attribute": "value",
-     "value": ".post"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Stage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:stage:{path}:.post"
-     },
-     "attributes": {
-      "name": {
-       "kind": "literal",
-       "value": ".post"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "runs_in",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:stage:{path}:.post"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.needs",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "needs"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Job",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:job:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "needs",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.dependencies",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "dependencies"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Job",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:job:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.extends",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "extends"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Job",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:job:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "extends",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.command",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_in",
-       "field": "definition.name",
-       "values": [
-        "script",
-        "before_script",
-        "after_script"
-       ]
-      }
-     ],
-     "bind": "phase"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Command",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:command:{path}:{job.definition.name}:{phase.definition.name}:{definition.name}"
-     },
-     "attributes": {
-      "command": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "phase": {
-       "kind": "field_ref",
-       "field": "phase.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "runs",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.tag",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "tags"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "RunnerTag",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:runner-tag:{definition.name}"
-     },
-     "attributes": {
-      "tag": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "requires_runner",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.service",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "services"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ServiceImage",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:service:{definition.name}"
-     },
-     "attributes": {
-      "image": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_service",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.artifact.path",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "paths"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "artifacts"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ArtifactPath",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:artifact:{path}:{job.definition.name}:{definition.name}"
-     },
-     "attributes": {
-      "artifact_path": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "produces",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.job.cache.path",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "paths"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "cache"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "CachePath",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:cache:{path}:{job.definition.name}:{definition.name}"
-     },
-     "attributes": {
-      "cache_path": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "caches",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.include.file",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.data"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "include"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Pipeline",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "attributes": {
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "IncludedFile",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:include:{definition.name}"
-     },
-     "attributes": {
-      "target": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "includes",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:include:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.variable",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "variables"
-      }
-     ]
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Pipeline",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "attributes": {
-      "source_path": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "CiVariable",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:variable:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "defines",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:pipeline:{path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:variable:{path}:{definition.name}"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "gitlab.variable.job",
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.config_key"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/.gitlab-ci.y*ml"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "variables"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.config_key",
-     "relation": "within",
-     "same_path": true,
-     "where": [
-      {
-       "kind": "field_not_in",
-       "field": "definition.name",
-       "values": [
-        "after_script",
-        "artifacts",
-        "assets",
-        "before_script",
-        "cache",
-        "changes",
-        "coverage",
-        "dast_configuration",
-        "default",
-        "dependencies",
-        "docker",
-        "environment",
-        "except",
-        "exclude",
-        "exists",
-        "extends",
-        "forward",
-        "hooks",
-        "id_tokens",
-        "identity",
-        "image",
-        "include",
-        "inherit",
-        "inputs",
-        "interruptible",
-        "kubernetes",
-        "links",
-        "matrix",
-        "needs",
-        "only",
-        "pages",
-        "parallel",
-        "paths",
-        "pipeline",
-        "project",
-        "publish",
-        "refs",
-        "release",
-        "reports",
-        "resource_group",
-        "retry",
-        "rules",
-        "script",
-        "secrets",
-        "services",
-        "spec",
-        "stage",
-        "stages",
-        "strategy",
-        "tags",
-        "timeout",
-        "trigger",
-        "variables",
-        "when",
-        "workflow"
-       ]
-      }
-     ],
-     "bind": "job"
-    }
-   ],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "CiVariable",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "ci:gitlab:variable:{path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "defines",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "ci:gitlab:job:{path}:{job.definition.name}"
-     },
-     "target": {
-      "kind": "current"
-     },
-     "attributes": {}
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "omega-yaml publishes a scalar key's value as an attribute, and an attribute can only be compared against a literal, so `stage:` resolves for GitLab's five default stage names only and `image:`, `environment:`, `extends: .base` and `include: - local:` resolve to no value at all",
-   "hidden dot-prefixed templates are stated as Job entities so that `extends` resolves; whether one is runnable is not stated",
-   "remote/project/component includes, generated child pipelines, matrix expansion and runner state need evidence outside the file"
-  ]
- },
- "provenance": [
-  {
-   "source_id": "checkov",
-   "repository": "https://github.com/bridgecrewio/checkov",
-   "path": "checkov/gitlab_ci/**",
-   "revision": "d8aec9dba01c173dac52ebe1dece1ef0c1026eed",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  }
- ],
- "detection_rules": [
-  {
-   "id": "gitlab-ci.candidate_signature.1.specifier",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "gitlab-ci"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "gitlab-ci"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "gitlab-ci",
-     "signature": "gitlab-ci",
-     "source": "candidate_signature"
-    },
-    "external_path": null,
-    "evidence_class": "heuristic"
-   }
-  },
-  {
-   "id": "gitlab-ci.candidate_signature.1.name",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "gitlab-ci"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "gitlab-ci"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "gitlab-ci",
-     "signature": "gitlab-ci",
-     "source": "candidate_reference"
-    },
-    "external_path": null,
-    "evidence_class": "heuristic"
-   }
-  }
- ],
- "runtime_status": "terminal-static-source-contract"
+  ],
+  "runtime_status": "terminal-static-source-contract"
 }

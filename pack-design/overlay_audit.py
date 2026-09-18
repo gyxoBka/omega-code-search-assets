@@ -111,7 +111,7 @@ def walk_clauses(clauses, out):
         k = c.get('kind')
         if k == 'fact_kind':
             out['kinds'].add(c.get('value'))
-        elif k in ('field_equals', 'field_present', 'field_in', 'field_not_in',
+        elif k in ('field_equals', 'field_present', 'field_absent', 'field_in', 'field_not_in',
                    'field_prefix', 'field_not_prefix'):
             f = c.get('field') or c.get('value')
             if isinstance(f, str):

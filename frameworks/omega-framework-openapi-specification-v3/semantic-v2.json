@@ -22,8 +22,10 @@
   ],
   "emits": {
     "entities": [
+      "ApiComponent",
       "ApiDocument",
       "ApiOperation",
+      "ApiOperationId",
       "PathItem",
       "Response",
       "SecurityScheme",
@@ -33,6 +35,8 @@
     "relations": [
       "contains",
       "declared_in",
+      "identified_by",
+      "references",
       "responds",
       "secured_by",
       "tagged"
@@ -40,7 +44,272 @@
   },
   "rules": [
     {
-      "id": "openapi3.document",
+      "id": "openapi3.component",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
+          "values": [
+            "schemas",
+            "responses",
+            "parameters",
+            "examples",
+            "requestBodies",
+            "headers",
+            "links",
+            "callbacks",
+            "pathItems"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "components"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:component:#/components/{section}/{component}"
+          },
+          "attributes": {
+            "section": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiDocument",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declared_in",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "openapi3.component.ref",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "$ref"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.container",
+              "values": [
+                "schemas",
+                "responses",
+                "parameters",
+                "examples",
+                "requestBodies",
+                "headers",
+                "links",
+                "callbacks",
+                "pathItems"
+              ]
+            },
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "components"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:component:{ref}"
+          },
+          "attributes": {
+            "ref": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:component:#/components/{section}/{component}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:component:{ref}"
+          },
+          "attributes": {
+            "section": {
+              "kind": "field_ref",
+              "field": "owner.definition.container"
+            },
+            "component": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "openapi3.component.security_scheme",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "securitySchemes"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "components"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SecurityScheme",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:security_scheme:{scheme}"
+          },
+          "attributes": {
+            "scheme": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiDocument",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declared_in",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "openapi3.api-document",
       "snapshot": true,
       "match": [
         {
@@ -53,18 +322,9 @@
           "value": "openapi"
         },
         {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.config_key",
-          "current_field": "path",
-          "join_field": "path",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "info"
-            }
-          ]
+          "kind": "field_prefix",
+          "field": "value",
+          "value": "3."
         }
       ],
       "guards": [],
@@ -80,12 +340,17 @@
             "document": {
               "kind": "field_ref",
               "field": "path"
+            },
+            "spec_version": {
+              "kind": "field_ref",
+              "field": "value"
             }
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "The specification document itself, with its version. Named to sort before every other rule minting `openapi3:document:` -- the host interns with `or_insert` and the first rule by id keeps its attributes, so the rule carrying `spec_version` has to be first or the version is computed and thrown away on any spec that also has a `components:` section."
     },
     {
       "id": "openapi3.operation",
@@ -98,6 +363,140 @@
         {
           "kind": "field_in",
           "field": "definition.name",
+          "values": [
+            "get",
+            "put",
+            "post",
+            "delete",
+            "options",
+            "head",
+            "patch",
+            "trace"
+          ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "definition.container",
+          "value": "/"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "paths"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiOperation",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:operation:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "PathItem",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:path:{normalized_route}"
+          },
+          "attributes": {
+            "route": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiDocument",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:path:{normalized_route}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declared_in",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "openapi3.operation.operation_id",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "operationId"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.container",
           "values": [
             "get",
             "put",
@@ -141,67 +540,147 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ApiOperation",
+          "entity_kind": "ApiOperationId",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:operation:{method}:{normalized_path}"
+            "template": "openapi3:operation_id:{operation_id}"
+          },
+          "attributes": {
+            "operation_id": {
+              "kind": "field_ref",
+              "field": "value"
+            },
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.container"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "path_item.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "identified_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:operation:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "openapi3.operation.ref",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.config_key"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "$ref"
+        },
+        {
+          "kind": "field_present",
+          "field": "value"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "op",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "get",
+                "put",
+                "post",
+                "delete",
+                "options",
+                "head",
+                "patch",
+                "trace"
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "path_item",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "/"
+            },
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "paths"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiComponent",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:component:{ref}"
+          },
+          "attributes": {
+            "ref": {
+              "kind": "field_ref",
+              "field": "value"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "references",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:operation:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:component:{ref}"
           },
           "attributes": {
             "method": {
               "kind": "field_ref",
-              "field": "definition.name"
+              "field": "op.definition.name"
             },
-            "path": {
+            "route": {
               "kind": "field_ref",
               "field": "path_item.definition.name"
-            },
-            "document": {
-              "kind": "field_ref",
-              "field": "path"
             }
           }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PathItem",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:path:{normalized_path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path_item.definition.name"
-            },
-            "document": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:path:{normalized_path}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declared_in",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:document:{document}"
-          },
-          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
@@ -290,17 +769,9 @@
           ]
         },
         {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "responses"
-            }
-          ]
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "responses"
         },
         {
           "kind": "fact_join_by_span",
@@ -360,7 +831,7 @@
           "entity_kind": "Response",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "openapi3:response:{method}:{normalized_path}:{status}"
+            "template": "openapi3:response:{method}:{normalized_route}:{status}"
           },
           "attributes": {
             "status": {
@@ -371,7 +842,7 @@
               "kind": "field_ref",
               "field": "op.definition.name"
             },
-            "path": {
+            "route": {
               "kind": "field_ref",
               "field": "path_item.definition.name"
             }
@@ -382,125 +853,12 @@
           "relation_kind": "responds",
           "source": {
             "kind": "by_canonical_key",
-            "template": "openapi3:operation:{method}:{normalized_path}"
+            "template": "openapi3:operation:{method}:{normalized_route}"
           },
           "target": {
             "kind": "current"
           },
           "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "openapi3.operation.tag",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.data"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "tags"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "bind": "op",
-          "where": [
-            {
-              "kind": "field_in",
-              "field": "definition.name",
-              "values": [
-                "get",
-                "put",
-                "post",
-                "delete",
-                "options",
-                "head",
-                "patch",
-                "trace"
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "bind": "path_item",
-          "where": [
-            {
-              "kind": "field_prefix",
-              "field": "definition.name",
-              "value": "/"
-            },
-            {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "paths"
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Tag",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "openapi3:tag:{tag}"
-          },
-          "attributes": {
-            "tag": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "tagged",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "openapi3:operation:{method}:{normalized_path}"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "op.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path_item.definition.name"
-            }
-          }
         }
       ],
       "evidence_class": "structurally_derived",
@@ -515,17 +873,9 @@
           "value": "definition.config_key"
         },
         {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.config_key",
-          "relation": "within",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "security"
-            }
-          ]
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "security"
         },
         {
           "kind": "fact_join_by_span",
@@ -599,7 +949,7 @@
           "relation_kind": "secured_by",
           "source": {
             "kind": "by_canonical_key",
-            "template": "openapi3:operation:{method}:{normalized_path}"
+            "template": "openapi3:operation:{method}:{normalized_route}"
           },
           "target": {
             "kind": "current"
@@ -609,7 +959,112 @@
               "kind": "field_ref",
               "field": "op.definition.name"
             },
-            "path": {
+            "route": {
+              "kind": "field_ref",
+              "field": "path_item.definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "openapi3.operation.tag",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.data"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.container",
+          "value": "tags"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "op",
+          "where": [
+            {
+              "kind": "field_in",
+              "field": "definition.name",
+              "values": [
+                "get",
+                "put",
+                "post",
+                "delete",
+                "options",
+                "head",
+                "patch",
+                "trace"
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.config_key",
+          "relation": "within",
+          "same_path": true,
+          "bind": "path_item",
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "/"
+            },
+            {
+              "kind": "fact_join_by_span",
+              "fact_kind": "definition.config_key",
+              "relation": "within",
+              "same_path": true,
+              "where": [
+                {
+                  "kind": "field_equals",
+                  "field": "definition.name",
+                  "value": "paths"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Tag",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:tag:{tag}"
+          },
+          "attributes": {
+            "tag": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "tagged",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "openapi3:operation:{method}:{normalized_route}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "op.definition.name"
+            },
+            "route": {
               "kind": "field_ref",
               "field": "path_item.definition.name"
             }
@@ -646,20 +1101,11 @@
           "fact_kind": "definition.config_key",
           "relation": "within",
           "same_path": true,
-          "bind": "event",
           "where": [
             {
-              "kind": "fact_join_by_span",
-              "fact_kind": "definition.config_key",
-              "relation": "within",
-              "same_path": true,
-              "where": [
-                {
-                  "kind": "field_equals",
-                  "field": "definition.name",
-                  "value": "webhooks"
-                }
-              ]
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "webhooks"
             }
           ]
         }
@@ -680,7 +1126,7 @@
             },
             "event": {
               "kind": "field_ref",
-              "field": "event.definition.name"
+              "field": "definition.container"
             },
             "document": {
               "kind": "field_ref",
@@ -698,8 +1144,22 @@
           "attributes": {
             "event": {
               "kind": "field_ref",
-              "field": "event.definition.name"
+              "field": "definition.container"
             },
+            "document": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiDocument",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "openapi3:document:{document}"
+          },
+          "attributes": {
             "document": {
               "kind": "field_ref",
               "field": "path"
@@ -738,8 +1198,10 @@
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "a $ref target, a server url, an operationId, a summary and a parameter name are the *value* of a configuration key; omega-json and omega-yaml publish that value as an attribute, and an overlay can only compare an attribute for equality -- it cannot render one into a canonical key, so those constructs cannot be named or related here",
-      "a component under components/<section> cannot be told apart from a key nested deeper inside it: fact_join_by_span with `within` reaches every enclosing key, not the immediate parent, so components/schemas, components/responses and the rest are not emitted",
+      "a component under components/pathItems holds operations whose responses map has status-code keys; those keys satisfy openapi3.component's responses-section test and are minted as components. The immediate grandparent is not reachable -- fact_join_by_span within reaches every ancestor and definition.container reaches exactly one level -- so the shape is accepted rather than excluded",
+      "a $ref whose value names another file (./pet.yaml#/components/schemas/Pet) mints an ApiComponent under that literal key; no declaration rule mints the same key, so the reference is stated and its target stays a stub",
+      "a webhook operation's operationId is not stated: openapi3.operation.operation_id keys the operation end on the enclosing path item, and a webhook has none",
+      "a top-level servers/url pair has no document-scoped gate that works in both languages -- omega-json emits no definition.config_document -- so server URLs are not stated rather than stated for every YAML file that happens to carry a servers list",
       "templated/generated specifications and runtime server behavior remain terminal external evidence outside static Framework rule scope"
     ]
   },

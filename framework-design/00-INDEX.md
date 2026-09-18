@@ -1152,3 +1152,71 @@ nothing mints at all, which is the class it was written for. **Zero across all
 55.**
 
 823 overlay rules, 0 that cannot match, 0 collisions, 0 dangling.
+
+---
+
+# Second pass, wave F (kubernetes-config, github-action, gitlab-ci, openapi-v3, docker-compose)
+
+The YAML frameworks, moved off the file-wide join and onto the document.
+
+| Framework | rules |
+|---|---|
+| omega-framework-gitlab-ci | 19 -> 25 |
+| omega-framework-github-action | 14 -> 23 |
+| omega-framework-openapi-specification-v3 | 6 -> 11 |
+| omega-framework-kubernetes-config | 25 -> 24 |
+| omega-framework-docker-compose | 0 -> 0 (detector-only; nothing to move) |
+
+kubernetes-config is document-exact now: twenty-three of its twenty-four rules
+enter from the document and bind `apiVersion`, `kind` and `metadata.name` with
+`contains`, so every key is a key of **that** document. Its agent verified it by
+re-implementing the clause set over real `dump_call_emissions` output: the
+two-document manifest states exactly two objects, and a seven-document manifest
+states seven objects and 36 relations, each on the object whose own document
+declares it.
+
+## The fix I shipped last wave broke every YAML overlay, and no check saw it
+
+`definition.config_document` is a **named `definition.*` fact**, so it joined the
+host's synthesized ancestor chain: every YAML fact's `definition.qname`,
+`enclosing.qname` and `definition.container` gained a leading `document`
+element. The 25 shipped kubernetes-config rules compared those names against 83
+unprefixed literals and, measured over a real manifest, stated **zero entities
+and zero relations** — while `overlay_audit.py` reported 25 live and
+`key_collisions.py` reported nothing. Both checks are structural — kinds,
+fields, key templates — and neither can see a literal that no longer occurs.
+
+**A value literal is a measurement with a date, exactly as a coverage note is.**
+That is the third invisible class, beside the dangling relation end and the key
+collision, and the only way to catch it is to run the program over real Pack
+output.
+
+The document is a `scope.config_document` now. A scope is a region: it spans the
+document and a rule reaches it by span, and it changes no chain. Recorded in
+the Pack's own queries so the next author does not undo it.
+
+Two host clauses came out of the same work, both in `framework/overlay.rs`,
+which is not frozen:
+
+- **`contains`** (last wave) — the mirror of `within`, a container reaching its
+  members.
+- **`field_absent`** — how a rule says *at the top level*. A top-level key has
+  no enclosing declaration and therefore no `enclosing.qname` at all; every
+  other clause needs a value to compare against, so before this there was no way
+  to say it. The agents had written `enclosing.qname == "document"`, which only
+  worked while the document was polluting the chain.
+
+## Three more blocking defects, all the same family
+
+**A guard only one spelling passes.** github-action required `image` under a key
+named `container`, which drops `container: node:18` — the shorthand, where the
+key itself carries the image. And it matched a matrix axis by
+`definition.container == "matrix"`, which drops every axis under `include:` or
+`exclude:`, whose immediate owner is the list. Both are two rules now.
+
+**The first rule by id keeps its attributes.** Five openapi-v3 rules mint
+`openapi3:document:{document}` as `ApiDocument`, and `openapi3.component` sorted
+before `openapi3.document`, so the version was computed and discarded on every
+spec that also has a `components:` section. Renamed to `openapi3.api-document`.
+
+842 overlay rules, 0 that cannot match, 0 collisions, 0 dangling.

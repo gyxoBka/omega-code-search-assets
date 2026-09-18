@@ -589,30 +589,38 @@ published the way `call.last_arg_name` is.
 
 ---
 
-## 19. kubernetes-config ties two keys together by file, and a file is many documents
+## 19. kubernetes-config tied two keys together by file -- fixed
 
-`fact_join_by_field` pushes a binding for **every** matching candidate
-(`overlay.rs:682`), so joining on the built-in `path` binds every fact of that
-kind in the file. A YAML stream's documents are flat siblings -- omega-yaml's
-own note says `---` does not separate them -- so
-omega-framework-kubernetes-config, which reaches an object's identity by
-joining the top-level `kind` key to the top-level `metadata.name` key on
-`path`, mints **n² objects for an n-document manifest**, n of them real. A file
-with Deployment `web` and Service `web-svc` states four objects, two of which
-are `Deployment/web-svc` and `Service/web`.
+`fact_join_by_field` pushes a binding for **every** matching candidate, so
+joining on the built-in `path` bound every fact of that kind in the file. A YAML
+stream's documents are flat siblings, so kubernetes-config, which reached an
+object's identity by joining the top-level `kind` key to the top-level
+`metadata.name` key on `path`, minted **n squared objects for an n-document
+manifest**.
 
-Both halves of the fix are in place:
+Fixed in second-pass wave F. omega-yaml emits `scope.config_document`, the
+overlay gained `contains` and `field_absent`, and twenty-three of the
+framework's twenty-four rules now enter from the document. Verified by
+re-implementing the clause set over real `dump_call_emissions` output: a
+seven-document manifest states seven objects and 36 relations, each on the
+object whose own document declares it.
 
-- **omega-yaml emits `definition.config_document`**, one per `(document)` node,
-  so there is a fact spanning a document to join to.
-- **`SpanRelation::Contains`** was added to the overlay. `within` reaches a
-  construct's ancestors and could not reach its members, so a rule entered from
-  a document could not bind that document's keys. `framework/overlay.rs` is not
-  a frozen design-set file, so this needed no re-stamp.
+**The fix's own first attempt is the lesson.** The document fact started as
+`definition.config_document`, a named definition -- so it joined the host's
+ancestor chain and prefixed every YAML `definition.qname`, `enclosing.qname` and
+`definition.container` with `document.`. Measured over a real manifest, the
+shipped rules stated zero entities and zero relations, while `overlay_audit.py`
+reported 25 live and `key_collisions.py` reported nothing: both are structural
+and neither can see a literal that no longer occurs. A value literal is a
+measurement with a date. The document is a **scope** now, which is a region and
+changes no chain.
 
-What remains is the rewrite: **24 of the framework's 25 rules** read `{n.value}`
-through the path join. Each has to enter from the document and bind its keys
-with `contains`, which is a rewrite rather than a hand-fix.
+### 19a. omega-json has no document fact
 
-**Done looks like:** no rule in that file joining `current_field: path` to
-`join_field: path`, and a two-document manifest stating exactly two objects.
+omega-yaml publishes `scope.config_document` and omega-json does not, so the two
+Packs describe the same configuration file differently and a document-entered
+rule cannot fire on a `.json` manifest. Not urgent -- Kubernetes manifests are
+YAML in practice, and `k8s.manifest` still states a JSON manifest -- but the
+asymmetry is a trap for the next author.
+
+**Done looks like:** omega-json emitting one `scope.config_document` per file.

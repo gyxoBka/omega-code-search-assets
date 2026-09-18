@@ -91,7 +91,7 @@ fact; join clauses bind one more fact and apply their own nested `where` to it.
 | clause | reads |
 |---|---|
 | `fact_kind` | the emission's `output_kind`, exactly |
-| `field_equals`, `field_present`, `field_in`, `field_not_in`, `field_prefix`, `field_not_prefix` | a field name, including the built-ins above |
+| `field_equals`, `field_present`, `field_absent`, `field_in`, `field_not_in`, `field_prefix`, `field_not_prefix` | a field name, including the built-ins above |
 | `attribute_equals` | an attribute name (spelled `attribute`, or `field` in older rules) |
 | `path_glob` | a glob over the artifact path, or over a named field |
 | `path_segment` | the path must contain none of the listed segments |
