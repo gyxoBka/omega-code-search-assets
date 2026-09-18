@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 6. Numbers come from
+Last updated after framework wave 7. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -121,7 +121,7 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-26 of 55 frameworks still hold rules that cannot match: **334 of 847**. The
+21 of 55 frameworks still hold rules that cannot match: **255 of 823**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 

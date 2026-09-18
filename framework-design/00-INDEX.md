@@ -414,3 +414,46 @@ been minted under.
 
 Totals: **886 -> 847 overlay rules; 421 -> 334 that cannot match.** Twenty-nine
 frameworks are clean.
+
+---
+
+# Framework wave 7 (kotlin-multiplatform, vue, fastapi, vapor, terraform-template)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-fastapi | 22 -> 12 | 6 | 12 |
+| omega-framework-vue | 17 -> 16 | 1 | 16 |
+| omega-framework-kotlin-multiplatform | 17 -> 13 | 0 | 13 |
+| omega-framework-vapor | 15 -> 12 | 0 | 12 |
+| omega-framework-terraform-template | 15 -> 9 | 0 | 9 |
+
+86 rules became 62.
+
+omega-kotlin-multiplatform found the join this whole programme was looking for.
+omega-kotlin publishes **no field on any of its 28 templates**, yet
+`definition.modifier_candidate` carries the modifier text as its *name* --
+`expect`, `actual`, `internal expect` -- on a span byte-identical to the
+declaration's own. So `fact_join_by_span` with `relation: "same"` reaches the
+declaration from the modifier with no Pack field at all, and `expect`/`actual`
+becomes statable. The expect key is deliberately path-free, so every platform's
+`actual` across a repository lands on one entity and *who implements this expect,
+and on how many platforms* is one hop. That edge is the one thing a language
+Pack cannot state: an `expect fun` in commonMain and an `actual fun` in jvmMain
+are two unrelated `definition.function` facts in two files.
+
+## The blocking defect: narrowing a list is a deletion
+
+omega-framework-vue cut its directive list from twelve values to three, on the
+stated ground that the old list "named no spelling the Pack publishes". False:
+omega-vue emits `data.vue_directive_value` for **any** `directive_attribute`
+with a quoted value, so the `directive` field holds whatever was written and the
+list was the Framework's own choice. `v-bind`, `v-if` and `v-show` lost their
+only coverage. Restored, and widened to the full set that carries an expression.
+
+This is the second time a value set has been narrowed on a false premise —
+omega-framework-unreal-engine lost 13 rules to the same shape a wave earlier —
+so it is now §3f of the brief: read the Pack pattern that produces the field
+before shortening any `field_in`, `member_in` or `#any-of?` list.
+
+Totals: **847 -> 823 overlay rules; 334 -> 255 that cannot match.** Thirty-four
+frameworks are clean.

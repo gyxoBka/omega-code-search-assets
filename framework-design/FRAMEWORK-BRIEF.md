@@ -186,6 +186,22 @@ and every relation addressing that entity's key dangles. omega-framework-nuxt
 lost its four principal entities this way. Use the name in a template; if you
 want it as an attribute, there is no route to it.
 
+## 3f. Narrowing a value list is a deletion, and needs the same evidence
+
+Twice now an agent has narrowed a set of literals on the ground that "the Pack
+does not publish these" and been wrong. omega-framework-vue cut a directive list
+from twelve values to three, saying the old list "named no spelling the Pack
+publishes" — but omega-vue emits `data.vue_directive_value` for **any**
+`directive_attribute` carrying a quoted value, so the `directive` field holds
+whatever was written and the list was the Framework's own choice. `v-bind`,
+`v-if` and `v-show` lost their only coverage. The same shape cost
+omega-framework-unreal-engine 13 rules a wave earlier.
+
+Before you shorten a `field_in`, `member_in` or `#any-of?` list, read the Pack
+pattern that produces the field. If the Pack captures the value generically, the
+list constrains nothing but your own rule, and every value you drop is an answer
+you delete.
+
 ## 4. Verification
 
 ```bash

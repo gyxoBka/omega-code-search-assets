@@ -12,555 +12,69 @@
   ],
   "required_capabilities": [
    "definitions",
-   "calls",
    "references",
-   "data",
-   "scopes"
+   "calls"
   ]
  },
  "evidence_inputs": [
-  "existing_language_ir",
-  "project_level_evidence",
-  "structured_documents",
-  "calls_members",
-  "scope.hcl_body",
-  "definition.hcl_block_labeled",
-  "reference.hcl_block_list_traversal_context",
-  "reference.hcl_block_traversal_context",
-  "call.hcl_function_context"
+  "definitions",
+  "references",
+  "calls"
  ],
  "emits": {
   "entities": [
-   "ConfigDocument",
-   "Module",
-   "Resource",
-   "TemplateCall",
-   "TemplateControl",
-   "TemplateFile",
-   "TemplateReference"
+   "Local",
+   "TemplateDataSource",
+   "TemplateDirectory",
+   "TemplateRender",
+   "TemplateVariable",
+   "TemplatedSetting",
+   "TemplatingBlock",
+   "Variable"
   ],
   "relations": [
    "configured_by",
-   "depends_on",
-   "references"
+   "contains",
+   "depends_on"
   ]
  },
  "rules": [
   {
-   "id": "terraform-template.source-authored.config-document",
+   "id": "terraform-template.render",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "scope.hcl_body"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ConfigDocument",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform-template:config-document:{path}"
-     },
-     "attributes": {
-      "path": {
-       "kind": "field_ref",
-       "field": "path"
-      },
-      "source_only": true
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact",
-   "coverage_note": "An authored HCL/Terraform source body is a ConfigDocument; template evaluation, variable interpolation values and Terraform plan/state are not executed."
-  },
-  {
-   "id": "terraform-template.resource",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.hcl_block_labeled"
-    },
-    {
-     "kind": "field_equals",
-     "field": "block_kind",
-     "value": "resource"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Resource",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform-template:resource:{label0}:{label1}"
-     },
-     "attributes": {
-      "type": {
-       "kind": "field_ref",
-       "field": "label0"
-      },
-      "name": {
-       "kind": "field_ref",
-       "field": "label1"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.module",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.hcl_block_labeled"
-    },
-    {
-     "kind": "field_equals",
-     "field": "block_kind",
-     "value": "module"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Module",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "terraform-template:module:{label0}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "label0"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.depends_on.resource_resource",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_list_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "attribute_key",
-     "value": "depends_on"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "resource"
-    },
-    {
-     "kind": "field_not_in",
-     "field": "target_root",
-     "values": [
-      "module",
-      "var",
-      "local",
-      "data",
-      "count",
-      "each",
-      "path",
-      "terraform"
-     ]
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{target_root}:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_depends_on_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.depends_on.resource_module",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_list_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "attribute_key",
-     "value": "depends_on"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "resource"
-    },
-    {
-     "kind": "field_equals",
-     "field": "target_root",
-     "value": "module"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_depends_on_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.depends_on.module_resource",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_list_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "attribute_key",
-     "value": "depends_on"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "module"
-    },
-    {
-     "kind": "field_not_in",
-     "field": "target_root",
-     "values": [
-      "module",
-      "var",
-      "local",
-      "data",
-      "count",
-      "each",
-      "path",
-      "terraform"
-     ]
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{owner_label0}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{target_root}:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_depends_on_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.depends_on.module_module",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_list_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "attribute_key",
-     "value": "depends_on"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "target_root",
-     "value": "module"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "depends_on",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{owner_label0}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_depends_on_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.references.resource_resource",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "resource"
-    },
-    {
-     "kind": "field_not_in",
-     "field": "target_root",
-     "values": [
-      "module",
-      "var",
-      "local",
-      "data",
-      "count",
-      "each",
-      "path",
-      "terraform",
-      "provider"
-     ]
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "references",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{target_root}:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_attribute_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.references.resource_module",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "resource"
-    },
-    {
-     "kind": "field_equals",
-     "field": "target_root",
-     "value": "module"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "references",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{owner_label0}:{owner_label1}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_attribute_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.references.module_resource",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "module"
-    },
-    {
-     "kind": "field_not_in",
-     "field": "target_root",
-     "values": [
-      "module",
-      "var",
-      "local",
-      "data",
-      "count",
-      "each",
-      "path",
-      "terraform",
-      "provider"
-     ]
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "references",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{owner_label0}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:resource:{target_root}:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_attribute_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.references.module_module",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.hcl_block_traversal_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "owner_kind",
-     "value": "module"
-    },
-    {
-     "kind": "field_equals",
-     "field": "target_root",
-     "value": "module"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "references",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{owner_label0}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform-template:module:{target_name}"
-     },
-     "attributes": {
-      "evidence": "direct_hcl_attribute_traversal"
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact",
-   "coverage_note": "Authored HCL block/traversal evidence only; Terraform/template evaluation, provider resolution, plan/state and generated values are not inferred."
-  },
-  {
-   "id": "terraform-template.template-file",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference_context.template_interpolation"
+     "value": "call.function"
     },
     {
      "kind": "path_glob",
-     "pattern": "**/*.tftpl"
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "templatefile",
+      "templatestring"
+     ]
     }
    ],
    "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "TemplateFile",
+     "entity_kind": "TemplateRender",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:template:{path}"
+      "template": "terraform-template:render:{path}:{source.start}"
      },
      "attributes": {
-      "path": {
+      "function": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "file": {
        "kind": "field_ref",
        "field": "path"
       }
@@ -568,80 +82,319 @@
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "candidate"
+   "confidence": "exact",
+   "coverage_note": "Where a Terraform configuration renders a template. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
   },
   {
-   "id": "terraform-template.template-interpolation",
+   "id": "terraform-template.render.block",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "reference_context.template_interpolation"
+     "value": "call.function"
     },
     {
      "kind": "path_glob",
-     "pattern": "**/*.tftpl"
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "templatefile",
+      "templatestring"
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_block",
+     "relation": "within",
+     "same_path": true,
+     "bind": "owner"
     }
    ],
    "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "TemplateReference",
+     "entity_kind": "TemplatingBlock",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:template-ref:{path}:{source.start}"
+      "template": "terraform-template:block:{owner.path}:{owner.source.start}"
      },
      "attributes": {
-      "expression": {
+      "name": {
        "kind": "field_ref",
-       "field": "name"
+       "field": "owner.definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "owner.path"
       }
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "references",
+     "relation_kind": "contains",
      "source": {
       "kind": "by_canonical_key",
-      "template": "terraform:template:{path}"
+      "template": "terraform-template:block:{owner.path}:{owner.source.start}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "terraform:template-ref:{path}:{source.start}"
+      "template": "terraform-template:render:{path}:{source.start}"
      },
      "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "candidate"
+   "confidence": "exact",
+   "coverage_note": "Which declared block renders this template. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
   },
   {
-   "id": "terraform-template.template-condition",
+   "id": "terraform-template.render.setting",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "reference_context.template_condition"
+     "value": "call.function"
     },
     {
      "kind": "path_glob",
-     "pattern": "**/*.tftpl"
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "templatefile",
+      "templatestring"
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_attribute",
+     "relation": "within",
+     "same_path": true,
+     "bind": "attr"
     }
    ],
    "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "TemplateControl",
+     "entity_kind": "TemplatedSetting",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:template-control:{path}:{source.start}"
+      "template": "terraform-template:setting:{attr.path}:{attr.source.start}"
      },
      "attributes": {
-      "expression": {
+      "name": {
        "kind": "field_ref",
-       "field": "name"
+       "field": "attr.definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "attr.path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configured_by",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "terraform-template:render:{path}:{source.start}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which setting is set by rendering a template -- user_data, content, command. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
+  },
+  {
+   "id": "terraform-template.render.input.variable",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.traversal"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "attribute_equals",
+     "attribute": "root",
+     "value": "var"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "call.function",
+     "relation": "within",
+     "same_path": true,
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "templatefile",
+        "templatestring"
+       ]
+      }
+     ],
+     "bind": "call"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Variable",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-template:variable:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends_on",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "terraform-template:render:{call.path}:{call.source.start}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which input variable a template render reads. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
+  },
+  {
+   "id": "terraform-template.render.input.local",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.traversal"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "attribute_equals",
+     "attribute": "root",
+     "value": "local"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "call.function",
+     "relation": "within",
+     "same_path": true,
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "templatefile",
+        "templatestring"
+       ]
+      }
+     ],
+     "bind": "call"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Local",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-template:local:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends_on",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "terraform-template:render:{call.path}:{call.source.start}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which local value a template render reads. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
+  },
+  {
+   "id": "terraform-template.render.variable",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.config_entry"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "call.function",
+     "relation": "within",
+     "same_path": true,
+     "where": [
+      {
+       "kind": "field_in",
+       "field": "definition.name",
+       "values": [
+        "templatefile",
+        "templatestring"
+       ]
+      }
+     ],
+     "bind": "call"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "TemplateVariable",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-template:render-var:{call.path}:{call.source.start}:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
       }
      }
     },
@@ -650,55 +403,200 @@
      "relation_kind": "configured_by",
      "source": {
       "kind": "by_canonical_key",
-      "template": "terraform:template:{path}"
+      "template": "terraform-template:render:{call.path}:{call.source.start}"
      },
      "target": {
-      "kind": "by_canonical_key",
-      "template": "terraform:template-control:{path}:{source.start}"
+      "kind": "current"
      },
      "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "candidate"
+   "confidence": "exact",
+   "coverage_note": "Which template variable this render site sets, by the name the template will interpolate. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
   },
   {
-   "id": "terraform-template.templatefile-call",
+   "id": "terraform-template.legacy.template-file",
    "snapshot": true,
    "match": [
     {
      "kind": "fact_kind",
-     "value": "call.hcl_function_context"
+     "value": "definition.config_block"
     },
     {
-     "kind": "field_equals",
-     "field": "function_name",
-     "value": "templatefile"
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "attribute_equals",
+     "attribute": "block_type",
+     "value": "data"
+    },
+    {
+     "kind": "attribute_equals",
+     "attribute": "type_label",
+     "value": "template_file"
     }
    ],
    "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "TemplateCall",
+     "entity_kind": "TemplateDataSource",
      "canonical_key": {
       "kind": "canonical_key",
-      "template": "terraform:template-call:{path}:{source.start}"
+      "template": "terraform-template:template-file:{definition.name}"
      },
      "attributes": {
-      "function": "templatefile"
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
      }
     }
    ],
    "evidence_class": "structurally_derived",
-   "confidence": "candidate"
+   "confidence": "exact",
+   "coverage_note": "Where the deprecated template_file data source is still declared. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
+  },
+  {
+   "id": "terraform-template.legacy.template-dir",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.config_block"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "attribute_equals",
+     "attribute": "block_type",
+     "value": "resource"
+    },
+    {
+     "kind": "attribute_equals",
+     "attribute": "type_label",
+     "value": "template_dir"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "TemplateDirectory",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-template:template-dir:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Where a whole directory of templates is rendered by the template_dir resource. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
+  },
+  {
+   "id": "terraform-template.legacy.template-file.variable",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.config_entry"
+    },
+    {
+     "kind": "path_glob",
+     "glob": "**/*.tf"
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_attribute",
+     "relation": "within",
+     "same_path": true,
+     "where": [
+      {
+       "kind": "field_equals",
+       "field": "definition.name",
+       "value": "vars"
+      }
+     ]
+    },
+    {
+     "kind": "fact_join_by_span",
+     "fact_kind": "definition.config_block",
+     "relation": "within",
+     "same_path": true,
+     "where": [
+      {
+       "kind": "attribute_equals",
+       "attribute": "block_type",
+       "value": "data"
+      },
+      {
+       "kind": "attribute_equals",
+       "attribute": "type_label",
+       "value": "template_file"
+      }
+     ],
+     "bind": "owner"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "TemplateVariable",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-template:template-file-var:{owner.definition.name}:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configured_by",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "terraform-template:template-file:{owner.definition.name}"
+     },
+     "target": {
+      "kind": "current"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which template variable a template_file data source sets in its vars object. Authored HCL only: the template's own file is not parsed by any Pack, and omega-hcl states a function call by its name, not by its arguments, so the rendered path and the rendered text are not stated."
   }
  ],
  "coverage": {
   "mode": "explicit-classified",
   "gaps": [
-   "authored .tftpl interpolation/control sites and templatefile() call sites are materialized; resolving computed template paths and variable-object values requires bounded HCL value/path resolution",
-   "template rendering results, filesystem availability outside the snapshot and provider/runtime/tool execution are external/runtime semantics"
+   "a .tftpl file is not parsed: no Pack claims the extension, so no fact is emitted for a template's own interpolations, conditionals or loops, and the questions 'what does this template interpolate' and 'which template file is this' are unanswerable from source",
+   "omega-hcl states a function call by its name only, so the first argument of templatefile() -- the path of the template being rendered -- is not stated, and a render site cannot be linked to the file it renders",
+   "the template attribute of a template_file data source, and any value assembled by file()/heredoc, are carried as declarations without their text",
+   "template rendering results, provider-computed values and plan/state remain terminal runtime ceilings"
   ]
  },
  "provenance": [
