@@ -55,6 +55,19 @@ def walk_clauses(clauses, out):
             a = c.get('attribute') or c.get('field')
             if isinstance(a, str):
                 out['attrs'].add(a)
+        elif k == 'path_glob':
+            # glob_here implements only **, * and ?; a brace is a literal byte,
+            # so `**/*.{js,ts}` matches a path that literally ends in that text.
+            g = c.get('pattern') or c.get('value') or c.get('glob') or ''
+            if '{' in g:
+                out['bad_glob'].add(g)
+        elif k == 'external_path_matches':
+            # parse_external_path takes the FIRST path part as the package, so a
+            # scoped npm name is split: `@sveltejs/kit` is package `@sveltejs`.
+            vals = [c.get('package'), c.get('package_prefix')] + list(c.get('package_in') or [])
+            for v in vals:
+                if isinstance(v, str) and v.startswith('@') and '/' in v:
+                    out['scoped'].add(v)
         # joins carry their own nested clause list, and their own fact kind
         for key in ('match', 'clauses', 'where'):
             if isinstance(c.get(key), list):
@@ -75,7 +88,8 @@ def audit(fw, kinds, fields, attrs):
     rules = doc.get('rules') or []
     dead, live, detail = 0, 0, []
     for r in rules:
-        out = {'kinds': set(), 'fields': set(), 'attrs': set()}
+        out = {'kinds': set(), 'fields': set(), 'attrs': set(),
+               'bad_glob': set(), 'scoped': set()}
         walk_clauses(r.get('match'), out)
         out['kinds'].discard(None)
         missing_kind = {k for k in out['kinds'] if k not in kinds}
@@ -88,10 +102,12 @@ def audit(fw, kinds, fields, attrs):
         for k in out['kinds'] & kinds:
             supplied_a |= attrs.get(k, set())
         missing_attr = out['attrs'] - supplied_a
-        if missing_kind or missing_field or missing_attr:
+        if missing_kind or missing_field or missing_attr or out['bad_glob'] or out['scoped']:
             dead += 1
+            extra = (['brace glob ' + g for g in sorted(out['bad_glob'])] +
+                     ['scoped package ' + g for g in sorted(out['scoped'])])
             detail.append((r.get('id', '?'), sorted(missing_kind),
-                           sorted(missing_field), sorted(missing_attr)))
+                           sorted(missing_field), sorted(missing_attr) + extra))
         else:
             live += 1
     return {'rules': len(rules), 'live': live, 'dead': dead, 'detail': detail,

@@ -223,3 +223,60 @@ created. The rule now requires `external.member` to be present.
 
 Totals: **1 170 -> 1 059 overlay rules; 951 -> 757 that cannot match.** Ten
 frameworks are clean; 45 to go.
+
+---
+
+# Framework wave 3 (ruby-on-rails, swiftui, sveltekit, electron, pytorch)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-ruby-on-rails | 33 -> 19 | 3 | 19 |
+| omega-framework-electron | 32 -> 12 | 3 | 12 |
+| omega-framework-pytorch | 29 -> 20 | 1 | 20 |
+| omega-framework-swiftui | 29 -> 9 | 0 | 9 |
+| omega-framework-sveltekit | 29 -> 15 | 0 | 15 |
+
+omega-ruby-on-rails shows what the collapse looks like when a framework is a set
+of macros: 12 model-macro rules became 1, 4 association rules 1, 8 route rules
+1, 5 migration rules 1. omega-ruby publishes **no field on any of its 25
+templates**, so the overlay has only kind, name, path and span — and that was
+enough for 19 rules, including the two cross-file edges Ruby actually has, both
+built on the constant, the one Ruby name that resolves across files.
+
+## Two more clauses that match nothing, and the audit now sees both
+
+**A brace in a path glob is a literal byte.** `glob_here` implements `**`, `*`
+and `?` and nothing else, so `**/*.{js,jsx,ts,tsx,mjs,cjs}` matches only a path
+that literally ends in that text. Every rule carrying one emitted nothing while
+the audit reported it live. **75 clauses across 9 frameworks**: webpack 19,
+electron 12, terraform-template 12, nuxt 8, terraform-providers 7,
+unreal-engine 6, astro 5, vite 5, vue 1.
+
+All 75 are gone. Where the extension list only restated what the fact kind
+already implies — a JS fact comes from a JS file — the clause was dropped
+entirely rather than rewritten: 37 of them were exactly that.
+
+**`external_path_matches` cannot name a scoped npm package.**
+`parse_external_path` takes the first `/`-separated part as the package, so
+`@sveltejs/kit` is package `@sveltejs` with segments `["kit"]`. 40 clauses in 5
+frameworks depend on a match that is unreachable for every possible input:
+nestjs 23, angular 10, tauri 4, sveltekit 2, astro 1.
+
+That is a host fix, recorded as `OWED.md` item 7 and **decided**: a scoped npm
+package's name is `@scope/name`, no other ecosystem this function serves emits a
+leading `@` segment, and `materialize.rs` needs its design-set obligations
+re-run for it. **nestjs, angular, tauri and astro are deliberately scheduled
+after that fix**, so they are written against a correct host instead of around a
+bug. sveltekit's two rules were deleted rather than worked around.
+
+Compounding it, and also now recorded (item 7a): **JS/TS facts carry no
+`external` at all.** `external_environment` registers only a binding whose
+`target_hint` is set; `target_hint` is `occurrence.qualifier`; and `qualifier` is
+read only from a field or attribute literally named `qualifier`, which the JS/TS
+Packs do not publish. So every `external_path_matches` clause in every
+JavaScript framework fails regardless of scoping. That is the same `qualifier`
+row already in item 1, now known to carry the whole `external.*` mechanism for
+the largest language family Omega has.
+
+Totals: **1 059 -> 982 overlay rules; 757 -> 630 that cannot match.** Fifteen
+frameworks are clean.

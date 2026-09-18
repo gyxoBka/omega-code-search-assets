@@ -18,1168 +18,892 @@
     ]
   },
   "evidence_inputs": [
-    "calls_members",
     "existing_language_ir",
-    "call.swift_computed_property_direct_call_context"
+    "imports_bindings"
   ],
   "emits": {
     "entities": [
-      "ApiUse",
-      "Component",
+      "App",
       "Dependency",
-      "Navigation",
+      "ObservableModel",
       "Presentation",
       "StateBinding",
+      "SwiftUIFile",
+      "SwiftUIType",
       "View",
       "ViewModifier",
-      "ViewUse"
+      "ViewName"
     ],
     "relations": [
       "configured_by",
-      "contains",
+      "declares_view",
       "depends_on",
-      "renders",
-      "uses_api"
+      "holds_state",
+      "presents",
+      "renders"
     ]
   },
   "rules": [
     {
-      "id": "swiftui.view.conformance",
-      "snapshot": true,
+      "id": "swiftui.dependency.import",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.swift_nominal_conformance_context"
+          "value": "import.swift_module"
         },
         {
-          "kind": "field_equals",
-          "field": "inherited_type",
-          "value": "View"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "View"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "SwiftUI",
+            "SwiftData",
+            "WidgetKit",
+            "Charts"
           ]
         },
         {
-          "kind": "field_present",
-          "field": "owner_type"
+          "kind": "path_segment",
+          "exclude": [
+            "Pods",
+            "Carthage",
+            ".build",
+            "DerivedData"
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "View",
+          "entity_kind": "SwiftUIFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
+            "template": "swiftui:file:{path}"
           },
           "attributes": {
-            "name": {
+            "path": {
               "kind": "field_ref",
-              "field": "owner_type"
+              "field": "path"
             },
-            "source_only": true
+            "framework": "swiftui"
           }
         },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Component",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:component:{path}:{owner_type}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "owner_type"
-            },
-            "role": "view",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "swiftui.body.direct-view-call",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_computed_property_direct_call_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "property_name",
-          "value": "body"
-        },
-        {
-          "kind": "field_present",
-          "field": "owner_type"
-        },
-        {
-          "kind": "field_present",
-          "field": "callee_name"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "reference.swift_nominal_conformance_context",
-          "current_field": "owner_type",
-          "join_field": "owner_type",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "inherited_type",
-              "value": "View"
-            },
-            {
-              "kind": "external_path_matches",
-              "package": "SwiftUI",
-              "member_in": [
-                "View"
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "reference.swift_nominal_conformance_context",
-          "current_field": "callee_name",
-          "join_field": "owner_type",
-          "same_path": true,
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "inherited_type",
-              "value": "View"
-            },
-            {
-              "kind": "external_path_matches",
-              "package": "SwiftUI",
-              "member_in": [
-                "View"
-              ]
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "contains",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{callee_name}"
-          },
-          "attributes": {
-            "evidence": "same_file_direct_body_call",
-            "target_requires_view_declaration": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{callee_name}"
-          },
-          "attributes": {
-            "evidence": "same_file_direct_body_call",
-            "target_requires_view_declaration": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "swiftui.generic-api-call.swiftui",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "SwiftUI"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "SwiftUI",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_api",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "SwiftUI",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
-    },
-    {
-      "id": "swiftui.generic-dependency.swiftui",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "import.module_path_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "SwiftUI"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Dependency",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:dependency:SwiftUI"
+            "template": "swiftui:package:{definition.name}"
           },
           "attributes": {
-            "package": "SwiftUI",
-            "source_only": true
+            "package": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
           "relation_kind": "depends_on",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "swiftui:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:dependency:SwiftUI"
+            "template": "swiftui:package:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files are SwiftUI files and which Apple UI module each one imports. The module name is the import's own name, so no Pack field is needed."
+    },
+    {
+      "id": "swiftui.view.declaration",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "View",
+            "Shape",
+            "InsettableShape",
+            "ViewModifier",
+            "Layout",
+            "UIViewRepresentable",
+            "UIViewControllerRepresentable",
+            "NSViewRepresentable",
+            "NSViewControllerRepresentable",
+            "WKInterfaceObjectRepresentable",
+            "PreviewProvider",
+            "TableRowContent",
+            "TableColumnContent"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
-            "package": "SwiftUI",
-            "source_only": true
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewName",
+          "canonical_key": {
+            "template": "swiftui:view-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_view",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:view-name:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+      "coverage_note": "Which authored types are SwiftUI views. A conformance is relation.implements named after the protocol, and the conforming type is the definition.swift_type whose span contains it. The ViewName node is what a render edge in another file addresses, because no Swift fact ties a constructor call to the file that declares the type."
     },
     {
-      "id": "swiftui.property.state",
-      "snapshot": true,
+      "id": "swiftui.app.declaration",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
+          "value": "relation.implements"
         },
         {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "State"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "State",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.stateobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "StateObject"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "StateObject",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.observedobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "ObservedObject"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "ObservedObject",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.environment",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "Environment"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "Environment",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.environmentobject",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "EnvironmentObject"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "EnvironmentObject",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.binding",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "Binding"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "Binding",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.appstorage",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "AppStorage"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "AppStorage",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.scenestorage",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "SceneStorage"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "SceneStorage",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.focusstate",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "FocusState"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "FocusState",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.fetchrequest",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "FetchRequest"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "FetchRequest",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.property.query",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.swift_property_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_name",
-          "value": "Query"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {
-            "wrapper": "Query",
-            "property": {
-              "kind": "field_ref",
-              "field": "property_name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view:{path}:{owner_type}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner_type}:{property_name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.api.navigationlink",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "NavigationLink"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "App",
+            "Scene",
+            "Widget",
+            "WidgetBundle",
+            "Commands",
+            "ToolbarContent"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Navigation",
+          "entity_kind": "App",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:navigation:{path}:{source.start}"
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
-            "api": "NavigationLink"
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewName",
+          "canonical_key": {
+            "template": "swiftui:view-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "declares_view",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "swiftui:view-name:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:navigation:{path}:{source.start}"
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
-          "attributes": {}
+          "attributes": {
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Where the app starts and what its scenes are: the type conforming to App, Scene, Widget or Commands. Same shape as a view declaration, so the renders edges out of its body land on the same type key."
     },
     {
-      "id": "swiftui.api.navigationstack",
-      "snapshot": true,
+      "id": "swiftui.model.observableobject",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "relation.implements"
         },
         {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "NavigationStack"
-          ]
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ObservableObject"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Navigation",
+          "entity_kind": "ObservableModel",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:navigation:{path}:{source.start}"
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
-            "api": "NavigationStack"
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "ObservableObject"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which types are observable models a view can watch. Conformance is stated by relation.implements; the model's name is that of the enclosing declaration."
+    },
+    {
+      "id": "swiftui.model.observable-macro",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.type"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "Observable"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ObservableModel",
+          "canonical_key": {
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "form": "Observable"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate",
+      "coverage_note": "The Observation macro spelling of the same thing. @Observable is written with a type identifier, so the Pack states it as reference.type, and the type it decorates is the declaration whose span contains it."
+    },
+    {
+      "id": "swiftui.view.state",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.type"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "State",
+            "StateObject",
+            "ObservedObject",
+            "EnvironmentObject",
+            "Environment",
+            "Binding",
+            "Bindable",
+            "AppStorage",
+            "SceneStorage",
+            "FocusState",
+            "FocusedValue",
+            "FocusedBinding",
+            "AccessibilityFocusState",
+            "FetchRequest",
+            "SectionedFetchRequest",
+            "Query",
+            "Published",
+            "GestureState",
+            "ScaledMetric",
+            "Namespace",
+            "UIApplicationDelegateAdaptor",
+            "NSApplicationDelegateAdaptor"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_property",
+          "relation": "within",
+          "same_path": true,
+          "bind": "prop",
+          "where": []
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StateBinding",
+          "canonical_key": {
+            "template": "swiftui:state:{path}:{owner.definition.name}:{prop.definition.name}"
+          },
+          "attributes": {
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "property": {
+              "kind": "field_ref",
+              "field": "prop.definition.name"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SwiftUIType",
+          "canonical_key": {
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "holds_state",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:navigation:{path}:{source.start}"
+            "template": "swiftui:state:{path}:{owner.definition.name}:{prop.definition.name}"
           },
-          "attributes": {}
+          "attributes": {
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Which view holds which piece of state, under which property wrapper. One rule replaces eleven: a wrapper is written as a type identifier inside the property declaration, so the wrapper name is the mention's own name, and the property and its owner are the declarations whose spans contain it."
     },
     {
-      "id": "swiftui.api.navigationsplitview",
-      "snapshot": true,
+      "id": "swiftui.view.renders",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.swift"
         },
         {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "NavigationSplitView"
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "a"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "b"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "c"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "d"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "e"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "f"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "g"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "h"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "i"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "j"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "k"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "l"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "m"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "n"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "o"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "p"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "q"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "r"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "s"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "t"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "u"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "v"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "w"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "x"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "y"
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "definition.name",
+          "value": "z"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_property",
+          "relation": "within",
+          "same_path": true,
+          "bind": "body",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "body"
+            }
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Navigation",
+          "entity_kind": "SwiftUIType",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:navigation:{path}:{source.start}"
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
-            "api": "NavigationSplitView"
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
         {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:navigation:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.api.list",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "List"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
           "kind": "entity_candidate",
-          "entity_kind": "ViewUse",
+          "entity_kind": "ViewName",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:viewuse:{path}:{source.start}"
+            "template": "swiftui:view-name:{definition.name}"
           },
           "attributes": {
-            "api": "List"
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
           "relation_kind": "renders",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:viewuse:{path}:{source.start}"
+            "template": "swiftui:view-name:{definition.name}"
           },
-          "attributes": {}
+          "attributes": {
+            "child": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "candidate",
+      "coverage_note": "What a view renders: every type constructed inside its body. The Pack states the callee of a call, and a Swift type is written UpperCamelCase, so the twenty-six lowercase-initial exclusions separate a child view from the modifiers chained onto it. The target is the shared ViewName node that swiftui.view.declaration links to the declaring type, so a render edge resolves across files."
     },
     {
-      "id": "swiftui.api.foreach",
-      "snapshot": true,
+      "id": "swiftui.view.presents",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.swift"
         },
         {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "ForEach"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "sheet",
+            "fullScreenCover",
+            "popover",
+            "alert",
+            "confirmationDialog",
+            "actionSheet",
+            "navigationDestination",
+            "contextMenu",
+            "toolbar",
+            "inspector",
+            "fileImporter",
+            "fileExporter",
+            "fileMover"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_property",
+          "relation": "within",
+          "same_path": true,
+          "bind": "body",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "body"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ViewUse",
+          "entity_kind": "SwiftUIType",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:viewuse:{path}:{source.start}"
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
-            "api": "ForEach"
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:viewuse:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.api.sheet",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "Sheet"
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "Presentation",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:presentation:{path}:{source.start}"
+            "template": "swiftui:presentation:{definition.name}"
           },
           "attributes": {
-            "api": "Sheet"
+            "modifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "configured_by",
+          "relation_kind": "presents",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:presentation:{path}:{source.start}"
+            "template": "swiftui:presentation:{definition.name}"
           },
-          "attributes": {}
+          "attributes": {
+            "modifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Which views put something else on screen, and how: a sheet, a cover, an alert, a navigation destination, a toolbar. Seven per-modifier rules collapse to one over the modifier's own callee name."
     },
     {
-      "id": "swiftui.api.alert",
-      "snapshot": true,
+      "id": "swiftui.view.configured-by",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "call.swift"
         },
         {
-          "kind": "external_path_matches",
-          "package": "SwiftUI",
-          "member_in": [
-            "Alert"
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "task",
+            "onAppear",
+            "onDisappear",
+            "onChange",
+            "onReceive",
+            "refreshable",
+            "onSubmit",
+            "onOpenURL",
+            "onDrop",
+            "onContinueUserActivity",
+            "environmentObject",
+            "environment",
+            "modelContainer",
+            "searchable",
+            "focused",
+            "onTapGesture",
+            "onLongPressGesture",
+            "gesture",
+            "onDelete"
           ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_property",
+          "relation": "within",
+          "same_path": true,
+          "bind": "body",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "body"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Presentation",
+          "entity_kind": "SwiftUIType",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:presentation:{path}:{source.start}"
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
-            "api": "Alert"
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
           }
         },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:presentation:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.navigationtitle",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "navigationTitle"
-        }
-      ],
-      "guards": [],
-      "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "ViewModifier",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:navigationTitle:{path}:{source.start}"
+            "template": "swiftui:modifier:{definition.name}"
           },
           "attributes": {
-            "modifier": "navigationTitle",
-            "value": {
+            "modifier": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "definition.name"
             }
           }
         },
@@ -1187,307 +911,34 @@
           "kind": "relation_candidate",
           "relation_kind": "configured_by",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:modifier:navigationTitle:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.navigationdestination",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "navigationDestination"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:navigationDestination:{path}:{source.start}"
+            "template": "swiftui:modifier:{definition.name}"
           },
           "attributes": {
-            "modifier": "navigationDestination",
-            "value": {
+            "modifier": {
               "kind": "field_ref",
-              "field": "value"
+              "field": "definition.name"
             }
           }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:navigationDestination:{path}:{source.start}"
-          },
-          "attributes": {}
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.sheet",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "sheet"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:sheet:{path}:{source.start}"
-          },
-          "attributes": {
-            "modifier": "sheet",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:sheet:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.alert",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "alert"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:alert:{path}:{source.start}"
-          },
-          "attributes": {
-            "modifier": "alert",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:alert:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.task",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "task"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:task:{path}:{source.start}"
-          },
-          "attributes": {
-            "modifier": "task",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:task:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.onappear",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "onAppear"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:onAppear:{path}:{source.start}"
-          },
-          "attributes": {
-            "modifier": "onAppear",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:onAppear:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "swiftui.modifier.ondisappear",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift_named_string_argument_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "onDisappear"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "swiftui:modifier:onDisappear:{path}:{source.start}"
-          },
-          "attributes": {
-            "modifier": "onDisappear",
-            "value": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:onDisappear:{path}:{source.start}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "Which views run work on a lifecycle event, take an injected environment value, or handle a gesture. The modifier node is shared by name, so 'which views run a .task' is one node's incoming edges."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "authored View conformance, direct computed-body child calls, property wrappers and common navigation/presentation modifiers are materialized",
-      "full result-builder expansion, imported/overloaded child target resolution and dynamic navigation destinations require Swift resolver/compiler evidence",
-      "runtime state propagation, environment values, navigation stack and render tree are runtime semantics"
+      "The declared type of a wrapped property is carried by definition.type_candidate, a carrier folded onto the declaration as an attribute, and an attribute is write-only to the overlay. Several reference.type mentions lie inside one property declaration -- the wrapper and the written type -- and nothing distinguishes them, so @StateObject var model = CartModel() cannot be linked to the ObservableModel it observes.",
+      "No Pack publishes call arguments, so the title of .navigationTitle(\"Cart\"), the destination of a NavigationLink and the binding behind .sheet(isPresented:) are not stated. A presentation is recorded by its modifier, not by what it presents.",
+      "extension Foo: View declares no definition.swift_type -- the Pack states an extension as relation.depends -- so a conformance added in an extension is not attributed to a view.",
+      "A child view constructed outside var body, in a helper computed property or a @ViewBuilder function, is not a render edge, because only the body property is joined.",
+      "Cross-file render edges resolve by view name, not by resolved path: nothing ties a constructor call to the module that declares the type."
     ]
   },
   "provenance": [

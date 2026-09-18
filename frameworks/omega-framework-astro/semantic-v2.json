@@ -1,1334 +1,1334 @@
 {
-  "schema_version": 2,
-  "asset": "omega-framework-astro",
-  "selector": "framework:astro",
-  "maturity_target": "semantic-overlay-full",
-  "host": {
-    "languages": [
-      "astro",
-      "javascript",
-      "typescript"
-    ],
-    "required_packs": [
-      "omega-astro",
-      "omega-javascript",
-      "omega-typescript"
-    ],
-    "required_capabilities": [
-      "calls",
-      "data",
-      "definitions",
-      "imports",
-      "references"
-    ]
-  },
-  "evidence_inputs": [
-    "package_manifests",
-    "file_paths",
-    "directory_conventions",
-    "imports_bindings",
-    "config_files",
-    "existing_language_ir"
+ "schema_version": 2,
+ "asset": "omega-framework-astro",
+ "selector": "framework:astro",
+ "maturity_target": "semantic-overlay-full",
+ "host": {
+  "languages": [
+   "astro",
+   "javascript",
+   "typescript"
   ],
-  "emits": {
-    "entities": [
-      "ApiUse",
-      "Component",
-      "ComponentReference",
-      "ContentCollection",
-      "CookieAccess",
-      "Dependency",
-      "EndpointHandler",
-      "GeneratorAccess",
-      "Integration",
-      "LocalsAccess",
-      "Page",
-      "ParamsAccess",
-      "PropsAccess",
-      "RedirectAccess",
-      "RequestAccess",
-      "Route",
-      "SiteAccess",
-      "StaticPathGenerator",
-      "UrlAccess"
-    ],
-    "relations": [
-      "depends_on",
-      "handles",
-      "renders",
-      "route_to_component",
-      "uses_api",
-      "uses_context"
-    ]
-  },
-  "rules": [
-    {
-      "id": "astro.page.route",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.file"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/src/pages/**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Page",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:page:{normalized_file_route}"
-          },
-          "attributes": {
-            "route": {
-              "kind": "normalize_route",
-              "source": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Component",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "page"
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "http:*:{normalized_file_route}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "normalize_route",
-              "source": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "route_to_component",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "http:*:{normalized_file_route}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:page:{normalized_file_route}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.component.authored-file",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.file"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Component",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "attributes": {
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "role": "authored_astro_component"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.integration.import",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "import.statement"
-        },
-        {
-          "kind": "external_path_matches",
-          "package_prefix": "@astrojs/"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Integration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:integration:{external.package}"
-          },
-          "attributes": {
-            "package": {
-              "kind": "field_ref",
-              "field": "import.specifier"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.content.config",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.file"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/src/content.config.{js,ts,mjs,mts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ContentCollection",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:content-config:{file.path}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "astro.generic-api-call.astro",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "astro"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "astro",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_api",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "astro",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
-    },
-    {
-      "id": "astro.generic-dependency.astro",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "import.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "astro"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Dependency",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:dependency:astro"
-          },
-          "attributes": {
-            "package": "astro",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "depends_on",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:dependency:astro"
-          },
-          "attributes": {
-            "package": "astro",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
-    },
-    {
-      "id": "astro.template.imported-component-render",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.astro_element"
-        },
-        {
-          "kind": "field_present",
-          "field": "name"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "import.ecmascript_named_binding_context",
-          "current_field": "name",
-          "join_field": "local_name",
-          "same_path": true,
-          "bind": "component_import",
-          "where": [
-            {
-              "kind": "field_present",
-              "field": "module_source"
-            }
-          ]
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ComponentReference",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:component-ref:{path}:{name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "name"
-            },
-            "source_only": true,
-            "import_resolved": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "renders",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:component-ref:{path}:{name}"
-          },
-          "attributes": {
-            "source_only": true,
-            "import_resolved": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.props",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "props"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "PropsAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:props:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "props",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:props:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.params",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "params"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ParamsAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:params:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "params",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:params:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.request",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "request"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RequestAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:request:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "request",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:request:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.url",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "url"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "UrlAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:url:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "url",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:url:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.redirect",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "redirect"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RedirectAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:redirect:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "redirect",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:redirect:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.cookies",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "cookies"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "CookieAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:cookies:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "cookies",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:cookies:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.locals",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "locals"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "LocalsAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:locals:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "locals",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:locals:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.site",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "site"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SiteAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:site:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "site",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:site:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.context.generator",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.ecmascript_root_member_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "root",
-          "value": "Astro"
-        },
-        {
-          "kind": "field_equals",
-          "field": "member",
-          "value": "generator"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.astro"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "GeneratorAccess",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:context:generator:{path}:{source.start}"
-          },
-          "attributes": {
-            "member": "generator",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_context",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:component:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:context:generator:{path}:{source.start}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.endpoint.export.function",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.ecmascript_exported_function_context"
-        },
-        {
-          "kind": "field_in",
-          "field": "exported_name",
-          "values": [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "HEAD",
-            "OPTIONS"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/src/pages/**/*.{astro,js,ts,mjs,mts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "EndpointHandler",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:endpoint:{path}:{exported_name}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "exported_name"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:route-source:{path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:route-source:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:endpoint:{path}:{exported_name}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "exported_name"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.get-static-paths.function",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.ecmascript_exported_function_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "exported_name",
-          "value": "getStaticPaths"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/src/pages/**/*.{astro,js,ts,mjs,mts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StaticPathGenerator",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:get-static-paths:{path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.endpoint.export.variable",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.ecmascript_exported_variable_context"
-        },
-        {
-          "kind": "field_in",
-          "field": "exported_name",
-          "values": [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "HEAD",
-            "OPTIONS"
-          ]
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/src/pages/**/*.{astro,js,ts,mjs,mts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "EndpointHandler",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:endpoint:{path}:{exported_name}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "exported_name"
-            },
-            "source_only": true
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:route-source:{path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "astro:route-source:{path}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "astro:endpoint:{path}:{exported_name}"
-          },
-          "attributes": {
-            "method": {
-              "kind": "field_ref",
-              "field": "exported_name"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "astro.get-static-paths.variable",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.ecmascript_exported_variable_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "exported_name",
-          "value": "getStaticPaths"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/src/pages/**/*.{astro,js,ts,mjs,mts}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StaticPathGenerator",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "astro:get-static-paths:{path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact"
-    }
+  "required_packs": [
+   "omega-astro",
+   "omega-javascript",
+   "omega-typescript"
   ],
-  "coverage": {
-    "mode": "explicit-classified",
-    "gaps": [
-      "source-authored dynamic component expressions require generic source symbol/value resolution before exact component identity can be materialized",
-      "runtime hydration behavior and runtime content collection loaders remain runtime semantics",
-      "statically recoverable getStaticPaths return values and dynamic route parameter values require bounded source value-flow resolution",
-      "layout role classification beyond exact imported component render requires deterministic naming/config evidence and remains generic ComponentReference",
-      "server action runtime execution and middleware behavior are not inferred from dynamic values"
-    ]
-  },
-  "provenance": [
-    {
-      "source_id": "astro-language-tools",
-      "repository": "https://github.com/withastro/astro/tree/main/packages/language-tools",
-      "path": "packages/language-tools/language-server/src/core/**",
-      "revision": "916b738b0447728f1c274e32677c9bac09be78f6",
-      "confidence": "high",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    },
-    {
-      "source_id": "astro-language-tools",
-      "repository": "https://github.com/withastro/astro/tree/main/packages/language-tools",
-      "path": "packages/language-tools/language-server/src/plugins/**",
-      "revision": "916b738b0447728f1c274e32677c9bac09be78f6",
-      "confidence": "high",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    },
-    {
-      "source_id": "astro-language-tools",
-      "repository": "https://github.com/withastro/astro/tree/main/packages/language-tools",
-      "path": "packages/language-tools/ts-plugin/**",
-      "revision": "916b738b0447728f1c274e32677c9bac09be78f6",
-      "confidence": "high",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    },
-    {
-      "source_id": "eslint-plugin-astro",
-      "repository": "https://github.com/ota-meshi/eslint-plugin-astro",
-      "path": "lib/**",
-      "revision": "5b4f0582f3ffc3a16efa6524dc9f57be9fdb254b",
-      "confidence": "medium",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    },
-    {
-      "source_id": "eslint-plugin-astro",
-      "repository": "https://github.com/ota-meshi/eslint-plugin-astro",
-      "path": "tests/lib/**",
-      "revision": "5b4f0582f3ffc3a16efa6524dc9f57be9fdb254b",
-      "confidence": "medium",
-      "reuse_mode": "knowledge-adapt-after-license-review"
-    }
-  ],
-  "runtime_status": "terminal-static-source-contract",
-  "detection_rules": [
-    {
-      "id": "astro.exact_signature.1.astro",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "binding"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "specifier",
-            "value": "astro"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "astro"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "astro",
-          "framework_name": "Astro",
-          "signature": "astro",
-          "source": "binding.specifier"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "astro.exact_signature.2.astro",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "reference"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "name",
-            "value": "astro"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "astro"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "astro",
-          "framework_name": "Astro",
-          "signature": "astro",
-          "source": "reference.name"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "astro.exact_signature.3.astro",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "package:astro"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "astro"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "astro",
-          "framework_name": "Astro",
-          "signature": "astro",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "astro.exact_signature.4.astro",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "astro"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "astro"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "astro",
-          "framework_name": "Astro",
-          "signature": "astro",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    }
+  "required_capabilities": [
+   "calls",
+   "data",
+   "definitions",
+   "imports",
+   "references"
   ]
+ },
+ "evidence_inputs": [
+  "package_manifests",
+  "file_paths",
+  "directory_conventions",
+  "imports_bindings",
+  "config_files",
+  "existing_language_ir"
+ ],
+ "emits": {
+  "entities": [
+   "ApiUse",
+   "Component",
+   "ComponentReference",
+   "ContentCollection",
+   "CookieAccess",
+   "Dependency",
+   "EndpointHandler",
+   "GeneratorAccess",
+   "Integration",
+   "LocalsAccess",
+   "Page",
+   "ParamsAccess",
+   "PropsAccess",
+   "RedirectAccess",
+   "RequestAccess",
+   "Route",
+   "SiteAccess",
+   "StaticPathGenerator",
+   "UrlAccess"
+  ],
+  "relations": [
+   "depends_on",
+   "handles",
+   "renders",
+   "route_to_component",
+   "uses_api",
+   "uses_context"
+  ]
+ },
+ "rules": [
+  {
+   "id": "astro.page.route",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.file"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/src/pages/**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Page",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:page:{normalized_file_route}"
+     },
+     "attributes": {
+      "route": {
+       "kind": "normalize_route",
+       "source": "path"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Component",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "role": "page"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Route",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "http:*:{normalized_file_route}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "normalize_route",
+       "source": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "route_to_component",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "http:*:{normalized_file_route}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:page:{normalized_file_route}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.component.authored-file",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.file"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Component",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "role": "authored_astro_component"
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.integration.import",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "import.statement"
+    },
+    {
+     "kind": "external_path_matches",
+     "package_prefix": "@astrojs/"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Integration",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:integration:{external.package}"
+     },
+     "attributes": {
+      "package": {
+       "kind": "field_ref",
+       "field": "import.specifier"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.content.config",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.file"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/src/content.config.*"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ContentCollection",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:content-config:{file.path}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "astro.generic-api-call.astro",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "call.target_candidate"
+    },
+    {
+     "kind": "external_path_matches",
+     "package": "astro"
+    },
+    {
+     "kind": "field_present",
+     "field": "source.start"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ApiUse",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:api-use:{path}:{source.start}"
+     },
+     "attributes": {
+      "package": "astro",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_api",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:api-use:{path}:{source.start}"
+     },
+     "attributes": {
+      "package": "astro",
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+  },
+  {
+   "id": "astro.generic-dependency.astro",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "import.target_candidate"
+    },
+    {
+     "kind": "external_path_matches",
+     "package": "astro"
+    },
+    {
+     "kind": "field_present",
+     "field": "source.start"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Dependency",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:dependency:astro"
+     },
+     "attributes": {
+      "package": "astro",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends_on",
+     "source": {
+      "kind": "current"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:dependency:astro"
+     },
+     "attributes": {
+      "package": "astro",
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+  },
+  {
+   "id": "astro.template.imported-component-render",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.astro_element"
+    },
+    {
+     "kind": "field_present",
+     "field": "name"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    },
+    {
+     "kind": "fact_join_by_field",
+     "fact_kind": "import.ecmascript_named_binding_context",
+     "current_field": "name",
+     "join_field": "local_name",
+     "same_path": true,
+     "bind": "component_import",
+     "where": [
+      {
+       "kind": "field_present",
+       "field": "module_source"
+      }
+     ]
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ComponentReference",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:component-ref:{path}:{name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "name"
+      },
+      "source_only": true,
+      "import_resolved": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "renders",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:component-ref:{path}:{name}"
+     },
+     "attributes": {
+      "source_only": true,
+      "import_resolved": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.props",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "props"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "PropsAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:props:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "props",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:props:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.params",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "params"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ParamsAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:params:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "params",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:params:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.request",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "request"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "RequestAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:request:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "request",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:request:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.url",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "url"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "UrlAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:url:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "url",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:url:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.redirect",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "redirect"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "RedirectAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:redirect:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "redirect",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:redirect:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.cookies",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "cookies"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "CookieAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:cookies:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "cookies",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:cookies:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.locals",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "locals"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "LocalsAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:locals:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "locals",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:locals:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.site",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "site"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "SiteAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:site:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "site",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:site:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.context.generator",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "reference.ecmascript_root_member_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "root",
+     "value": "Astro"
+    },
+    {
+     "kind": "field_equals",
+     "field": "member",
+     "value": "generator"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/*.astro"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "GeneratorAccess",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:context:generator:{path}:{source.start}"
+     },
+     "attributes": {
+      "member": "generator",
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "uses_context",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:component:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:context:generator:{path}:{source.start}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.endpoint.export.function",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.ecmascript_exported_function_context"
+    },
+    {
+     "kind": "field_in",
+     "field": "exported_name",
+     "values": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS"
+     ]
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/src/pages/**/*.*"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "EndpointHandler",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:endpoint:{path}:{exported_name}"
+     },
+     "attributes": {
+      "method": {
+       "kind": "field_ref",
+       "field": "exported_name"
+      },
+      "source_only": true
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Route",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:route-source:{path}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:route-source:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:endpoint:{path}:{exported_name}"
+     },
+     "attributes": {
+      "method": {
+       "kind": "field_ref",
+       "field": "exported_name"
+      },
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.get-static-paths.function",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.ecmascript_exported_function_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "exported_name",
+     "value": "getStaticPaths"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/src/pages/**/*.*"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "StaticPathGenerator",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:get-static-paths:{path}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.endpoint.export.variable",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.ecmascript_exported_variable_context"
+    },
+    {
+     "kind": "field_in",
+     "field": "exported_name",
+     "values": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS"
+     ]
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/src/pages/**/*.*"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "EndpointHandler",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:endpoint:{path}:{exported_name}"
+     },
+     "attributes": {
+      "method": {
+       "kind": "field_ref",
+       "field": "exported_name"
+      },
+      "source_only": true
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Route",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:route-source:{path}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "astro:route-source:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "astro:endpoint:{path}:{exported_name}"
+     },
+     "attributes": {
+      "method": {
+       "kind": "field_ref",
+       "field": "exported_name"
+      },
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  },
+  {
+   "id": "astro.get-static-paths.variable",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "definition.ecmascript_exported_variable_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "exported_name",
+     "value": "getStaticPaths"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/src/pages/**/*.*"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "StaticPathGenerator",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "astro:get-static-paths:{path}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact"
+  }
+ ],
+ "coverage": {
+  "mode": "explicit-classified",
+  "gaps": [
+   "source-authored dynamic component expressions require generic source symbol/value resolution before exact component identity can be materialized",
+   "runtime hydration behavior and runtime content collection loaders remain runtime semantics",
+   "statically recoverable getStaticPaths return values and dynamic route parameter values require bounded source value-flow resolution",
+   "layout role classification beyond exact imported component render requires deterministic naming/config evidence and remains generic ComponentReference",
+   "server action runtime execution and middleware behavior are not inferred from dynamic values"
+  ]
+ },
+ "provenance": [
+  {
+   "source_id": "astro-language-tools",
+   "repository": "https://github.com/withastro/astro/tree/main/packages/language-tools",
+   "path": "packages/language-tools/language-server/src/core/**",
+   "revision": "916b738b0447728f1c274e32677c9bac09be78f6",
+   "confidence": "high",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  },
+  {
+   "source_id": "astro-language-tools",
+   "repository": "https://github.com/withastro/astro/tree/main/packages/language-tools",
+   "path": "packages/language-tools/language-server/src/plugins/**",
+   "revision": "916b738b0447728f1c274e32677c9bac09be78f6",
+   "confidence": "high",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  },
+  {
+   "source_id": "astro-language-tools",
+   "repository": "https://github.com/withastro/astro/tree/main/packages/language-tools",
+   "path": "packages/language-tools/ts-plugin/**",
+   "revision": "916b738b0447728f1c274e32677c9bac09be78f6",
+   "confidence": "high",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  },
+  {
+   "source_id": "eslint-plugin-astro",
+   "repository": "https://github.com/ota-meshi/eslint-plugin-astro",
+   "path": "lib/**",
+   "revision": "5b4f0582f3ffc3a16efa6524dc9f57be9fdb254b",
+   "confidence": "medium",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  },
+  {
+   "source_id": "eslint-plugin-astro",
+   "repository": "https://github.com/ota-meshi/eslint-plugin-astro",
+   "path": "tests/lib/**",
+   "revision": "5b4f0582f3ffc3a16efa6524dc9f57be9fdb254b",
+   "confidence": "medium",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  }
+ ],
+ "runtime_status": "terminal-static-source-contract",
+ "detection_rules": [
+  {
+   "id": "astro.exact_signature.1.astro",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "binding"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "specifier",
+      "value": "astro"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "astro"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "astro",
+     "framework_name": "Astro",
+     "signature": "astro",
+     "source": "binding.specifier"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "astro.exact_signature.2.astro",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "reference"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "name",
+      "value": "astro"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "astro"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "astro",
+     "framework_name": "Astro",
+     "signature": "astro",
+     "source": "reference.name"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "astro.exact_signature.3.astro",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "package:astro"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "astro"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "astro",
+     "framework_name": "Astro",
+     "signature": "astro",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "astro.exact_signature.4.astro",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "astro"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "astro"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "astro",
+     "framework_name": "Astro",
+     "signature": "astro",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  }
+ ]
 }

@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 2. Numbers come from
+Last updated after framework wave 3. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -119,6 +119,43 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-45 of 55 frameworks still hold rules that cannot match: **757 of 1 059**. The
+40 of 55 frameworks still hold rules that cannot match: **630 of 982**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
+
+---
+
+## 7. A scoped npm package can never be matched — a host fix, decided
+
+`parse_external_path` (`omega-semantic/src/framework/materialize.rs:560`) splits
+the target on `/` and takes the **first** part as the package. So
+`@sveltejs/kit` becomes package `@sveltejs` with segments `["kit"]`, and an
+`external_path_matches` clause naming `@sveltejs/kit` is unreachable for every
+possible input.
+
+**40 clauses in 5 frameworks depend on this**: nestjs 23, angular 10, tauri 4,
+sveltekit 2, astro 1. A scoped npm package's name *is* `@scope/name`; no other
+ecosystem this function serves produces a leading `@` segment, so joining the
+first two parts when the first begins with `@` is a small, generic rule.
+
+`materialize.rs` is frozen, so the fix needs the design-set obligations re-run
+and `tests/fixtures/design-set/freeze.json` re-stamped with a dated note.
+
+**Decided, not yet done.** The five frameworks above are deliberately scheduled
+*after* the fix, so they are written against a correct host rather than around a
+bug. sveltekit's two rules were deleted rather than worked around; the others
+have not been rewritten yet.
+
+### 7a. JS/TS facts never carry `external` at all
+
+Separately and compounding it: `facts_of_surface` resolves external identity
+through `external_environment`, which only registers a binding whose
+`target_hint` is set. `target_hint` is `occurrence.qualifier`, and `qualifier` is
+read only from an emission field or attribute literally named `qualifier`. The
+JS/TS Packs publish `target` and `module`, never `qualifier` — so
+`external.package` and `external.member` are empty for every JavaScript and
+TypeScript fact, and every `external_path_matches` clause in a JS framework
+fails regardless of scoping.
+
+This is the same `qualifier` row already in item 1, now known to be load-bearing
+for the whole `external.*` mechanism in the largest language family Omega has.

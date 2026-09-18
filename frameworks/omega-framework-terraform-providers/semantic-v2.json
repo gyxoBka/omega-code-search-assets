@@ -1,610 +1,582 @@
 {
-  "schema_version": 2,
-  "asset": "omega-framework-terraform-providers",
-  "selector": "framework:terraform-providers",
-  "maturity_target": "semantic-overlay-full",
-  "host": {
-    "languages": [
-      "hcl"
-    ],
-    "required_packs": [
-      "omega-hcl"
-    ],
-    "required_capabilities": [
-      "definitions",
-      "calls",
-      "references",
-      "data",
-      "scopes"
-    ]
-  },
-  "evidence_inputs": [
-    "existing_language_ir",
-    "project_level_evidence",
-    "structured_documents",
-    "calls_members",
-    "scope.hcl_body"
+ "schema_version": 2,
+ "asset": "omega-framework-terraform-providers",
+ "selector": "framework:terraform-providers",
+ "maturity_target": "semantic-overlay-full",
+ "host": {
+  "languages": [
+   "hcl"
   ],
-  "emits": {
-    "entities": [
-      "ConfigDocument",
-      "ProviderAlias",
-      "ProviderConfig",
-      "ProviderRequirement",
-      "ProviderSelection"
-    ],
-    "relations": [
-      "configured_by"
-    ]
-  },
-  "rules": [
+  "required_packs": [
+   "omega-hcl"
+  ],
+  "required_capabilities": [
+   "definitions",
+   "calls",
+   "references",
+   "data",
+   "scopes"
+  ]
+ },
+ "evidence_inputs": [
+  "existing_language_ir",
+  "project_level_evidence",
+  "structured_documents",
+  "calls_members",
+  "scope.hcl_body"
+ ],
+ "emits": {
+  "entities": [
+   "ConfigDocument",
+   "ProviderAlias",
+   "ProviderConfig",
+   "ProviderRequirement",
+   "ProviderSelection"
+  ],
+  "relations": [
+   "configured_by"
+  ]
+ },
+ "rules": [
+  {
+   "id": "terraform-providers.source-authored.config-document",
+   "snapshot": true,
+   "match": [
     {
-      "id": "terraform-providers.source-authored.config-document",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "scope.hcl_body"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ConfigDocument",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform-providers:config-document:{path}"
-          },
-          "attributes": {
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "observed",
-      "confidence": "exact",
-      "coverage_note": "Authored HCL document identity only; module/resource/provider/effective values and Terraform evaluation remain unresolved."
-    },
-    {
-      "id": "terraform-providers.provider-block",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.hcl_block_labeled"
-        },
-        {
-          "kind": "field_equals",
-          "field": "block_kind",
-          "value": "provider"
-        },
-        {
-          "kind": "field_present",
-          "field": "label0"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderConfig",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:provider:{path}:{label0}:{source.start}"
-          },
-          "attributes": {
-            "provider": {
-              "kind": "field_ref",
-              "field": "label0"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "terraform-providers.provider-alias",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.hcl_block_string_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_kind",
-          "value": "provider"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "alias"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderAlias",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:provider-alias:{path}:{owner_label0}:{value}"
-          },
-          "attributes": {
-            "provider": {
-              "kind": "field_ref",
-              "field": "owner_label0"
-            },
-            "alias": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "terraform:provider:{path}:{owner_label0}:{source.start}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "terraform:provider-alias:{path}:{owner_label0}:{value}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "terraform-providers.required-provider",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.hcl_unlabeled_block_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_kind",
-          "value": "required_providers"
-        },
-        {
-          "kind": "field_present",
-          "field": "key"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderRequirement",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:required-provider:{path}:{key}"
-          },
-          "attributes": {
-            "provider": {
-              "kind": "field_ref",
-              "field": "key"
-            },
-            "constraint": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "terraform-providers.selection.resource",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.hcl_block_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_kind",
-          "value": "resource"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "provider"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderSelection",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:provider-selection:{path}:resource:{owner_label0}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": "resource",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_label0"
-            },
-            "provider": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "terraform-providers.selection.data",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.hcl_block_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_kind",
-          "value": "data"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "provider"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderSelection",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:provider-selection:{path}:data:{owner_label0}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": "data",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_label0"
-            },
-            "provider": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "terraform-providers.selection.module",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.hcl_block_attribute_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_kind",
-          "value": "module"
-        },
-        {
-          "kind": "field_equals",
-          "field": "key",
-          "value": "provider"
-        },
-        {
-          "kind": "field_present",
-          "field": "value"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/*.{tf,hcl}"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderSelection",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:provider-selection:{path}:module:{owner_label0}:{source.start}"
-          },
-          "attributes": {
-            "owner_kind": "module",
-            "owner": {
-              "kind": "field_ref",
-              "field": "owner_label0"
-            },
-            "provider": {
-              "kind": "field_ref",
-              "field": "value"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "terraform-providers.required-provider-entry",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "data.hcl_block_object_entry_unlabeled_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "owner_kind",
-          "value": "terraform"
-        },
-        {
-          "kind": "field_equals",
-          "field": "attribute_key",
-          "value": "required_providers"
-        },
-        {
-          "kind": "field_present",
-          "field": "object_key"
-        },
-        {
-          "kind": "field_present",
-          "field": "object_value"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ProviderRequirement",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "terraform:required-provider:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "object_key"
-            },
-            "constraint_or_object": {
-              "kind": "field_ref",
-              "field": "object_value"
-            },
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Authored required_providers entry; nested source/version object fields remain raw value text unless further resolved."
+     "kind": "fact_kind",
+     "value": "scope.hcl_body"
     }
-  ],
-  "coverage": {
-    "mode": "explicit-classified",
-    "gaps": [
-      "provider blocks, aliases, required_providers entries/object values and authored provider selections are materialized; nested source/version object fields are preserved in authored object text unless generic HCL object recursion resolves them",
-      "provider schemas, installed plugin versions, remote credentials/state and runtime/tool execution are external state and are never executed during indexing"
-    ]
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ConfigDocument",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform-providers:config-document:{path}"
+     },
+     "attributes": {
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "observed",
+   "confidence": "exact",
+   "coverage_note": "Authored HCL document identity only; module/resource/provider/effective values and Terraform evaluation remain unresolved."
   },
-  "provenance": [
+  {
+   "id": "terraform-providers.provider-block",
+   "snapshot": true,
+   "match": [
     {
-      "source_id": "terraform-schema",
-      "repository": "https://github.com/hashicorp/terraform-schema",
-      "path": "schema/**",
-      "revision": "b2df465f26aa7901038469a1d3fc3a280458271f",
-      "confidence": "high",
-      "reuse_mode": "knowledge-adapt-after-license-review"
+     "kind": "fact_kind",
+     "value": "definition.hcl_block_labeled"
     },
     {
-      "source_id": "terraform-plugin-sdk-schema",
-      "repository": "https://github.com/hashicorp/terraform-plugin-sdk",
-      "path": "helper/schema/schema.go",
-      "revision": "e6c7dc42a51abcaf5b709a98720ba13ba0082021",
-      "confidence": "high",
-      "reuse_mode": "knowledge-adapt-after-license-review"
+     "kind": "field_equals",
+     "field": "block_kind",
+     "value": "provider"
+    },
+    {
+     "kind": "field_present",
+     "field": "label0"
     }
-  ],
-  "detection_rules": [
+   ],
+   "guards": [],
+   "outputs": [
     {
-      "id": "terraform-providers.exact_signature.1.github.com_hashicorp_terraform-plugin-framework",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "binding"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "specifier",
-            "value": "github.com/hashicorp/terraform-plugin-framework"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "terraform-providers"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "terraform-providers",
-          "framework_name": "Terraform providers",
-          "signature": "github.com/hashicorp/terraform-plugin-framework",
-          "source": "binding.specifier"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderConfig",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:provider:{path}:{label0}:{source.start}"
+     },
+     "attributes": {
+      "provider": {
+       "kind": "field_ref",
+       "field": "label0"
       }
-    },
-    {
-      "id": "terraform-providers.exact_signature.2.github.com_hashicorp_terraform-plugin-framework",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "reference"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "name",
-            "value": "github.com/hashicorp/terraform-plugin-framework"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "terraform-providers"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "terraform-providers",
-          "framework_name": "Terraform providers",
-          "signature": "github.com/hashicorp/terraform-plugin-framework",
-          "source": "reference.name"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "terraform-providers.exact_signature.3.github.com_hashicorp_terraform-plugin-framework",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "package:github.com/hashicorp/terraform-plugin-framework"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "terraform-providers"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "terraform-providers",
-          "framework_name": "Terraform providers",
-          "signature": "github.com/hashicorp/terraform-plugin-framework",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
-    },
-    {
-      "id": "terraform-providers.exact_signature.4.github.com_hashicorp_terraform-plugin-framework",
-      "atoms": [
-        {
-          "FieldEquals": {
-            "field": "row_kind",
-            "value": "contract"
-          }
-        },
-        {
-          "FieldEquals": {
-            "field": "identity",
-            "value": "github.com/hashicorp/terraform-plugin-framework"
-          }
-        }
-      ],
-      "guards": [],
-      "output": {
-        "kind": "Dependency",
-        "selector": {
-          "Textual": {
-            "namespace": "framework",
-            "text": "terraform-providers"
-          }
-        },
-        "selector_expr": null,
-        "attributes": {
-          "framework_id": "terraform-providers",
-          "framework_name": "Terraform providers",
-          "signature": "github.com/hashicorp/terraform-plugin-framework",
-          "source": "contract.identity"
-        },
-        "external_path": null,
-        "evidence_class": "structurally_derived"
-      }
+     }
     }
-  ],
-  "runtime_status": "terminal-static-source-contract"
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact"
+  },
+  {
+   "id": "terraform-providers.provider-alias",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.hcl_block_string_attribute_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "owner_kind",
+     "value": "provider"
+    },
+    {
+     "kind": "field_equals",
+     "field": "key",
+     "value": "alias"
+    },
+    {
+     "kind": "field_present",
+     "field": "value"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderAlias",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:provider-alias:{path}:{owner_label0}:{value}"
+     },
+     "attributes": {
+      "provider": {
+       "kind": "field_ref",
+       "field": "owner_label0"
+      },
+      "alias": {
+       "kind": "field_ref",
+       "field": "value"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "configured_by",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "terraform:provider:{path}:{owner_label0}:{source.start}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "terraform:provider-alias:{path}:{owner_label0}:{value}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "terraform-providers.required-provider",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.hcl_unlabeled_block_attribute_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "owner_kind",
+     "value": "required_providers"
+    },
+    {
+     "kind": "field_present",
+     "field": "key"
+    },
+    {
+     "kind": "field_present",
+     "field": "value"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderRequirement",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:required-provider:{path}:{key}"
+     },
+     "attributes": {
+      "provider": {
+       "kind": "field_ref",
+       "field": "key"
+      },
+      "constraint": {
+       "kind": "field_ref",
+       "field": "value"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "terraform-providers.selection.resource",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.hcl_block_attribute_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "owner_kind",
+     "value": "resource"
+    },
+    {
+     "kind": "field_equals",
+     "field": "key",
+     "value": "provider"
+    },
+    {
+     "kind": "field_present",
+     "field": "value"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderSelection",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:provider-selection:{path}:resource:{owner_label0}:{source.start}"
+     },
+     "attributes": {
+      "owner_kind": "resource",
+      "owner": {
+       "kind": "field_ref",
+       "field": "owner_label0"
+      },
+      "provider": {
+       "kind": "field_ref",
+       "field": "value"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "terraform-providers.selection.data",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.hcl_block_attribute_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "owner_kind",
+     "value": "data"
+    },
+    {
+     "kind": "field_equals",
+     "field": "key",
+     "value": "provider"
+    },
+    {
+     "kind": "field_present",
+     "field": "value"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderSelection",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:provider-selection:{path}:data:{owner_label0}:{source.start}"
+     },
+     "attributes": {
+      "owner_kind": "data",
+      "owner": {
+       "kind": "field_ref",
+       "field": "owner_label0"
+      },
+      "provider": {
+       "kind": "field_ref",
+       "field": "value"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "terraform-providers.selection.module",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.hcl_block_attribute_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "owner_kind",
+     "value": "module"
+    },
+    {
+     "kind": "field_equals",
+     "field": "key",
+     "value": "provider"
+    },
+    {
+     "kind": "field_present",
+     "field": "value"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderSelection",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:provider-selection:{path}:module:{owner_label0}:{source.start}"
+     },
+     "attributes": {
+      "owner_kind": "module",
+      "owner": {
+       "kind": "field_ref",
+       "field": "owner_label0"
+      },
+      "provider": {
+       "kind": "field_ref",
+       "field": "value"
+      }
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "candidate"
+  },
+  {
+   "id": "terraform-providers.required-provider-entry",
+   "snapshot": true,
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "data.hcl_block_object_entry_unlabeled_context"
+    },
+    {
+     "kind": "field_equals",
+     "field": "owner_kind",
+     "value": "terraform"
+    },
+    {
+     "kind": "field_equals",
+     "field": "attribute_key",
+     "value": "required_providers"
+    },
+    {
+     "kind": "field_present",
+     "field": "object_key"
+    },
+    {
+     "kind": "field_present",
+     "field": "object_value"
+    }
+   ],
+   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ProviderRequirement",
+     "canonical_key": {
+      "kind": "canonical_key",
+      "template": "terraform:required-provider:{path}:{source.start}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "object_key"
+      },
+      "constraint_or_object": {
+       "kind": "field_ref",
+       "field": "object_value"
+      },
+      "source_only": true
+     }
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Authored required_providers entry; nested source/version object fields remain raw value text unless further resolved."
+  }
+ ],
+ "coverage": {
+  "mode": "explicit-classified",
+  "gaps": [
+   "provider blocks, aliases, required_providers entries/object values and authored provider selections are materialized; nested source/version object fields are preserved in authored object text unless generic HCL object recursion resolves them",
+   "provider schemas, installed plugin versions, remote credentials/state and runtime/tool execution are external state and are never executed during indexing"
+  ]
+ },
+ "provenance": [
+  {
+   "source_id": "terraform-schema",
+   "repository": "https://github.com/hashicorp/terraform-schema",
+   "path": "schema/**",
+   "revision": "b2df465f26aa7901038469a1d3fc3a280458271f",
+   "confidence": "high",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  },
+  {
+   "source_id": "terraform-plugin-sdk-schema",
+   "repository": "https://github.com/hashicorp/terraform-plugin-sdk",
+   "path": "helper/schema/schema.go",
+   "revision": "e6c7dc42a51abcaf5b709a98720ba13ba0082021",
+   "confidence": "high",
+   "reuse_mode": "knowledge-adapt-after-license-review"
+  }
+ ],
+ "detection_rules": [
+  {
+   "id": "terraform-providers.exact_signature.1.github.com_hashicorp_terraform-plugin-framework",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "binding"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "specifier",
+      "value": "github.com/hashicorp/terraform-plugin-framework"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "terraform-providers"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "terraform-providers",
+     "framework_name": "Terraform providers",
+     "signature": "github.com/hashicorp/terraform-plugin-framework",
+     "source": "binding.specifier"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "terraform-providers.exact_signature.2.github.com_hashicorp_terraform-plugin-framework",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "reference"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "name",
+      "value": "github.com/hashicorp/terraform-plugin-framework"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "terraform-providers"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "terraform-providers",
+     "framework_name": "Terraform providers",
+     "signature": "github.com/hashicorp/terraform-plugin-framework",
+     "source": "reference.name"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "terraform-providers.exact_signature.3.github.com_hashicorp_terraform-plugin-framework",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "package:github.com/hashicorp/terraform-plugin-framework"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "terraform-providers"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "terraform-providers",
+     "framework_name": "Terraform providers",
+     "signature": "github.com/hashicorp/terraform-plugin-framework",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  },
+  {
+   "id": "terraform-providers.exact_signature.4.github.com_hashicorp_terraform-plugin-framework",
+   "atoms": [
+    {
+     "FieldEquals": {
+      "field": "row_kind",
+      "value": "contract"
+     }
+    },
+    {
+     "FieldEquals": {
+      "field": "identity",
+      "value": "github.com/hashicorp/terraform-plugin-framework"
+     }
+    }
+   ],
+   "guards": [],
+   "output": {
+    "kind": "Dependency",
+    "selector": {
+     "Textual": {
+      "namespace": "framework",
+      "text": "terraform-providers"
+     }
+    },
+    "selector_expr": null,
+    "attributes": {
+     "framework_id": "terraform-providers",
+     "framework_name": "Terraform providers",
+     "signature": "github.com/hashicorp/terraform-plugin-framework",
+     "source": "contract.identity"
+    },
+    "external_path": null,
+    "evidence_class": "structurally_derived"
+   }
+  }
+ ],
+ "runtime_status": "terminal-static-source-contract"
 }

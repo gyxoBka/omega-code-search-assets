@@ -128,6 +128,22 @@ None and the entity is dropped, while the relation is evaluated in a second loop
 and still renders its ends. Add a `field_present` clause for anything an
 attribute depends on.
 
+## 3c. Two clauses that silently match nothing
+
+**A brace in a path glob is a literal byte.** `glob_here` implements only `**`,
+`*` and `?`. `**/*.{js,ts,tsx}` therefore matches only a path that literally
+ends in that text, so every rule carrying one emitted nothing — 75 clauses
+across 9 frameworks, all reported "live" by the audit. If a fact kind already
+implies its language, the extension filter was restating what the Pack decided:
+drop it. `overlay_audit.py` flags these now.
+
+**`external_path_matches` cannot name a scoped npm package.**
+`parse_external_path` takes the first `/`-separated part as the package, so
+`@sveltejs/kit` is package `@sveltejs`. Until the host fix in `OWED.md` item 7
+lands, do not write a rule against a scoped package; and note `OWED.md` item 7a:
+JS/TS facts carry no `external` at all, because the Packs publish `target` and
+`module` rather than `qualifier`.
+
 ## 4. Verification
 
 ```bash
