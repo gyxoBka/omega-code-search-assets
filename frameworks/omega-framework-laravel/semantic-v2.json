@@ -296,7 +296,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -464,7 +464,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -705,7 +705,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -782,7 +782,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -915,7 +915,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -1002,7 +1002,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -1049,7 +1049,7 @@
             "template": "laravel:class:{definition.name}"
           },
           "attributes": {
-            "named_class": {
+            "class": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -1191,7 +1191,136 @@
             "kind": "by_canonical_key",
             "template": "laravel:view-name:{definition.name}"
           },
-          "attributes": {}
+          "attributes": {
+            "directive": {
+              "kind": "literal",
+              "value": "@include"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "laravel.view.include.conditional",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "directive",
+          "value": "@includeif"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:view:{path}"
+          },
+          "attributes": {
+            "template": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewName",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:view-name:{definition.name}"
+          },
+          "attributes": {
+            "view": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:view:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:view-name:{definition.name}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "literal",
+              "value": "@includeIf"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "laravel.view.include.each",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "attribute_equals",
+          "attribute": "directive",
+          "value": "@each"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "View",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:view:{path}"
+          },
+          "attributes": {
+            "template": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewName",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "laravel:view-name:{definition.name}"
+          },
+          "attributes": {
+            "view": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "renders",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "laravel:view:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "laravel:view-name:{definition.name}"
+          },
+          "attributes": {
+            "directive": {
+              "kind": "literal",
+              "value": "@each"
+            }
+          }
         }
       ]
     },
@@ -1459,9 +1588,10 @@
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "omega-php publishes no field on any of its templates, so a call argument is not a fact: the route path in Route::get('/users', ...), the view name in view('users.index'), the table name in Schema::create('users', ...) and the keys returned by config/*.php are string literals no Pack emits, and no join reaches them",
-      "a Laravel facade is recognised here by the class name written at the '::', because omega-php publishes no 'qualifier' and so no PHP fact carries an external package to match 'Illuminate\\\\Support\\\\Facades\\\\Route' against",
-      "@includeIf and @each name a view that omega-blade states, but 'directive' is a Pack attribute and attribute_equals compares against one constant, so only @extends and @include are stated",
+      "a call argument is not a fact in PHP: omega-php publishes no field and no attribute on any of its 51 templates, and it is not one of the ten Packs that now carry the canonical call view (call.arg0_text, call.arg1_text, call.last_arg_name, receiver) on their call templates -- measured with dump_call_emissions on routes/web.php, Route::get('/users/{id}', [UserController::class,'show']) emits call.static_method get and two reference.class and nothing else",
+      "so a Route entity here is keyed by file and byte offset, not by the http:{method}:{normalized_route} identity every Framework with a reachable first argument uses: the URL literal '/users/{id}' produces no fact, and neither does the view name in view('users.index'), the table name in Schema::create('users', ...), the queue name, the gate ability or the keys returned by config/*.php",
+      "a Laravel facade is recognised here by the class name written at the '::', because omega-php publishes no 'qualifier' and so no PHP fact carries an external package to match 'Illuminate\\Support\\Facades\\Route' against",
+      "@includeWhen, @includeUnless and @includeFirst name a view that omega-blade's query captures but no template emits -- measured, @includeWhen($cond, 'partials.admin') produces no fact at all -- so those three spellings are not stated; @extends, @include, @includeIf and @each are",
       "route macros, container bindings made at runtime, middleware ordering and morph maps are runtime framework state and are not guessed"
     ]
   },
@@ -1663,7 +1793,8 @@
   ],
   "reconciliation": {
     "v3_144": "Pack/Framework fact contract reconciled against current host Pack; runtime-only/dynamic gaps remain explicitly bounded.",
-    "wave_6": "Rewritten against omega-php and omega-blade as they emit today: kind, name, path and span only. Every rule is reached by fact_kind plus fact_join_by_span/within; no rule reads a Pack-published field, because neither Pack publishes one."
+    "wave_6": "Rewritten against omega-php and omega-blade as they emit today: kind, name, path and span only. Every rule is reached by fact_kind plus fact_join_by_span/within; no rule reads a Pack-published field, because neither Pack publishes one.",
+    "wave_7": "Re-measured against the ten Packs that now publish the canonical call view. omega-php is not one of them and emits no call.arg* field, so the route URL, view name and table name remain unreachable and the Route key stays file+offset. Added @includeIf and @each as view dependencies, put the directive on the renders edge, and made every LaravelClass minting carry the same attribute name."
   },
   "runtime_status": "terminal-static-source-contract"
 }

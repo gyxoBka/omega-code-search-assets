@@ -374,6 +374,22 @@ byte, and both are the spelling their own documentation uses. Where a construct
 has two spellings and only one carries a literal, write two rules -- the literal
 one stating the value, the other stating what it can.
 
+**In omega-ruby and omega-kotlin, `call.arguments` is not every call.** Its
+pattern requires an argument list, and neither language needs one: `before_save
+do … end`, `default_scope { … }`, `run { }` emit `call.method` and no
+`call.arguments` at all. Matching only `call.arguments` deletes every block form.
+Write both rules and have them mint the same key with the same kind, and give
+the argument-bearing one the **shorter id** -- the host interns with
+`or_insert`, so the first rule by id is the one whose attributes survive.
+
+**An audit cannot tell you whether the Pack's grammar can run.**
+`overlay_audit.py` builds its surface from `packs/*/rules.json` and never looks
+at a grammar's detection keys. Nine laravel rules matched omega-blade and scored
+live for a whole programme while every `.blade.php` in existence was being
+routed to omega-php by its tail. If your Framework's language is reached by an
+unusual filename or a compound suffix, check `grammars/<slug>/manifest.toml`
+yourself.
+
 **Key a handler on `*_name`, never on the argument as written.** A handler is
 written `ctrl.GetUser`, `handlers.ListUsers`, `handlers::show_user` at the
 registration and declared as `GetUser`, `ListUsers`, `show_user`. Four

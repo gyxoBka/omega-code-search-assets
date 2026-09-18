@@ -5,8 +5,8 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-9 overlay rules, 12 detection rules. **9 can match, 0 cannot.** (Was 10 rules,
-0 live.)
+11 overlay rules, 12 detection rules. **11 can match, 0 cannot.**
+(Wave 1: 9 rules, 9 live. Before wave 1: 10 rules, 0 live.)
 
 Selector: `framework:jetpack-compose`. Maturity: `semantic-overlay-full`.
 Language: Kotlin only, so every rule reads `omega-kotlin`.
@@ -16,6 +16,7 @@ Language: Kotlin only, so every rule reads `omega-kotlin`.
 | entity_kind | rules |
 |---|---|
 | `ComposeComponent` | 2 |
+| `ComposeRoute` | 2 |
 | `ComposeState` | 2 |
 | `ComposeEffect` | 1 |
 | `ComposeNavGraph` | 1 |
@@ -26,173 +27,232 @@ Language: Kotlin only, so every rule reads `omega-kotlin`.
 
 | relation_kind | rules |
 |---|---|
-| `declares` | 3 |
+| `declares` | 4 |
+| `navigates` | 2 |
 | `renders` | 1 |
 | `hosts` | 1 |
-| `navigates` | 1 |
 
 ### Fact kinds it matches
 
 | kind | rules | a Pack emits it |
 |---|---|---|
-| `call.function` | 5 | yes |
+| `call.arguments` | 3 | yes (omega-kotlin) |
+| `call.function` | 4 | yes |
 | `call.method` | 2 | yes |
-| `definition.modifier_candidate` | 2 (+7 as a nested join) | yes |
-| `definition.function` | 9 (as a join) | yes |
+| `definition.modifier_candidate` | 2 (+9 as a nested join) | yes |
+| `definition.function` | 10 (as a join) | yes |
 | `definition.class` | 1 (as a join) | yes |
 
-Fields read: none. Every value comes from a built-in name — `definition.name`,
-`path`, `source.start` — or from a bound join.
+Fields read: `call.arg0_text`, `call.arg1_text` on `call.arguments`. Everything
+else comes from a built-in name — `definition.name`, `path`, `source.start` —
+or from a bound join.
 
 ## What was wrong with it
 
-All ten rules were keyed to the generator's old Kotlin-private vocabulary, and
-no Pack emits any of it:
+Wave 1 had already ported the file off the generator's dead Kotlin-private
+vocabulary (10 rules keyed to `definition.kotlin_annotated_function_context`,
+`call.kotlin_direct_call_context` and three more kinds no Pack emits, plus eight
+fields no Pack publishes). That part stands. **What was wrong on this pass is
+one thing, and it cost four sentences of `coverage.gaps` and two of the three
+questions Navigation Compose exists to answer.**
 
-| dead kind | rules using it |
-|---|---|
-| `definition.kotlin_annotated_function_context` | 10 |
-| `call.kotlin_direct_call_context` | 4 |
-| `call.kotlin_annotated_owner_direct_call_context` | 2 |
-| `call.kotlin_member_string_arg_context` | 2 |
-| `call.kotlin_string_arg_context` | 1 |
+Wave 1 measured, correctly at the time, that omega-kotlin publishes no argument
+text, and concluded that a route literal "is not reachable by any clause". It
+then wrote that conclusion into three places:
 
-and to eight fields no Pack publishes — `annotation_name`, `function_name`,
-`call_name`, `callee_name`, `owner_name`, `member`, `receiver`, `arg0`. The
-whole file answered nothing.
+1. **`coverage.gaps` entry 2** — *"omega-kotlin publishes no argument text, so
+   every Navigation Compose route literal … is unreachable. Navigation is stated
+   as which composable hosts the graph and which composable moves the back
+   stack, never as a route string."* False as of the `call.arguments` emission.
+2. **"A field only the Pack can supply", first entry** — a request for exactly
+   the field that now exists. Withdrawn.
+3. **Two `coverage_note`s**, on `compose.navigation.host` and
+   `compose.navigation.action`, each repeating that the route argument "is not
+   published". Both rewritten.
 
-Beyond the translation, four things were wrong on their own terms:
+The concrete loss was **three rules' worth of answers**:
 
-1. **Three rules restated their input.** `compose.composable.nested-call` minted
-   a `ComposeCall` keyed `compose:call:{path}:{source.start}` whose only
-   attribute was the callee name it had just read, with no relation to anything.
-   `compose.navigation.navigate-literal` and `.popbackstack-literal` each minted
-   a `RouteReference` keyed by the very string they matched and pointed a
-   `navigates_to` at it — an edge from a call site to its own argument. Gone.
+- **`composable("home") { … }` produced nothing at all.** The whole
+  `NavGraphBuilder` body — every destination in the application — was invisible.
+  A project's route table did not exist in the graph.
+- **`compose.navigation.action` had no target.** It minted a
+  `ComposeNavigationAction` keyed `compose:nav-action:{path}:{source.start}` and
+  pointed a `navigates` edge at it, so the edge went from a screen to *the byte
+  offset of its own call site*. *Which screen does this button navigate to* was
+  unanswerable, and `navigate` and `popBackStack` — one of which names a
+  destination and one of which cannot — were lumped into one rule.
+- **`compose.navigation.host` stated a nav graph with no start destination**,
+  although `NavHost(navController, startDestination)` puts it in argument one.
 
-2. **Three relation kinds for one fact.** `compose.composable.direct-child` and
-   `compose.composable.nested-child` each emitted `calls`, `contains` *and*
-   `renders` between the same two keys, with the same evidence attribute. In
-   Compose those are one statement. One `renders` edge now.
+Measured against the same hand-written file (`dump_call_emissions`, omega-kotlin
++ omega-kotlin grammar), omega-kotlin emits `call.arguments` on the **same span**
+as `call.function`/`call.method`, carrying twelve fields:
 
-3. **Two rules were the same rule twice.** `direct-child` and `nested-child`
-   differed only in which dead composite kind carried the owner — the annotated
-   owner was baked into the fact in one and reached by a span join in the other.
-   `compose.remember.call` and `compose.state.nested` were likewise one question
-   asked of two spellings. Each pair is one rule now.
+```
+251-261  call.arguments  name=composable  call.arg0="\"home\""  call.arg0_text="home"  …
+776-784  call.arguments  name=navigate    call.arg0="\"details/1\""  call.arg0_text="details/1"  …
+363-373  call.arguments  name=composable  call.arg0="Screen.Profile.route"  call.arg0_text="Screen.Profile.route"
+816-824  call.arguments  name=navigate    call.arg0="Screen.Profile.route"  call.arg0_text="Screen.Profile.route"
+```
 
-4. **Every key was path-local.** `compose:component:{path}:{name}` meant a
-   composable declared in `HomeScreen.kt` and called from `AppNav.kt` were two
-   different entities, so the one cross-file question Compose has — *which screen
-   does this navigation host render* — could never be answered even if the kinds
-   had existed. Components are keyed by name alone now, and the callee join runs
-   repository-wide.
+Two things follow that decided the design. First, `call.arguments`' **name is
+the callee**, so the three new rules match `call.arguments` directly rather than
+joining it to `call.function`; the join would buy nothing. Second, the two Compose
+route spellings each meet *themselves* — literal↔literal and constant↔constant —
+so a single `compose:route:{normalized_route}` key space is a real identity for
+both, and only the mixed case fails.
 
-Three rules could not be ported at all and are deleted rather than rewritten:
-`compose.navigation.route`, `.navigate-literal` and `.popbackstack-literal` all
-read `arg0`, the text of a string-literal argument. omega-kotlin publishes no
-argument text on any of its 28 templates, so a route literal is not reachable by
-any clause — see *A field only the Pack can supply* below.
+Three further corrections made on this pass:
+
+4. **`compose.navigation.action` is split in two** (brief §3l: where a construct
+   has two spellings and only one carries a literal, write two rules).
+   `compose.navigation.navigate` states the destination; `compose.navigation.back`
+   states that `popBackStack`/`navigateUp`/`clearBackStack` leave, and by which
+   API, which is all they can state.
+5. **The `navigate` edge now lands on a key another rule mints.** Both
+   `compose.navigation.destination` and `compose.navigation.navigate` mint
+   `ComposeRoute` — **one kind, one key space** (brief §3g) — so an edge to a
+   route that no `NavHost` in this repository declares still reaches an entity
+   rather than dangling (brief §3a). `compose.navigation.destination` sorts
+   before `compose.navigation.navigate`, so where both fire it is the
+   declaration's attributes that survive the `or_insert` (brief §3g);
+   `key_collisions.py jetpack-compose` reports nothing.
+6. **`navigation(...)` is deliberately excluded** from the destination rule. It
+   is the one Navigation Compose builder whose arguments are conventionally all
+   named, so `call.arg0_text` is the literal text `startDestination = "settings/main"`
+   and not a route. Including it would have minted a junk route identity that
+   nothing else can address (brief §3f cuts the other way here: this is not
+   narrowing a value list the Pack fills generically, it is declining a value the
+   Pack measurably cannot give).
 
 ## What it states now
 
-Measured, not assumed: `dump_call_emissions` over a hand-written Compose file
-(`@Composable fun Greeting`, `remember { mutableStateOf(0) }`, `NavHost { }`,
-`navController.navigate("details/1")`, `setContent { }`) is what every row below
-is written against. The one fact that makes this framework statable is
+Every row is written against a `dump_call_emissions` run over a hand-written
+Compose file — `@Composable fun AppNav`, a `NavHost` with four `composable`
+destinations in two spellings, a `dialog`, a nested `navigation`,
+`remember { mutableStateOf(0) }`, `LaunchedEffect`, `navController.navigate` in
+both spellings, `popBackStack`, `@Preview @Composable`, and a `MainActivity`
+with `setContent`.
+
+The fact that makes this framework statable at all remains
 `definition.modifier_candidate`: omega-kotlin emits the trimmed text of a
 declaration's whole modifier run as the *name* of a carrier whose span is
 byte-identical to the declaration's, so `@Composable` arrives as
 `definition.modifier_candidate "@Composable"` on the exact span of the
-`definition.function` — and `fact_join_by_span` with `relation: "same"` reaches
-the function with no Pack field at all.
+`definition.function`, and `fact_join_by_span` `relation: "same"` reaches the
+function with no Pack field.
 
 | what it answers | which Pack fact | entity or relation |
 |---|---|---|
 | Which functions are UI components? | `definition.modifier_candidate` name prefixed `@Composable`, span-`same` join to `definition.function` | `ComposeComponent` at `compose:composable:{name}` |
-| Which of them are preview harnesses, not real UI? | the same carrier prefixed `@Preview` (the Android Studio template order) | the same `ComposeComponent`, with `preview_harness` |
-| Which composable renders which, across files? | `call.function` inside a composable, whose name joins a `@Composable` `definition.function` anywhere in the repository | `renders` from the caller's component key to the callee's |
-| What state does this screen hold? | `call.function` in the `remember` / `mutableStateOf` / `derivedStateOf` family, inside a composable | `ComposeState` + `declares` from the component |
-| What does this screen observe from a ViewModel? | `call.method` `collectAsState` / `collectAsStateWithLifecycle` / `observeAsState`, inside a composable | `ComposeState` + `declares` from the component |
-| What side effects does this screen run? | `call.function` `LaunchedEffect` / `DisposableEffect` / `SideEffect` / `produceState` / `rememberCoroutineScope`, inside a composable | `ComposeEffect` + `declares` from the component |
-| Which composable hosts the navigation graph? | `call.function` `NavHost` / `AnimatedNavHost`, inside a composable | `ComposeNavGraph` + `hosts` from the component |
-| Which screens move the back stack, and how? | `call.method` `navigate` / `popBackStack` / `navigateUp` / `clearBackStack`, inside a composable | `ComposeNavigationAction` + `navigates` from the component |
+| Which of them are preview harnesses, not real UI? | the same carrier prefixed `@Preview` | the same `ComposeComponent`, with `preview_harness` |
+| Which composable renders which, across files? | `call.function` inside a composable whose name joins a `@Composable` `definition.function` anywhere in the repository | `renders`, component key to component key |
+| **What routes does this app declare?** | `call.arguments` named `composable`/`dialog`/`bottomSheet`, `call.arg0_text` | **`ComposeRoute` at `compose:route:{normalized_route}`** |
+| **Which composable declares this route?** | the same fact, `within` join to the `@Composable` owner | **`declares`, component -> route** |
+| **Where does this screen navigate to?** | `call.arguments` named `navigate`, `call.arg0_text`, inside a composable | **`navigates`, component -> `compose:route:{normalized_route}`** |
+| Which screens leave without naming a destination? | `call.method` `popBackStack`/`navigateUp`/`clearBackStack`, inside a composable | `ComposeNavigationAction` + `navigates` from the component |
+| Which composable hosts the navigation graph, **and where does it start**? | `call.arguments` named `NavHost`/`AnimatedNavHost`; `call.arg1_text` is the start destination | `ComposeNavGraph` + `hosts` from the component |
+| What state does this screen hold? | `call.function` in the `remember`/`mutableStateOf`/`derivedStateOf` family, inside a composable | `ComposeState` + `declares` from the component |
+| What does this screen observe from a ViewModel? | `call.method` `collectAsState`/`collectAsStateWithLifecycle`/`observeAsState`/`subscribeAsState`, inside a composable | `ComposeState` + `declares` from the component |
+| What side effects does this screen run? | `call.function` `LaunchedEffect`/`DisposableEffect`/`SideEffect`/`produceState`/`rememberCoroutineScope`, inside a composable | `ComposeEffect` + `declares` from the component |
 | Where does the Compose tree start? | `call.function` `setContent` inside a `definition.class` | `ComposeEntryPoint` at `compose:entry-point:{class}` |
 
-"Inside a composable" is one shared clause in seven rules: `fact_join_by_span`
+"Inside a composable" is one shared clause in eight rules: `fact_join_by_span`
 `within` a `definition.function`, bound `owner`, whose nested `where` requires a
 span-`same` `definition.modifier_candidate` prefixed `@Composable`. That binding
 *is* the screen, and it is what every relation above is sourced at.
+
+The three bolded rows are new on this pass, and together they are the route
+table: a project's declared destinations, who declares each one, and which
+screen moves to which.
 
 ### Keys minted and keys addressed
 
 | key template | minted by | addressed by |
 |---|---|---|
-| `compose:composable:{name}` | `compose.composable.declaration`, `compose.composable.preview` | the source end of `renders`, `declares` x3, `hosts`, `navigates`; the target end of `renders` |
-| `compose:state:{path}:{start}` | `compose.state.remember`, `compose.state.observed` | their own `declares` |
+| `compose:composable:{name}` | `compose.composable.declaration`, `.preview` | source of `renders`, `declares` x4, `hosts`, `navigates` x2; target of `renders` |
+| `compose:route:{normalized_route}` | `compose.navigation.destination`, `compose.navigation.navigate` | target of `declares` (destination) and of `navigates` (navigate) |
+| `compose:state:{path}:{start}` | `compose.state.remember`, `.observed` | their own `declares` |
 | `compose:effect:{path}:{start}` | `compose.effect` | its own `declares` |
 | `compose:nav-graph:{path}:{start}` | `compose.navigation.host` | its own `hosts` |
-| `compose:nav-action:{path}:{start}` | `compose.navigation.action` | its own `navigates` |
+| `compose:nav-action:{path}:{start}` | `compose.navigation.back` | its own `navigates` |
 | `compose:entry-point:{class}` | `compose.entry-point` | — |
 
-Every addressed key is minted (brief §3a), and every rule that addresses
+Every addressed key is minted (brief §3a). Every rule that addresses
 `compose:composable:{name}` carries the same `@Composable`-prefix condition as
-the rule that mints it (brief §3b). `compose:composable:{name}` is a hub with
-**one** kind, `ComposeComponent`, from both rules that mint it (brief §3g);
-`pack-design/key_collisions.py jetpack-compose` reports nothing.
+the rule that mints it (brief §3b). Both hub key spaces carry exactly one entity
+kind (brief §3g). No attribute is named `path`, `name` or any other built-in, so
+no later output in a rule picks up an earlier output's value (brief §3k); the
+one deliberate use of that mechanism is `{normalized_route}` reading the
+attribute `route`.
 
 ## A field only the Pack can supply
 
-**Pack `omega-kotlin`, kind `call.function` / `call.method`, field: the text of a
-literal string argument.** Navigation Compose declares a destination as
-`composable("home") { HomeScreen() }` and requests one as
-`navController.navigate("details/1")`. The route is a string literal in the
-argument list. omega-kotlin's `call_expression` patterns capture only
-`@call.function.name` / `@call.method.name` and publish no fields at all, so:
+**Withdrawn: "the text of a literal string argument."** Wave 1 asked omega-kotlin
+for it. It exists — `call.arguments` with twelve fields, on the same span as the
+call — and all three of this pass's new rules are built on it. Nothing is owed.
 
-- no built-in name reaches it — the built-ins are path, span, name and the
-  enclosing-definition chain, none of which is argument text;
-- no join reaches it — `fact_join_by_span` needs the Pack to have emitted a fact
-  *for the literal*, and it emits none; the call fact's own span covers only the
-  callee identifier, so the argument is not even inside it.
+**Still standing: Pack `omega-kotlin`, a missing kind `reference.annotation`.**
+Contract §6 lists it in the cross-language vocabulary and omega-kotlin does not
+emit it. An annotation reaches the overlay only as (a) the trimmed text of the
+whole modifier run, as one `definition.modifier_candidate` name — measured:
+`@Preview\n@Composable` arrives as a single name with an embedded newline — and
+(b) a `reference.type` on the annotation's identifier, which is
+indistinguishable from a `@Composable` lambda *parameter* type. So `@Composable`
+can be tested only by prefix on the run, and `@Inject @Composable fun Screen()`
+is not recognised. Neither a built-in name nor a join reaches it: the built-ins
+are path, span, name and the enclosing-definition chain, and a
+`fact_join_by_span` needs a fact *per annotation*, which is the thing that does
+not exist. One `reference.annotation` per annotation, spanned on the declaration
+the way `definition.modifier_candidate` already is, would make this exact and
+would serve every annotation-driven Kotlin framework (Dagger/Hilt, Room,
+kotlinx.serialization) rather than this one.
 
-Without it, `which URL does this screen serve` and `which screen does this button
-navigate to` are unanswerable for Compose. This is the same gap `OWED.md`
-already records for omega-go and Fiber/Gin route strings; it is a language-Pack
-question, not a Compose one.
-
-**Pack `omega-kotlin`, a missing kind: `reference.annotation`.** Contract §6
-lists `reference.annotation` in the cross-language vocabulary, and omega-kotlin
-does not emit it. An annotation reaches the overlay only as (a) the trimmed text
-of the whole modifier run, as one `definition.modifier_candidate` name, and (b) a
-`reference.type` on the annotation's identifier, which is indistinguishable from
-a `@Composable` lambda *parameter type*. So `@Composable` can be tested only by
-prefix on the run, and `@Inject @Composable fun Screen()` is not recognised. One
-`reference.annotation` per annotation, spanned on the declaration the way
-`definition.modifier_candidate` already is, would make this exact and would serve
-every annotation-driven Kotlin framework (Dagger/Hilt, Room, kotlinx.serialization)
-rather than this one.
+**New, and worth more than it looks: Pack `omega-kotlin`, kind `call.arguments`,
+a span over the whole `call_expression` rather than over the callee identifier.**
+`span_capture` is `call.arguments.name`, the `simple_identifier`, so the fact
+covers `composable` (bytes 251-261) and not the trailing lambda that follows it.
+That is why `composable("home") { HomeScreen() }` cannot state *route home
+renders HomeScreen*: the `call.function HomeScreen` at 272-282 is not inside any
+span this framework can bind, and the only thing that contains both is the
+enclosing `@Composable fun AppNav`. A second emission — or a widened span on
+this one — would give every trailing-lambda DSL in Kotlin (Navigation Compose,
+Gradle KTS, Ktor routing, kotlinx-serialization builders) a `within` join to its
+own block. No join reaches it today, because a join can only relate spans the
+Pack emitted, and no emitted span covers a call's lambda argument.
 
 ## Still to decide
 
 - **Annotation order.** `@Composable`-first and `@Preview`-first are both
   matched; `private @Composable fun` and `@Inject @Composable fun` are not. Two
-  prefixes cover the two orderings that actually occur in Compose source, and
-  widening further would mean matching `reference.type Composable` inside the
-  function, which also fires for `content: @Composable () -> Unit` parameters and
-  would call every Compose *wrapper* a component. Left narrow deliberately;
-  the clean fix is the `reference.annotation` kind above.
+  prefixes cover the two orderings that occur in Compose source; widening would
+  mean matching `reference.type Composable`, which also fires for
+  `content: @Composable () -> Unit` parameters and would call every Compose
+  *wrapper* a component. Left narrow deliberately; the clean fix is
+  `reference.annotation` above.
 - **Simple-name resolution.** `compose.composable.renders` joins callee to
   declaration by simple name across the whole repository, because the overlay has
   no Kotlin import environment. Two composables named `Header` in two feature
-  modules are one node. The alternative — `same_path: true` — would lose every
-  cross-file `renders` edge, which is the main thing this overlay exists for.
-  Repository-wide is the right trade, but it is a trade.
+  modules are one node. `same_path: true` would lose every cross-file `renders`
+  edge, which is the main thing this overlay exists for.
+- **Two route identities for one route.** `composable("home")` keys
+  `compose:route:/home`; `composable(Screen.Home.route)` keys
+  `compose:route:/Screen.Home.route`. Each meets its own `navigate` spelling
+  exactly, which is the common case, because a project picks one convention. A
+  project that declares with the constant and navigates with the literal gets two
+  disconnected nodes, and there is no clause that can resolve a constant to its
+  value. Stated in `coverage.gaps` rather than papered over.
+- **Named arguments.** `navigate(route = "home")` and
+  `NavHost(navController = nc, startDestination = "home")` deliver `call.arg0` /
+  `call.arg1` as the whole `value_argument` text, `startDestination = "home"`
+  included. `start_destination` is therefore an **attribute** and never a key.
+  `navigate(route = "home")` would mint `compose:route:/route = "home"` — junk,
+  but rare enough in real Compose (the positional spelling is what the docs and
+  every sample use) that excluding `navigate` on that ground would cost far more
+  than it saves. `navigation(...)`, where the named spelling *is* the convention,
+  is excluded.
 - **`compose.entry-point` emits an entity and no relation.** It is keyed on the
   Activity class reached by a join, not on its own input, so it is not a
-  restatement — but the edge one would want, *the entry point renders this
-  composable*, is not reachable: a call fact spans only the callee identifier, so
-  nothing relates `setContent` to the composable inside its lambda. A rule that
-  instead took any composable call inside a `definition.class` as the evidence
-  was considered and rejected: it would call any class holding a member
-  composable an entry point.
+  restatement — but *the entry point renders this composable* needs the same
+  widened span as the destination-content case above. `setContent { … }` has no
+  `value_arguments` node at all and emits no `call.arguments`.

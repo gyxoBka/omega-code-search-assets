@@ -383,12 +383,25 @@ parser today.** That is a host rule to relax — the identity check should compa
 filenames against filenames, not against the language name — and until then
 those two languages are reachable only through `Containerfile` and `.caddyfile`.
 
-### 12a. Still unreachable by extension: `.blade.php`
+### 12a. `.blade.php` — fixed
 
-`Path::extension` of `home.blade.php` is `php`, so a Blade template goes to
-omega-php and omega-blade can never claim it. It needs a suffix rule — matching
-the tail of the filename rather than the extension — which `detect_path` does
-not have.
+`Path::extension` of `home.blade.php` is `php`, so every Blade template in
+existence went to omega-php and omega-blade could never claim one. Nine of
+omega-framework-laravel's eighteen rules matched a Pack that could not run, and
+all three audits scored them live, because `overlay_audit.py` builds its surface
+from `packs/*/rules.json` and never looks at the grammar's detection keys.
+
+`detect_path` now walks the whole suffix chain, longest first, and omega-blade
+declares `blade.php`. The same mechanism serves `.d.ts` and any other compound
+suffix. `parser_registry.rs` is frozen: the six obligations were re-run and
+`freeze.json` re-stamped, and the behaviour has its own test in
+`migrated_parser_registry.rs`.
+
+**Still true and worth knowing:** the audits cannot see whether a Pack's grammar
+is reachable at all. Twenty grammars are reachable only because their extension
+spells their language name, which is correct for `.go`, `.vue` and `.sql`; the
+one real remainder is `Caddyfile`, which has no extension and cannot declare its
+own filename because a manifest may not repeat its language as a filename.
 
 ---
 

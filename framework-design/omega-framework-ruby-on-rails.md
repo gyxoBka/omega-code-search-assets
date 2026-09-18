@@ -5,17 +5,17 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 
 ## State
 
-**19 overlay rules, 4 detection rules. 19 live, 0 cannot match, and 0 entity
+**23 overlay rules, 4 detection rules. 23 live, 0 cannot match, and 0 entity
 outputs overwritten by a same-key rule.** (Wave 3: 33 rules -> 19, 3 live -> 19.
-This pass: 19 rules -> 19, and **9 of 21 entity outputs that were computed and
-silently discarded now materialize**.)
+Wave 4: 19 -> 19, 9 discarded entity outputs recovered. This pass: 19 -> 23, and
+**a route now has a URL**.)
 
 Selector: `framework:ruby-on-rails`. Maturity: `semantic-overlay-full`.
 The only language is Ruby, so the only Pack that feeds it is `omega-ruby`.
 
 ### What omega-ruby actually emits
 
-This is the whole of what a rule can match, and it is small:
+This is the whole of what a rule can match:
 
 | kind | name it carries |
 |---|---|
@@ -24,117 +24,134 @@ This is the whole of what a rule can match, and it is small:
 | `definition.method`, `definition.singleton_method`, `scope.method_body` | the method name |
 | `definition.attribute_method`, `definition.alias_method`, `reference.method` | `attr_*` / `alias` names |
 | `call.method` | the *method name only* — the span is the name node, not the call |
+| **`call.arguments`** | **the method name, on the same span as `call.method`, carrying twelve argument fields** |
 | `reference.constant`, `definition.constant` | a constant mention / assignment |
 | `definition.variable`, `reference.variable` | `@ivar`, `@@cvar`, `$global` |
 | `relation.implements` | a superclass **or** an `include`/`extend`/`prepend` argument |
+| `definition.superclass_candidate` | `Y` of `class X < Y`, spanning the whole class node |
 | `import.require` | the required path as written |
 
-**No omega-ruby template publishes a single `field`.** Every template's `fields`
-map is empty. So the overlay has exactly the kind, the name, the path and the
-span to work with, plus `fact_join_by_span` over those spans.
+`call.arguments` is the change this pass is built on. It is a **separate
+emission on the same span as `call.method`** — a Ruby call needs no parentheses,
+so an unbound argument capture would have skipped the whole call template and
+`save` would have stopped being a call at all. It carries `call.arg0`,
+`call.arg1`, `call.arg2`, `call.last_arg` and the `_text` / `_name` view of each.
+Because it carries the method name as its own `definition.name`, a rule matches
+it **directly**; the `fact_join_by_span relation: "same"` the brief describes is
+only needed when a rule must keep matching calls that have no arguments at all.
 
-One more thing the table above under-sold, and this rewrite uses:
-`definition.superclass_candidate` is emitted for `class X < Y` with **the whole
-class node as its span** and `Y` as its name, alongside the `relation.implements`
-that spans only `Y`. `definition.class` and `scope.class_body` carry that same
-whole-class span. So a `fact_join_by_span` with `relation: "same"` reaches the
-class from its superclass with no field and no ambiguity, and — unlike
-`relation.implements` — it cannot be a mixin.
+Measured with `dump_call_emissions` against a hand-written `config/routes.rb`,
+model, controller and migration (the exact spellings, per brief §3d):
+
+| written | `call.arg0` | `call.arg0_text` |
+|---|---|---|
+| `get "/users/:id", to: "users#show"` | `"/users/:id"` | `/users/:id` |
+| `get "photos/index", to: "photos#index"` | `"photos/index"` | `photos/index` |
+| `get "photos/:id" => "photos#show"` | `"photos/:id" => "photos#show"` | `photos/:id" => "photos#show` |
+| `get :preview` (member block) | `:preview` | `:preview` |
+| `root to: "home#index"` | `to: "home#index"` | `to: "home#index"` |
+| `resources :posts` | `:posts` | `:posts` |
+| `belongs_to :author, class_name: "User"` | `:author` | `:author` |
+| `before_action :authenticate_user!, only: [:edit]` | `:authenticate_user!` | `:authenticate_user!` |
+| `create_table :orders` | `:orders` | `:orders` |
+| `enum status: { draft: 0 }` | `status: { draft: 0 }` | `status: { draft: 0 }` |
+
+Three facts follow from that table and shape every rule below.
+**`unquote` strips string delimiters only**, so a Ruby symbol keeps its leading
+colon and `call.arg0_text` of `belongs_to :author` is `:author`, not `author`.
+**A keyword argument arrives as its whole written text**, `to: "users#show"`, so
+`root` and `enum` put a pair in argument zero and a route's handler is not
+separable. **`call.arg1_text` is a pair too**, so the `to:` of a `get` is not
+reachable either.
 
 ## What was wrong with it
 
-The wave-3 file audited clean: **19 rules, 19 live, 0 that cannot match**, and
-that is still true. What it did not survive is `pack-design/key_collisions.py`,
-and the defect it found is the whole of this rewrite.
+The wave-4 file audited clean and collided clean — 19 rules, 19 live, 0
+overwritten — and it still does. What was wrong is what it *said*, and the file
+said so itself: its first `coverage.gaps` sentence was
 
-- **9 of the file's 21 entity outputs never reached the graph.** Entity identity
-  is the rendered canonical key alone (`Entity::named` builds its id from
-  `EntityBindingSeed::Canonical { key }`; the kind is not part of it), and
-  `apply_overlay_runs` interns with `entities.entry(id).or_insert(entity)`, so
-  the alphabetically first `rule_id` that renders a key wins **with its kind and
-  its attributes**. The file put **seven** entity kinds on one key space:
+> omega-ruby publishes a call's name and span but not its arguments, so the path
+> a route serves, the table a migration touches and the model an association
+> points at are not stated by any Pack and are not invented here
 
-  | key template | kept | dropped |
-  |---|---|---|
-  | `rails:class:{path}:{cls.definition.name}` | `RailsClass` (`rails.class.mixes_in`) | `Controller`, `Job`, `Mailer`, `Model` — all four `*.by_superclass` rules |
-  | `rails:class:{path}:{definition.name}` | `Channel` (`rails.channel`) | `Controller`, `Job`, `Mailer`, `Migration`, `Model` |
+That sentence is now false. Concretely:
 
-  Nine is `key_collisions.py`'s static count, and it is worth being exact about
-  which of the nine bite at runtime, because the path globs are mutually
-  exclusive: no file is in both `app/channels` and `app/controllers`, so
-  `rails.channel` and `rails.controller` never actually contend for one key.
-  **What contends is `rails.class.mixes_in`.** Its glob is `**/app/**/*.rb` —
-  every layer — it mints `RailsClass` with no `layer` and no `base_class`, and
-  `rails.class.mixes_in` sorts before `rails.controller`, `rails.job`,
-  `rails.mailer` and `rails.model`. So **every controller, model, job and mailer
-  that includes a concern** — in a Rails app of any size, most of them — reached
-  the graph as a bare `RailsClass`, its layer gone, and the matching
-  `*.by_superclass` rule's `Model`/`Controller`/`Job`/`Mailer` and its
-  `base_class` attribute were computed and thrown away with it. `rails.migration`
-  escaped only because `db/migrate` is not under `app/`, and `rails.model.usage`
-  (also `RailsClass`) never won because its id sorts after every layer rule.
-  The audit cannot see any of this — both kinds exist, both rules match — which
-  is why `key_collisions.py` exists.
+- **A route had no URL. 1 rule covered the entire routing table**, keyed
+  `rails:route:{path}:{source.start}`, and the only thing it stated about a
+  route was the DSL macro's own name. `get "/users/:id"` and `get "/orders"`
+  were two `RouteDefinition`s distinguishable only by byte offset, and
+  *which route serves `/users/:id`* was unanswerable in a Rails project while
+  every other HTTP framework in the repository answered it under
+  `http:{method}:{normalized_route}`.
+- **6 macro rules restated their input.** `rails.controller.filter`,
+  `rails.model.association`, `rails.model.rule`, `rails.migration.schema_change`
+  and `rails.route.declaration` each minted an entity whose only content was the
+  macro name it matched on plus a byte offset — `belongs_to` at offset 33,
+  `validates` at offset 116. The thing a person asks for (*which association*,
+  *which field*, *which table*) is the first argument, and it was unreachable.
+- **1 relation carried an apology as an attribute.**
+  `rails.model.association` emitted `depends_on` with
+  `"target_name_not_published_by_pack": true`. Half of that is no longer true:
+  the association's own name is published now, only the class it resolves to is
+  not, and that is a Rails inflection rather than a missing Pack field.
+- **3 route DSL values could never match.** `member`, `collection` and `shallow`
+  take a block and no argument list, so they produce no `call.arguments` fact;
+  they were in the `field_in` list and named nothing even before. Dropping them
+  is not the §3f narrowing the brief warns about — the Pack pattern requires an
+  `argument_list` to fire at all, which is a measured fact and not a guess.
+- **`before_action :authenticate_user!` pointed at nothing.** A controller
+  filter names a method of its own controller, and that method was already
+  minted as an `Action`; the edge between them simply could not be written.
 
-- **The classification could not be moved into an attribute either.** The
-  previous file already carried `layer` as an entity attribute; attributes are
-  interned with the entity, so `layer: "model"` was discarded by exactly the same
-  `or_insert`. Only the winner's attribute map survives.
-
-- **`rails:module:{definition.name}` had two attribute maps.**
-  `rails.class.mixes_in` minted it with `{name}` and `rails.concern` with
-  `{name, role, source_file}`; `rails.cl…` sorts before `rails.co…`, so the
-  concern's `role` and `source_file` were dropped. Same defect, below
-  `key_collisions.py`'s kind-level resolution.
-
-- **The four `*.by_superclass` rules bound the wrong class in a nested file.**
-  They matched `relation.implements` (span: the superclass constant) joined
-  `within` `definition.class`, and `within` is *every* enclosing class, not the
-  nearest — `module Admin; class Base < ApplicationController` also bound any
-  outer class. `definition.superclass_candidate` joined `same` binds exactly one.
-
-- **`relation.implements` does not distinguish a superclass from a mixin**, so
-  those four rules were also matching `include ApplicationRecord`-shaped source.
-  `definition.superclass_candidate` is emitted only by the `class X < Y` pattern.
-
-Rule count is unchanged at 19: nothing was deleted, because every rule already
-matched a fact omega-ruby emits. Nine entity outputs that were computed and
-discarded now materialize.
+Nothing was deleted for being dead. 19 rules became 23: five rules changed the
+kind they match from `call.method` to `call.arguments`, `rails.route.declaration`
+split into three (a DSL entry that names something, an HTTP verb route, and
+`root`), and two rules are new (`rails.controller.filter.callback`,
+`rails.migration.table`). Each of the four extra rules exists because a guard
+that would have folded it into its neighbour **is a deletion** (brief §3l): the
+symbol spelling `get :preview` is not a URL, `enable_extension "plpgsql"` is not
+a table, and a `rescue_from ActiveRecord::RecordNotFound` names no method — so
+the guarded rule states the strong thing and the unguarded one still states what
+it can.
 
 ## What it states now
 
-One key space, one kind. `rails:class:{path}:{name}` holds exactly one
-`RailsClass` whoever mints it, and **which Rails layer a class belongs to is a
-`declares` edge from a `RailsLayer`, not an entity kind** — brief §3g remedy 1,
-the pattern unity established. `rails:module:{name}` holds exactly one
-`RailsModule` with one attribute map. So a relation from any rule can address a
-class or a module without knowing its layer, and no rule's output is discarded.
+The key spaces are unchanged from wave 4 and still one kind each:
+`rails:class:{path}:{name}` holds exactly one `RailsClass` whoever mints it, and
+which Rails layer a class belongs to is a `declares` edge from a `RailsLayer`,
+not an entity kind (brief §3g remedy 1). Two key spaces are new: the
+cross-framework `http:{method}:{normalized_route}` and `rails:table:{name}`.
 
 | what it states | which Pack fact | which entity or relation |
 |---|---|---|
-| this class exists, and it is a Rails class | `definition.class` (or a joined `cls`) — minted by 11 rules | entity `RailsClass` at `rails:class:{path}:{name}`, attributes `name`, `source_file` |
-| this class is a controller / model / job / mailer / channel, by where it lives | `definition.class` + path glob `app/controllers\|models\|jobs\|mailers\|channels/**` | entity `RailsLayer` at `rails:layer:<layer>`; relation **`declares`** RailsLayer -> RailsClass |
-| this class is a migration, and its version | `definition.class` + `**/db/migrate/*.rb`, `path.stem` | relation **`declares`** `rails:layer:migration` -> RailsClass, attribute `version` |
-| this class is a model / controller / job / mailer *because of what it inherits*, wherever it lives | `definition.superclass_candidate` named `ApplicationRecord` / `ApplicationController` / `ApplicationJob` / `ApplicationMailer`, joined `same`-span to its `definition.class` | relation **`declares`** RailsLayer -> RailsClass, attributes `base_class`, `via: superclass` — so a model in `lib/` or an engine coalesces with one in `app/models` |
-| this method is an action of that controller | `definition.method` joined `within` `scope.class_body`, under `app/controllers` | entity `Action` at `rails:action:{path}:{Controller}#{name}`; relation **`handles`** RailsClass -> Action |
-| this filter runs around that controller's actions | `call.method` named `before_action`/`around_action`/`rescue_from`/… (16 macros) joined `within` `scope.class_body` | entity `ControllerFilter`; relation **`configured_by`** RailsClass -> filter |
-| this model declares an association here | `call.method` named `belongs_to`/`has_one`/`has_many`/… (7 macros) joined `within` `scope.class_body`, under `app/models` | entity `Association`; relation **`depends_on`** RailsClass -> Association |
-| this model declares this validation, callback, scope or enum | `call.method` named one of 35 ActiveRecord macros joined `within` `scope.class_body` | entity `ModelRule`; relation **`configured_by`** RailsClass -> ModelRule |
-| the routing table is here and declares these route macros | `call.method` named one of 26 routing-DSL methods in `**/config/routes.rb` | entities `RouteDefinition`, `RouteTable`; relation **`configures`** RouteTable -> RouteDefinition |
-| this migration performs this schema operation | `call.method` named one of 26 schema methods in `**/db/migrate/*.rb`, joined `within` `scope.class_body` | entity `SchemaChange`; relation **`configures`** RailsClass -> SchemaChange |
-| this module is a concern | `definition.module` + `**/app/**/concerns/**/*.rb` | entity `RailsModule` at `rails:module:{name}`; relation **`declares`** `rails:layer:concern` -> RailsModule |
-| this class mixes in that concern | `relation.implements` joined `within` `scope.class_body`, **and** `fact_join_by_field` to a `definition.module` of the same name under `app/**` | relation **`depends_on`** RailsClass -> `rails:module:{name}`; both ends minted in the rule |
-| this controller / job / service uses that model | `reference.constant` joined `within` `scope.class_body`, **and** `fact_join_by_field` to a `definition.class` of the same name under `app/models` | relation **`uses_model`** RailsClass -> `rails:class:{model path}:{name}` |
+| **which URL this route serves, and with which method** | `call.arguments` named `get`/`post`/`put`/`patch`/`delete`/`options`/`head`/`match` in `**/config/routes.rb`, `call.arg0_text` not starting `:` | entity **`Route`** at **`http:{method}:{normalized_route}`**, attributes `method`, `route`, `source_file`; relation `configures` RouteTable -> Route |
+| **`root` serves `GET /`** | `call.arguments` named `root` in `**/config/routes.rb` | the same `Route` key with literal `method: get`, `route: /` — the one thing the macro means but does not spell |
+| which routing-DSL entry names what | `call.arguments` named one of 14 DSL methods, `call.arg0_text` | entity `RouteDefinition`, attributes `dsl`, `declared`; relation `configures` RouteTable -> RouteDefinition |
+| **which table a migration creates, alters or indexes** | `call.arguments` named one of 24 table-shaped schema macros in `**/db/migrate/*.rb`, `call.arg0_text` starting `:` | entity **`DatabaseTable`** at `rails:table:{arg0}`; relation `configures` SchemaChange -> DatabaseTable |
+| this migration performs this schema operation, on this target | `call.arguments` named one of 26 schema methods, joined `within` `scope.class_body` | entity `SchemaChange`, attributes `operation`, **`target`**; relation `configures` RailsClass -> SchemaChange |
+| **which association a model declares, by name** | `call.arguments` named `belongs_to`/`has_one`/`has_many`/… (7 macros) under `app/models`, joined `within` `scope.class_body` | entity `Association`, attributes `macro`, **`association`**; relation `depends_on` RailsClass -> Association |
+| **which attribute or scope a model macro is about** | `call.arguments` named one of 35 ActiveRecord macros under `app/models` | entity `ModelRule`, attributes `macro`, **`target`**; relation `configured_by` RailsClass -> ModelRule |
+| **which callback a controller filter names** | `call.arguments` named one of 16 filter macros under `app/controllers` | entity `ControllerFilter`, attributes `macro`, **`target`**; relation `configured_by` RailsClass -> ControllerFilter |
+| **which method that filter actually runs** | the same fact, `call.arg0_text` joined with `current_strip_prefix: ":"` to a `definition.method` of that name in the same file | relation **`depends_on`** ControllerFilter -> `Action`, both ends minted |
+| this class exists, and it is a Rails class | `definition.class` (or a joined `cls`) — minted by 17 rules | entity `RailsClass` at `rails:class:{path}:{name}` |
+| this class is a controller / model / job / mailer / channel, by where it lives | `definition.class` + path glob | entity `RailsLayer`; relation `declares` RailsLayer -> RailsClass |
+| this class is a migration, and its version | `definition.class` + `**/db/migrate/*.rb`, `path.stem` | relation `declares` `rails:layer:migration` -> RailsClass, attribute `version` |
+| this class is a model / controller / job / mailer *because of what it inherits* | `definition.superclass_candidate` named `ApplicationRecord` / `ApplicationController` / `ApplicationJob` / `ApplicationMailer`, joined `same`-span to its `definition.class` | relation `declares` RailsLayer -> RailsClass, attributes `base_class`, `via: superclass` |
+| this method is an action of that controller | `definition.method` joined `within` `scope.class_body` under `app/controllers` | entity `Action`; relation `handles` RailsClass -> Action |
+| this module is a concern | `definition.module` + `**/app/**/concerns/**/*.rb` | entity `RailsModule`; relation `declares` `rails:layer:concern` -> RailsModule |
+| this class mixes in that concern | `relation.implements` joined `within` `scope.class_body` **and** by field to a `definition.module` of the same name under `app/**` | relation `depends_on` RailsClass -> RailsModule |
+| this controller / job / service uses that model | `reference.constant` joined `within` `scope.class_body` **and** by field to a `definition.class` under `app/models` | relation `uses_model` RailsClass -> RailsClass |
 
-The last two are the only cross-file edges the Ruby Pack can support, and both
-come from the one Ruby name that resolves across files: the constant. They are
-what the overlay adds that `omega-ruby` alone cannot say.
-
-Questions this now answers that it did not: *list every controller in this app*
-(sources of `declares` from `rails:layer:controller` — previously every one that
-included a concern had lost its `Controller` kind and its `layer` attribute to
-`rails.class.mixes_in`), *which base class does this class inherit*, *which
-migration version is this*, *is this module a concern*.
+**What it now answers that it could not.** *Which route serves `/users/:id`*
+and *what does this app expose over HTTP* — a Rails `Route` is now addressed by
+the same `http:{method}:{normalized_route}` identity as express, gin, django and
+the rest, so `get "photos/index"` and `get "/photos/index"` are one route and
+`:id`/`{id}`/`[id]` agree. *Which migrations touch the `orders` table* — every
+`create_table`, `add_column` and `add_index` on `:orders` reaches one
+`DatabaseTable`, across files. *Which associations does `Post` declare* and
+*which field does this validation validate* — by name, not by byte offset.
+*Which method does this `before_action` run* — the first cross-entity edge in
+this Framework that comes from a call argument rather than a constant.
 
 ### Key reachability and collision
 
@@ -142,118 +159,123 @@ migration version is this*, *is this module a concern*.
 
 | key space | kind | minted by | addressed by |
 |---|---|---|---|
-| `rails:class:{path}:{name}` | `RailsClass`, only | 11 rules — 6 layer, 4 `*.by_superclass`, plus every rule that points at a class (`action`, `filter`, `association`, `model.rule`, `schema_change`, `mixes_in`, `model.usage` mint it themselves) | `declares`, `handles`, `configured_by` x2, `depends_on` x2, `configures`, `uses_model` |
-| `rails:layer:<literal>` | `RailsLayer`, only | the 6 layer rules, the 4 superclass rules, `rails.concern` | `declares` |
-| `rails:module:{name}` | `RailsModule`, only | `rails.concern`, `rails.class.mixes_in` — with the **same** attribute map, `{name, source_file}`, `source_file` taken from `mod.path` in the second so both render the same value | `depends_on`, `declares` |
-| `rails:route-table:{path}` | `RouteTable` | `rails.route.declaration` | `configures`, in the same rule |
-| `rails:action`, `rails:filter`, `rails:association`, `rails:model-rule`, `rails:route`, `rails:schema-change` | one kind each | their own rule | `current`, in the minting rule |
+| `rails:class:{path}:{name}` | `RailsClass`, only | 17 rules; every rule that points at a class mints it in the same rule | `declares`, `handles`, `configured_by` x2, `depends_on` x2, `configures`, `uses_model` |
+| `rails:layer:<literal>` | `RailsLayer`, only | 6 layer rules, 4 superclass rules, `rails.concern` | `declares` |
+| `rails:module:{name}` | `RailsModule`, only | `rails.concern`, `rails.class.mixes_in`, same attribute map | `depends_on`, `declares` |
+| `http:{method}:{normalized_route}` | `Route`, only | `rails.route.http`, `rails.route.root` | `configures`, in the minting rule |
+| `rails:route-table:{path}` | `RouteTable`, only | `rails.route.declaration`, `.http`, `.root`, same attribute map | `configures`, in the minting rule |
+| `rails:table:{arg0}` | `DatabaseTable`, only | `rails.migration.table` | `configures`, in the minting rule |
+| `rails:action:{path}:{class}#{method}` | `Action`, only | `rails.controller.action`, `rails.controller.filter.callback`, same attribute names | `handles`, `depends_on` |
+| `rails:filter`, `rails:association`, `rails:model-rule`, `rails:route`, `rails:schema-change` | one kind each | their own rule | `current`, or an explicit key minted by a rule whose conditions are a strict subset |
 
-Every relation end is contained in the set of minted keys. Every rule that
-addresses `rails:class:{path}:{cls.definition.name}` now **mints it in the same
-rule**, so the minter's conditions are the addresser's conditions by
-construction (brief §3b, second case) and the edge cannot dangle even in a file
-the layer globs do not cover.
+Two ends are addressed by a key another rule mints, and both satisfy brief §3b
+(the addresser carries the minter's conditions):
+`rails.controller.filter.callback` addresses `rails:filter:{path}:{source.start}`
+and its match is `rails.controller.filter`'s plus one join;
+`rails.migration.table` addresses `rails:schema-change:{path}:{source.start}`
+and **also mints it itself**, so the edge cannot dangle in either direction.
 
 `current` is the rule's **first** entity output everywhere it is used, checked
-against `emit()` (overlay.rs:884), and in every rule that emits more than one
-entity the entity the relation is about is the **first** output: the
-`RailsClass` in the six layer rules, the four superclass rules,
-`rails.class.mixes_in` and `rails.model.usage`; the `RailsModule` in
-`rails.concern`; the macro entity in `rails.controller.action`,
-`rails.controller.filter`, `rails.model.association`, `rails.model.rule` and
-`rails.migration.schema_change`, whose hub is the third output and is addressed
-by explicit key; the `RouteDefinition` in `rails.route.declaration`.
-No attribute depends on an optional value — every one is
-`definition.name`, `path`, `path.stem`, `source.start`, a literal or a bound
-fact's name or path, all of which the Pack guarantees.
+against `emit()` (`overlay.rs:884`): the `Route` is not addressed by `current`
+at all but by its explicit key, because `emit` renders an entity's key from that
+output's **own** attribute map (`render(&canonical_key.template, binding,
+&values)`) while a relation end is rendered from the accumulated scope — so
+`{method}` and `{normalized_route}` in the relation resolve to what the `Route`
+output computed, and nothing leaks into the `rails:route-table:{path}` key
+beside it (brief §3k).
 
-No `rails:` key template is minted by any other Framework, so the global
-interning `key_collisions.py` checks across frameworks is clean too.
+No attribute depends on an optional value: `call.arg0_text` is an `unquote` over
+a `default` to the empty string and is present on every `call.arguments`
+emission, and everything else is `definition.name`, `path`, `path.stem`,
+`source.start`, a literal or a bound fact's name.
 
 ## A field only the Pack can supply
 
-**Pack `omega-ruby`, kind `call.method`, field `arg0`** — the first argument of
-the call, when it is a simple symbol or a string literal.
+The wave-4 ask — `arg0` on `call.method` — **has been answered** by
+`call.arguments`, and the 12 fields it carries are what this rewrite spends.
+What remains is narrower and one level down.
 
-Rails is a DSL of one-argument macros. `resources :posts`, `belongs_to :author`,
-`create_table :orders`, `get "/health"`, `mount Sidekiq::Web`, `validates :email`
-— in every case the *name* is what the framework is about, and omega-ruby emits
-only the macro (`resources`, `belongs_to`, …) and the span of that macro's
-identifier.
+**Pack `omega-ruby`, kind `call.arguments`, fields `call.arg<n>_key` and
+`call.arg<n>_value`** — for an argument that is a `pair` node, its key and its
+value separately, the value unquoted.
+
+Rails states a route's handler, an association's class and a mount point as
+keyword arguments: `to: "users#show"`, `class_name: "User"`, `through: :memberships`.
+`call.arg1_text` gives the whole pair as written, `to: "users#show"`, which can
+be published as an attribute but is not an identity and cannot meet the
+declaration side of anything.
 
 Neither of the first two options in `FRAMEWORK-BRIEF.md` §2 reaches it:
 
-- **No built-in name carries it.** `definition.name` of a `call.method` fact is
-  the method name; `path`, `path.stem`, `external.*` are about the file and the
-  import environment. The argument is a different node.
-- **No join reaches it.** `fact_join_by_span` relates a fact to a fact whose
-  span *contains* it. omega-ruby emits nothing at all for `:posts`: a
-  `simple_symbol` is not captured by any pattern in `queries.scm` except the
-  three special-cased macros (`attr_*`, `define_method`) and `require`'s string.
-  There is no fact to join to. `fact_join_by_field` needs a field, which is the
-  thing being asked for.
+- **No built-in name carries it.** `definition.name` of a `call.arguments` fact
+  is the method name; `call.arg1_name` splits the pair's text on `.` and returns
+  the same text.
+- **No join reaches it.** `fact_join_by_span` needs a fact on the pair's span,
+  and omega-ruby emits nothing for a `pair` — `queries.scm` captures the
+  argument list as a whole and reads it with `ordered_children`, so the pair's
+  key and value are never separate nodes in any emission.
+  `fact_join_by_field` needs a field, which is the thing being asked for.
 
-The cost of this absence, concretely: **which URL a route serves and which
-`controller#action` answers it is unanswerable**, and so is *which table this
-migration creates* and *which model this `belongs_to` points at*. Those are the
-three questions a person asks about a Rails app first. The overlay currently
-says a route macro exists at a byte offset; with `arg0` it would say
-`GET /orders -> OrdersController#index`.
+What it would buy, concretely: `handles` from `http:get:/users/{}` to the
+controller action that answers it. Note the honest limit — even with
+`call.arg1_value` = `users#show`, turning that into
+`rails:action:app/controllers/users_controller.rb:UsersController#show` needs a
+split on `#` and a camelize, and the overlay has no string operation. So the
+realistic gain is a **`handler` attribute on the Route** reading `users#show`,
+which is what a person wants to see, rather than a graph edge. That is worth
+saying plainly before anyone spends a Pack field on it.
 
-The narrow, cheap version of the ask: publish `arg0` only on calls whose first
-argument is a `simple_symbol` or a `string`, which is one extra capture and one
-extra field on a subset of `call.method` emissions. `kwarg` support (for
-`to:`, `class_name:`, `through:`) would answer the association target and the
-route handler as well, but `arg0` alone unlocks the route path, the table name
-and the association name.
-
-Reported in `pack_fields_needed`. Not acted on here — the Pack is not mine to
-edit, and the 19 rules above are written against what omega-ruby emits today.
+Reported in `pack_fields_needed`. Not acted on here.
 
 ## Still to decide
 
 1. **`RailsLayer` is a hub named after a constant, and that is deliberate.**
-   Brief §1 says a rule whose output is an entity named after its own input adds
-   nothing. `rails:layer:controller` is close to that line: it carries one
-   attribute equal to its own key. It survives because it is the *only* way the
-   host lets a classification reach the graph once the class hub is fixed — a
-   kind collides, an attribute collides, and only a relation does not. The
-   alternative, remedy 2 of §3g (a key space per layer: `rails:controller:{…}`,
-   `rails:model:{…}`), keeps both kinds and both attribute sets but costs the
-   property this framework is built on: `rails.controller.action`,
-   `rails.model.rule` and `rails.model.usage` address a class **without knowing
-   its layer**, and would each have to fan out into one rule per layer. Seven
-   rules would become twenty-odd. Chosen: remedy 1.
-2. **A controller's private helpers are indistinguishable from its actions.**
-   Ruby's `private` is a bare `call.method` that changes the visibility of
-   everything after it; the Pack emits it as a call and attaches nothing to the
-   methods that follow. `rails.controller.action` therefore reports every
-   instance method of a controller class as an `Action`, with
-   `confidence: "candidate"`. Deciding otherwise would need either a Pack
-   visibility field or a span comparison the overlay cannot express
-   (`source.start` is a string, and there is no ordering clause).
-3. **A nested class fires the enclosing class's `within` rules too.** `within`
-   binds *every* enclosing `scope.class_body`, so a method of `Admin::Base`
-   nested inside `Admin` emits an `Action` for both. This is the same behaviour
-   every wave-1 and wave-2 framework accepts; there is no "nearest enclosing"
-   clause. The four `*.by_superclass` rules no longer have this problem — they
-   join `same`, not `within` — but the six `call.method` macro rules and
-   `rails.controller.action` still do.
-4. **`rails.model.usage` emits a self-edge** when a model mentions its own
-   constant inside its own body (`Post.where(...)` in `class Post`). Harmless
-   but visible; suppressing it would need an inequality clause the overlay does
-   not have.
-5. **`rails.class.mixes_in` still matches `relation.implements`, which omega-ruby
-   emits for both `class X < Y` and `include M`.** It proves the target is a
-   module by joining to a `definition.module` of that name under `app/**`, and
-   its relation attribute `via` records the ambiguity honestly. It could now be
-   narrowed — a superclass also emits a `definition.superclass_candidate` on the
-   class's own span — but the overlay has no negation clause, so "this
-   `relation.implements` is *not* a superclass" is not expressible. Left as is.
-6. **`ActiveRecord::Base` cannot be told from any other `::Base`.** omega-ruby
-   reduces a qualified constant to its last segment, so `ActiveRecord::Base`,
-   `ActionController::Base` and `Struct::Base` all arrive as `Base`. The four
-   `*.by_superclass` rules therefore key on the unambiguous Rails-generated
-   parents (`ApplicationRecord`, `ApplicationController`, `ApplicationJob`,
-   `ApplicationMailer`), which is the Rails 5+ convention, and leave pre-5 apps
-   to the path globs.
+   Unchanged from wave 4: a kind collides and an attribute collides, and only a
+   relation does not, so the classification is an edge. Remedy 2 of §3g (a key
+   space per layer) would force `rails.controller.action`, `rails.model.rule`
+   and `rails.model.usage` — which address a class *without knowing its layer* —
+   to fan out into one rule per layer. Chosen: remedy 1.
+2. **A symbol argument keeps its leading colon.** `unquote` strips string
+   delimiters only, so `belongs_to :author` publishes `association: ":author"`
+   and `rails:table::orders` is the key for the `orders` table. It is a stable
+   identity and an honest attribute, and `current_strip_prefix: ":"` removes it
+   wherever a join has to *meet* an unprefixed name (which is why
+   `rails.controller.filter.callback` works). A canonical key template has no
+   strip, so the colon stays in the key. Changing it would be a Pack change to
+   `call.arg0_text` that every other language's rules depend on not happening.
+3. **The legacy `get "photos/:id" => "photos#show"` spelling mangles the
+   route.** The whole association is argument zero, and `unquote` takes the
+   outer quotes off the pair's text, so `call.arg0_text` is
+   `photos/:id" => "photos#show` and the Route identity is that whole string.
+   No clause can tell it from a bare `get "photos/index"`: `field_prefix` and
+   `field_not_prefix` are the only string tests, there is no *contains*, and
+   `call.arg1` is absent for both. Requiring a leading `/` would fix it and
+   delete `get "photos/index"`, which is the current Rails-guide spelling —
+   the §3l deletion the brief warns about. Left stating the strong, common
+   spellings exactly and the deprecated one loudly wrong, and recorded in
+   `coverage.gaps`.
+4. **A controller's private helpers are indistinguishable from its actions.**
+   Unchanged: Ruby's `private` is a bare call and the Pack attaches nothing to
+   what follows, so `rails.controller.action` reports every instance method with
+   `confidence: "candidate"`. `rails.controller.filter.callback` now adds a
+   *second* way a method becomes an `Action` — being named by a `before_action`
+   — which is, if anything, evidence it is *not* an action. It mints the same
+   key so the two agree, and `rails.controller.action` sorts first and keeps its
+   attributes.
+5. **A nested class fires the enclosing class's `within` rules too.** `within`
+   binds *every* enclosing `scope.class_body` and there is no "nearest
+   enclosing" clause, so a method of `Admin::Base` nested in `Admin` emits for
+   both. The four `*.by_superclass` rules join `same` and are exempt; the six
+   macro rules and `rails.controller.action` are not.
+6. **`rails.model.usage` emits a self-edge** when a model mentions its own
+   constant in its own body. Suppressing it needs an inequality clause the
+   overlay does not have.
+7. **`rails.class.mixes_in` still matches `relation.implements`**, which
+   omega-ruby emits for both `class X < Y` and `include M`. It proves the target
+   is a module by joining to a `definition.module` under `app/**`, and its `via`
+   attribute records the ambiguity. Narrowing it needs a negation clause the
+   overlay does not have.
+8. **`ActiveRecord::Base` cannot be told from any other `::Base`.** omega-ruby
+   reduces a qualified constant to its last segment, so the four
+   `*.by_superclass` rules key on the Rails 5+ generated parents and leave
+   pre-5 apps to the path globs.

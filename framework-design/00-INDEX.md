@@ -955,3 +955,68 @@ pretending to a route name.
 all pydantic, all read: `{enclosing.qname}.{call.arg0_text}` and
 `{definition.qname}` render the same string, as do `{receiver}` and
 `{definition.name}` for a model used by its own class name.
+
+---
+
+# Second pass, wave C (jetpack-compose, ruby-on-rails, laravel, symfony, fastapi)
+
+| Framework | rules | what it can now say |
+|---|---|---|
+| omega-framework-ruby-on-rails | 19 -> 29 | `belongs_to :author`, `validates :title`, a route's verb and path |
+| omega-framework-laravel | 16 -> 18 | a route's URL and the controller behind it |
+| omega-framework-symfony | 10 -> 12 | `#[Route('/orders/{id}')]` |
+| omega-framework-fastapi | 12 -> 14 | a router's prefix |
+| omega-framework-jetpack-compose | 9 -> 11 | the app's whole route table |
+
+jetpack-compose gained something it never had: the NavGraphBuilder body was
+invisible, so `navigates` pointed from a screen at the byte offset of its own
+call site — an edge to nothing. `composable("home")` is a route now, keyed
+`compose:route:{normalized_route}` so `details/{id}` and `details/:id` are one
+identity, and *what routes does this app declare* and *where does this screen
+navigate to* are one hop apart.
+
+Its agent also declined a value deliberately and said why:
+`navigation(startDestination = …, route = …)` is the one builder whose arguments
+are conventionally all named, so `call.arg0_text` is the text
+`startDestination = "settings/main"` and not a route. That is not narrowing a
+generically-filled list — it is declining a value measured to be unusable.
+
+## Two blocking defects, and one of them was a grammar the audit cannot see
+
+**A block-form Ruby macro has no argument list.** Five rails rules moved their
+`fact_kind` from `call.method` to `call.arguments`, and omega-ruby's
+`call.arguments` pattern requires an `argument_list` — so `before_save do … end`,
+`default_scope { … }` and every block-form filter stopped being stated at all.
+Both forms are rules now, and the pair mints the same key with the same kind so
+a macro written either way is one entity. The argument-bearing rule keeps the
+base id deliberately: the host interns with `or_insert` and the **first rule by
+id** is the one whose attributes survive.
+
+The same rewrite excluded `get :preview` inside `member do … end` with a
+`field_not_prefix ':'` — correct, a symbol is not a URL — but nothing else
+stated it, so a resource's extra actions vanished. `rails.route.http.symbolic`
+states them by verb and action, and says its path belongs to the enclosing
+resource.
+
+**Nine of laravel's eighteen rules could never fire, and all three audits called
+them live.** They match omega-blade, and a Laravel template is `home.blade.php`:
+`Path::extension` returns `php`, so every Blade file in existence went to
+omega-php. `overlay_audit.py` builds its surface from `packs/*/rules.json` and
+never looks at the grammar's detection keys, so a Pack that cannot run scores
+exactly like one that can.
+
+Fixed in the engine: `detect_path` now walks the whole suffix chain, longest
+first, which is what `.blade.php` and `.d.ts` need. Filename and shebang
+detection are unchanged and still take precedence. `parser_registry.rs` is a
+frozen design-set file, so the six behavioural obligations were re-run and
+`freeze.json` re-stamped; the new behaviour has its own test —
+`a.fixture.rs` resolves to the language that claims `fixture.rs`, `b.rs` to the
+one that claims `rs`.
+
+After it, twenty grammars are still reachable only because their extension
+spells their language name — `.go`, `.vue`, `.sql` — which is correct. The one
+real remainder is `Caddyfile`, which has no extension and cannot declare its own
+filename, already `OWED.md` item 12.
+
+793 overlay rules, 0 that cannot match, 0 collisions, 5 dangling candidates, all
+pydantic and all read.

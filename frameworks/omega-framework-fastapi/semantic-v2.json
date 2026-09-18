@@ -29,7 +29,7 @@
     "entities": [
       "ApiModule",
       "Application",
-      "DependencyInjection",
+      "DependencyProvider",
       "ExceptionHandler",
       "Handler",
       "HttpResponseContract",
@@ -38,13 +38,13 @@
       "RequestParameter",
       "Route",
       "Router",
-      "RouterMount",
       "SchemaModel",
       "SecurityScheme"
     ],
     "relations": [
       "contains",
       "declares",
+      "handles",
       "injects",
       "mounts",
       "produces"
@@ -54,6 +54,7 @@
     {
       "id": "fastapi.application",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -143,20 +144,14 @@
             "kind": "by_canonical_key",
             "template": "fastapi:app:{path}:{var.definition.name}"
           },
-          "attributes": {
-            "object": {
-              "kind": "field_ref",
-              "field": "var.definition.name"
-            }
-          }
+          "attributes": {}
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.router.declaration",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -200,7 +195,7 @@
           "entity_kind": "Router",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastapi:router:{path}:{var.definition.name}"
+            "template": "fastapi:router:{var.definition.name}"
           },
           "attributes": {
             "name": {
@@ -240,22 +235,16 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastapi:router:{path}:{var.definition.name}"
+            "template": "fastapi:router:{var.definition.name}"
           },
-          "attributes": {
-            "object": {
-              "kind": "field_ref",
-              "field": "var.definition.name"
-            }
-          }
+          "attributes": {}
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.router.include",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -269,6 +258,10 @@
           "kind": "field_equals",
           "field": "definition.name",
           "value": "include_router"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
         },
         {
           "kind": "fact_join_by_field",
@@ -289,19 +282,19 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "RouterMount",
+          "entity_kind": "Router",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastapi:router-mount:{path}:{source.start}"
+            "template": "fastapi:router:{call.arg0_name}"
           },
           "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
             }
           }
         },
@@ -332,21 +325,29 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastapi:router-mount:{path}:{source.start}"
+            "template": "fastapi:router:{call.arg0_name}"
           },
-          "attributes": {}
+          "attributes": {
+            "mounted_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "router": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            }
+          }
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.route.decorator",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.decorator"
+          "value": "call.method"
         },
         {
           "kind": "path_glob",
@@ -370,6 +371,17 @@
           ]
         },
         {
+          "kind": "field_prefix",
+          "field": "call.arg0_text",
+          "value": "/"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.decorator",
+          "relation": "same",
+          "same_path": true
+        },
+        {
           "kind": "fact_join_by_field",
           "fact_kind": "import.from_module",
           "current_field": "path",
@@ -382,12 +394,133 @@
               "value": "fastapi"
             }
           ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "framework": "fastapi",
+            "registered_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastapi:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "contains",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "fastapi.route.decorator.computed",
+      "snapshot": true,
+      "confidence": "candidate",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "options",
+            "head",
+            "trace",
+            "api_route",
+            "websocket",
+            "websocket_route"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "call.arg0_text",
+          "value": "/"
         },
         {
           "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
+          "fact_kind": "reference.decorator",
           "relation": "same",
           "same_path": true
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.from_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastapi"
+            }
+          ]
         }
       ],
       "guards": [],
@@ -403,6 +536,11 @@
             "method": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "framework": "fastapi",
+            "registered_on": {
+              "kind": "field_ref",
+              "field": "receiver"
             },
             "declared_in": {
               "kind": "field_ref",
@@ -450,17 +588,16 @@
             }
           }
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.lifecycle.event",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.decorator"
+          "value": "call.method"
         },
         {
           "kind": "path_glob",
@@ -470,6 +607,16 @@
           "kind": "field_equals",
           "field": "definition.name",
           "value": "on_event"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_text"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.decorator",
+          "relation": "same",
+          "same_path": true
         },
         {
           "kind": "fact_join_by_field",
@@ -484,12 +631,6 @@
               "value": "fastapi"
             }
           ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
-          "relation": "same",
-          "same_path": true
         }
       ],
       "guards": [],
@@ -499,16 +640,20 @@
           "entity_kind": "LifecycleHook",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastapi:lifecycle:{path}:{source.start}"
+            "template": "fastapi:lifecycle:{path}:{call.arg0_text}"
           },
           "attributes": {
+            "phase": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "registered_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
             }
           }
         },
@@ -539,17 +684,21 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastapi:lifecycle:{path}:{source.start}"
+            "template": "fastapi:lifecycle:{path}:{call.arg0_text}"
           },
-          "attributes": {}
+          "attributes": {
+            "phase": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.middleware",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -566,6 +715,10 @@
             "middleware",
             "add_middleware"
           ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
         },
         {
           "kind": "fact_join_by_field",
@@ -589,20 +742,24 @@
           "entity_kind": "Middleware",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastapi:middleware:{path}:{source.start}"
+            "template": "fastapi:middleware:{path}:{definition.name}:{call.arg0_name}"
           },
           "attributes": {
             "form": {
               "kind": "field_ref",
               "field": "definition.name"
             },
+            "middleware": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            },
+            "installed_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
             }
           }
         },
@@ -633,38 +790,48 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastapi:middleware:{path}:{source.start}"
+            "template": "fastapi:middleware:{path}:{definition.name}:{call.arg0_name}"
           },
           "attributes": {
             "form": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "middleware": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
             }
           }
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
-      "id": "fastapi.exception-handler",
+      "id": "fastapi.exception-handler.decorator",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "reference.decorator"
+          "value": "call.method"
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.py"
         },
         {
-          "kind": "field_in",
+          "kind": "field_equals",
           "field": "definition.name",
-          "values": [
-            "exception_handler",
-            "add_exception_handler"
-          ]
+          "value": "exception_handler"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "reference.decorator",
+          "relation": "same",
+          "same_path": true
         },
         {
           "kind": "fact_join_by_field",
@@ -679,12 +846,6 @@
               "value": "fastapi"
             }
           ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "call.method",
-          "relation": "same",
-          "same_path": true
         }
       ],
       "guards": [],
@@ -694,16 +855,20 @@
           "entity_kind": "ExceptionHandler",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastapi:exception-handler:{path}:{source.start}"
+            "template": "fastapi:exception-handler:{path}:{call.arg0_name}"
           },
           "attributes": {
+            "exception": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            },
+            "registered_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
             "declared_in": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
             }
           }
         },
@@ -734,17 +899,155 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastapi:exception-handler:{path}:{source.start}"
+            "template": "fastapi:exception-handler:{path}:{call.arg0_name}"
+          },
+          "attributes": {
+            "exception": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "fastapi.exception-handler.registered",
+      "snapshot": true,
+      "confidence": "high",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.py"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "add_exception_handler"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg1_name"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "import.from_module",
+          "current_field": "path",
+          "join_field": "path",
+          "same_path": true,
+          "where": [
+            {
+              "kind": "field_prefix",
+              "field": "definition.name",
+              "value": "fastapi"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExceptionHandler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastapi:exception-handler:{path}:{call.arg0_name}"
+          },
+          "attributes": {
+            "exception": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            },
+            "registered_on": {
+              "kind": "field_ref",
+              "field": "receiver"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastapi:handler:{path}:{call.arg1_name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "call.arg1_name"
+            },
+            "declared_in": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ApiModule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastapi:module:{path}"
+          },
+          "attributes": {
+            "module": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "name": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:exception-handler:{path}:{call.arg0_name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:handler:{path}:{call.arg1_name}"
+          },
+          "attributes": {
+            "exception": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:module:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:exception-handler:{path}:{call.arg0_name}"
           },
           "attributes": {}
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.request.parameter",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -884,13 +1187,12 @@
           },
           "attributes": {}
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.dependency.injection",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -907,6 +1209,10 @@
             "Depends",
             "Security"
           ]
+        },
+        {
+          "kind": "field_present",
+          "field": "call.arg0_name"
         },
         {
           "kind": "fact_join_by_field",
@@ -934,27 +1240,15 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "DependencyInjection",
+          "entity_kind": "DependencyProvider",
           "canonical_key": {
             "kind": "canonical_key",
-            "template": "fastapi:dependency:{path}:{source.start}"
+            "template": "fastapi:provider:{call.arg0_name}"
           },
           "attributes": {
-            "form": {
+            "name": {
               "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "handler": {
-              "kind": "field_ref",
-              "field": "fn.definition.name"
-            },
-            "declared_in": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "offset": {
-              "kind": "field_ref",
-              "field": "source.start"
+              "field": "call.arg0_name"
             }
           }
         },
@@ -1003,12 +1297,16 @@
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "fastapi:dependency:{path}:{source.start}"
+            "template": "fastapi:provider:{call.arg0_name}"
           },
           "attributes": {
             "form": {
               "kind": "field_ref",
               "field": "definition.name"
+            },
+            "provider": {
+              "kind": "field_ref",
+              "field": "call.arg0_name"
             }
           }
         },
@@ -1025,13 +1323,12 @@
           },
           "attributes": {}
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.response.class",
       "snapshot": true,
+      "confidence": "candidate",
       "match": [
         {
           "kind": "fact_kind",
@@ -1158,13 +1455,12 @@
           },
           "attributes": {}
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      ]
     },
     {
       "id": "fastapi.security.scheme",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -1238,6 +1534,20 @@
         },
         {
           "kind": "entity_candidate",
+          "entity_kind": "DependencyProvider",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "fastapi:provider:{var.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "var.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
           "entity_kind": "ApiModule",
           "canonical_key": {
             "kind": "canonical_key",
@@ -1271,14 +1581,31 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "produces",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:security-scheme:{path}:{var.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "fastapi:provider:{var.definition.name}"
+          },
+          "attributes": {
+            "scheme": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     },
     {
       "id": "fastapi.schema.model",
       "snapshot": true,
+      "confidence": "high",
       "match": [
         {
           "kind": "fact_kind",
@@ -1379,18 +1706,17 @@
             }
           }
         }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "high"
+      ]
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "Python sources: the FastAPI application object and its variable name, the APIRouter objects, where a router is included, every HTTP and WebSocket endpoint decorator with its method, the lifecycle hooks, the middleware, the exception handlers, the request parameters and injected dependencies of each handler together with the handler they belong to, the response classes a handler constructs, the declared security schemes and the Pydantic schema classes are materialized.",
-      "omega-python captures no call argument on call.function or call.method, so the URL path of @app.get(...), the phase of @app.on_event(...), the response_model and status_code keywords, the target of Depends(...), the router passed to include_router(...) and the class passed to add_middleware(...) are not stated and are reported as not found. Every route-path, prefix and response-model answer depends on that one field.",
-      "omega-python spans reference.decorator on the decorator name and definition.function on the function_definition, which a decorated_definition encloses separately, so a decorator cannot be joined to the declaration it decorates: a Route is attached to its module, not to its handler function.",
+      "Python sources: the FastAPI application object and its variable name, the APIRouter objects and where each is included, every HTTP and WebSocket endpoint with its method and its URL, the lifecycle hooks with their phase, the installed middleware, the exception handlers with the exception they catch, the request parameters and injected dependency providers of each handler together with the handler they belong to, the response classes a handler constructs, the declared security schemes and the Pydantic schema classes are materialized.",
+      "omega-python captures a call argument only positionally and only as written text, so a keyword argument arrives whole: call.arg1 for @router.post(\"/u\", response_model=Item) is the string response_model=Item, and there is no clause that splits it. The response_model and status_code of a route, the prefix= of an APIRouter and the tokenUrl= of a security scheme are therefore still not stated, and a route registered with a computed path (@app.get(PREFIX + \"/x\")) is materialized at its byte offset with no URL.",
+      "omega-python spans reference.decorator on the decorator name and definition.function on the function_definition, which a decorated_definition encloses separately, so a decorator cannot be joined to the declaration it decorates: a Route is attached to its module and carries the object it was registered on, but not the handler function that answers it. add_exception_handler(exc, fn) passes its handler as an argument and is the one registration here whose handler edge is stated.",
       "omega-python publishes no qualifier on any import binding, so no Python fact carries a resolved external package path and no rule here can match on one. A construct is recognised by its emitted name plus a same-file `from fastapi import ...` gate instead, which does not distinguish a same-named symbol imported from somewhere else in the same file.",
+      "A Router is identified by the name of the variable that holds it, because that is the only spelling shared between the APIRouter(...) that declares it and the include_router(...) that mounts it across files. Two modules that both call their router `router` are therefore one Router entity.",
       "definition.variable is emitted for module-level assignments only, so an application, router or security scheme built inside a factory function (def create_app(): app = FastAPI()) is not stated.",
       "Runtime state -- generated OpenAPI documents, dependency overrides, middleware added at runtime and mounted sub-applications -- is outside a static source contract."
     ]

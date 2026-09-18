@@ -30,10 +30,12 @@
       "Action",
       "Association",
       "ControllerFilter",
+      "DatabaseTable",
       "ModelRule",
       "RailsClass",
       "RailsLayer",
       "RailsModule",
+      "Route",
       "RouteDefinition",
       "RouteTable",
       "SchemaChange"
@@ -472,7 +474,7 @@
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.method"
+          "value": "call.arguments"
         },
         {
           "kind": "path_glob",
@@ -522,13 +524,17 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "source_file": {
+            "target": {
               "kind": "field_ref",
-              "field": "path"
+              "field": "call.arg0_text"
             },
             "controller": {
               "kind": "field_ref",
               "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -564,7 +570,102 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "before_action :authenticate_user!, only: [:edit] -- the macro is the call's name and what it runs is its first argument, so the filter states which callback it names instead of only where it was written."
+    },
+    {
+      "id": "rails.controller.filter.callback",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/controllers/**/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "before_action",
+            "prepend_before_action",
+            "append_before_action",
+            "skip_before_action",
+            "after_action",
+            "prepend_after_action",
+            "around_action",
+            "skip_around_action",
+            "rescue_from",
+            "helper_method",
+            "layout",
+            "protect_from_forgery",
+            "before_filter",
+            "skip_before_filter",
+            "after_filter",
+            "around_filter"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.method",
+          "current_field": "call.arg0_text",
+          "join_field": "definition.name",
+          "current_strip_prefix": ":",
+          "same_path": true,
+          "bind": "cb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Action",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:action:{path}:{cls.definition.name}#{cb.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cb.definition.name"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:filter:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "via": "symbol argument"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "which method a before_action / rescue_from / helper_method actually runs: the symbol argument stripped of its leading colon is the declared method name, which is the only spelling that meets the declaration side. A macro whose argument names no method in the file does not bind here, and rails.controller.filter still states the filter."
     },
     {
       "id": "rails.job",
@@ -899,6 +1000,1002 @@
       "match": [
         {
           "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "create_table",
+            "change_table",
+            "drop_table",
+            "rename_table",
+            "create_join_table",
+            "drop_join_table",
+            "add_column",
+            "remove_column",
+            "remove_columns",
+            "rename_column",
+            "change_column",
+            "change_column_null",
+            "change_column_default",
+            "add_index",
+            "remove_index",
+            "rename_index",
+            "add_reference",
+            "remove_reference",
+            "add_belongs_to",
+            "add_foreign_key",
+            "remove_foreign_key",
+            "add_timestamps",
+            "remove_timestamps",
+            "enable_extension",
+            "disable_extension",
+            "add_check_constraint"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaChange",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schema-change:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "migration": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "create_table :orders, add_index :orders, :name -- the operation is the call's name and what it operates on is its first argument."
+    },
+    {
+      "id": "rails.migration.table",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/db/migrate/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "create_table",
+            "change_table",
+            "drop_table",
+            "rename_table",
+            "create_join_table",
+            "drop_join_table",
+            "add_column",
+            "remove_column",
+            "remove_columns",
+            "rename_column",
+            "change_column",
+            "change_column_null",
+            "change_column_default",
+            "add_index",
+            "remove_index",
+            "rename_index",
+            "add_reference",
+            "remove_reference",
+            "add_belongs_to",
+            "add_foreign_key",
+            "remove_foreign_key",
+            "add_timestamps",
+            "remove_timestamps",
+            "add_check_constraint"
+          ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0_text",
+          "value": ":"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "DatabaseTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:table:{call.arg0_text}"
+          },
+          "attributes": {
+            "table": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:schema-change:{path}:{source.start}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SchemaChange",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:schema-change:{path}:{source.start}"
+          },
+          "attributes": {
+            "operation": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "migration": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "which table a migration touches: every table-shaped schema macro takes the table as its first argument, so all the migrations that create, alter or index `orders` reach one DatabaseTable. Guarded on the symbol spelling because that is the one that carries a bare name; enable_extension / disable_extension are excluded because their first argument is an extension, not a table."
+    },
+    {
+      "id": "rails.model",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.class"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/models/**/*.rb"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:model"
+          },
+          "attributes": {
+            "layer": "model"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:model"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.model.association",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/models/**/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "belongs_to",
+            "has_one",
+            "has_many",
+            "has_and_belongs_to_many",
+            "has_one_attached",
+            "has_many_attached",
+            "has_rich_text"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Association",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:association:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "association": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "depends_on",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "belongs_to :author, has_many :comments -- the association's own name is now stated. The class it points at is not: Rails derives it by singularizing and camelizing, and the overlay has no string operation."
+    },
+    {
+      "id": "rails.model.by_superclass",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.superclass_candidate"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "ApplicationRecord"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "same",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsLayer",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:layer:model"
+          },
+          "attributes": {
+            "layer": "model"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:layer:model"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {
+            "base_class": "ApplicationRecord",
+            "via": "superclass"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "rails.model.rule",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/models/**/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "validates",
+            "validate",
+            "validates_presence_of",
+            "validates_uniqueness_of",
+            "validates_associated",
+            "validates_each",
+            "validates_with",
+            "before_validation",
+            "after_validation",
+            "before_save",
+            "after_save",
+            "around_save",
+            "before_create",
+            "after_create",
+            "around_create",
+            "before_update",
+            "after_update",
+            "around_update",
+            "before_destroy",
+            "after_destroy",
+            "around_destroy",
+            "after_commit",
+            "after_rollback",
+            "after_initialize",
+            "after_find",
+            "after_touch",
+            "scope",
+            "default_scope",
+            "enum",
+            "serialize",
+            "delegate",
+            "accepts_nested_attributes_for",
+            "attr_readonly",
+            "store_accessor",
+            "broadcasts_to"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ModelRule",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:model-rule:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "target": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "validates :title, scope :published, enum :status -- which attribute or scope the macro is about, not only that a macro is there."
+    },
+    {
+      "id": "rails.model.usage",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.constant"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/**/*.rb"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "definition.class",
+          "current_field": "definition.name",
+          "join_field": "definition.name",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "**/app/models/**/*.rb"
+            }
+          ],
+          "bind": "model"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_model",
+          "source": {
+            "kind": "current"
+          },
+          "target": {
+            "kind": "by_joined_field",
+            "bind": "model",
+            "field": "path",
+            "template": "rails:class:{value}:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "candidate"
+    },
+    {
+      "id": "rails.route.declaration",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/config/routes.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "resources",
+            "resource",
+            "namespace",
+            "scope",
+            "constraints",
+            "mount",
+            "concern",
+            "concerns",
+            "defaults",
+            "direct",
+            "resolve",
+            "draw",
+            "redirect",
+            "controller"
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteDefinition",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route:{path}:{source.start}"
+          },
+          "attributes": {
+            "dsl": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "declared": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "the routing DSL entries that name something -- resources :posts, namespace :admin, mount Sidekiq::Web. `member`, `collection` and `shallow` were dropped from the list: they take a block and no argument, so they produce no call.arguments fact at all and named nothing even before."
+    },
+    {
+      "id": "rails.route.http",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/config/routes.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "options",
+            "head",
+            "match"
+          ]
+        },
+        {
+          "kind": "field_not_prefix",
+          "field": "call.arg0_text",
+          "value": ":"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "route": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "get \"/users/:id\", to: \"users#show\" -- the HTTP method is the call's own name and the URL is its first argument, so a route is keyed by what it serves. The normalized form makes get \"photos/index\" and get \"/photos/index\" one identity, and :id, {id} and [id] agree. The symbol spelling (get :preview inside a member block) is excluded because it names an action, not a URL."
+    },
+    {
+      "id": "rails.route.root",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/config/routes.rb"
+        },
+        {
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "root"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Route",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {
+            "method": "get",
+            "route": "/",
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "http:{method}:{normalized_route}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "root to: \"home#index\" states GET / and nothing else; the method and the URL are what the macro means rather than what it spells, which is the one piece of framework knowledge this rule adds."
+    },
+    {
+      "id": "rails.controller.filter.block",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.method"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/app/controllers/**/*.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "before_action",
+            "prepend_before_action",
+            "append_before_action",
+            "skip_before_action",
+            "after_action",
+            "prepend_after_action",
+            "around_action",
+            "skip_around_action",
+            "rescue_from",
+            "helper_method",
+            "layout",
+            "protect_from_forgery",
+            "before_filter",
+            "skip_before_filter",
+            "after_filter",
+            "around_filter"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.class_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ControllerFilter",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:filter:{path}:{source.start}"
+          },
+          "attributes": {
+            "macro": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "current"
+          },
+          "attributes": {}
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RailsClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:class:{path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "The block form -- `before_save do … end`, `default_scope { … }`, `resources :posts do … end`. A Ruby call needs no parentheses, so there is no argument list to read; the macro is still stated, and its argument-bearing spelling is the rule this one is named after."
+    },
+    {
+      "id": "rails.migration.schema_change.block",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
           "value": "call.method"
         },
         {
@@ -1001,70 +2098,11 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "The block form -- `before_save do … end`, `default_scope { … }`, `resources :posts do … end`. A Ruby call needs no parentheses, so there is no argument list to read; the macro is still stated, and its argument-bearing spelling is the rule this one is named after."
     },
     {
-      "id": "rails.model",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.class"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/models/**/*.rb"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsClass",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsLayer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:layer:model"
-          },
-          "attributes": {
-            "layer": "model"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "rails:layer:model"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.model.association",
+      "id": "rails.model.association.block",
       "snapshot": true,
       "match": [
         {
@@ -1110,13 +2148,13 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            },
             "owner": {
               "kind": "field_ref",
               "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -1130,9 +2168,7 @@
           "target": {
             "kind": "current"
           },
-          "attributes": {
-            "target_name_not_published_by_pack": true
-          }
+          "attributes": {}
         },
         {
           "kind": "entity_candidate",
@@ -1154,81 +2190,11 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "The block form -- `before_save do … end`, `default_scope { … }`, `resources :posts do … end`. A Ruby call needs no parentheses, so there is no argument list to read; the macro is still stated, and its argument-bearing spelling is the rule this one is named after."
     },
     {
-      "id": "rails.model.by_superclass",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "definition.superclass_candidate"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "ApplicationRecord"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.class",
-          "relation": "same",
-          "same_path": true,
-          "bind": "cls"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsClass",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsLayer",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:layer:model"
-          },
-          "attributes": {
-            "layer": "model"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "rails:layer:model"
-          },
-          "target": {
-            "kind": "current"
-          },
-          "attributes": {
-            "base_class": "ApplicationRecord",
-            "via": "superclass"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "rails.model.rule",
+      "id": "rails.model.rule.block",
       "snapshot": true,
       "match": [
         {
@@ -1302,13 +2268,13 @@
               "kind": "field_ref",
               "field": "definition.name"
             },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            },
             "owner": {
               "kind": "field_ref",
               "field": "cls.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
@@ -1344,81 +2310,11 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "The block form -- `before_save do … end`, `default_scope { … }`, `resources :posts do … end`. A Ruby call needs no parentheses, so there is no argument list to read; the macro is still stated, and its argument-bearing spelling is the rule this one is named after."
     },
     {
-      "id": "rails.model.usage",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.constant"
-        },
-        {
-          "kind": "path_glob",
-          "pattern": "**/app/**/*.rb"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "scope.class_body",
-          "relation": "within",
-          "same_path": true,
-          "bind": "cls"
-        },
-        {
-          "kind": "fact_join_by_field",
-          "fact_kind": "definition.class",
-          "current_field": "definition.name",
-          "join_field": "definition.name",
-          "where": [
-            {
-              "kind": "path_glob",
-              "pattern": "**/app/models/**/*.rb"
-            }
-          ],
-          "bind": "model"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "RailsClass",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "rails:class:{path}:{cls.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "cls.definition.name"
-            },
-            "source_file": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_model",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_joined_field",
-            "bind": "model",
-            "field": "path",
-            "template": "rails:class:{value}:{definition.name}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "rails.route.declaration",
+      "id": "rails.route.declaration.block",
       "snapshot": true,
       "match": [
         {
@@ -1433,23 +2329,12 @@
           "kind": "field_in",
           "field": "definition.name",
           "values": [
-            "get",
-            "post",
-            "put",
-            "patch",
-            "delete",
-            "options",
-            "head",
-            "match",
-            "root",
             "resources",
             "resource",
             "namespace",
             "scope",
             "constraints",
             "mount",
-            "member",
-            "collection",
             "concern",
             "concerns",
             "defaults",
@@ -1457,7 +2342,6 @@
             "resolve",
             "draw",
             "redirect",
-            "shallow",
             "controller"
           ]
         }
@@ -1510,15 +2394,102 @@
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "candidate"
+      "confidence": "exact",
+      "coverage_note": "The block form -- `before_save do … end`, `default_scope { … }`, `resources :posts do … end`. A Ruby call needs no parentheses, so there is no argument list to read; the macro is still stated, and its argument-bearing spelling is the rule this one is named after."
+    },
+    {
+      "id": "rails.route.http.symbolic",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.arguments"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/config/routes.rb"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "options",
+            "head",
+            "match"
+          ]
+        },
+        {
+          "kind": "field_prefix",
+          "field": "call.arg0_text",
+          "value": ":"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteDefinition",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route:{path}:{source.start}"
+          },
+          "attributes": {
+            "verb": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "action": {
+              "kind": "field_ref",
+              "field": "call.arg0_text"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "RouteTable",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configures",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "rails:route-table:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "rails:route:{path}:{source.start}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "`get :preview` inside a `member do … end` or `collection { … }` block. The argument is a symbol naming an action on the enclosing resource, not a URL, so the route is stated where it is written and by which verb and action; its path is the resource's and is not derivable here."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "omega-ruby publishes a call's name and span but not its arguments, so the path a route serves, the table a migration touches and the model an association points at are not stated by any Pack and are not invented here",
+      "a route's handler is not stated: Rails writes it as the keyword argument to: \"users#show\", and omega-ruby publishes an argument only as the whole written text, so there is no key/value view of a pair argument and no string operation in the overlay to split users#show into a controller and an action",
+      "an association's target class is not stated: has_many :comments names the association, and Rails derives Comment by singularizing and camelizing it, which the overlay cannot do",
+      "the legacy get \"photos/:id\" => \"photos#show\" spelling is one association argument, so its first-argument text carries the handler as well as the URL and its Route identity is that whole text; the to: spelling and the bare-path spelling are exact",
+      "a symbol argument keeps its leading colon, because unquote strips string delimiters only, so an attribute naming an association, a table or a validated field reads :author rather than author",
       "every Rails class is one entity under rails:class:{path}:{name}; its Rails layer is stated by a declares edge from a RailsLayer, because a canonical key holds exactly one entity kind and the first rule by id wins",
-      "class, module and method declarations, their containment, their superclass and mixin edges and the Rails directory conventions are materialized",
       "Ruby visibility (private/protected) is a call, not a declaration attribute, so a controller's private helpers cannot be told apart from its actions",
       "runtime Rails metaprogramming, dynamically loaded engines and ActiveSupport callback ordering are runtime semantics"
     ]

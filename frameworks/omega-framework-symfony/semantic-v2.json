@@ -1,1069 +1,1236 @@
 {
- "schema_version": 2,
- "asset": "omega-framework-symfony",
- "selector": "framework:symfony",
- "maturity_target": "semantic-overlay-full",
- "host": {
-  "languages": [
-   "php"
-  ],
-  "required_packs": [
-   "omega-php",
-   "omega-twig"
-  ],
-  "required_capabilities": [
-   "calls",
-   "data",
-   "definitions",
-   "imports",
-   "references"
-  ]
- },
- "evidence_inputs": [
-  "existing_language_ir",
-  "imports_bindings",
-  "calls_members",
-  "project_level_evidence"
- ],
- "emits": {
-  "entities": [
-   "FrameworkAttribute",
-   "Handler",
-   "ServiceDependency",
-   "SymfonyClass",
-   "SymfonyContract",
-   "Template",
-   "TemplateBlock",
-   "TemplateMacro"
-  ],
-  "relations": [
-   "configured_by",
-   "defines",
-   "handles",
-   "implements",
-   "includes",
-   "injects",
-   "uses_macro"
-  ]
- },
- "rules": [
-  {
-   "id": "symfony.controller.action",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.attribute"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "Route",
-      "Get",
-      "Post",
-      "Put",
-      "Patch",
-      "Delete",
-      "Head",
-      "Options"
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.method",
-     "relation": "within",
-     "same_path": true,
-     "bind": "action"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.class",
-     "relation": "within",
-     "same_path": true,
-     "bind": "cls"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Handler",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "action.definition.name"
-      },
-      "controller": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
-      },
-      "route_attribute": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "SymfonyClass",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "handles",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
-     },
-     "attributes": {
-      "via": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+  "schema_version": 2,
+  "asset": "omega-framework-symfony",
+  "selector": "framework:symfony",
+  "maturity_target": "semantic-overlay-full",
+  "host": {
+    "languages": [
+      "php"
+    ],
+    "required_packs": [
+      "omega-php",
+      "omega-twig"
+    ],
+    "required_capabilities": [
+      "calls",
+      "data",
+      "definitions",
+      "imports",
+      "references"
+    ]
   },
-  {
-   "id": "symfony.action.attribute",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "reference.attribute"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "IsGranted",
-      "Security",
-      "Cache",
+  "evidence_inputs": [
+    "existing_language_ir",
+    "imports_bindings",
+    "calls_members",
+    "project_level_evidence"
+  ],
+  "emits": {
+    "entities": [
+      "FrameworkAttribute",
+      "Handler",
+      "ServiceDependency",
+      "SymfonyClass",
+      "SymfonyContract",
       "Template",
-      "MapRequestPayload",
-      "MapQueryString",
-      "MapUploadedFile",
-      "MapEntity",
-      "MapDateTime",
-      "CurrentUser",
-      "ValueResolver",
-      "AsEventListener",
-      "AsMessageHandler",
-      "AsCronTask",
-      "AsPeriodicTask",
-      "Required"
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.method",
-     "relation": "within",
-     "same_path": true,
-     "bind": "action"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.class",
-     "relation": "within",
-     "same_path": true,
-     "bind": "cls"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "FrameworkAttribute",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
-     },
-     "attributes": {
-      "attribute": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Handler",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "action.definition.name"
-      },
-      "controller": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
-     },
-     "attributes": {
-      "attribute": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+      "TemplateBlock",
+      "TemplateMacro"
+    ],
+    "relations": [
+      "configured_by",
+      "defines",
+      "handles",
+      "implements",
+      "includes",
+      "injects",
+      "resolves_to",
+      "uses_macro"
+    ]
   },
-  {
-   "id": "symfony.service.attribute",
-   "snapshot": true,
-   "match": [
+  "rules": [
     {
-     "kind": "fact_kind",
-     "value": "reference.attribute"
+      "id": "symfony.controller.action",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "Route",
+            "Get",
+            "Post",
+            "Put",
+            "Patch",
+            "Delete",
+            "Head",
+            "Options"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "action"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "action.definition.name"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            },
+            "route_attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "handles",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "attributes": {
+            "via": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
     },
     {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "AsCommand",
-      "AsController",
-      "AsEventListener",
-      "AsMessageHandler",
-      "AsDoctrineListener",
-      "AsEntityListener",
-      "AsAlias",
-      "AsDecorator",
-      "AsTaggedItem",
-      "AsTargetedValueResolver",
-      "AsCronTask",
-      "AsPeriodicTask",
-      "AsSchedule",
-      "AsLiveComponent",
-      "AsTwigComponent",
-      "AsTwigFilter",
-      "AsTwigFunction",
-      "Autoconfigure",
-      "AutoconfigureTag",
-      "Autowire",
-      "AutowireLocator",
-      "AutowireIterator",
-      "AutowireServiceClosure",
-      "AutowireCallable",
-      "AutowireDecorated",
-      "AutowireMethodOf",
-      "TaggedIterator",
-      "TaggedLocator",
-      "Target",
-      "When",
-      "Exclude",
-      "Lazy"
-     ]
+      "id": "symfony.action.attribute",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "IsGranted",
+            "Security",
+            "Cache",
+            "Template",
+            "MapRequestPayload",
+            "MapQueryString",
+            "MapUploadedFile",
+            "MapEntity",
+            "MapDateTime",
+            "CurrentUser",
+            "ValueResolver",
+            "AsEventListener",
+            "AsMessageHandler",
+            "AsCronTask",
+            "AsPeriodicTask",
+            "Required"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "action"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkAttribute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Handler",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "action.definition.name"
+            },
+            "controller": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:handler:{file.path}:{cls.definition.name}:{action.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
     },
     {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.class",
-     "relation": "within",
-     "same_path": true,
-     "bind": "cls"
+      "id": "symfony.service.attribute",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "reference.attribute"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "AsCommand",
+            "AsController",
+            "AsEventListener",
+            "AsMessageHandler",
+            "AsDoctrineListener",
+            "AsEntityListener",
+            "AsAlias",
+            "AsDecorator",
+            "AsTaggedItem",
+            "AsTargetedValueResolver",
+            "AsCronTask",
+            "AsPeriodicTask",
+            "AsSchedule",
+            "AsLiveComponent",
+            "AsTwigComponent",
+            "AsTwigFilter",
+            "AsTwigFunction",
+            "Autoconfigure",
+            "AutoconfigureTag",
+            "Autowire",
+            "AutowireLocator",
+            "AutowireIterator",
+            "AutowireServiceClosure",
+            "AutowireCallable",
+            "AutowireDecorated",
+            "AutowireMethodOf",
+            "TaggedIterator",
+            "TaggedLocator",
+            "Target",
+            "When",
+            "Exclude",
+            "Lazy"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "FrameworkAttribute",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
+          },
+          "attributes": {
+            "attribute": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.service.contract",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "AbstractAuthenticator",
+            "AbstractBundle",
+            "AbstractController",
+            "AbstractExtension",
+            "AbstractLoginFormAuthenticator",
+            "AbstractMigration",
+            "AbstractNormalizer",
+            "AbstractType",
+            "AbstractVoter",
+            "AccessTokenHandlerInterface",
+            "AuthenticatorInterface",
+            "BaseKernel",
+            "Bundle",
+            "BundleInterface",
+            "CacheClearerInterface",
+            "CacheWarmerInterface",
+            "Command",
+            "CompilerPassInterface",
+            "ConstraintValidator",
+            "ConstraintValidatorInterface",
+            "ControllerArgumentValueResolverInterface",
+            "DataTransformerInterface",
+            "DecoderInterface",
+            "DenormalizerInterface",
+            "EncoderInterface",
+            "EventSubscriberInterface",
+            "Extension",
+            "ExtensionInterface",
+            "FormTypeExtensionInterface",
+            "FormTypeInterface",
+            "Kernel",
+            "MessageHandlerInterface",
+            "NormalizerInterface",
+            "PasswordAuthenticatedUserInterface",
+            "RuntimeExtensionInterface",
+            "ServiceSubscriberInterface",
+            "TranslationLoaderInterface",
+            "UserInterface",
+            "UserProviderInterface",
+            "ValueResolverInterface",
+            "Voter",
+            "VoterInterface"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyContract",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:contract:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "implements",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:contract:{definition.name}"
+          },
+          "attributes": {}
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.service.injects",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "type_use.name"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.method",
+          "relation": "within",
+          "same_path": true,
+          "bind": "ctor",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "__construct"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.class",
+          "relation": "within",
+          "same_path": true,
+          "bind": "cls"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ServiceDependency",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:dependency:{file.path}:{cls.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "consumer": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SymfonyClass",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "cls.definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "injects",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:class:{file.path}:{cls.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:dependency:{file.path}:{cls.definition.name}:{definition.name}"
+          },
+          "attributes": {
+            "type": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.depends",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "file.path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "includes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.import",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.twig_path"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "file.path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "includes",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.resolve-depends",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.depends"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.file",
+          "current_field": "path",
+          "join_field": "path",
+          "join_strip_prefix": "templates/",
+          "bind": "tpl",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "templates/**"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{tpl.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "tpl.path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "resolves_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{tpl.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "tpl.path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.resolve-import",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.twig_path"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        },
+        {
+          "kind": "field_present",
+          "field": "path"
+        },
+        {
+          "kind": "fact_join_by_field",
+          "fact_kind": "data.file",
+          "current_field": "path",
+          "join_field": "path",
+          "join_strip_prefix": "templates/",
+          "bind": "tpl",
+          "where": [
+            {
+              "kind": "path_glob",
+              "pattern": "templates/**"
+            }
+          ]
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "attributes": {
+            "template_name": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{tpl.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "tpl.path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "resolves_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template-name:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{tpl.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "tpl.path"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.macro-use",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "import.symbol"
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "import.twig_path",
+          "relation": "same",
+          "same_path": true,
+          "bind": "src",
+          "where": [
+            {
+              "kind": "field_present",
+              "field": "path"
+            }
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateMacro",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:macro:{src.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "template_name": {
+              "kind": "field_ref",
+              "field": "src.path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "file.path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_macro",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:macro:{src.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.block",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.template_block"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateBlock",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:block:{file.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "file.path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "defines",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:block:{file.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
+    },
+    {
+      "id": "symfony.template.macro-definition",
+      "snapshot": true,
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "definition.macro_function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.twig"
+        }
+      ],
+      "guards": [],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "TemplateMacro",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:macro-definition:{file.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "kind": "canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "attributes": {
+            "template_path": {
+              "kind": "field_ref",
+              "field": "file.path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "defines",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "symfony:template:{file.path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "symfony:macro-definition:{file.path}:{definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact"
     }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "FrameworkAttribute",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
-     },
-     "attributes": {
-      "attribute": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "SymfonyClass",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "configured_by",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:attribute:{file.path}:{source.start}:{definition.name}"
-     },
-     "attributes": {
-      "attribute": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+  ],
+  "coverage": {
+    "mode": "explicit-classified",
+    "gaps": [
+      "a route path, name, methods and requirements live in the arguments of #[Route]; omega-php emits reference.attribute carrying the attribute's name only and publishes no field on any emission, so a Handler is identified by its class and method and not by the URL it serves -- the canonical call view (call.arg0_text and its siblings) that ten Packs now publish is not published by omega-php, and a Symfony route is not a call argument in any case",
+      "the template a controller renders is the first argument of $this->render(); omega-php emits call.method named render with no argument text, so SymfonyClass -> Template is unreachable",
+      "a Twig reference under the default templates/ root now resolves to the artifact it names, via a data.file join that strips that prefix; a reference into a bundle or a custom Twig namespace (@Admin/list.html.twig, or a root added in twig.yaml) still lands in symfony:template-name:* with no artifact behind it",
+      "services.yaml, routes.yaml and framework.yaml are configuration this overlay does not read; omega-yaml publishes a definition.config_key's value as an attribute, which is write-only, so a YAML route could not be linked to the controller it names",
+      "container compilation, autowiring resolution and runtime service decoration need runtime state no static fact carries"
+    ]
   },
-  {
-   "id": "symfony.service.contract",
-   "snapshot": true,
-   "match": [
+  "provenance": [
     {
-     "kind": "fact_kind",
-     "value": "relation.implements"
-    },
-    {
-     "kind": "field_in",
-     "field": "definition.name",
-     "values": [
-      "AbstractAuthenticator",
-      "AbstractBundle",
-      "AbstractController",
-      "AbstractExtension",
-      "AbstractLoginFormAuthenticator",
-      "AbstractMigration",
-      "AbstractNormalizer",
-      "AbstractType",
-      "AbstractVoter",
-      "AccessTokenHandlerInterface",
-      "AuthenticatorInterface",
-      "BaseKernel",
-      "Bundle",
-      "BundleInterface",
-      "CacheClearerInterface",
-      "CacheWarmerInterface",
-      "Command",
-      "CompilerPassInterface",
-      "ConstraintValidator",
-      "ConstraintValidatorInterface",
-      "ControllerArgumentValueResolverInterface",
-      "DataTransformerInterface",
-      "DecoderInterface",
-      "DenormalizerInterface",
-      "EncoderInterface",
-      "EventSubscriberInterface",
-      "Extension",
-      "ExtensionInterface",
-      "FormTypeExtensionInterface",
-      "FormTypeInterface",
-      "Kernel",
-      "MessageHandlerInterface",
-      "NormalizerInterface",
-      "PasswordAuthenticatedUserInterface",
-      "RuntimeExtensionInterface",
-      "ServiceSubscriberInterface",
-      "TranslationLoaderInterface",
-      "UserInterface",
-      "UserProviderInterface",
-      "ValueResolverInterface",
-      "Voter",
-      "VoterInterface"
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.class",
-     "relation": "within",
-     "same_path": true,
-     "bind": "cls"
+      "source_id": "phpstan-symfony",
+      "repository": "https://github.com/phpstan/phpstan-symfony",
+      "path": "src/**",
+      "revision": "f7c1f00171b423a6200202176c6927e1d28feadd",
+      "confidence": "high",
+      "reuse_mode": "knowledge-adapt-after-license-review"
     }
-   ],
-   "guards": [],
-   "outputs": [
+  ],
+  "detection_rules": [
     {
-     "kind": "entity_candidate",
-     "entity_kind": "SymfonyClass",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
+      "id": "symfony.exact_signature.1.symfony_symfony",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "binding"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "specifier",
+            "value": "symfony/symfony"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "symfony"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "symfony",
+          "framework_name": "Symfony",
+          "signature": "symfony/symfony",
+          "source": "binding.specifier"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "entity_candidate",
-     "entity_kind": "SymfonyContract",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:contract:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
+      "id": "symfony.exact_signature.2.symfony_symfony",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "reference"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "name",
+            "value": "symfony/symfony"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "symfony"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "symfony",
+          "framework_name": "Symfony",
+          "signature": "symfony/symfony",
+          "source": "reference.name"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
       }
-     }
     },
     {
-     "kind": "relation_candidate",
-     "relation_kind": "implements",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:contract:{definition.name}"
-     },
-     "attributes": {}
+      "id": "symfony.exact_signature.3.symfony_symfony",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "package:symfony/symfony"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "symfony"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "symfony",
+          "framework_name": "Symfony",
+          "signature": "symfony/symfony",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
+    },
+    {
+      "id": "symfony.exact_signature.4.symfony_symfony",
+      "atoms": [
+        {
+          "FieldEquals": {
+            "field": "row_kind",
+            "value": "contract"
+          }
+        },
+        {
+          "FieldEquals": {
+            "field": "identity",
+            "value": "symfony/symfony"
+          }
+        }
+      ],
+      "guards": [],
+      "output": {
+        "kind": "Dependency",
+        "selector": {
+          "Textual": {
+            "namespace": "framework",
+            "text": "symfony"
+          }
+        },
+        "selector_expr": null,
+        "attributes": {
+          "framework_id": "symfony",
+          "framework_name": "Symfony",
+          "signature": "symfony/symfony",
+          "source": "contract.identity"
+        },
+        "external_path": null,
+        "evidence_class": "structurally_derived"
+      }
     }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "symfony.service.injects",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "type_use.name"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.method",
-     "relation": "within",
-     "same_path": true,
-     "bind": "ctor",
-     "where": [
-      {
-       "kind": "field_equals",
-       "field": "definition.name",
-       "value": "__construct"
-      }
-     ]
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "definition.class",
-     "relation": "within",
-     "same_path": true,
-     "bind": "cls"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "ServiceDependency",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:dependency:{file.path}:{cls.definition.name}:{definition.name}"
-     },
-     "attributes": {
-      "type": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "consumer": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "SymfonyClass",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "cls.definition.name"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "injects",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:class:{file.path}:{cls.definition.name}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:dependency:{file.path}:{cls.definition.name}:{definition.name}"
-     },
-     "attributes": {
-      "type": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "symfony.template.depends",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "relation.depends"
-    },
-    {
-     "kind": "field_present",
-     "field": "path"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.twig"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "attributes": {
-      "template_path": {
-       "kind": "field_ref",
-       "field": "file.path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template-name:{path}"
-     },
-     "attributes": {
-      "template_name": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "includes",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template-name:{path}"
-     },
-     "attributes": {
-      "template_name": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "symfony.template.import",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "import.twig_path"
-    },
-    {
-     "kind": "field_present",
-     "field": "path"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.twig"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "attributes": {
-      "template_path": {
-       "kind": "field_ref",
-       "field": "file.path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template-name:{path}"
-     },
-     "attributes": {
-      "template_name": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "includes",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template-name:{path}"
-     },
-     "attributes": {
-      "template_name": {
-       "kind": "field_ref",
-       "field": "path"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "symfony.template.macro-use",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "import.symbol"
-    },
-    {
-     "kind": "fact_join_by_span",
-     "fact_kind": "import.twig_path",
-     "relation": "same",
-     "same_path": true,
-     "bind": "src",
-     "where": [
-      {
-       "kind": "field_present",
-       "field": "path"
-      }
-     ]
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.twig"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "TemplateMacro",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:macro:{src.path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      },
-      "template_name": {
-       "kind": "field_ref",
-       "field": "src.path"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "attributes": {
-      "template_path": {
-       "kind": "field_ref",
-       "field": "file.path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "uses_macro",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:macro:{src.path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "symfony.template.block",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.template_block"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.twig"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "TemplateBlock",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:block:{file.path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "attributes": {
-      "template_path": {
-       "kind": "field_ref",
-       "field": "file.path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "defines",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:block:{file.path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "symfony.template.macro-definition",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.macro_function"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/*.twig"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "TemplateMacro",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:macro-definition:{file.path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Template",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "attributes": {
-      "template_path": {
-       "kind": "field_ref",
-       "field": "file.path"
-      }
-     }
-    },
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "defines",
-     "source": {
-      "kind": "by_canonical_key",
-      "template": "symfony:template:{file.path}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "symfony:macro-definition:{file.path}:{definition.name}"
-     },
-     "attributes": {
-      "name": {
-       "kind": "field_ref",
-       "field": "definition.name"
-      }
-     }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  }
- ],
- "coverage": {
-  "mode": "explicit-classified",
-  "gaps": [
-   "a route path, name, methods and requirements live in the arguments of #[Route]; omega-php emits reference.attribute carrying the attribute's name only, so a Handler is identified by its class and method and not by the URL it serves",
-   "the template a controller renders is the first argument of $this->render(); omega-php emits call.method named render with no argument text, so SymfonyClass -> Template is unreachable",
-   "a Twig reference is a logical template name (base.html.twig), not a project path, so symfony:template-name:* and symfony:template:* are two key spaces only a resolver over the Twig loader roots could join",
-   "services.yaml, routes.yaml and framework.yaml are configuration this overlay does not read; only attribute-declared and interface-declared wiring is stated",
-   "container compilation, autowiring resolution and runtime service decoration need runtime state no static fact carries"
-  ]
- },
- "provenance": [
-  {
-   "source_id": "phpstan-symfony",
-   "repository": "https://github.com/phpstan/phpstan-symfony",
-   "path": "src/**",
-   "revision": "f7c1f00171b423a6200202176c6927e1d28feadd",
-   "confidence": "high",
-   "reuse_mode": "knowledge-adapt-after-license-review"
-  }
- ],
- "detection_rules": [
-  {
-   "id": "symfony.exact_signature.1.symfony_symfony",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "binding"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "specifier",
-      "value": "symfony/symfony"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "symfony"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "symfony",
-     "framework_name": "Symfony",
-     "signature": "symfony/symfony",
-     "source": "binding.specifier"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "symfony.exact_signature.2.symfony_symfony",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "reference"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "name",
-      "value": "symfony/symfony"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "symfony"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "symfony",
-     "framework_name": "Symfony",
-     "signature": "symfony/symfony",
-     "source": "reference.name"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "symfony.exact_signature.3.symfony_symfony",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "package:symfony/symfony"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "symfony"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "symfony",
-     "framework_name": "Symfony",
-     "signature": "symfony/symfony",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  },
-  {
-   "id": "symfony.exact_signature.4.symfony_symfony",
-   "atoms": [
-    {
-     "FieldEquals": {
-      "field": "row_kind",
-      "value": "contract"
-     }
-    },
-    {
-     "FieldEquals": {
-      "field": "identity",
-      "value": "symfony/symfony"
-     }
-    }
-   ],
-   "guards": [],
-   "output": {
-    "kind": "Dependency",
-    "selector": {
-     "Textual": {
-      "namespace": "framework",
-      "text": "symfony"
-     }
-    },
-    "selector_expr": null,
-    "attributes": {
-     "framework_id": "symfony",
-     "framework_name": "Symfony",
-     "signature": "symfony/symfony",
-     "source": "contract.identity"
-    },
-    "external_path": null,
-    "evidence_class": "structurally_derived"
-   }
-  }
- ],
- "runtime_status": "terminal-static-source-contract"
+  ],
+  "runtime_status": "terminal-static-source-contract"
 }
