@@ -169,6 +169,23 @@ And when you write a `coverage.gaps` entry, it is a claim like any other: the
 same file asserted that `UCLASS` and `GENERATED_BODY` produce no fact, and they
 arrive as `call.function` named exactly that.
 
+## 3e. A built-in name makes a guard vacuous, and a placeholder is not a field
+
+**`field_present` on a built-in is always true.** `OverlayFact::field` falls
+back to `path`, `path.dir`, `path.stem`, `definition.name` and the rest when the
+fields map has none, so `{"kind":"field_present","field":"path"}` guards
+nothing: omega-framework-symfony's Twig rules carried it and matched every
+`relation.depends` from every Pack in the repository. Gate on something that is
+actually particular — a `path_glob`, a name set, a joined fact.
+
+**`normalized_file_route` is a placeholder, not a field.** It resolves in
+`resolve_placeholder`, which serves `{...}` templates in canonical keys and
+relation ends. A `field_ref` attribute goes through `OverlayFact::field`, which
+has never heard of it — so the attribute is unresolvable, the entity is dropped,
+and every relation addressing that entity's key dangles. omega-framework-nuxt
+lost its four principal entities this way. Use the name in a template; if you
+want it as an attribute, there is no route to it.
+
 ## 4. Verification
 
 ```bash

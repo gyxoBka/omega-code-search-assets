@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 5. Numbers come from
+Last updated after framework wave 6. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -33,6 +33,7 @@ different map.**
 | omega-javascript, omega-typescript, omega-tsx | `import.symbol` | `module` — the specifier the symbol came from | react |
 | omega-python | `call.function`, `call.method` | the call's first string-or-identifier argument | django |
 | omega-caddyfile | `definition.config_matcher_condition` | `operand` — what the condition tests for | caddyfile |
+| omega-php | `reference.attribute` | the attribute's argument text — `#[Route('/orders/{id}')]` is where a Symfony URL is stated | symfony |
 
 `qualifier` is the one with a second consumer: the host reads it for external
 package resolution (`content_builder.rs::mention_fields` accepts a qualifier
@@ -120,7 +121,7 @@ contract rests on.
 
 ## 6. The framework waves themselves
 
-31 of 55 frameworks still hold rules that cannot match: **421 of 886**. The
+26 of 55 frameworks still hold rules that cannot match: **334 of 847**. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 

@@ -5,10 +5,12 @@
   "maturity_target": "semantic-overlay-full",
   "host": {
     "languages": [
-      "php"
+      "php",
+      "json"
     ],
     "required_packs": [
-      "omega-php"
+      "omega-php",
+      "omega-json"
     ],
     "required_capabilities": [
       "calls",
@@ -24,963 +26,1510 @@
   ],
   "emits": {
     "entities": [
-      "ApiUse",
-      "BlockType",
-      "ContentType",
-      "Hook",
-      "HookDispatch",
-      "HookRegistration",
-      "Menu",
-      "Option",
-      "Route",
-      "ScriptResource",
-      "Shortcode",
-      "Sidebar",
-      "StyleResource",
-      "Taxonomy"
+      "Block",
+      "ExtensionFile",
+      "Registrar",
+      "Template",
+      "View",
+      "WpApi"
     ],
     "relations": [
-      "configured_by",
       "configures",
-      "dispatches",
+      "declares",
       "handles",
-      "registers_for",
-      "uses_api",
-      "uses_resource"
+      "registers",
+      "uses_api"
     ]
   },
   "rules": [
     {
-      "id": "wordpress.register-hook-two-string",
-      "snapshot": true,
+      "id": "wordpress.plugin.file",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.php_function_two_string_args_context"
-        },
-        {
-          "kind": "field_in",
-          "field": "call_name",
-          "values": [
-            "add_action",
-            "add_filter"
-          ]
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
-        },
-        {
-          "kind": "field_present",
-          "field": "arg1"
+          "value": "call.function"
         },
         {
           "kind": "path_glob",
-          "pattern": "**/*.php"
+          "pattern": "**/wp-content/*plugins/**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Hook",
+          "entity_kind": "ExtensionFile",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:hook:{arg0}"
+            "template": "wordpress:file:{path}"
           },
           "attributes": {
-            "name": {
+            "source_file": {
               "kind": "field_ref",
-              "field": "arg0"
+              "field": "path"
+            },
+            "surface": "plugin"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "Which PHP files are plugin (or must-use plugin) code. WordPress decides that by location, not by syntax, so the artifact path is the whole of the evidence and no Pack field is involved."
+    },
+    {
+      "id": "wordpress.theme.file",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/wp-content/themes/**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "surface": "theme"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "high",
+      "coverage_note": "Which PHP files are theme code, by the same path convention. The surface attribute is what tells a reader whether a registration belongs to a plugin or to the active theme."
+    },
+    {
+      "id": "wordpress.theme.template",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/wp-content/themes/**/*.php"
+        },
+        {
+          "kind": "field_in",
+          "field": "path.stem",
+          "values": [
+            "index",
+            "front-page",
+            "home",
+            "single",
+            "singular",
+            "page",
+            "archive",
+            "category",
+            "tag",
+            "taxonomy",
+            "author",
+            "date",
+            "search",
+            "404",
+            "attachment",
+            "comments",
+            "header",
+            "footer",
+            "sidebar",
+            "searchform",
+            "privacy-policy",
+            "embed"
+          ]
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Template",
+          "canonical_key": {
+            "template": "wordpress:template:{path}"
+          },
+          "attributes": {
+            "template": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "HookRegistration",
+          "entity_kind": "View",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:registration:{path}:{source.start}"
+            "template": "wordpress:view:{path.stem}"
           },
           "attributes": {
-            "api": {
+            "view": {
               "kind": "field_ref",
-              "field": "call_name"
-            },
-            "callback_literal": {
-              "kind": "field_ref",
-              "field": "arg1"
+              "field": "path.stem"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "registers_for",
+          "relation_kind": "handles",
           "source": {
             "kind": "by_canonical_key",
-            "template": "wordpress:registration:{path}:{source.start}"
+            "template": "wordpress:template:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "wordpress:hook:{arg0}"
+            "template": "wordpress:view:{path.stem}"
           },
-          "attributes": {}
+          "attributes": {
+            "view": {
+              "kind": "field_ref",
+              "field": "path.stem"
+            }
+          }
         }
       ],
       "evidence_class": "observed",
-      "confidence": "exact"
+      "confidence": "exact",
+      "coverage_note": "Which file renders which view. The template hierarchy is WordPress knowledge a PHP Pack cannot have: single.php serves a single post, 404.php the not-found view. The file name is the route, so path.stem answers it, and the View is the shared node that two themes' single.php both reach."
     },
     {
-      "id": "wordpress.dispatch-hook",
-      "snapshot": true,
+      "id": "wordpress.hook.wiring",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
+          "value": "call.function"
         },
         {
           "kind": "field_in",
-          "field": "call_name",
+          "field": "definition.name",
+          "values": [
+            "add_action",
+            "add_filter",
+            "remove_action",
+            "remove_filter",
+            "has_action",
+            "has_filter"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "hook-wiring"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "hook-wiring",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files wire behaviour onto WordPress hooks. This is the central WordPress question -- what runs when -- and add_action/add_filter is the only thing that answers it. The hook name and the callback are call arguments, and omega-php publishes no argument field, so the edge is file-to-API rather than file-to-hook."
+    },
+    {
+      "id": "wordpress.hook.dispatch",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
           "values": [
             "do_action",
             "do_action_ref_array",
             "apply_filters",
-            "apply_filters_ref_array"
+            "apply_filters_ref_array",
+            "apply_filters_deprecated",
+            "do_action_deprecated"
           ]
-        },
-        {
-          "kind": "field_present",
-          "field": "arg0"
         },
         {
           "kind": "path_glob",
           "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Hook",
+          "entity_kind": "WpApi",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:hook:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HookDispatch",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:dispatch:{path}:{source.start}"
+            "template": "wordpress:api:{definition.name}"
           },
           "attributes": {
             "api": {
               "kind": "field_ref",
-              "field": "call_name"
+              "field": "definition.name"
+            },
+            "capability": "hook-dispatch"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "dispatches",
+          "relation_kind": "uses_api",
           "source": {
             "kind": "by_canonical_key",
-            "template": "wordpress:dispatch:{path}:{source.start}"
+            "template": "wordpress:file:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "wordpress:hook:{arg0}"
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "hook-dispatch",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files define extension points of their own. do_action and apply_filters are how a plugin invites other code in, so these are the files a third-party integrator has to read."
+    },
+    {
+      "id": "wordpress.content-model.register",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "register_post_type",
+            "register_taxonomy",
+            "register_post_status",
+            "register_meta",
+            "register_post_meta",
+            "register_term_meta",
+            "register_taxonomy_for_object_type"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "content-model"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "content-model",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files define the site's content model -- the custom post types, taxonomies and registered meta that a WordPress site's schema consists of."
+    },
+    {
+      "id": "wordpress.block.register",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "register_block_type",
+            "register_block_type_from_metadata",
+            "register_block_pattern",
+            "register_block_pattern_category",
+            "register_block_style",
+            "register_block_bindings_source"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "block"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "block",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files register editor blocks, patterns and block styles: the server side of the block editor."
+    },
+    {
+      "id": "wordpress.rest.register",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "register_rest_route",
+            "register_rest_field",
+            "rest_get_server",
+            "rest_ensure_response"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "rest"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "rest",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files add REST endpoints or fields. The namespace and route are string arguments the Pack does not publish, so this names the file that serves API surface rather than the path it serves."
+    },
+    {
+      "id": "wordpress.admin.register",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "add_menu_page",
+            "add_submenu_page",
+            "add_options_page",
+            "add_theme_page",
+            "add_management_page",
+            "add_plugins_page",
+            "add_users_page",
+            "add_meta_box",
+            "register_setting",
+            "add_settings_section",
+            "add_settings_field"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "admin"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "admin",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files build the wp-admin surface: menu pages, meta boxes and the Settings API. This is where a site's configuration screens come from."
+    },
+    {
+      "id": "wordpress.presentation.register",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "add_shortcode",
+            "register_widget",
+            "register_sidebar",
+            "register_sidebars",
+            "register_nav_menu",
+            "register_nav_menus",
+            "add_theme_support",
+            "add_image_size"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "presentation"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "presentation",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files register shortcodes, widgets, sidebars, nav menus and theme supports -- the things an editor can place on a page."
+    },
+    {
+      "id": "wordpress.assets.enqueue",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "wp_enqueue_script",
+            "wp_enqueue_style",
+            "wp_register_script",
+            "wp_register_style",
+            "wp_localize_script",
+            "wp_add_inline_script",
+            "wp_add_inline_style",
+            "wp_set_script_translations",
+            "wp_script_add_data",
+            "wp_enqueue_block_style"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "assets"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "assets",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files put scripts and styles on the page. Asset handles are string arguments the Pack does not publish, so the answer is the enqueuing file, which is the file to edit."
+    },
+    {
+      "id": "wordpress.options.access",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get_option",
+            "add_option",
+            "update_option",
+            "delete_option",
+            "get_site_option",
+            "add_site_option",
+            "update_site_option",
+            "delete_site_option",
+            "get_transient",
+            "set_transient",
+            "delete_transient",
+            "get_theme_mod",
+            "set_theme_mod"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "options"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "options",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files read or write persistent site settings -- the options table, transients and theme mods. Keeping this separate from ordinary data access is what makes 'where is this setting touched' answerable."
+    },
+    {
+      "id": "wordpress.data.access",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "get_posts",
+            "wp_insert_post",
+            "wp_update_post",
+            "wp_delete_post",
+            "get_post_meta",
+            "add_post_meta",
+            "update_post_meta",
+            "delete_post_meta",
+            "get_terms",
+            "wp_insert_term",
+            "wp_set_object_terms",
+            "get_users",
+            "wp_insert_user",
+            "get_user_meta",
+            "update_user_meta",
+            "wp_cache_get",
+            "wp_cache_set"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "data"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "data",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files read or write posts, terms, users and their meta through the WordPress data API rather than SQL."
+    },
+    {
+      "id": "wordpress.data.query-object",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.constructor"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "WP_Query",
+            "WP_User_Query",
+            "WP_Term_Query",
+            "WP_Comment_Query",
+            "WP_Meta_Query",
+            "WP_Tax_Query",
+            "WP_REST_Response",
+            "WP_Error"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "data-query"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "data-query",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files construct a WordPress query or response object. WP_Query is the idiomatic read path and arrives as call.constructor, a different fact kind from the wp_* functions above."
+    },
+    {
+      "id": "wordpress.security.check",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "current_user_can",
+            "user_can",
+            "current_user_can_for_blog",
+            "is_user_logged_in",
+            "wp_verify_nonce",
+            "check_admin_referer",
+            "check_ajax_referer",
+            "wp_create_nonce",
+            "wp_nonce_field",
+            "wp_nonce_url",
+            "map_meta_cap"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "security"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "uses_api",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "capability": "security",
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "observed",
+      "confidence": "exact",
+      "coverage_note": "Which files check a capability or a nonce before acting. A registration with none of these anywhere near it is the shape of a WordPress privilege bug, so the two sets being separately reachable is the point."
+    },
+    {
+      "id": "wordpress.registrar.function",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.function"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "add_action",
+            "add_filter",
+            "add_image_size",
+            "add_management_page",
+            "add_menu_page",
+            "add_meta_box",
+            "add_options_page",
+            "add_plugins_page",
+            "add_settings_field",
+            "add_settings_section",
+            "add_shortcode",
+            "add_submenu_page",
+            "add_theme_page",
+            "add_theme_support",
+            "add_users_page",
+            "has_action",
+            "has_filter",
+            "register_block_bindings_source",
+            "register_block_pattern",
+            "register_block_pattern_category",
+            "register_block_style",
+            "register_block_type",
+            "register_block_type_from_metadata",
+            "register_meta",
+            "register_nav_menu",
+            "register_nav_menus",
+            "register_post_meta",
+            "register_post_status",
+            "register_post_type",
+            "register_rest_field",
+            "register_rest_route",
+            "register_setting",
+            "register_sidebar",
+            "register_sidebars",
+            "register_taxonomy",
+            "register_taxonomy_for_object_type",
+            "register_term_meta",
+            "register_widget",
+            "remove_action",
+            "remove_filter",
+            "rest_ensure_response",
+            "rest_get_server",
+            "wp_add_inline_script",
+            "wp_add_inline_style",
+            "wp_enqueue_block_style",
+            "wp_enqueue_script",
+            "wp_enqueue_style",
+            "wp_localize_script",
+            "wp_register_script",
+            "wp_register_style",
+            "wp_script_add_data",
+            "wp_set_script_translations"
+          ]
+        },
+        {
+          "kind": "path_glob",
+          "pattern": "**/*.php"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "scope.function_body",
+          "relation": "within",
+          "same_path": true,
+          "bind": "fn"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Registrar",
+          "canonical_key": {
+            "template": "wordpress:function:{path}:{fn.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "fn.definition.name"
+            },
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "capability": "registration"
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ExtensionFile",
+          "canonical_key": {
+            "template": "wordpress:file:{path}"
+          },
+          "attributes": {
+            "source_file": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "registers",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:function:{path}:{fn.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:api:{definition.name}"
+          },
+          "attributes": {
+            "api": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:file:{path}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "wordpress:function:{path}:{fn.definition.name}"
           },
           "attributes": {}
         }
       ],
       "evidence_class": "observed",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.generic-api-call.wordpress-plugin",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.target_candidate"
-        },
-        {
-          "kind": "external_path_matches",
-          "package": "@wordpress-plugin"
-        },
-        {
-          "kind": "field_present",
-          "field": "source.start"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "@wordpress-plugin",
-            "source_only": true
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_api",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:api-use:{path}:{source.start}"
-          },
-          "attributes": {
-            "package": "@wordpress-plugin",
-            "source_only": true
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+      "coverage_note": "Which named PHP function performs a WordPress registration. Most plugins wrap their registrations in a bootstrap function that is itself hooked onto init or plugins_loaded, and the span join to scope.function_body names it without any Pack field. A registration at file top level lies in no function scope and is answered by the file-level rules instead."
     },
     {
-      "id": "wordpress.generic-api-call.wp-content-plugins",
-      "snapshot": true,
+      "id": "wordpress.block.metadata",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.target_candidate"
+          "value": "definition.config_key"
         },
         {
-          "kind": "external_path_matches",
-          "package": "wp-content/plugins"
+          "kind": "path_glob",
+          "pattern": "**/block.json"
         },
         {
-          "kind": "field_present",
-          "field": "source.start"
+          "kind": "field_equals",
+          "field": "definition.name",
+          "value": "apiVersion"
+        },
+        {
+          "kind": "path_segment",
+          "exclude": [
+            "node_modules",
+            "vendor",
+            "wp-admin",
+            "wp-includes"
+          ]
         }
       ],
-      "guards": [],
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ApiUse",
+          "entity_kind": "Block",
           "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:api-use:{path}:{source.start}"
+            "template": "wordpress:block:{path}"
           },
           "attributes": {
-            "package": "wp-content/plugins",
-            "source_only": true
+            "metadata_file": {
+              "kind": "field_ref",
+              "field": "path"
+            },
+            "directory": {
+              "kind": "field_ref",
+              "field": "path.dir"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "WpApi",
+          "canonical_key": {
+            "template": "wordpress:api:register_block_type"
+          },
+          "attributes": {
+            "api": "register_block_type",
+            "capability": "block"
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "uses_api",
+          "relation_kind": "configures",
           "source": {
-            "kind": "current"
+            "kind": "by_canonical_key",
+            "template": "wordpress:block:{path}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "wordpress:api-use:{path}:{source.start}"
+            "template": "wordpress:api:register_block_type"
           },
-          "attributes": {
-            "package": "wp-content/plugins",
-            "source_only": true
-          }
+          "attributes": {}
         }
       ],
-      "evidence_class": "structurally_derived",
+      "evidence_class": "observed",
       "confidence": "exact",
-      "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
-    },
-    {
-      "id": "wordpress.add_action.identifier",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_identifier_args_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "add_action"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HookRegistration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "callback": {
-              "kind": "field_ref",
-              "field": "arg1_identifier"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_field",
-            "field": "arg1_identifier"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "wordpress.add_filter.identifier",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_identifier_args_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "add_filter"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "HookRegistration",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "callback": {
-              "kind": "field_ref",
-              "field": "arg1_identifier"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:hookregistration:{arg0}:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_field",
-            "field": "arg1_identifier"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "wordpress.add_shortcode.identifier",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_identifier_args_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "add_shortcode"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Shortcode",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:shortcode:{arg0}:{path}:{source.start}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "callback": {
-              "kind": "field_ref",
-              "field": "arg1_identifier"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "handles",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:shortcode:{arg0}:{path}:{source.start}"
-          },
-          "target": {
-            "kind": "by_field",
-            "field": "arg1_identifier"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate"
-    },
-    {
-      "id": "wordpress.register_post_type",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "register_post_type"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ContentType",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:contenttype:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:contenttype:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.register_taxonomy",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "register_taxonomy"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Taxonomy",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:taxonomy:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:taxonomy:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.register_block_type",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "register_block_type"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "BlockType",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:blocktype:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:blocktype:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.register_nav_menu",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "register_nav_menu"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Menu",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:menu:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:menu:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.register_sidebar",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "register_sidebar"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Sidebar",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:sidebar:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configures",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:sidebar:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.rest-route",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_two_string_args_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "register_rest_route"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Route",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:rest:{arg0}:{arg1}"
-          },
-          "attributes": {
-            "namespace": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "arg1"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:rest:{arg0}:{arg1}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.wp_enqueue_script",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "wp_enqueue_script"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ScriptResource",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:scriptresource:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "operation": "wp_enqueue_script"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:scriptresource:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.wp_enqueue_style",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "wp_enqueue_style"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StyleResource",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:styleresource:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "operation": "wp_enqueue_style"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "uses_resource",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:styleresource:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.get_option",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "get_option"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Option",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:option:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "operation": "get_option"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:option:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.update_option",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "update_option"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Option",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:option:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "operation": "update_option"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:option:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
-    },
-    {
-      "id": "wordpress.add_option",
-      "snapshot": true,
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.php_function_string_arg_context"
-        },
-        {
-          "kind": "field_equals",
-          "field": "call_name",
-          "value": "add_option"
-        }
-      ],
-      "guards": [],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "Option",
-          "canonical_key": {
-            "kind": "canonical_key",
-            "template": "wordpress:option:{arg0}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "arg0"
-            },
-            "operation": "add_option"
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "current"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "wordpress:option:{arg0}"
-          },
-          "attributes": {}
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact"
+      "coverage_note": "Which blocks the project defines. A block.json is one block, and apiVersion is its top-level marker key, so the metadata file's path identifies the block and its directory is the block's source folder. The block's own name and script handles are config values, which omega-json publishes as an attribute the overlay cannot read."
     }
   ],
   "coverage": {
     "mode": "explicit-classified",
     "gaps": [
-      "callable arrays, closures, computed hook names and dynamic callback resolution remain candidate/runtime value-flow semantics",
-      "literal hook/filter/shortcode names, direct identifier callbacks, REST route namespace/path, content/taxonomy/block/menu/sidebar registrations and literal asset/option keys are materialized",
-      "runtime plugin/theme registration order, generated hooks and WordPress global state are runtime semantics"
+      "omega-php publishes no field on any of its templates, so no call argument is visible to the overlay: hook names, callbacks, shortcode tags, option keys, REST namespaces and asset handles are all string arguments and none of them can be materialized.",
+      "what is materialized is the file, the enclosing PHP function, the WordPress API each one uses, the theme template hierarchy by file name, and the blocks a block.json declares.",
+      "config values in block.json and theme.json are published by omega-json as an attribute, and OverlayFact::field never reads attributes, so a block's own name and script handles stay unreachable until that value moves to fields.",
+      "runtime plugin and theme activation order, dynamically composed hook names, callable arrays and closures remain runtime semantics."
     ]
   },
   "provenance": [

@@ -31,88 +31,84 @@
  ],
  "emits": {
   "entities": [
-   "ApiUse",
    "Component",
    "Composable",
    "Dependency",
    "Layout",
    "Middleware",
    "Module",
-   "ModuleDependency",
+   "NuxtApp",
+   "NuxtConfig",
+   "NuxtFile",
    "Page",
    "Plugin",
    "Route",
-   "RouteRule",
    "ServerHandler",
    "ServerMiddleware",
    "ServerRoute"
   ],
   "relations": [
-   "configures",
+   "config",
+   "contains",
    "depends_on",
+   "extends",
    "handles",
-   "layout_applies_to",
-   "middleware_wraps",
-   "uses_api"
+   "renders"
   ]
  },
  "rules": [
   {
-   "id": "nuxt.page.file",
-   "snapshot": true,
+   "id": "nuxt.page",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "scope.template_block"
     },
     {
      "kind": "path_glob",
-     "value": "**/pages/**/*.vue",
-     "field": "file.path"
+     "pattern": "**/pages/**/*.vue"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
      "entity_kind": "Page",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:page:{path.route}"
+      "template": "nuxt:page:{path}"
      },
      "attributes": {
-      "path": {
+      "file": {
        "kind": "field_ref",
-       "field": "path.value"
-      }
-     }
-    },
-    {
-     "kind": "entity_candidate",
-     "entity_kind": "Component",
-     "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:component:{path.value}"
-     },
-     "attributes": {
-      "path": {
-       "kind": "field_ref",
-       "field": "path.value"
+       "field": "path"
       },
-      "role": "page"
+      "router": "pages"
      }
     },
     {
      "kind": "entity_candidate",
      "entity_kind": "Route",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:route:{path.route}"
+      "template": "http:*:{normalized_file_route}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "nuxt",
+      "router": "pages"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
       "path": {
        "kind": "field_ref",
-       "field": "path.route"
+       "field": "path"
       }
      }
     },
@@ -121,773 +117,1176 @@
      "relation_kind": "handles",
      "source": {
       "kind": "by_canonical_key",
-      "template": "nuxt:route:{path.route}"
+      "template": "http:*:{normalized_file_route}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "nuxt:page:{path.route}"
+      "template": "nuxt:page:{path}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:page:{path}"
      },
      "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "A page of the file router: the URL its path under pages/ spells, and the single-file component that serves it. The entry fact is the SFC's own <template> block, which omega-vue emits once per page file."
   },
   {
-   "id": "nuxt.layout.file",
-   "snapshot": true,
+   "id": "nuxt.page.meta",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "call.function"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "definePageMeta"
     },
     {
      "kind": "path_glob",
-     "value": "**/layouts/*.vue",
-     "field": "file.path"
+     "pattern": "**/pages/**/*.vue"
     }
    ],
-   "guards": [],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Page",
+     "canonical_key": {
+      "template": "nuxt:page:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "router": "pages"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Route",
+     "canonical_key": {
+      "template": "http:*:{normalized_file_route}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "nuxt",
+      "router": "pages"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "http:*:{normalized_file_route}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:page:{path}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:page:{path}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "The same page stated by its definePageMeta() call, which is how a page that renders from script rather than a <template> block still declares itself, and marks the pages that override their route metadata."
+  },
+  {
+   "id": "nuxt.layout",
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "scope.template_block"
+    },
+    {
+     "kind": "path_glob",
+     "pattern": "**/layouts/**/*.vue"
+    }
+   ],
    "outputs": [
     {
      "kind": "entity_candidate",
      "entity_kind": "Layout",
      "canonical_key": {
-      "kind": "canonical_key",
       "template": "nuxt:layout:{path.stem}"
      },
      "attributes": {
       "name": {
        "kind": "field_ref",
        "field": "path.stem"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
       }
      }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtApp",
+     "canonical_key": {
+      "template": "nuxt:app"
+     },
+     "attributes": {
+      "framework": "nuxt"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "extends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:app"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:layout:{path.stem}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:layout:{path.stem}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "A layout, keyed by the name a page addresses it with -- the file stem -- because a layout is not a URL: it wraps whichever pages name it."
   },
   {
-   "id": "nuxt.middleware.file",
-   "snapshot": true,
+   "id": "nuxt.middleware",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "call.function"
     },
     {
-     "kind": "path_glob",
-     "value": "**/middleware/*.*",
-     "field": "file.path"
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "defineNuxtRouteMiddleware"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
      "entity_kind": "Middleware",
      "canonical_key": {
-      "kind": "canonical_key",
       "template": "nuxt:middleware:{path.stem}"
      },
      "attributes": {
       "name": {
        "kind": "field_ref",
        "field": "path.stem"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
       }
      }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "nuxt.page.explicit_layout",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_field_context"
     },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "definePageMeta"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "layout"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/pages/**/*.vue",
-     "field": "file.path"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "data.file",
-     "current_field": "value",
-     "join_field": "path.stem",
-     "where": [
-      {
-       "kind": "path_glob",
-       "value": "**/layouts/*.vue",
-       "field": "file.path"
-      }
-     ],
-     "bind": "layout_file"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "layout_applies_to",
-     "source": {
-      "kind": "by_joined_field",
-      "bind": "layout_file",
-      "field": "path.stem",
-      "template": "nuxt:layout:{value}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "nuxt:page:{path.route}"
-     },
-     "attributes": {
-      "source_only": true,
-      "metadata_call": "definePageMeta",
-      "metadata_field": "layout",
-      "target_requires_declaration": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "nuxt.page.explicit_middleware",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_array_item_context"
-    },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "definePageMeta"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "middleware"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/pages/**/*.vue",
-     "field": "file.path"
-    },
-    {
-     "kind": "fact_join_by_field",
-     "fact_kind": "data.file",
-     "current_field": "value",
-     "join_field": "path.stem",
-     "where": [
-      {
-       "kind": "path_glob",
-       "value": "**/middleware/*.*",
-       "field": "file.path"
-      }
-     ],
-     "bind": "middleware_file"
-    }
-   ],
-   "guards": [],
-   "outputs": [
-    {
-     "kind": "relation_candidate",
-     "relation_kind": "middleware_wraps",
-     "source": {
-      "kind": "by_joined_field",
-      "bind": "middleware_file",
-      "field": "path.stem",
-      "template": "nuxt:middleware:{value}"
-     },
-     "target": {
-      "kind": "by_canonical_key",
-      "template": "nuxt:page:{path.route}"
-     },
-     "attributes": {
-      "source_only": true,
-      "metadata_call": "definePageMeta",
-      "metadata_field": "middleware",
-      "target_requires_declaration": true
-     }
-    }
-   ],
-   "evidence_class": "structurally_derived",
-   "confidence": "exact"
-  },
-  {
-   "id": "nuxt.generic-api-call.nuxt",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "call.target_candidate"
-    },
-    {
-     "kind": "external_path_matches",
-     "package": "nuxt"
-    },
-    {
-     "kind": "field_present",
-     "field": "source.start"
-    }
-   ],
-   "guards": [],
-   "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ApiUse",
+     "entity_kind": "NuxtApp",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:api-use:{path}:{source.start}"
+      "template": "nuxt:app"
      },
      "attributes": {
-      "package": "nuxt",
-      "source_only": true
+      "framework": "nuxt"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "uses_api",
+     "relation_kind": "extends",
      "source": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "nuxt:app"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "nuxt:api-use:{path}:{source.start}"
+      "template": "nuxt:middleware:{path.stem}"
      },
-     "attributes": {
-      "package": "nuxt",
-      "source_only": true
-     }
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:middleware:{path.stem}"
+     },
+     "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
    "confidence": "exact",
-   "coverage_note": "Generic provenance-backed authored framework API use; specialized framework semantics are added by dedicated rules."
+   "coverage_note": "Route middleware, keyed by the name a page names it with. The entry fact is the defineNuxtRouteMiddleware() call, which is what makes a file in middleware/ middleware rather than a helper beside it."
   },
   {
-   "id": "nuxt.generic-dependency.nuxt",
-   "snapshot": true,
+   "id": "nuxt.plugin",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "import.target_candidate"
+     "value": "call.function"
     },
     {
-     "kind": "external_path_matches",
-     "package": "nuxt"
-    },
-    {
-     "kind": "field_present",
-     "field": "source.start"
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "defineNuxtPlugin"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "Dependency",
+     "entity_kind": "Plugin",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:dependency:nuxt"
+      "template": "nuxt:plugin:{path}"
      },
      "attributes": {
-      "package": "nuxt",
-      "source_only": true
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "name": {
+       "kind": "field_ref",
+       "field": "path.stem"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtApp",
+     "canonical_key": {
+      "template": "nuxt:app"
+     },
+     "attributes": {
+      "framework": "nuxt"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "depends_on",
+     "relation_kind": "extends",
      "source": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "nuxt:app"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "nuxt:dependency:nuxt"
+      "template": "nuxt:plugin:{path}"
      },
-     "attributes": {
-      "package": "nuxt",
-      "source_only": true
-     }
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:plugin:{path}"
+     },
+     "attributes": {}
     }
    ],
    "evidence_class": "structurally_derived",
    "confidence": "exact",
-   "coverage_note": "Explicit resolved import/module provenance only; installation/runtime availability is not inferred."
+   "coverage_note": "A plugin: code Nuxt runs while creating the app. Stated by its defineNuxtPlugin() call rather than by its directory, because a layer or a module may ship one from anywhere."
   },
   {
-   "id": "nuxt.file.server-api",
-   "snapshot": true,
+   "id": "nuxt.module",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "call.function"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "defineNuxtModule"
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Module",
+     "canonical_key": {
+      "template": "nuxt:module:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "name": {
+       "kind": "field_ref",
+       "field": "path.stem"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtApp",
+     "canonical_key": {
+      "template": "nuxt:app"
+     },
+     "attributes": {
+      "framework": "nuxt"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "extends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:app"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:module:{path}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:module:{path}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "A module authored in this repository: defineNuxtModule() is the build-time extension point, so this answers which parts of the app are generated rather than written."
+  },
+  {
+   "id": "nuxt.config",
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "call.function"
+    },
+    {
+     "kind": "field_equals",
+     "field": "definition.name",
+     "value": "defineNuxtConfig"
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtConfig",
+     "canonical_key": {
+      "template": "nuxt:config:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtApp",
+     "canonical_key": {
+      "template": "nuxt:app"
+     },
+     "attributes": {
+      "framework": "nuxt"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
+     },
+     "attributes": {
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "config",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:config:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:app"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:config:{path}"
+     },
+     "attributes": {}
+    }
+   ],
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "The configuration that defines the app, and which file it lives in -- the one file to open when asking how this project is built. A layer contributes its own, which is why it is keyed by path."
+  },
+  {
+   "id": "nuxt.server.api",
+   "match": [
+    {
+     "kind": "fact_kind",
+     "value": "call.function"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "defineEventHandler",
+      "defineLazyEventHandler",
+      "defineCachedEventHandler",
+      "defineRequestMiddleware",
+      "eventHandler"
+     ]
     },
     {
      "kind": "path_glob",
      "pattern": "**/server/api/**/*.*"
     }
    ],
-   "guards": [],
    "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ServerHandler",
+     "canonical_key": {
+      "template": "nuxt:server-handler:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "role": "server_api"
+     }
+    },
     {
      "kind": "entity_candidate",
      "entity_kind": "ServerRoute",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:server-api:{path}"
+      "template": "http:*:/api{normalized_file_route}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "nuxt",
+      "role": "server_api"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
       "path": {
        "kind": "field_ref",
        "field": "path"
-      },
-      "role": "server_api",
-      "source_only": true
+      }
      }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "http:*:/api{normalized_file_route}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:server-handler:{path}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:server-handler:{path}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which handler answers an /api/... request: Nitro serves server/api/x.ts at /api/x, so the URL is the path below server/api with the /api prefix Nuxt adds, and the handler is the defineEventHandler() call in that file."
   },
   {
-   "id": "nuxt.file.server-route",
-   "snapshot": true,
+   "id": "nuxt.server.route",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "call.function"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "defineEventHandler",
+      "defineLazyEventHandler",
+      "defineCachedEventHandler",
+      "defineRequestMiddleware",
+      "eventHandler"
+     ]
     },
     {
      "kind": "path_glob",
      "pattern": "**/server/routes/**/*.*"
     }
    ],
-   "guards": [],
    "outputs": [
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "ServerHandler",
+     "canonical_key": {
+      "template": "nuxt:server-handler:{path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "role": "server_route"
+     }
+    },
     {
      "kind": "entity_candidate",
      "entity_kind": "ServerRoute",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:server-route:{path}"
+      "template": "http:*:{normalized_file_route}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
+      "framework": "nuxt",
+      "role": "server_route"
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
       "path": {
        "kind": "field_ref",
        "field": "path"
-      },
-      "role": "server_route",
-      "source_only": true
+      }
      }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "handles",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "http:*:{normalized_file_route}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:server-handler:{path}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:server-handler:{path}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "The same question for server/routes, which Nitro mounts at the root instead of under /api."
   },
   {
-   "id": "nuxt.file.server-middleware",
-   "snapshot": true,
+   "id": "nuxt.server.middleware",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "call.function"
+    },
+    {
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "defineEventHandler",
+      "defineLazyEventHandler",
+      "defineCachedEventHandler",
+      "defineRequestMiddleware",
+      "eventHandler"
+     ]
     },
     {
      "kind": "path_glob",
      "pattern": "**/server/middleware/**/*.*"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
      "entity_kind": "ServerMiddleware",
      "canonical_key": {
-      "kind": "canonical_key",
       "template": "nuxt:server-middleware:{path}"
      },
      "attributes": {
-      "path": {
+      "file": {
        "kind": "field_ref",
        "field": "path"
       },
-      "role": "server_middleware",
-      "source_only": true
+      "name": {
+       "kind": "field_ref",
+       "field": "path.stem"
+      }
      }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "nuxt.file.plugin",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.file"
     },
     {
-     "kind": "path_glob",
-     "pattern": "**/plugins/**/*.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtApp",
+     "canonical_key": {
+      "template": "nuxt:app"
+     },
+     "attributes": {
+      "framework": "nuxt"
+     }
+    },
     {
      "kind": "entity_candidate",
-     "entity_kind": "Plugin",
+     "entity_kind": "NuxtFile",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:plugin:{path}"
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
       "path": {
        "kind": "field_ref",
        "field": "path"
-      },
-      "role": "plugin",
-      "source_only": true
+      }
      }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "extends",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:app"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:server-middleware:{path}"
+     },
+     "attributes": {}
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:server-middleware:{path}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Server middleware runs before every server route and owns no URL of its own, so it is keyed by file and hangs off the app rather than off a route."
   },
   {
-   "id": "nuxt.file.composable",
-   "snapshot": true,
+   "id": "nuxt.composable.declaration",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "definition.function"
     },
     {
      "kind": "path_glob",
      "pattern": "**/composables/**/*.*"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
      "entity_kind": "Composable",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:composable:{path}"
+      "template": "nuxt:composable:{definition.name}"
+     },
+     "attributes": {
+      "name": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      },
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "NuxtFile",
+     "canonical_key": {
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
       "path": {
        "kind": "field_ref",
        "field": "path"
-      },
-      "role": "composable",
-      "source_only": true
+      }
      }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "contains",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:composable:{definition.name}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "A composable, keyed by its name rather than its file because Nuxt auto-imports it by name: that key is what a call site anywhere in the project resolves to."
   },
   {
-   "id": "nuxt.file.module",
-   "snapshot": true,
+   "id": "nuxt.composable.use",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.file"
+     "value": "call.function"
     },
     {
-     "kind": "path_glob",
-     "pattern": "**/modules/**/*.*"
+     "kind": "fact_join_by_field",
+     "fact_kind": "definition.function",
+     "current_field": "definition.name",
+     "join_field": "definition.name",
+     "where": [
+      {
+       "kind": "path_glob",
+       "pattern": "**/composables/**/*.*"
+      }
+     ],
+     "bind": "decl"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "Module",
+     "entity_kind": "NuxtFile",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:module:{path}"
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
       "path": {
        "kind": "field_ref",
        "field": "path"
-      },
-      "role": "module",
-      "source_only": true
+      }
      }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "nuxt.server.authored-export.function",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "definition.ecmascript_exported_function_context"
     },
-    {
-     "kind": "field_present",
-     "field": "exported_name"
-    },
-    {
-     "kind": "path_glob",
-     "pattern": "**/server/{api,routes}/**/*.*"
-    }
-   ],
-   "guards": [],
-   "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ServerHandler",
+     "entity_kind": "Composable",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:server-handler:{path}:{exported_name}"
+      "template": "nuxt:composable:{decl.definition.name}"
      },
      "attributes": {
       "name": {
        "kind": "field_ref",
-       "field": "exported_name"
+       "field": "decl.definition.name"
       },
-      "source_only": true
+      "file": {
+       "kind": "field_ref",
+       "field": "decl.path"
+      }
      }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends_on",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:composable:{decl.definition.name}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Who calls a composable. Nuxt auto-imports composables, so there is no import statement to follow; the edge is the call name resolved against the declarations under composables/, which is exactly the resolution Nuxt performs."
   },
   {
-   "id": "nuxt.server.authored-export.variable",
-   "snapshot": true,
+   "id": "nuxt.component.declaration",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "definition.ecmascript_exported_variable_context"
-    },
-    {
-     "kind": "field_present",
-     "field": "exported_name"
+     "value": "scope.template_block"
     },
     {
      "kind": "path_glob",
-     "pattern": "**/server/{api,routes}/**/*.*"
+     "pattern": "**/components/**/*.vue"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ServerHandler",
+     "entity_kind": "Component",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:server-handler:{path}:{exported_name}"
+      "template": "nuxt:component:{path}"
      },
      "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "path"
+      },
       "name": {
        "kind": "field_ref",
-       "field": "exported_name"
-      },
-      "source_only": true
+       "field": "path.stem"
+      }
      }
-    }
-   ],
-   "evidence_class": "observed",
-   "confidence": "exact"
-  },
-  {
-   "id": "nuxt.config.modules.ecmascript_call_object_string_array_item_context",
-   "snapshot": true,
-   "match": [
-    {
-     "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_string_array_item_context"
     },
-    {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineNuxtConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "modules"
-    },
-    {
-     "kind": "field_present",
-     "field": "value"
-    }
-   ],
-   "guards": [],
-   "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ModuleDependency",
+     "entity_kind": "NuxtFile",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:config-module:{path}:{source.start}:{value}"
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
-      "module": {
+      "path": {
        "kind": "field_ref",
-       "field": "value"
-      },
-      "source_only": true
+       "field": "path"
+      }
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "configures",
+     "relation_kind": "contains",
      "source": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "nuxt:config-module:{path}:{source.start}:{value}"
+      "template": "nuxt:component:{path}"
      },
-     "attributes": {
-      "field": "modules",
-      "source_only": true
-     }
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "An auto-imported component: a single-file component under components/, whose file stem is the tag every template addresses it by."
   },
   {
-   "id": "nuxt.config.modules.ecmascript_call_object_array_direct_call_context",
-   "snapshot": true,
+   "id": "nuxt.component.render",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_array_direct_call_context"
+     "value": "data.vue_element"
     },
     {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineNuxtConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "key",
-     "value": "modules"
-    },
-    {
-     "kind": "field_present",
-     "field": "item_call_name"
+     "kind": "fact_join_by_field",
+     "fact_kind": "scope.template_block",
+     "current_field": "definition.name",
+     "join_field": "path.stem",
+     "where": [
+      {
+       "kind": "path_glob",
+       "pattern": "**/components/**/*.vue"
+      }
+     ],
+     "bind": "cmp"
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "ModuleDependency",
+     "entity_kind": "NuxtFile",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:config-module:{path}:{source.start}:{item_call_name}"
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
-      "module": {
+      "path": {
        "kind": "field_ref",
-       "field": "item_call_name"
+       "field": "path"
+      }
+     }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Component",
+     "canonical_key": {
+      "template": "nuxt:component:{cmp.path}"
+     },
+     "attributes": {
+      "file": {
+       "kind": "field_ref",
+       "field": "cmp.path"
       },
-      "source_only": true
+      "name": {
+       "kind": "field_ref",
+       "field": "cmp.path.stem"
+      }
      }
     },
     {
      "kind": "relation_candidate",
-     "relation_kind": "configures",
+     "relation_kind": "renders",
      "source": {
-      "kind": "current"
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
      },
      "target": {
       "kind": "by_canonical_key",
-      "template": "nuxt:config-module:{path}:{source.start}:{item_call_name}"
+      "template": "nuxt:component:{cmp.path}"
      },
-     "attributes": {
-      "field": "modules",
-      "source_only": true
-     }
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "exact"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "What a page or component renders: a tag in a template resolved against the components/ file whose stem it names, which is Nuxt's auto-import rule. This is the edge that makes a page reachable from a component and back."
   },
   {
-   "id": "nuxt.config.route-rules",
-   "snapshot": true,
+   "id": "nuxt.dependency",
    "match": [
     {
      "kind": "fact_kind",
-     "value": "data.ecmascript_call_object_array_object_string_identifier_context"
+     "value": "import.module"
     },
     {
-     "kind": "field_equals",
-     "field": "call_name",
-     "value": "defineNuxtConfig"
-    },
-    {
-     "kind": "field_equals",
-     "field": "array_key",
-     "value": "routeRules"
+     "kind": "field_in",
+     "field": "definition.name",
+     "values": [
+      "nuxt",
+      "nuxt/app",
+      "nuxt/schema",
+      "nuxt/kit",
+      "nuxt/config",
+      "#app",
+      "#imports",
+      "#components",
+      "#build",
+      "h3",
+      "nitropack",
+      "ofetch",
+      "@nuxt/kit",
+      "@nuxt/schema"
+     ]
     }
    ],
-   "guards": [],
    "outputs": [
     {
      "kind": "entity_candidate",
-     "entity_kind": "RouteRule",
+     "entity_kind": "NuxtFile",
      "canonical_key": {
-      "kind": "canonical_key",
-      "template": "nuxt:route-rule:{path}:{source.start}"
+      "template": "nuxt:file:{path}"
      },
      "attributes": {
-      "source_only": true
+      "path": {
+       "kind": "field_ref",
+       "field": "path"
+      }
      }
+    },
+    {
+     "kind": "entity_candidate",
+     "entity_kind": "Dependency",
+     "canonical_key": {
+      "template": "nuxt:dependency:{definition.name}"
+     },
+     "attributes": {
+      "module": {
+       "kind": "field_ref",
+       "field": "definition.name"
+      }
+     }
+    },
+    {
+     "kind": "relation_candidate",
+     "relation_kind": "depends_on",
+     "source": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:file:{path}"
+     },
+     "target": {
+      "kind": "by_canonical_key",
+      "template": "nuxt:dependency:{definition.name}"
+     },
+     "attributes": {}
     }
    ],
-   "evidence_class": "observed",
-   "confidence": "candidate"
+   "evidence_class": "structurally_derived",
+   "confidence": "exact",
+   "coverage_note": "Which files reach for Nuxt's own API surface -- nuxt/kit, #imports, #app, h3 -- which is what separates framework-coupled code from plain TypeScript in the same repository."
   }
  ],
  "coverage": {
   "mode": "explicit-classified",
   "gaps": [
-   "non-literal or merged srcDir/layer configuration requires bounded static value/config resolution",
-   "module-generated pages/routes, Nitro runtime hooks and runtime module execution remain terminal runtime ceilings",
-   "non-literal definePageMeta expressions and nested routeRules values require bounded static value/structured-path resolution",
-   "auto-import alias normalization requires deterministic source-name/path normalization and symbol provenance",
-   "runtime route extension remains runtime framework state"
+   "definePageMeta({layout, middleware, name}) keys are unreachable: the JS/TS Packs emit a fact for an object key only when its value is a function, so which layout or middleware a page names cannot be stated",
+   "defineNuxtConfig({modules, routeRules, runtimeConfig}) values are unreachable for the same reason, so configured modules and route rules are not in the graph",
+   "kebab-case component tags (<app-header>) and nested component directories (components/app/Header.vue -> AppHeader) are not resolved: the join matches a tag against a file stem literally",
+   "module-generated pages and routes, Nitro runtime hooks and runtime module execution remain terminal runtime ceilings",
+   "layers and a non-default srcDir move the routing roots, which no static fact states"
   ]
  },
  "provenance": [

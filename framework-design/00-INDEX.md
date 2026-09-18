@@ -374,3 +374,43 @@ neighbours* before acting on it, with `dump_call_emissions`.
 
 Totals: **926 -> 886 overlay rules; 503 -> 421 that cannot match.** Twenty-four
 frameworks are clean.
+
+---
+
+# Framework wave 6 (symfony, asp-net-core, laravel, wordpress, nuxt)
+
+| Framework | rules | live before | live after |
+|---|---|---|---|
+| omega-framework-laravel | 32 -> 16 | 19 | 16 |
+| omega-framework-symfony | 20 -> 10 | 1 | 10 |
+| omega-framework-asp-net-core | 19 -> 10 | 0 | 10 |
+| omega-framework-wordpress | 18 -> 17 | 0 | 17 |
+| omega-framework-nuxt | 18 -> 15 | 0 | 15 |
+
+107 rules became 68. omega-symfony collapsed 15 per-attribute rules that were
+byte-identical apart from one string in a `member_in` list of length one.
+
+## Three blocking defects, two of them a new kind of vacuity
+
+**A `field_present` on a built-in name is always true.** `OverlayFact::field`
+falls back to `path` when the fields map has none, so symfony's
+`{"kind":"field_present","field":"path"}` guarded nothing and its Twig rules
+matched every `relation.depends` from every Pack in the repository — 30-odd
+Packs publish that kind. Gated on `**/*.twig` now.
+
+**A placeholder is not a field.** `normalized_file_route` resolves in
+`resolve_placeholder`, which serves `{...}` templates in canonical keys and
+relation ends. A `field_ref` attribute goes through `OverlayFact::field`, which
+has never heard of it. omega-nuxt gave its four principal entities an attribute
+`"route": {"kind":"field_ref","field":"normalized_file_route"}`, so all four
+were dropped as unresolvable — and eight relations addressing `nuxt:page:{path}`
+and `nuxt:server-handler:{path}` dangled, including the two answers the overlay
+exists for: *which URL does this page serve* and *which handler answers this
+API path*. The attribute is redundant with the relation's own end and is gone.
+
+The third was the same self-loop shape wave 2 found: symfony's
+`generic-api-call` ran `uses_api` from `current` to the key `current` had just
+been minted under.
+
+Totals: **886 -> 847 overlay rules; 421 -> 334 that cannot match.** Twenty-nine
+frameworks are clean.
