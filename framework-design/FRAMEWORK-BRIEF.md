@@ -4,6 +4,11 @@ You are being sent to rewrite exactly one Framework overlay.
 
 ## Required reading, before you touch anything
 
+If you find something that has to be done later and not by you, add it to
+`OWED.md` at the repository root -- that is the one place deferred work is
+tracked, and anything left only in a report is lost.
+
+
 1. **This file.**
 2. **`framework-design/00-CONTRACT.md`** — what the overlay sees, every match
    clause, every join, every output, and the Pack vocabulary to write against.

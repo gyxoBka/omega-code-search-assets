@@ -4,6 +4,11 @@ You are being sent to rewrite exactly one language Pack.
 
 ## Required reading, before you touch anything
 
+If you find something that has to be done later and not by you, add it to
+`OWED.md` at the repository root -- that is the one place deferred work is
+tracked, and anything left only in a report is lost.
+
+
 Read all four, whole, in this order. They are your context; you should not need
 to reverse-engineer the engine.
 

@@ -4,6 +4,10 @@ One `.md` per Framework in this folder, `00-CONTRACT.md` is the spec they are
 read against, and `pack-design/overlay_audit.py` is the measurement. This file
 is the cross-Framework reading.
 
+
+> Work this rewrite created and did not finish is tracked in `OWED.md`
+> at the repository root, not in these wave notes.
+
 ## The state, measured
 
 **1 415 of 1 525 overlay rules cannot match anything a Pack emits.** 110 can.

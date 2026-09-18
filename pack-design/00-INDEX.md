@@ -6,6 +6,10 @@ Pack never looks at. `00-CONTRACT.md` is the spec those documents are read
 against. This file is the cross-Pack reading: the defects that are not one
 Pack's mistake but the same mistake everywhere, and the order to fix them in.
 
+
+> Work this rewrite created and did not finish is tracked in `OWED.md`
+> at the repository root, not in these wave notes.
+
 ## Defect A — a type the host files as a value (54 kinds, 22 Packs)
 
 `entity_family` recognises a type by the words `type class trait struct enum
