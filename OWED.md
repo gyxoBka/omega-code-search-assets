@@ -498,3 +498,56 @@ been rewritten at all and are deferred; pydantic's 3 were read and are sound.
 
 **Done looks like:** the deferred wave closing angular's and nestjs's, and the
 check run beside the other two from then on.
+
+---
+
+## 17. The canonical call view was deleted, and it is the answer nine Frameworks asked for
+
+`crates/omega-ingest/tests/injection_regions.rs::the_canonical_call_view_reaches_the_emission_fields`
+fails against the rewritten Packs. It reads the live `packs/omega-typescript`,
+executes `app.get("/users/:id", mw, getUser)` and asserts
+
+```
+call.arg0     "/users/:id"
+call.arg1     mw
+call.last_arg getUser
+receiver      app
+```
+
+Before the Pack rewrite omega-typescript had exactly that, on two templates:
+
+| kind | fields |
+|---|---|
+| `call.member` | `call.arg0`, `call.arg1`, `call.arg2`, `call.last_arg`, `call.member`, `call.name`, `receiver` |
+| `call.direct` | the same without `receiver` |
+
+and **none of it needed a new capture or a Pack field to be invented**. Each
+argument is `first` / `select` / `last` over `ordered_children` of the captured
+argument list -- ops `expr.rs` has had all along. The rewrite deleted both
+templates as restating their match. They do not restate it: an argument list is
+a node, and its ordered children are the arguments.
+
+This is the single most-requested thing in this file. Every one of these asked
+for it, in these words or near them:
+
+| Framework | what it cannot say without it |
+|---|---|
+| fastify, express, bun | a route's URL, a plugin registration's prefix |
+| gin, fiber | `r.GET("/users/:id", h)` -- the path, the group prefix, a Static mount's directory |
+| axum | `.route("/users/:id", get(h))`, `.nest("/api", …)` |
+| vapor | `app.get("todos", ":id")`, `@Field(key: "title")`, a model's table name |
+| maui | `Routing.RegisterRoute("details", typeof(P))`, `GoToAsync("//details")` |
+| django, pydantic, pytorch-extensions | a decorator's or constructor's first argument |
+| jetpack-compose | `composable("home") { … }` |
+
+`OWED.md` items 1 and 11 are both this, described from the Framework side and
+guessed at as "a field only the Pack can supply". It is not a new field: it is a
+view the Packs already had.
+
+**Done looks like:** the canonical call view restored on the call templates of
+every Pack whose query captures the argument list -- starting with
+omega-javascript, omega-typescript and omega-tsx, where the engine test asserts
+it, then omega-go, omega-rust, omega-c-sharp, omega-python, omega-kotlin,
+omega-swift and omega-ruby -- on the **current** kind names (`call.method`,
+`call.function`), the engine test updated to the current spelling, and a second
+pass over the Frameworks above so they use it. Items 1 and 11 close with it.
