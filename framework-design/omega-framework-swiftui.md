@@ -84,77 +84,112 @@ Fields read: `attribute_name`, `call_name`, `inherited_type`, `owner_type`, `sou
 
 ## What was wrong with it
 
-Rewritten. **29 rules -> 9; 0 live -> 9 live, 0 dead.**
+Two rewrites are recorded here. The first turned 29 dead rules into 9 live
+ones; the second, this one, fixed what the audit cannot see — **seven of the
+nine rules' principal entity output was computed and thrown away.**
 
-**Every one of the six fact kinds was the generator's private Swift spelling,
-and no Pack has ever emitted any of them.** `omega-swift` emits 43 templates
-over 22 kinds; not one is a `*_context`. The 29 rules divided as
-`reference.swift_property_attribute_context` 11, `call.target_candidate` 8,
-`call.swift_named_string_argument_context` 7,
-`reference.swift_nominal_conformance_context` 3,
-`call.swift_computed_property_direct_call_context` 1,
-`import.module_path_candidate` 1.
+### This wave: one key, four kinds (9 rules -> 8, 7 dropped entities -> 0)
 
-**Six of the seven fields read were published by nobody** --
-`attribute_name`, `call_name`, `inherited_type`, `owner_type`,
-`property_name`, `callee_name`. The seventh, `source.start`, is a built-in.
-`omega-swift` publishes **no fields and no attributes at all**: every template
-has `"fields": {}` and `"attributes": {}`, so the whole overlay had to be
-rewritten onto `definition.name`, `path`, the span and the kind.
+`python pack-design/key_collisions.py swiftui` reported:
 
-**Twelve rules required `external_path_matches` with `package: "SwiftUI"`.**
-`OverlayFact::external` is `None` unless the Pack's import resolved to an
-external package; `omega-swift` emits `import.swift_module` with a bare module
-name and resolves nothing. Those twelve could not have matched even with their
-kinds restored. The rewrite uses no `external_path_matches` clause.
+```
+   swiftui:type:{path}:{owner.definition.name}
+      kept    App                                swiftui.app.declaration
+      DROPPED ObservableModel                    swiftui.model.observable-macro
+      DROPPED ObservableModel                    swiftui.model.observableobject
+      DROPPED SwiftUIType                        swiftui.view.configured-by
+      DROPPED View                               swiftui.view.declaration
+      DROPPED SwiftUIType                        swiftui.view.presents
+      DROPPED SwiftUIType                        swiftui.view.renders
+      DROPPED SwiftUIType                        swiftui.view.state
+```
 
-**Sixteen rules emitted a relation from an entity to itself.**
-`emit()` sets `own_key` from the rule's *first* entity output, and in
-`swiftui.api.*` (7), `swiftui.modifier.*` (7), `swiftui.generic-api-call` and
-`swiftui.generic-dependency` the relation's `source` was `current` while its
-`target` was `by_canonical_key` rendering the **same template** the entity had
-just been minted under. Each was `X configured_by X`. Nothing in the graph was
-connected by any of them.
+**Eight of the nine rules minted the same canonical key under four different
+entity kinds** — `App`, `View`, `ObservableModel`, `SwiftUIType`. `Entity::named`
+builds its id from the key alone and `apply_overlay_runs` does
+`entities.entry(id).or_insert(entity)`, so the alphabetically first rule id
+wins with its kind *and* its attributes (brief 3g). `swiftui.app.declaration`
+sorts first. The consequence, on the ordinary case of
 
-**Eleven more relations pointed at a key no reachable rule minted.** The
-property rules emitted `configured_by` from `swiftui:view:{path}:{owner_type}`,
-a key minted only by `swiftui.view.conformance` -- which additionally demanded
-the SwiftUI external resolution above. Even granting the kinds, the source end
-dangled.
+```swift
+struct ContentView: View { @State private var n = 0; var body: some View { ItemRow(n) } }
+```
 
-**Twenty-five of the 29 were one literal apart from a sibling.** Eleven
-property rules differed only in the wrapper string; seven modifier rules only
-in `call_name`; seven API rules only in `member_in`. They are now three rules.
+in a file that also declares `struct CartApp: App`: **`ContentView` never
+materialized as a `View` at all.** Where a file declared both, the App's entity
+took the key; where it did not, whichever of the remaining seven rules sorted
+first took it, so the same `ContentView` was an `ObservableModel` in one file
+and a bare `SwiftUIType` in the next. `View`, the entity the whole overlay
+exists to state, reached the graph only when a file had no App, no
+`@Observable` and no `ObservableObject` — and even then its `conforms_to`
+attribute was whatever the winning rule published, because attributes collide
+with the kind.
+
+The three questions the document advertised — *which types are views*, *where
+does the app start*, *which types are observable models* — were all answered by
+a kind on a shared key, which is the one place a kind cannot survive.
+
+**The fix is remedy 1 from brief 3g: one neutral kind per key space.**
+`swiftui:type:{path}:{Name}` now holds exactly one kind, `SwiftUIType`, with
+exactly one attribute set (`name`, `path`), minted identically by all seven
+rules that need it as a relation end. The classification moved into an edge:
+`conforms_to`, from the type to `swiftui:protocol:{Name}`, one node per
+protocol. *Which types are views* is now the incoming edges of
+`swiftui:protocol:View`, *where does the app start* is `swiftui:protocol:App`,
+*which types are observable models* is `swiftui:protocol:ObservableObject` plus
+`swiftui:protocol:Observable`. Nothing is dropped, and the answer is finer than
+the kind was: it names the protocol, not the bucket.
+
+That also collapsed `swiftui.view.declaration` and `swiftui.app.declaration`,
+which after the move differed only in their `field_in` list, into one
+`swiftui.type.conformance` — 9 rules to 8.
+
+### The previous wave, for the record
+
+**All six fact kinds were the generator's private Swift spelling, and no Pack
+ever emitted any of them** (11 `reference.swift_property_attribute_context`,
+8 `call.target_candidate`, 7 `call.swift_named_string_argument_context`,
+3 `reference.swift_nominal_conformance_context`, 1
+`call.swift_computed_property_direct_call_context`, 1
+`import.module_path_candidate`). **Six of the seven fields read were published
+by nobody**; `omega-swift` has `"fields": {}` and `"attributes": {}` on all 43
+templates. **Twelve rules required `external_path_matches` package `SwiftUI`**,
+which omega-swift never resolves. **Sixteen relations ran from an entity to
+itself**, and **eleven more addressed a key only the unmatched conformance rule
+minted.** **Twenty-five of the 29 were one literal apart from a sibling.**
 
 ## What it states now
 
-Nine rules. All nine are live.
+Eight rules. All eight are live; no canonical key carries two kinds.
 
 | what it states | which Pack fact | entity or relation |
 |---|---|---|
-| this file is a SwiftUI file and imports SwiftUI / SwiftData / WidgetKit / Charts | `import.swift_module`, name in list | `SwiftUIFile` `swiftui:file:{path}`, `Dependency` `swiftui:package:{name}`, `depends_on` |
-| this authored type is a SwiftUI view (View, Shape, ViewModifier, a UIKit/AppKit representable, Layout, PreviewProvider, …) | `relation.implements` named after the protocol, joined `within` `definition.swift_type` | `View` `swiftui:type:{path}:{Name}`, `ViewName` `swiftui:view-name:{Name}`, `declares_view` name -> declaration |
-| this type is where the app starts, or is one of its scenes (App, Scene, Widget, WidgetBundle, Commands, ToolbarContent) | `relation.implements`, same join | `App` at the same type key, `ViewName`, `declares_view` |
-| this class is an observable model a view can watch | `relation.implements` `ObservableObject`, same join | `ObservableModel` `swiftui:type:{path}:{Name}` |
-| …written with the Observation macro instead | `reference.type` `Observable` (an attribute spelled with a type is a type mention), same join | `ObservableModel`, `form: Observable` |
-| this view holds this piece of state, under this property wrapper | `reference.type` with the wrapper's name, joined `within` `definition.swift_property` and `within` `definition.swift_type` | `StateBinding` `swiftui:state:{path}:{Owner}:{prop}`, `SwiftUIType`, `holds_state` |
+| this file is a SwiftUI file, and which Apple UI module it imports | `import.swift_module`, name in {SwiftUI, SwiftData, WidgetKit, Charts} | `SwiftUIFile` `swiftui:file:{path}`, `Dependency` `swiftui:package:{name}`, `depends_on` |
+| this authored type conforms to a SwiftUI protocol — a view (View, Shape, ViewModifier, Layout, a UIKit/AppKit representable, PreviewProvider) or an app entry point (App, Scene, Widget, WidgetBundle, Commands, ToolbarContent) | `relation.implements` named after the protocol, joined `within` `definition.swift_type` | `SwiftUIType` `swiftui:type:{path}:{Name}`, `SwiftUIProtocol` `swiftui:protocol:{Proto}`, `conforms_to`; plus `ViewName` `swiftui:view-name:{Name}` and `declares_view` |
+| this class is an observable model a view can watch | `relation.implements` `ObservableObject`, same join | `SwiftUIType`, `SwiftUIProtocol` `swiftui:protocol:ObservableObject`, `conforms_to` (`via: conformance`) |
+| …written with the Observation macro instead | `reference.type` `Observable` — an attribute spelled with a type is a `user_type`, so the Pack states it as a type mention — same join | `SwiftUIType`, `SwiftUIProtocol` `swiftui:protocol:Observable`, `conforms_to` (`via: macro`) |
+| this type holds this piece of state, under this property wrapper | `reference.type` with the wrapper's name, joined `within` `definition.swift_property` and `within` `definition.swift_type` | `StateBinding` `swiftui:state:{path}:{Owner}:{prop}`, `SwiftUIType`, `holds_state` |
 | this view renders that view | `call.swift`, callee not lowercase-initial, joined `within` the `body` property and `within` the enclosing type | `SwiftUIType`, `ViewName` `swiftui:view-name:{callee}`, `renders` |
-| this view presents a sheet / cover / alert / navigation destination / toolbar | `call.swift`, callee in the presentation list, same two joins | `Presentation` `swiftui:presentation:{modifier}`, `presents` |
-| this view runs work on appear, takes an injected environment value, or handles a gesture | `call.swift`, callee in the lifecycle/environment list, same two joins | `ViewModifier` `swiftui:modifier:{modifier}`, `configured_by` |
+| this view presents a sheet / cover / alert / navigation destination / toolbar | `call.swift`, callee in the presentation list, same two joins | `SwiftUIType`, `Presentation` `swiftui:presentation:{modifier}`, `presents` |
+| this view runs work on appear, takes an injected environment value, or handles a gesture | `call.swift`, callee in the lifecycle/environment list, same two joins | `SwiftUIType`, `ViewModifier` `swiftui:modifier:{modifier}`, `configured_by` |
 
-Every canonical key a relation addresses is minted by the rule that addresses
-it: `swiftui:file:{path}`, `swiftui:package:{name}`,
-`swiftui:type:{path}:{Name}`, `swiftui:view-name:{Name}`,
-`swiftui:state:{path}:{Owner}:{prop}`, `swiftui:presentation:{name}`,
-`swiftui:modifier:{name}`. Addressed-minus-minted is empty. No relation uses
-`current`; both ends of every relation are explicit templates, so no rule can
-repeat the self-loop the old file shipped sixteen times.
+Keys minted: `swiftui:file:{path}`, `swiftui:package:{name}`,
+`swiftui:type:{path}:{Name}`, `swiftui:protocol:{Proto}`,
+`swiftui:view-name:{Name}`, `swiftui:state:{path}:{Owner}:{prop}`,
+`swiftui:presentation:{name}`, `swiftui:modifier:{name}`. Every key a relation
+addresses is minted by the rule that addresses it, so addressed-minus-minted is
+empty. No relation uses `current`; both ends of every relation are explicit
+templates. Every one of the seven rules that mints `swiftui:type:…` mints it
+with kind `SwiftUIType` and attributes `{name, path}` — byte-identical — so
+which rule sorts first no longer decides anything. All eight key spaces are
+`swiftui:`-prefixed, so no other Framework interns against them.
 
-The questions it now answers: *which files use SwiftUI*, *which types are
-views*, *where does the app start*, *what does this view render* (resolving
-across files through the shared `ViewName` node), *what state does this view
-hold and under which wrapper*, *which views present a sheet or an alert*,
-*which views run a `.task`*, *which types are observable models*.
+The questions it answers: *which files use SwiftUI*, *which types are views*
+(incoming edges of `swiftui:protocol:View`), *where does the app start*
+(`swiftui:protocol:App`), *which types are observable models*, *what does this
+view render* (resolving across files through the shared `ViewName` node), *what
+state does this view hold and under which wrapper*, *which views present a
+sheet or an alert*, *which views run a `.task`*.
 
 ## A field only the Pack can supply
 
@@ -162,24 +197,24 @@ hold and under which wrapper*, *which views present a sheet or an alert*,
 
 *Which model backs this view* is the one SwiftUI question the overlay still
 cannot answer. `@StateObject private var model = CartModel()` needs the
-property's written type, `CartModel`, to be joined to the `ObservableModel`
-that `swiftui.model.observableobject` mints.
+property's written type, `CartModel`, to join the type key the conformance rule
+mints.
 
 - A built-in name cannot reach it: `definition.name` of the property is
   `model`, and the Pack publishes no fields at all.
 - `fact_join_by_span` cannot reach it either. The written type *is* emitted, as
-  a `reference.type` inside the property's span -- but so is the wrapper
-  (`StateObject`), and so is every generic argument. `Within` yields the set of
+  a `reference.type` inside the property's span — but so is the wrapper
+  (`StateObject`), and so is every generic argument. `within` yields the set of
   mentions in the property with no way to say which one is the annotation; the
   only discriminator, being the child of the `type_annotation` node, is syntax
   the overlay is forbidden to see.
 - The Pack already computes the value. `definition.type_candidate` carries
   `property.type` and is folded onto the declaration as the attribute
-  `omega.pack.type` -- and an attribute is write-only to the overlay
+  `omega.pack.type` — and an attribute is write-only to the overlay
   (`OverlayFact::field` never consults `attributes`).
 
-So the ask is the wave-1 remedy again: the same bytes in a different map --
-publish `property.type` as a **field** on `definition.swift_property`, instead
+So the ask is the wave-1 remedy again: the same bytes in a different map —
+publish `property.type` as a **field** on `definition.swift_property` instead
 of (or as well as) as the carrier attribute. The same one edit would give
 `definition.swift_parameter` and `definition.swift_property_requirement` their
 types.
@@ -190,16 +225,21 @@ types.
    A Swift type is UpperCamelCase and a view modifier is lowerCamelCase, so
    excluding each lowercase initial separates `ItemRow(item)` from
    `.padding()`. It is a naming convention read off `definition.name`, not a
-   tree shape, and the clause language has no case test and no disjunction --
+   tree shape, and the clause language has no case test and no disjunction —
    but if `omega-swift` ever emitted constructor calls under a kind of their
    own (`call.constructor`, as eight Packs already do), the rule would be one
    `fact_kind` and the twenty-six clauses would go.
 2. **`extension Foo: View`.** The Pack states an extension as
    `relation.depends`, not `definition.swift_type`, so a conformance declared
    in an extension is not attributed to a view. Reaching it means joining the
-   `relation.implements` to the extension's `scope.type_body` -- which the
+   `relation.implements` to the extension's `scope.type_body` — which the
    inheritance clause sits *outside* of. Left unanswered rather than guessed.
 3. **`ViewName` is keyed by bare name.** Two `ContentView`s in two modules are
    one node. Resolving by path would need a Pack fact tying a constructor call
    to the module that declares the callee, which Swift's implicit module
    imports do not give.
+4. **`@main` is stated and unused.** `(attribute . (simple_identifier))` gives
+   `reference.attribute main`, a second and independent statement of where the
+   app starts, and it would cover a type that reaches `App` through a type
+   alias. Not added: it would be a ninth rule answering a question
+   `swiftui:protocol:App` already answers for every ordinary spelling.

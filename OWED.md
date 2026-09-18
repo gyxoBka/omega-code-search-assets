@@ -4,7 +4,7 @@ Everything this rewrite created and did not finish, in one place so it is not
 lost between commits. Each item says what it is, why it was deferred, and what
 "done" looks like.
 
-Last updated after framework wave 11. Numbers come from
+Last updated after framework wave 12. Numbers come from
 `python pack-design/audit.py` and `python pack-design/overlay_audit.py`.
 
 ---
@@ -125,7 +125,7 @@ kept, because that is the statement the whole framework contract rests on.
 
 ## 6. The framework waves themselves
 
-4 of 55 frameworks still hold rules that cannot match: **93 of 797**, measured with the surface scoped to each framework's own `host.required_packs` — and all four are the ones deferred behind item 7. Every other Framework matches everything it names. The
+4 of 55 frameworks still hold rules that cannot match: **93 of 796**, measured with the surface scoped to each framework's own `host.required_packs` — and all four are the ones deferred behind item 7. Every other Framework matches everything it names. The
 loop is running in waves of five, worst first, and this file is updated when it
 finishes.
 
@@ -419,23 +419,39 @@ the Pack, and the fields nothing reads removed.
 
 ---
 
-## 15. Key collisions still open
+## 15. Key collisions -- closed except angular
 
-`python pack-design/key_collisions.py`, after wave 11:
+`python pack-design/key_collisions.py`, after wave 12: **3 dropped entity
+outputs, all in omega-framework-angular**, which is deferred behind item 7 with
+the rest of that framework. unity, unreal-engine, ruby-on-rails, vapor, swiftui,
+maui and nuxt are all silent, and so is the cross-framework check.
 
-| framework | dropped outputs |
-|---|---|
-| omega-framework-vapor | 8 |
-| omega-framework-swiftui | 7 |
-| omega-framework-maui | 7 |
-| omega-framework-angular | 3 |
-| omega-framework-nuxt | 1 |
+vapor settled the remedy. A type is routinely several things at once -- `final
+class Todo: Model, Content` -- and remedy 1 keeps only the first rule's
+attribute set, so a key space per classification with a relation back to the
+neutral hub is the default for this shape, not a per-framework judgement.
 
-And one across Frameworks, which interning treats identically:
-`http:*:{normalized_file_route}` is minted as `Route` by astro, next-js and
-nuxt — a shared key space is the point — and as `ServerRoute` by
-`nuxt.server.route`, which is the defect. Either a Nitro server route is a
-`Route` with an attribute saying so, or it needs its own key space.
+**Done looks like:** angular's three closed in the deferred wave.
 
-**Done looks like:** `key_collisions.py` silent on both counts. angular is
-behind item 7; the other four are the next wave.
+---
+
+## 16. A dangling relation end now has a check -- and it is a candidate finder
+
+`pack-design/dangling_ends.py` collects the canonical key templates a file's
+`entity_candidate` outputs render, collects the ones its `relation_candidate`
+ends address, and reports the difference. That is the class wave 1 found three
+times and every wave since has checked by reading.
+
+It compares text, so it finds candidates rather than verdicts: two templates
+that differ textually can render the same string. `{op.path}` and `{path}` are
+normalized to the same thing, but omega-framework-pydantic mints
+`pydantic:model:{definition.container}` from a base-class reference and
+addresses `pydantic:model:{model.definition.name}` from the class itself, and a
+nested join makes those the same name by construction. Read the pair before
+believing a row.
+
+Across all 55: **37 rows, 34 of them in angular and nestjs**, which have not
+been rewritten at all and are deferred; pydantic's 3 were read and are sound.
+
+**Done looks like:** the deferred wave closing angular's and nestjs's, and the
+check run beside the other two from then on.

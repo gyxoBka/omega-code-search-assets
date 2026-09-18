@@ -6,7 +6,9 @@ else, so a rule lives or dies by whether a Pack still emits its fact kind.
 ## State before the rewrite
 
 18 overlay rules, 4 detection rules. **0 could match, 18 could not.**
-After the rewrite: **15 overlay rules, 15 live, 0 dead.** Everything from
+After the first rewrite: **15 overlay rules, 15 live, 0 dead** -- but one of
+the fifteen was computing an entity the host threw away. After this pass:
+**15 overlay rules, 15 live, 0 dead, 0 key collisions.** Everything from
 here to "What was wrong with it" describes the file that was replaced.
 
 Selector: `framework:nuxt`. Maturity: `semantic-overlay-full`.
@@ -46,7 +48,7 @@ Selector: `framework:nuxt`. Maturity: `semantic-overlay-full`.
 
 | kind | rules | a Pack emits it |
 |---|---|---|
-| `data.file` | 11 | **no** |
+| `data.file` | 11 | not a Pack -- the host synthesises one per artifact |
 | `data.ecmascript_call_object_string_array_item_context` | 2 | **no** |
 | `data.ecmascript_call_object_string_field_context` | 1 | **no** |
 | `call.target_candidate` | 1 | **no** |
@@ -90,16 +92,26 @@ Path globs: `**/pages/**/*.vue`, `**/layouts/*.vue`, `**/middleware/*.*`, `**/se
 **18 rules, 0 of which could match a fact any Pack emits.** The failure was not
 uniform; it had four separate causes.
 
-**11 of 18 rules were keyed to `data.file`** -- a whole-file assertion with no
-syntax behind it. Page, Layout, Middleware, ServerRoute x2, ServerMiddleware,
-Plugin, Composable, Module and the two `definePageMeta` joins all entered on it.
-No Pack emits `data.file`; the host synthesises one per artifact
-(`OverlayFact::artifact`, overlay.rs:39), which is why these once appeared to
-work, but it is by construction outside the Pack vocabulary the audit and the
-contract are written against. Each of the 11 is now entered on a fact the Packs
-actually publish, and in every case that fact is a better witness than the
-filename: a page is `scope.template_block` under `pages/`, a plugin is the
-`defineNuxtPlugin()` call, a server handler is the `defineEventHandler()` call.
+**11 of 18 rules were keyed to `data.file`** -- Page, Layout, Middleware,
+ServerRoute x2, ServerMiddleware, Plugin, Composable, Module and the two
+`definePageMeta` joins all entered on it. They were re-entered on a fact the
+Packs publish -- a page as `scope.template_block` under `pages/`, a plugin as
+the `defineNuxtPlugin()` call, a server handler as the `defineEventHandler()`
+call -- **on a premise that was wrong.** `data.file` is real: the host pushes one
+per artifact with field `path` before any Pack emission
+(`OverlayFact::artifact`, overlay.rs:41), and `path.dir`, `path.stem` and
+`normalized_file_route` all work on it. It is the only way to address the file
+itself, and `overlay_audit.py` reported it dead because the audit built its kind
+set from `packs/*/rules.json` alone. That is fixed.
+
+A declaration inside the file is a better witness **when there is one**. Where
+there is not -- a `pages/about.vue` that is markup with no `definePageMeta`, a
+server file whose handler is not one of the five named calls, a script-only
+`components/*.vue` -- the file now produces no entity at all, and Nuxt is a
+framework whose whole subject is the file tree. Restoring a file-shaped rule
+wherever the question is about the file rather than about a declaration in it is
+`OWED.md` item 13, together with next-js and sveltekit, which lost 20 and 10 the
+same way.
 
 **5 rules read fields no Pack publishes.** `call_name`, `key`, `value`,
 `item_call_name`, `array_key` and `exported_name` came from the old
@@ -131,7 +143,36 @@ as its only attribute. That restates the input. Every entity in the new file is
 either an end of a relation emitted in the same rule or the target of one
 emitted by another rule here.
 
-15 rules replace the 18: 6 relation kinds over 15 entity kinds, with **every
+**And the rewrite that fixed those four introduced a fifth: two kinds on one
+key template.** `nuxt.page` and `nuxt.page.meta` minted `Route` on
+`http:*:{normalized_file_route}`; `nuxt.server.route` minted `ServerRoute` on
+the same template. A canonical key holds exactly one entity and the first rule
+by id wins with its kind *and* its attributes, so `nuxt.page` sorted first and
+**1 of 15 rules had its principal entity output computed and discarded** --
+every Nitro root-mounted route that spelled the same URL as a page lost its
+`ServerRoute`, its `role` and its `file`. The same key space is minted as
+`Route` by `astro.page.route` and by `next.app.page`, and interning is global
+across every overlay in a run, so this was never a Nuxt-local disagreement: it
+was three Frameworks agreeing on one kind for the URL space and one rule
+dissenting.
+
+The fix is remedy 1 of brief §3g -- **one neutral kind per key space, with the
+classification in the relations**. All three of this file's `http:*:` templates
+(`{normalized_file_route}` for pages and for `server/routes`,
+`/api{normalized_file_route}` for `server/api`) now mint `Route`, and what
+serves that URL is read off the `handles` edge: a `Route` that handles a `Page`
+is rendered by vue-router, a `Route` that handles a `ServerHandler` is served
+by Nitro. `ServerRoute` is gone from `emits.entities`; nothing else in the file
+addressed it. The `router` / `runtime` attributes (`pages` + `vue-router`,
+`server/routes` + `nitro`, `server/api` + `nitro`) are kept for the ordinary
+case where one URL has one source, but they are *not* where the answer lives --
+per §3g an attribute collides exactly as a kind does, so the relation is the
+carrier. A URL that a page and a server route both spell is now one `Route`
+with two `handles` edges, which is what Nuxt actually builds.
+
+`python pack-design/key_collisions.py nuxt` reports nothing.
+
+15 rules replace the 18: 6 relation kinds over 14 entity kinds, with **every
 relation end minted by a rule in this file**. Checked key by key, the set of keys
 addressed is contained in the set minted, and in all 15 rules both ends of every
 relation are minted by the rule that emits it, so no end depends on another
@@ -148,8 +189,9 @@ rule's conditions.
 | What runs while the app is being created? | `call.function defineNuxtPlugin` | `Plugin nuxt:plugin:{path}`; `NuxtApp` -`extends`-> it |
 | Which parts of the app are generated rather than written? | `call.function defineNuxtModule` | `Module nuxt:module:{path}`; `NuxtApp` -`extends`-> it |
 | Which file configures this app? | `call.function defineNuxtConfig` | `NuxtConfig nuxt:config:{path}` -`config`-> `NuxtApp nuxt:app` |
-| Which handler answers `/api/orders`? | `call.function defineEventHandler` (and the lazy / cached / `eventHandler` spellings) under `**/server/api/**/*.*` | `ServerRoute http:*:/api{normalized_file_route}` -`handles`-> `ServerHandler nuxt:server-handler:{path}` |
-| ...and the root-mounted ones | the same calls under `**/server/routes/**/*.*` | `ServerRoute http:*:{normalized_file_route}` -`handles`-> `ServerHandler` |
+| Which handler answers `/api/orders`? | `call.function defineEventHandler` (and the lazy / cached / `eventHandler` spellings) under `**/server/api/**/*.*` | `Route http:*:/api{normalized_file_route}` -`handles`-> `ServerHandler nuxt:server-handler:{path}` |
+| ...and the root-mounted ones | the same calls under `**/server/routes/**/*.*` | `Route http:*:{normalized_file_route}` -`handles`-> `ServerHandler` |
+| Is this URL served by Nitro or rendered by a page? | -- | the kind at the far end of `handles`: `ServerHandler` means Nitro, `Page` means vue-router. One kind, `Route`, in the whole `http:*:` key space |
 | What runs before every server route? | the same calls under `**/server/middleware/**/*.*` | `ServerMiddleware nuxt:server-middleware:{path}`; `NuxtApp` -`extends`-> it |
 | Which composables does this project define? | `definition.function` under `**/composables/**/*.*` | `Composable nuxt:composable:{definition.name}` -- keyed by name, because the name is what Nuxt auto-imports |
 | Who calls `useCart()`? | `call.function` joined by `definition.name` to a `definition.function` under `composables/` | `NuxtFile nuxt:file:{path}` -`depends_on`-> `Composable nuxt:composable:{name}` |
@@ -162,6 +204,10 @@ from one file an agent reaches its Nuxt role, the components it renders, the
 composables it calls and the framework packages it imports. `NuxtApp nuxt:app`
 is the second hub: the plugins, modules, layouts, route middleware and server
 middleware that extend the application, and the config that defines it.
+`Route http:*:...` is the third, and it is not this Framework's: astro and
+next-js mint the same kind on the same template, so a question about a URL
+crosses Frameworks, and nothing in this file may dissent about what lives
+there.
 
 The three questions the old file *claimed* to answer and could not -- which
 layout a page names, which middleware wraps it, which modules `nuxt.config`
@@ -227,3 +273,21 @@ and `OWED.md` rather than in one framework's notes.
    per role would make each edge self-describing; keeping it one makes "what
    extends this app" a single query. Kept as one, with the role carried by the
    target entity's kind.
+5. **`Route` for Nitro, rather than a `nitro:` key space.** Remedy 2 of §3g --
+   `nuxt:server-route:{normalized_file_route}` -- would have kept the
+   `ServerRoute` kind and its own attribute set, and would have been separately
+   addressable. It was rejected because the value of `http:*:` is that it is the
+   one key space in which *which route serves this path* is asked, across every
+   routing Framework; moving Nitro out of it would make `/api/orders`
+   unanswerable from the URL side, and Nitro routes are exactly the ones an
+   agent asks that about. The cost is that when a page and a server route spell
+   the same URL, one `Route` entity carries the earlier rule's `router` and
+   `runtime` attributes for both. That is inherent to interning, not to this
+   choice, and the `handles` edges -- which are not interned -- both survive and
+   both name their handler.
+6. **`http:*:/api{normalized_file_route}` can still render a page's key.** A
+   file at `pages/api/orders.vue` renders `http:*:/api/orders`, the same string
+   `server/api/orders.ts` renders. Both are now `Route`, so nothing is dropped
+   and both `handles` edges stand; but it is worth knowing that the two
+   templates are not disjoint even though `key_collisions.py`, which compares
+   template text, cannot see it.

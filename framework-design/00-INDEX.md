@@ -719,3 +719,59 @@ normalized by the Pack.** Recorded as `OWED.md` item 14.
 Totals: **797 overlay rules; 104 -> 93 that cannot match, all 93 in the four
 deferred frameworks.** Key collisions 62 -> 26: vapor 8, swiftui 7, maui 7,
 angular 3, nuxt 1.
+
+---
+
+# Framework wave 12 (vapor, swiftui, maui, nuxt) -- the key collisions
+
+| Framework | rules | dropped outputs before | after |
+|---|---|---|---|
+| omega-framework-vapor | 12 -> 12 | 8 | 0 |
+| omega-framework-swiftui | 9 -> 8 | 7 | 0 |
+| omega-framework-maui | 9 -> 9 | 7 | 0 |
+| omega-framework-nuxt | 15 -> 15 | 1 | 0 |
+
+**`key_collisions.py` is now silent except for angular's three**, which are
+behind item 7 with the rest of that framework; and the one cross-framework
+collision is gone — `nuxt.server.route` no longer mints `ServerRoute` on
+`http:*:{normalized_file_route}`, the key space astro, next-js and nuxt share
+for `Route`.
+
+vapor settled which of the two remedies is the default for this shape. A Vapor
+type is routinely several things at once — `final class Todo: Model, Content` is
+the ordinary spelling — and remedy 1, one neutral kind with the classification
+in the relations, keeps only the **first rule's attribute set**, so `conforms_to`
+would be lost for every role but one. Remedy 2, a key space per classification
+with a `has_role` edge back to the neutral hub, keeps every kind and every
+attribute set. The same argument holds for maui (a page that is also a
+navigation target and a query receiver) and for unity, so:
+
+**A hub key and a classification cannot be the same key.** The moment a
+Framework has a per-declaration hub that several rules mint as a relation end,
+every rule that also wants to say *what kind of thing this is* needs its own key
+space. That is now the stated default for the MVC / protocol-conformance shape,
+not a judgement call per framework.
+
+## A clean audit says nothing about whether the answers reach the graph
+
+vapor audited 12 of 12 live throughout, while eight of its twenty-one entity
+outputs — five of the six headline answers its `.md` advertised — were being
+discarded by the first-rule-wins intern. Two checks measure two different
+things and both have to be run.
+
+A third is worth writing: **every canonical key template a relation addresses
+must be one the file mints.** That is the wave-1 dangling-relation class, it is
+a ten-line pass over the JSON, and it is still done by hand.
+
+## The `data.file` premise is corrected where it was written down
+
+nuxt's design note still argued that `data.file` is "by construction outside the
+Pack vocabulary", which is the premise brief 3h names as false and the reason
+eleven file-shaped rules were re-entered on declarations inside the file. The
+note now says what is true: a declaration is the better witness **when there is
+one**, and where there is not — a `pages/about.vue` that is markup with no
+`definePageMeta`, a script-only `components/*.vue` — the file produces no entity
+at all. The restoration itself is `OWED.md` item 13, with next-js and sveltekit.
+
+Totals: **796 overlay rules; 93 that cannot match, all in the four deferred
+frameworks. 3 dropped entity outputs, all in angular.**

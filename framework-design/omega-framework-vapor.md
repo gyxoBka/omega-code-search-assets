@@ -13,19 +13,23 @@ one Pack: `omega-swift`.
 
 ### Entities it declares
 
-| entity_kind | rules |
-|---|---|
-| `VaporType` | 3 (shared hub key, also minted by the six role rules) |
-| `VaporTypeName` | 7 |
-| `Route` | 2 |
-| `Controller`, `Model`, `Migration`, `Middleware`, `Payload`, `Worker` | 1 each |
-| `VaporFile`, `Dependency`, `RouteRegistrar`, `RequestHandler`, `ModelField`, `Application` | 1 each |
+| entity_kind | key space | rules |
+|---|---|---|
+| `VaporType` | `vapor:type:{path}:{type}` -- the neutral hub | 9, all minting it identically |
+| `VaporTypeName` | `vapor:type-name:{name}` | 7 |
+| `Route` | `vapor:route:{path}:{fn}:{method}:{start}` | 2 |
+| `Controller`, `Model`, `Migration`, `Middleware`, `Payload`, `Worker` | one key space each: `vapor:controller:`, `vapor:model:`, ... | 1 each |
+| `VaporFile`, `Dependency`, `RouteRegistrar`, `RequestHandler`, `ModelField`, `Application` | one key space each | 1 each |
+
+No key template is minted under more than one entity kind:
+`python pack-design/key_collisions.py vapor` reports nothing.
 
 ### Relations it declares
 
 | relation_kind | rules |
 |---|---|
 | `declares` | 6 |
+| `has_role` | 6 |
 | `depends_on`, `registers_route`, `serves`, `handles`, `has_field`, `mounts` | 1 each |
 
 ### Fact kinds it matches
@@ -49,7 +53,48 @@ Everything a rule reads is a built-in — `definition.name`, `path`,
 
 ## What was wrong with it
 
-**All 15 rules were dead, and 14 of them were dead twice over.**
+### This wave: the whole type classification was computed and thrown away
+
+`overlay_audit.py` reported 12 rules, 12 live, 0 dead -- and nine of those rules
+minted an entity on the single key template
+
+    vapor:type:{path}:{owner.definition.name}
+
+under **seven different entity kinds**. `Entity::named` builds its id from the
+canonical key alone and `apply_overlay_runs` does `entities.entry(id)
+.or_insert(entity)`, so the alphabetically first rule id wins with its kind *and*
+its attributes. `vapor.controller.declaration` sorts first, so the graph got a
+`Controller` and lost, silently:
+
+| kind dropped | rule | what the answer was |
+|---|---|---|
+| `Model` | `vapor.model.declaration` | which types back database tables |
+| `Migration` | `vapor.migration.declaration` | which types change the schema |
+| `Middleware` | `vapor.middleware.declaration` | what sits in front of a handler |
+| `Payload` | `vapor.payload.declaration` | which types cross the wire |
+| `Worker` | `vapor.worker.declaration` | what runs outside a request |
+| `VaporType` x3 | `.controller.route`, `.controller.handler`, `.model.field` | the hub the `serves`/`handles`/`has_field` edges hang off |
+
+**8 entity outputs overwritten.** In practice that meant: in any Vapor project,
+a type that conformed to `RouteCollection` anywhere in the file swallowed every
+other classification in the same file for that type name, and -- worse -- a
+`Model` in a file with no controller still lost its `role` and `conforms_to`
+attributes to whichever of the six role rules happened to fire, because the
+attributes collide exactly as the kind does. Five of the six answers the
+previous section of this document advertised did not reach the graph at all.
+
+The fix is brief 3g remedy 2, a key space per classification. Each role rule now
+mints **two** entities: the neutral hub `vapor:type:{path}:{type}` as a
+`VaporType` with the same two attributes (`name`, `path`) that every one of the
+nine rules gives it -- so the nine agree and the hub is stable no matter which
+sorts first -- and its own `vapor:<role>:{path}:{type}` carrying the kind, the
+`role` and the `conforms_to` protocol name. A `has_role` edge runs hub -> role
+entity. Remedy 1 (one neutral kind, classification in the relations) was
+rejected because a Vapor type is routinely several things at once -- `final class
+Todo: Model, Content` is the ordinary spelling -- and remedy 1 keeps one
+attribute set, so `conforms_to` would still be lost for all but one role.
+
+### The previous wave: all 15 rules were dead, and 14 of them dead twice over
 
 | cause | rules |
 |---|---|
@@ -113,17 +158,20 @@ middleware, payloads, jobs or handlers — all of which are stated by
 
 `{owner}`, `{fn}`, `{prop}`, `{reg}` below are `fact_join_by_span` / `within`
 bindings on the current fact — the enclosing type, function, property, or the
-enclosing call.
+enclosing call. "hub" is the neutral `VaporType` at
+`vapor:type:{path}:{owner}`: every rule that needs a type as a relation end
+mints it, all nine with the identical kind and the identical two attributes, and
+the classification hangs off it as its own entity in its own key space.
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
 | which files are Vapor server files, and which part of the stack each pulls in (router, Fluent, **which database driver**, Leaf, JWT, Queues) | `import.swift_module` named in a 27-module list | `VaporFile vapor:file:{path}`, `Dependency vapor:package:{name}`, `depends_on` |
-| which types register routes | `relation.implements` named `RouteCollection`/`AsyncRouteCollection` + `{owner}` `definition.swift_type` | `Controller vapor:type:{path}:{owner}`, `VaporTypeName`, `declares` |
-| which types back database tables | `relation.implements` in 6 `Model*` protocols + `{owner}` | `Model` at the same type key, `declares` |
-| which types change the schema | `relation.implements` `Migration`/`AsyncMigration` + `{owner}` | `Migration`, `declares` |
-| what sits in front of a handler (middleware, authenticators, lifecycle) | `relation.implements` in 13 protocols + `{owner}` | `Middleware`, `declares` |
-| which types cross the wire, and which are validated | `relation.implements` in 7 protocols (`Content`, `Validatable`, …) + `{owner}` | `Payload`, `declares` |
-| what runs outside a request (queued job, scheduled job, CLI command) | `relation.implements` in 6 protocols + `{owner}` | `Worker`, `declares` |
+| which types register routes | `relation.implements` named `RouteCollection`/`AsyncRouteCollection` + `{owner}` `definition.swift_type` | `VaporType vapor:type:{path}:{owner}` (hub), `Controller vapor:controller:{path}:{owner}`, `VaporTypeName`, `declares`, `has_role` |
+| which types back database tables | `relation.implements` in 6 `Model*` protocols + `{owner}` | hub, `Model vapor:model:{path}:{owner}`, `declares`, `has_role` |
+| which types change the schema | `relation.implements` `Migration`/`AsyncMigration` + `{owner}` | hub, `Migration vapor:migration:{path}:{owner}`, `declares`, `has_role` |
+| what sits in front of a handler (middleware, authenticators, lifecycle) | `relation.implements` in 13 protocols + `{owner}` | hub, `Middleware vapor:middleware:{path}:{owner}`, `declares`, `has_role` |
+| which types cross the wire, and which are validated | `relation.implements` in 7 protocols (`Content`, `Validatable`, …) + `{owner}` | hub, `Payload vapor:payload:{path}:{owner}`, `declares`, `has_role` |
+| what runs outside a request (queued job, scheduled job, CLI command) | `relation.implements` in 6 protocols + `{owner}` | hub, `Worker vapor:worker:{path}:{owner}`, `declares`, `has_role` |
 | where routes are declared and **which HTTP methods** they answer | `call.swift` named `get`…`on`/`webSocket`, in a file that imports `Vapor`, + `{fn}` `definition.swift_function` | `RouteRegistrar vapor:registrar:{path}:{fn}`, `Route vapor:route:{path}:{fn}:{method}:{start}`, `registers_route` |
 | which HTTP methods **a controller** serves | the same, plus `{owner}` `definition.swift_type` | `VaporType`, `Route` (same key), `serves` |
 | which functions answer a request | `reference.type` named `Request`/`WebSocket`, Vapor-importing file, + `{fn}` + `{owner}` | `VaporType`, `RequestHandler vapor:handler:{path}:{owner}:{fn}`, `handles` |
@@ -147,7 +195,8 @@ rule that addresses it** (brief §3a, §3b):
 |---|---|
 | `vapor:file:{path}` | `vapor.dependency.import` (only rule addressing it) |
 | `vapor:package:{name}` | same rule |
-| `vapor:type:{path}:{owner}` | the six role rules, **and** `vapor.controller.route`, `.controller.handler`, `.model.field` mint it themselves — because a type need not conform to `RouteCollection` to serve a route |
+| `vapor:type:{path}:{owner}` | all nine type-scoped rules, each as `VaporType` with the same two attributes — the six role rules, **and** `vapor.controller.route`, `.controller.handler`, `.model.field`, because a type need not conform to `RouteCollection` to serve a route |
+| `vapor:controller:…`, `vapor:model:…`, `vapor:migration:…`, `vapor:middleware:…`, `vapor:payload:…`, `vapor:worker:…` | one rule each, the only minter and the only addresser of its key space |
 | `vapor:route:{path}:{fn}:{method}:{start}` | `vapor.route.registration`; `vapor.controller.route` is that rule's match plus one join, so the key always exists, and it mints it again anyway |
 | `vapor:handler:…`, `vapor:model-field:…`, `vapor:registrar:…`, `vapor:app:{path}` | minted in the same rule that addresses them |
 | `vapor:type-name:{name}` | the six role rules (from `{owner}`) and `vapor.component.mounted` (from the constructor's own name) |
@@ -165,6 +214,12 @@ depends on `external.*`, so no entity can be dropped as unresolvable while its
 relation still renders.
 
 ## Still to decide
+
+- **Whether `has_role` should be six relation kinds instead of one.**
+  `is_model` / `is_middleware` / … would let a query reach a classification
+  without reading a relation attribute, at the cost of six relation kinds in
+  `emits`. One kind plus the role entity's own `entity_kind` already answers it
+  twice over, so this stays one kind until a consumer asks.
 
 - **`vapor.component.mounted` is heuristic.** It keeps a constructed type whose
   name does not begin with a lower-case letter, using the same twenty-six

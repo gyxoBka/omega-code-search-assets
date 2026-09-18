@@ -23,19 +23,18 @@
   ],
   "emits": {
     "entities": [
-      "App",
       "Dependency",
-      "ObservableModel",
       "Presentation",
       "StateBinding",
       "SwiftUIFile",
+      "SwiftUIProtocol",
       "SwiftUIType",
-      "View",
       "ViewModifier",
       "ViewName"
     ],
     "relations": [
       "configured_by",
+      "conforms_to",
       "declares_view",
       "depends_on",
       "holds_state",
@@ -118,30 +117,16 @@
       "coverage_note": "Which files are SwiftUI files and which Apple UI module each one imports. The module name is the import's own name, so no Pack field is needed."
     },
     {
-      "id": "swiftui.view.declaration",
+      "id": "swiftui.model.observable-macro",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "relation.implements"
+          "value": "reference.type"
         },
         {
-          "kind": "field_in",
+          "kind": "field_equals",
           "field": "definition.name",
-          "values": [
-            "View",
-            "Shape",
-            "InsettableShape",
-            "ViewModifier",
-            "Layout",
-            "UIViewRepresentable",
-            "UIViewControllerRepresentable",
-            "NSViewRepresentable",
-            "NSViewControllerRepresentable",
-            "WKInterfaceObjectRepresentable",
-            "PreviewProvider",
-            "TableRowContent",
-            "TableColumnContent"
-          ]
+          "value": "Observable"
         },
         {
           "kind": "fact_join_by_span",
@@ -155,7 +140,7 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "View",
+          "entity_kind": "SwiftUIType",
           "canonical_key": {
             "template": "swiftui:type:{path}:{owner.definition.name}"
           },
@@ -167,134 +152,41 @@
             "path": {
               "kind": "field_ref",
               "field": "path"
-            },
-            "conforms_to": {
-              "kind": "field_ref",
-              "field": "definition.name"
             }
           }
         },
         {
           "kind": "entity_candidate",
-          "entity_kind": "ViewName",
+          "entity_kind": "SwiftUIProtocol",
           "canonical_key": {
-            "template": "swiftui:view-name:{owner.definition.name}"
+            "template": "swiftui:protocol:{definition.name}"
           },
           "attributes": {
-            "name": {
+            "protocol": {
               "kind": "field_ref",
-              "field": "owner.definition.name"
+              "field": "definition.name"
             }
           }
         },
         {
           "kind": "relation_candidate",
-          "relation_kind": "declares_view",
+          "relation_kind": "conforms_to",
           "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view-name:{owner.definition.name}"
-          },
-          "target": {
             "kind": "by_canonical_key",
             "template": "swiftui:type:{path}:{owner.definition.name}"
           },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:protocol:{definition.name}"
+          },
           "attributes": {
-            "conforms_to": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
+            "via": "macro"
           }
         }
       ],
       "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Which authored types are SwiftUI views. A conformance is relation.implements named after the protocol, and the conforming type is the definition.swift_type whose span contains it. The ViewName node is what a render edge in another file addresses, because no Swift fact ties a constructor call to the file that declares the type."
-    },
-    {
-      "id": "swiftui.app.declaration",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "relation.implements"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "App",
-            "Scene",
-            "Widget",
-            "WidgetBundle",
-            "Commands",
-            "ToolbarContent"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.swift_type",
-          "relation": "within",
-          "same_path": true,
-          "bind": "owner",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "App",
-          "canonical_key": {
-            "template": "swiftui:type:{path}:{owner.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "owner.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "conforms_to": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewName",
-          "canonical_key": {
-            "template": "swiftui:view-name:{owner.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "owner.definition.name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "declares_view",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:view-name:{owner.definition.name}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:type:{path}:{owner.definition.name}"
-          },
-          "attributes": {
-            "conforms_to": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Where the app starts and what its scenes are: the type conforming to App, Scene, Widget or Commands. Same shape as a view declaration, so the renders edges out of its body land on the same type key."
+      "confidence": "candidate",
+      "coverage_note": "The Observation macro spelling of an observable model. @Observable is written with a type identifier, so the Pack states it as reference.type, and the type it decorates is the declaration whose span contains it. The classification rides on the conforms_to edge, not on the type's kind, so it cannot overwrite what another rule computed for the same type key."
     },
     {
       "id": "swiftui.model.observableobject",
@@ -320,141 +212,12 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "ObservableModel",
+          "entity_kind": "SwiftUIType",
           "canonical_key": {
             "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
-              "kind": "field_ref",
-              "field": "owner.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "form": "ObservableObject"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Which types are observable models a view can watch. Conformance is stated by relation.implements; the model's name is that of the enclosing declaration."
-    },
-    {
-      "id": "swiftui.model.observable-macro",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.type"
-        },
-        {
-          "kind": "field_equals",
-          "field": "definition.name",
-          "value": "Observable"
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.swift_type",
-          "relation": "within",
-          "same_path": true,
-          "bind": "owner",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ObservableModel",
-          "canonical_key": {
-            "template": "swiftui:type:{path}:{owner.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "owner.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            },
-            "form": "Observable"
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "candidate",
-      "coverage_note": "The Observation macro spelling of the same thing. @Observable is written with a type identifier, so the Pack states it as reference.type, and the type it decorates is the declaration whose span contains it."
-    },
-    {
-      "id": "swiftui.view.state",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "reference.type"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "State",
-            "StateObject",
-            "ObservedObject",
-            "EnvironmentObject",
-            "Environment",
-            "Binding",
-            "Bindable",
-            "AppStorage",
-            "SceneStorage",
-            "FocusState",
-            "FocusedValue",
-            "FocusedBinding",
-            "AccessibilityFocusState",
-            "FetchRequest",
-            "SectionedFetchRequest",
-            "Query",
-            "Published",
-            "GestureState",
-            "ScaledMetric",
-            "Namespace",
-            "UIApplicationDelegateAdaptor",
-            "NSApplicationDelegateAdaptor"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.swift_property",
-          "relation": "within",
-          "same_path": true,
-          "bind": "prop",
-          "where": []
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.swift_type",
-          "relation": "within",
-          "same_path": true,
-          "bind": "owner",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "StateBinding",
-          "canonical_key": {
-            "template": "swiftui:state:{path}:{owner.definition.name}:{prop.definition.name}"
-          },
-          "attributes": {
-            "wrapper": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            },
-            "property": {
-              "kind": "field_ref",
-              "field": "prop.definition.name"
-            },
-            "owner": {
               "kind": "field_ref",
               "field": "owner.definition.name"
             },
@@ -464,6 +227,81 @@
             }
           }
         },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SwiftUIProtocol",
+          "canonical_key": {
+            "template": "swiftui:protocol:{definition.name}"
+          },
+          "attributes": {
+            "protocol": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "conforms_to",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:protocol:{definition.name}"
+          },
+          "attributes": {
+            "via": "conformance"
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which types are observable models a view can watch: everything with a conforms_to edge to swiftui:protocol:ObservableObject. Conformance is stated by relation.implements; the model's name is that of the enclosing declaration."
+    },
+    {
+      "id": "swiftui.type.conformance",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "relation.implements"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "View",
+            "Shape",
+            "InsettableShape",
+            "ViewModifier",
+            "Layout",
+            "UIViewRepresentable",
+            "UIViewControllerRepresentable",
+            "NSViewRepresentable",
+            "NSViewControllerRepresentable",
+            "WKInterfaceObjectRepresentable",
+            "PreviewProvider",
+            "TableRowContent",
+            "TableColumnContent",
+            "App",
+            "Scene",
+            "Widget",
+            "WidgetBundle",
+            "Commands",
+            "ToolbarContent"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
         {
           "kind": "entity_candidate",
           "entity_kind": "SwiftUIType",
@@ -482,18 +320,59 @@
           }
         },
         {
+          "kind": "entity_candidate",
+          "entity_kind": "SwiftUIProtocol",
+          "canonical_key": {
+            "template": "swiftui:protocol:{definition.name}"
+          },
+          "attributes": {
+            "protocol": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewName",
+          "canonical_key": {
+            "template": "swiftui:view-name:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            }
+          }
+        },
+        {
           "kind": "relation_candidate",
-          "relation_kind": "holds_state",
+          "relation_kind": "conforms_to",
           "source": {
             "kind": "by_canonical_key",
             "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:state:{path}:{owner.definition.name}:{prop.definition.name}"
+            "template": "swiftui:protocol:{definition.name}"
           },
           "attributes": {
-            "wrapper": {
+            "via": "conformance"
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "declares_view",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:view-name:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "conforms_to": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -502,7 +381,219 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Which view holds which piece of state, under which property wrapper. One rule replaces eleven: a wrapper is written as a type identifier inside the property declaration, so the wrapper name is the mention's own name, and the property and its owner are the declarations whose spans contain it."
+      "coverage_note": "Which authored types are SwiftUI views and which one is the app entry point. A conformance is relation.implements named after the protocol, and the conforming type is the definition.swift_type whose span contains it. Which of the two it is -- View, Shape, Layout, or App, Scene, Widget -- is the protocol node the conforms_to edge points at, so one rule serves both and neither can overwrite the other's entity. The ViewName node is what a render edge in another file addresses, because no Swift fact ties a constructor call to the file that declares the type."
+    },
+    {
+      "id": "swiftui.view.configured-by",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "task",
+            "onAppear",
+            "onDisappear",
+            "onChange",
+            "onReceive",
+            "refreshable",
+            "onSubmit",
+            "onOpenURL",
+            "onDrop",
+            "onContinueUserActivity",
+            "environmentObject",
+            "environment",
+            "modelContainer",
+            "searchable",
+            "focused",
+            "onTapGesture",
+            "onLongPressGesture",
+            "gesture",
+            "onDelete"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_property",
+          "relation": "within",
+          "same_path": true,
+          "bind": "body",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "body"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SwiftUIType",
+          "canonical_key": {
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "ViewModifier",
+          "canonical_key": {
+            "template": "swiftui:modifier:{definition.name}"
+          },
+          "attributes": {
+            "modifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "configured_by",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:modifier:{definition.name}"
+          },
+          "attributes": {
+            "modifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which views run work on a lifecycle event, take an injected environment value, or handle a gesture. The modifier node is shared by name, so 'which views run a .task' is one node's incoming edges."
+    },
+    {
+      "id": "swiftui.view.presents",
+      "match": [
+        {
+          "kind": "fact_kind",
+          "value": "call.swift"
+        },
+        {
+          "kind": "field_in",
+          "field": "definition.name",
+          "values": [
+            "sheet",
+            "fullScreenCover",
+            "popover",
+            "alert",
+            "confirmationDialog",
+            "actionSheet",
+            "navigationDestination",
+            "contextMenu",
+            "toolbar",
+            "inspector",
+            "fileImporter",
+            "fileExporter",
+            "fileMover"
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_property",
+          "relation": "within",
+          "same_path": true,
+          "bind": "body",
+          "where": [
+            {
+              "kind": "field_equals",
+              "field": "definition.name",
+              "value": "body"
+            }
+          ]
+        },
+        {
+          "kind": "fact_join_by_span",
+          "fact_kind": "definition.swift_type",
+          "relation": "within",
+          "same_path": true,
+          "bind": "owner",
+          "where": []
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "SwiftUIType",
+          "canonical_key": {
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Presentation",
+          "canonical_key": {
+            "template": "swiftui:presentation:{definition.name}"
+          },
+          "attributes": {
+            "modifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "presents",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "swiftui:presentation:{definition.name}"
+          },
+          "attributes": {
+            "modifier": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
+        }
+      ],
+      "evidence_class": "structurally_derived",
+      "confidence": "exact",
+      "coverage_note": "Which views put something else on screen, and how: a sheet, a cover, an alert, a navigation destination, a toolbar. Seven per-modifier rules collapse to one over the modifier's own callee name."
     },
     {
       "id": "swiftui.view.renders",
@@ -719,29 +810,38 @@
       "coverage_note": "What a view renders: every type constructed inside its body. The Pack states the callee of a call, and a Swift type is written UpperCamelCase, so the twenty-six lowercase-initial exclusions separate a child view from the modifiers chained onto it. The target is the shared ViewName node that swiftui.view.declaration links to the declaring type, so a render edge resolves across files."
     },
     {
-      "id": "swiftui.view.presents",
+      "id": "swiftui.view.state",
       "match": [
         {
           "kind": "fact_kind",
-          "value": "call.swift"
+          "value": "reference.type"
         },
         {
           "kind": "field_in",
           "field": "definition.name",
           "values": [
-            "sheet",
-            "fullScreenCover",
-            "popover",
-            "alert",
-            "confirmationDialog",
-            "actionSheet",
-            "navigationDestination",
-            "contextMenu",
-            "toolbar",
-            "inspector",
-            "fileImporter",
-            "fileExporter",
-            "fileMover"
+            "State",
+            "StateObject",
+            "ObservedObject",
+            "EnvironmentObject",
+            "Environment",
+            "Binding",
+            "Bindable",
+            "AppStorage",
+            "SceneStorage",
+            "FocusState",
+            "FocusedValue",
+            "FocusedBinding",
+            "AccessibilityFocusState",
+            "FetchRequest",
+            "SectionedFetchRequest",
+            "Query",
+            "Published",
+            "GestureState",
+            "ScaledMetric",
+            "Namespace",
+            "UIApplicationDelegateAdaptor",
+            "NSApplicationDelegateAdaptor"
           ]
         },
         {
@@ -749,14 +849,8 @@
           "fact_kind": "definition.swift_property",
           "relation": "within",
           "same_path": true,
-          "bind": "body",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "body"
-            }
-          ]
+          "bind": "prop",
+          "where": []
         },
         {
           "kind": "fact_join_by_span",
@@ -768,6 +862,31 @@
         }
       ],
       "outputs": [
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "StateBinding",
+          "canonical_key": {
+            "template": "swiftui:state:{path}:{owner.definition.name}:{prop.definition.name}"
+          },
+          "attributes": {
+            "wrapper": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            },
+            "property": {
+              "kind": "field_ref",
+              "field": "prop.definition.name"
+            },
+            "owner": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
         {
           "kind": "entity_candidate",
           "entity_kind": "SwiftUIType",
@@ -786,31 +905,18 @@
           }
         },
         {
-          "kind": "entity_candidate",
-          "entity_kind": "Presentation",
-          "canonical_key": {
-            "template": "swiftui:presentation:{definition.name}"
-          },
-          "attributes": {
-            "modifier": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        },
-        {
           "kind": "relation_candidate",
-          "relation_kind": "presents",
+          "relation_kind": "holds_state",
           "source": {
             "kind": "by_canonical_key",
             "template": "swiftui:type:{path}:{owner.definition.name}"
           },
           "target": {
             "kind": "by_canonical_key",
-            "template": "swiftui:presentation:{definition.name}"
+            "template": "swiftui:state:{path}:{owner.definition.name}:{prop.definition.name}"
           },
           "attributes": {
-            "modifier": {
+            "wrapper": {
               "kind": "field_ref",
               "field": "definition.name"
             }
@@ -819,116 +925,7 @@
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Which views put something else on screen, and how: a sheet, a cover, an alert, a navigation destination, a toolbar. Seven per-modifier rules collapse to one over the modifier's own callee name."
-    },
-    {
-      "id": "swiftui.view.configured-by",
-      "match": [
-        {
-          "kind": "fact_kind",
-          "value": "call.swift"
-        },
-        {
-          "kind": "field_in",
-          "field": "definition.name",
-          "values": [
-            "task",
-            "onAppear",
-            "onDisappear",
-            "onChange",
-            "onReceive",
-            "refreshable",
-            "onSubmit",
-            "onOpenURL",
-            "onDrop",
-            "onContinueUserActivity",
-            "environmentObject",
-            "environment",
-            "modelContainer",
-            "searchable",
-            "focused",
-            "onTapGesture",
-            "onLongPressGesture",
-            "gesture",
-            "onDelete"
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.swift_property",
-          "relation": "within",
-          "same_path": true,
-          "bind": "body",
-          "where": [
-            {
-              "kind": "field_equals",
-              "field": "definition.name",
-              "value": "body"
-            }
-          ]
-        },
-        {
-          "kind": "fact_join_by_span",
-          "fact_kind": "definition.swift_type",
-          "relation": "within",
-          "same_path": true,
-          "bind": "owner",
-          "where": []
-        }
-      ],
-      "outputs": [
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "SwiftUIType",
-          "canonical_key": {
-            "template": "swiftui:type:{path}:{owner.definition.name}"
-          },
-          "attributes": {
-            "name": {
-              "kind": "field_ref",
-              "field": "owner.definition.name"
-            },
-            "path": {
-              "kind": "field_ref",
-              "field": "path"
-            }
-          }
-        },
-        {
-          "kind": "entity_candidate",
-          "entity_kind": "ViewModifier",
-          "canonical_key": {
-            "template": "swiftui:modifier:{definition.name}"
-          },
-          "attributes": {
-            "modifier": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        },
-        {
-          "kind": "relation_candidate",
-          "relation_kind": "configured_by",
-          "source": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:type:{path}:{owner.definition.name}"
-          },
-          "target": {
-            "kind": "by_canonical_key",
-            "template": "swiftui:modifier:{definition.name}"
-          },
-          "attributes": {
-            "modifier": {
-              "kind": "field_ref",
-              "field": "definition.name"
-            }
-          }
-        }
-      ],
-      "evidence_class": "structurally_derived",
-      "confidence": "exact",
-      "coverage_note": "Which views run work on a lifecycle event, take an injected environment value, or handle a gesture. The modifier node is shared by name, so 'which views run a .task' is one node's incoming edges."
+      "coverage_note": "Which view holds which piece of state, under which property wrapper. One rule replaces eleven: a wrapper is written as a type identifier inside the property declaration, so the wrapper name is the mention's own name, and the property and its owner are the declarations whose spans contain it."
     }
   ],
   "coverage": {

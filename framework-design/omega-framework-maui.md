@@ -64,6 +64,8 @@ Path globs: `**/*.xaml`, `**/*.cs`.
 
 ## What was wrong with it
 
+### Wave 1: 12 rules, none of which could match
+
 **All 12 rules were dead, and 9 of them could never have been anything else.**
 
 - **9 of 12 matched `structured.entry`** with `attribute_equals role =
@@ -98,28 +100,80 @@ Path globs: `**/*.xaml`, `**/*.cs`.
   `fact_join_by_field` on `arg1` between two kinds no Pack emits, on a field no
   Pack publishes.
 
-9 rules replace the 12. Every one is live, and `overlay_audit.py` reports zero
-that cannot match.
+9 rules replaced the 12, all live.
+
+### Wave 2: 9 live rules, 7 of whose entities never reached the graph
+
+The 9 rules audited clean — `overlay_audit.py` reported 9 live, 0 dead, both
+before and after this pass — and were still wrong in the way the audit cannot
+see. `pack-design/key_collisions.py maui` reported **7 entity outputs
+overwritten by a same-key rule that sorts first**, across three key templates:
+
+| key template | kind that materialized | kinds computed and discarded |
+|---|---|---|
+| `maui:type:{cls.definition.name}` | `MauiCommandOwner` (`maui.mvvm.relay_command`) | `MauiPage`, `MauiShellQueryReceiver`, `MauiViewModel` |
+| `maui:type:{definition.name}` | `MauiApplication` (`maui.app.root`) | `MauiNavigationTarget`, `MauiService`, `MauiRouteTarget` |
+| `maui:type:{owner.definition.name}` | `MauiNavigationSource` (`maui.navigation.push`) | `MauiRouteRegistrar` |
+
+`Entity::named` builds the entity id from the canonical key alone — the kind is
+not part of the identity — and `apply_overlay_runs` does
+`entities.entry(id).or_insert(entity)`, so the alphabetically first rule id wins
+with **its kind and its attributes**, and every other rule's output for that key
+is dropped silently. The practical cost was total: in a CommunityToolkit.Mvvm
+app every view model carries `[RelayCommand]`, so `maui.mvvm.relay_command`
+sorted first on every view-model class and **`MauiViewModel` never materialized
+once**. `MauiPage` lost its `base` and `code_behind` attributes the same way, so
+*which file is this page's code-behind* had no answer although a rule computed
+it. Eleven entity kinds in total were being written to one key space.
+
+Two smaller collisions of the same shape: `maui:app:{path}` was minted by
+`maui.app.root` with `{host_file, root_class}` and by
+`maui.services.registration` with `{host_file}` alone — same kind, different
+attributes, and only the first rule's attributes survive; and
+`maui:type:{path.stem}` carried an eleventh kind, `MauiXamlBackedType`.
+
+**The fix, brief §3g.** `maui:type:{…}` is now one neutral kind, `MauiType`,
+minted by every rule that needs a C# type as a relation end, carrying exactly
+one attribute (`class`) with the same value computed the same way in every rule
+— so a shared key is now the intended hub behaviour rather than a defect. Each
+classification that carries attributes of its own moved to its own key space
+(remedy 2) — `maui:page:{class}`, `maui:viewmodel:{class}`,
+`maui:application:{class}`, `maui:query_receiver:{class}`,
+`maui:service:{path}:{type}` — and is tied back to the hub by a `classifies`
+relation carrying an `as` attribute. The two classifications that carried no
+attributes of their own (`MauiRouteTarget`/`MauiRouteRegistrar`,
+`MauiNavigationTarget`/`MauiNavigationSource`) needed no entity at all (remedy
+1): being the source or the target of a `routes_to` or `navigates_to` edge
+between two `MauiType`s is the whole of what they said. `MauiApp` now carries
+`{host_file}` in both rules that mint it, and the root class it boots is stated
+by the `bootstraps` edge instead of by an attribute one of the two rules would
+have lost.
+
+Net: 14 declared entity kinds became 9, 6 relations became 8, the rule count is
+unchanged at 9, every canonical key template is minted under exactly one kind
+with one attribute set, and `key_collisions.py maui` reports nothing.
 
 ## What it states now
 
 The hub is `maui:type:{ClassName}` — a C# type by its simple name, deliberately
 path-free, so that a page declared in `Pages/DetailsPage.xaml.cs`, registered in
-`MauiProgram.cs` and navigated to from `AppShell.xaml.cs` is one entity. Every
-relation end below is minted by the same rule that addresses it, so nothing
+`MauiProgram.cs` and navigated to from `AppShell.xaml.cs` is one entity. It has
+**one** kind, `MauiType`, and one attribute; everything that distinguishes a
+type is a relation or a separately-keyed facet entity. Every relation end below
+is minted by the same rule that addresses it, under the same clauses, so nothing
 dangles.
 
 | what it answers | which Pack fact | which entity or relation |
 |---|---|---|
-| Which classes are pages, shells or views | `relation.implements` named one of 13 MAUI base types, `fact_join_by_span`/`within` → `definition.class` | entity `MauiPage` at `maui:type:{class}` with `base` and `code_behind` |
-| Which classes are view models | `relation.implements` named `ObservableObject`, `ObservableRecipient`, `ObservableValidator`, `INotifyPropertyChanged`, joined `within` its class | entity `MauiViewModel` at `maui:type:{class}` |
-| Which class is the application root, and where the host is built | `reference.type` (the `<App>` type argument) joined `within` `call.method UseMauiApp` | entities `MauiApplication` at `maui:type:{App}` and `MauiApp` at `maui:app:{path}`, relation `bootstraps` |
-| What is in the DI container and with what lifetime | `reference.type` (each generic argument) joined `within` `call.method` named `Add*`/`TryAdd*` with a `receiver_hint` | entity `MauiService` at `maui:type:{type}` with `lifetime` and `container`, relation `provides` from `maui:app:{path}` |
-| Which pages are registered for Shell routing, and from which class | `reference.type` (the `typeof(Page)`) joined `within` `call.method RegisterRoute` and `within` `definition.class` | entities `MauiRouteTarget` + `MauiRouteRegistrar`, relation `routes_to` |
-| Which page navigates to which page | `reference.type` (the `new Page()`) joined `within` `call.method PushAsync`/`PushModalAsync` and `within` `definition.class` | entities `MauiNavigationSource` + `MauiNavigationTarget`, relation `navigates_to` with `via` |
-| Which pages receive Shell query parameters | `reference.attribute QueryProperty` joined `within` `definition.class` | entity `MauiShellQueryReceiver` at `maui:type:{class}` |
-| Which commands a view model exposes to XAML `Command="{Binding …}"` | `reference.attribute RelayCommand` joined `within` `definition.method` and `within` `definition.class` | entity `MauiCommand` at `maui:command:{class}.{method}`, relation `exposes` |
-| Which XAML file declares a page's visual tree | `definition.config_attribute` named `xmlns` whose `value` attribute equals the MAUI 2021 schema URI, joined `within` `definition.config_element` (the root tag) | entities `MauiXamlView` at `maui:xaml:{path}` + `MauiXamlBackedType` at `maui:type:{path.stem}`, relation `renders` |
+| Which classes are pages, shells or views, and which file is the code-behind | `relation.implements` named one of 13 MAUI base types, `fact_join_by_span`/`within` → `definition.class` | `MauiPage` at `maui:page:{class}` with `base` and `code_behind`; `MauiType` at `maui:type:{class}`; relation `classifies` (`as` = page) |
+| Which classes are view models | `relation.implements` named `ObservableObject`, `ObservableRecipient`, `ObservableValidator`, `INotifyPropertyChanged`, joined `within` its class | `MauiViewModel` at `maui:viewmodel:{class}` with `base`; `MauiType`; relation `classifies` (`as` = view_model) |
+| Which class is the application root, and where the host is built | `reference.type` (the `<App>` type argument) joined `within` `call.method UseMauiApp` | `MauiApplication` at `maui:application:{class}`, `MauiApp` at `maui:app:{path}`, `MauiType`; relations `classifies` and `bootstraps` |
+| What is in the DI container, with what lifetime, and which type it resolves to | `reference.type` (each generic argument) joined `within` `call.method` named `Add*`/`TryAdd*` with a `receiver_hint` | `MauiService` at `maui:service:{path}:{type}` with `lifetime` and `container`; relations `provides` from `maui:app:{path}` and `resolves_to` to `maui:type:{type}` |
+| Which pages are registered for Shell routing, and from which class | `reference.type` (the `typeof(Page)`) joined `within` `call.method RegisterRoute` and `within` `definition.class` | two `MauiType`s; relation `routes_to` with `via` and `registered_in` |
+| Which page navigates to which page | `reference.type` (the `new Page()`) joined `within` `call.method PushAsync`/`PushModalAsync` and `within` `definition.class` | two `MauiType`s; relation `navigates_to` with `via` and `declared_in` |
+| Which pages receive Shell query parameters | `reference.attribute QueryProperty` joined `within` `definition.class` | `MauiShellQueryReceiver` at `maui:query_receiver:{class}`; `MauiType`; relation `classifies` (`as` = shell_query_receiver) |
+| Which commands a view model exposes to XAML `Command="{Binding …}"` | `reference.attribute RelayCommand` joined `within` `definition.method` and `within` `definition.class` | `MauiCommand` at `maui:command:{class}.{method}`; `MauiType`; relation `exposes` from `maui:type:{class}` |
+| Which XAML file declares a page's visual tree | `definition.config_attribute` named `xmlns` whose `value` attribute equals the MAUI 2021 schema URI, joined `within` `definition.config_element` (the root tag) | `MauiXamlView` at `maui:xaml:{path}`; `MauiType` at `maui:type:{path.stem}`; relation `renders` |
 
 Everything was measured, not assumed, with
 `target/release/examples/dump_call_emissions.exe` over a hand-written
@@ -129,6 +183,8 @@ depends on were confirmed there: `reference.type App` at 218–221 lies inside
 545–580 lies inside `definition.class DetailsPage` at 544–748;
 `reference.attribute RelayCommand` at 1153–1165 lies inside
 `definition.method LoadAsync` at 1152–1205.
+
+All 9 rules are live; none is kept against a fact no Pack emits.
 
 ## A field only the Pack can supply
 

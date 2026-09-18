@@ -46,6 +46,7 @@
       "depends_on",
       "handles",
       "has_field",
+      "has_role",
       "mounts",
       "registers_route",
       "serves"
@@ -186,9 +187,26 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Controller",
+          "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Controller",
+          "canonical_key": {
+            "template": "vapor:controller:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
@@ -236,11 +254,30 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_role",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:controller:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "role": "route-collection",
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Which types register routes. A RouteCollection is the unit a Vapor project groups its endpoints into; the conformance is stated by relation.implements and the type is the declaration whose span contains it."
+      "coverage_note": "Which types register routes. A RouteCollection is the unit a Vapor project groups its endpoints into; the conformance is stated by relation.implements and the type is the declaration whose span contains it. The type is minted once, under the neutral hub key vapor:type:{path}:{type} as a VaporType with the same two attributes every rule gives it, and the classification lives in its own key space vapor:controller:{path}:{type} -- so a type that is both a Model and a Content payload keeps both entities and both conformance names instead of the alphabetically-first rule's kind winning the hub key (brief 3g, remedy 2)."
     },
     {
       "id": "vapor.model.declaration",
@@ -283,9 +320,26 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Model",
+          "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Model",
+          "canonical_key": {
+            "template": "vapor:model:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
@@ -333,11 +387,30 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_role",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:model:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "role": "model",
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Which types are Fluent models -- the types that back database tables. Six model protocols collapse into one rule over the conformance name."
+      "coverage_note": "Which types are Fluent models -- the types that back database tables. Six model protocols collapse into one rule over the conformance name. The type is minted once, under the neutral hub key vapor:type:{path}:{type} as a VaporType with the same two attributes every rule gives it, and the classification lives in its own key space vapor:model:{path}:{type} -- so a type that is both a Model and a Content payload keeps both entities and both conformance names instead of the alphabetically-first rule's kind winning the hub key (brief 3g, remedy 2)."
     },
     {
       "id": "vapor.migration.declaration",
@@ -376,9 +449,26 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Migration",
+          "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Migration",
+          "canonical_key": {
+            "template": "vapor:migration:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
@@ -426,11 +516,30 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_role",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:migration:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "role": "migration",
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Which types change the database schema. Both spellings of the protocol, sync and async, are one rule."
+      "coverage_note": "Which types change the database schema. Both spellings of the protocol, sync and async, are one rule. The type is minted once, under the neutral hub key vapor:type:{path}:{type} as a VaporType with the same two attributes every rule gives it, and the classification lives in its own key space vapor:migration:{path}:{type} -- so a type that is both a Model and a Content payload keeps both entities and both conformance names instead of the alphabetically-first rule's kind winning the hub key (brief 3g, remedy 2)."
     },
     {
       "id": "vapor.middleware.declaration",
@@ -480,9 +589,26 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Middleware",
+          "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Middleware",
+          "canonical_key": {
+            "template": "vapor:middleware:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
@@ -530,11 +656,30 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_role",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:middleware:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "role": "middleware",
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "What sits in front of a handler: middleware, authenticators and lifecycle handlers. Thirteen protocol spellings of one role become one rule."
+      "coverage_note": "What sits in front of a handler: middleware, authenticators and lifecycle handlers. Thirteen protocol spellings of one role become one rule. The type is minted once, under the neutral hub key vapor:type:{path}:{type} as a VaporType with the same two attributes every rule gives it, and the classification lives in its own key space vapor:middleware:{path}:{type} -- so a type that is both a Model and a Content payload keeps both entities and both conformance names instead of the alphabetically-first rule's kind winning the hub key (brief 3g, remedy 2)."
     },
     {
       "id": "vapor.payload.declaration",
@@ -578,9 +723,26 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Payload",
+          "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Payload",
+          "canonical_key": {
+            "template": "vapor:payload:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
@@ -628,11 +790,30 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_role",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:payload:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "role": "payload",
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "Which types cross the wire -- the request and response bodies of this API. Content is Vapor's Codable-over-HTTP conformance and Validatable says the payload is checked on the way in."
+      "coverage_note": "Which types cross the wire -- the request and response bodies of this API. Content is Vapor's Codable-over-HTTP conformance and Validatable says the payload is checked on the way in. The type is minted once, under the neutral hub key vapor:type:{path}:{type} as a VaporType with the same two attributes every rule gives it, and the classification lives in its own key space vapor:payload:{path}:{type} -- so a type that is both a Model and a Content payload keeps both entities and both conformance names instead of the alphabetically-first rule's kind winning the hub key (brief 3g, remedy 2)."
     },
     {
       "id": "vapor.worker.declaration",
@@ -675,9 +856,26 @@
       "outputs": [
         {
           "kind": "entity_candidate",
-          "entity_kind": "Worker",
+          "entity_kind": "VaporType",
           "canonical_key": {
             "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "name": {
+              "kind": "field_ref",
+              "field": "owner.definition.name"
+            },
+            "path": {
+              "kind": "field_ref",
+              "field": "path"
+            }
+          }
+        },
+        {
+          "kind": "entity_candidate",
+          "entity_kind": "Worker",
+          "canonical_key": {
+            "template": "vapor:worker:{path}:{owner.definition.name}"
           },
           "attributes": {
             "name": {
@@ -725,11 +923,30 @@
               "field": "definition.name"
             }
           }
+        },
+        {
+          "kind": "relation_candidate",
+          "relation_kind": "has_role",
+          "source": {
+            "kind": "by_canonical_key",
+            "template": "vapor:type:{path}:{owner.definition.name}"
+          },
+          "target": {
+            "kind": "by_canonical_key",
+            "template": "vapor:worker:{path}:{owner.definition.name}"
+          },
+          "attributes": {
+            "role": "worker",
+            "conforms_to": {
+              "kind": "field_ref",
+              "field": "definition.name"
+            }
+          }
         }
       ],
       "evidence_class": "structurally_derived",
       "confidence": "exact",
-      "coverage_note": "What runs outside a request: queued jobs, scheduled jobs and CLI commands. Six protocol spellings, one rule."
+      "coverage_note": "What runs outside a request: queued jobs, scheduled jobs and CLI commands. Six protocol spellings, one rule. The type is minted once, under the neutral hub key vapor:type:{path}:{type} as a VaporType with the same two attributes every rule gives it, and the classification lives in its own key space vapor:worker:{path}:{type} -- so a type that is both a Model and a Content payload keeps both entities and both conformance names instead of the alphabetically-first rule's kind winning the hub key (brief 3g, remedy 2)."
     },
     {
       "id": "vapor.route.registration",
